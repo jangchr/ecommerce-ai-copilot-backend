@@ -3633,6 +3633,7 @@
         let latestProjectWorkspaceRealProviderReadinessChecklistPack = {};
         let latestProjectWorkspaceSecretEnvironmentGatePack = {};
         let latestProjectWorkspaceNetworkExternalCallBlockGuardPack = {};
+        let latestProjectWorkspaceRealExecutionApprovalTokenPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -6390,6 +6391,142 @@
             networkExternalCallBlockGuardFailureRiskQualityAuditSafetyNote: 'Network failure policy \u53ea\u5f15\u7528 failure taxonomy\uff1b\u4e0d\u6267\u884c\u771f\u5b9e retry \u6216 rollback\u3002Risk register \u5305\u542b external call blocked\u3001provider endpoint missing\u3001webhook blocked\u3001media transfer blocked\u3001external scraping blocked\u3001database network blocked\u3001rollback endpoint blocked \u548c billing endpoint blocked\u3002Audit preview \u4e0d\u5199\u5165\u6570\u636e\u5e93\u3002',
             networkExternalCallBlockGuardSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001image\u3001video\u3001media\u3001paid\u3001registry\u3001rollback\u3001external scraping\u3001database persistence\u3001real restore\u3001real execution\u3001secret read \u548c external call \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002',
             networkExternalCallBlockGuardProviderTypesNote: '\u8986\u76d6\u7684 provider \u7c7b\u578b\uff1allm_text_generation\u3001video_generation_provider\u3001image_generation_provider\u3001media_storage_provider\u3001external_scraping_provider\u3001translation_provider\u3001analytics_or_tracking_provider\u3001database_persistence_provider\u3001approval_or_ticket_provider\u3001rollback_restore_provider\u3002'
+        });
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceRealExecutionApprovalTokenMarker: 'Project Workspace real execution approval token bundle',
+            realExecutionApprovalTokenPackTitle: 'Workspace Real Execution Approval Token Preview',
+            realExecutionApprovalTokenPackHelper: 'Review deterministic approval token preview only. This is an approval token preview, not a real token system.',
+            realExecutionApprovalTokenSummaryTitle: 'Approval Token Summary',
+            realExecutionApprovalTokenCardsTitle: 'Approval Token Preview Cards',
+            realExecutionApprovalTokenGateSignoffTitle: 'Execution Approval Gate Checks / Required Signoff Matrix',
+            realExecutionApprovalTokenGateTitle: 'Execution Approval Gate Checks',
+            realExecutionApprovalTokenSignoffTitle: 'Required Signoff Matrix',
+            realExecutionApprovalTokenBlockerPacketScopeTitle: 'Token Blockers / Approval Packet Requirements / Scope Boundaries',
+            realExecutionApprovalTokenBlockerTitle: 'Token Blocker Cards',
+            realExecutionApprovalTokenPacketTitle: 'Approval Packet Requirements',
+            realExecutionApprovalTokenScopeTitle: 'Token Scope Boundary Rules',
+            realExecutionApprovalTokenRiskQualityAuditSafetyTitle: 'Approval Token Risk / Quality / Audit / Safety Boundaries',
+            realExecutionApprovalTokenRiskTitle: 'Approval Token Risk Register',
+            realExecutionApprovalTokenQualityTitle: 'Approval Token Quality Checks',
+            realExecutionApprovalTokenAuditTitle: 'Audit Preview',
+            realExecutionApprovalTokenSafetyTitle: 'Safety Boundaries',
+            realExecutionApprovalTokenMode: 'Mode',
+            realExecutionApprovalTokenPreviewCount: 'Token preview count',
+            realExecutionApprovalTokenGateCheckCount: 'Approval gate check count',
+            realExecutionApprovalTokenRequiredSignoffCount: 'Required signoff count',
+            realExecutionApprovalTokenBlockerCount: 'Token blocker count',
+            realExecutionApprovalTokenRecommendedAction: 'Recommended operator action',
+            realExecutionApprovalTokenIssueAllowed: 'Token issue allowed',
+            realExecutionApprovalTokenValidationAllowed: 'Token validation allowed',
+            realExecutionApprovalTokenRealInvocation: 'Real invocation allowed',
+            realExecutionApprovalTokenRealExecution: 'Real execution allowed',
+            realExecutionApprovalTokenDisabled: 'disabled',
+            realExecutionApprovalTokenNoData: 'No workspace real execution approval token data is available.',
+            realExecutionApprovalTokenCopyNoData: 'No workspace real execution approval token content is available to copy.',
+            realExecutionApprovalTokenCopyFailed: 'Unable to copy workspace real execution approval token content.',
+            realExecutionApprovalTokenCopied: 'Workspace real execution approval token content copied.',
+            realExecutionApprovalTokenCopySummary: 'Copy approval token summary',
+            realExecutionApprovalTokenCopyCards: 'Copy approval token preview cards',
+            realExecutionApprovalTokenCopyGateChecks: 'Copy execution approval gate checks',
+            realExecutionApprovalTokenCopySignoff: 'Copy required signoff matrix',
+            realExecutionApprovalTokenCopyBlockers: 'Copy token blocker cards',
+            realExecutionApprovalTokenCopyPacket: 'Copy approval packet requirements',
+            realExecutionApprovalTokenCopyScope: 'Copy token scope boundary rules',
+            realExecutionApprovalTokenCopyRisk: 'Copy approval token risk register',
+            realExecutionApprovalTokenCopyFull: 'Copy full real execution approval token pack',
+            realExecutionApprovalTokenPreviewId: 'Token preview ID',
+            realExecutionApprovalTokenProviderId: 'Provider ID',
+            realExecutionApprovalTokenProviderType: 'Provider type',
+            realExecutionApprovalTokenSourceCapability: 'Source capability',
+            realExecutionApprovalTokenPurpose: 'Token purpose',
+            realExecutionApprovalTokenScopePreview: 'Token scope preview',
+            realExecutionApprovalTokenRequiredSignoffs: 'Required signoffs',
+            realExecutionApprovalTokenRequiredEvidence: 'Required evidence',
+            realExecutionApprovalTokenBlockedBy: 'Blocked by',
+            realExecutionApprovalTokenRiskNote: 'Risk note',
+            realExecutionApprovalTokenGateId: 'Gate ID',
+            realExecutionApprovalTokenGateName: 'Gate name',
+            realExecutionApprovalTokenGateStatus: 'Gate status',
+            realExecutionApprovalTokenPreviewNote: 'Approval token preview only. This is not a real token system, does not issue a real token, does not validate a real token, creates no real approval, and unlocks no real provider capability.',
+            realExecutionApprovalTokenCardsHelper: 'Inspect token preview cards for provider capability, scope preview, required signoffs, required evidence, blockers, and disabled issue/validation/execution flags.',
+            realExecutionApprovalTokenGateSignoffHelper: 'Inspect execution approval gate checks and the required signoff matrix for human review, cost review, secret review, network review, media review, rollback review, and database review.',
+            realExecutionApprovalTokenBlockerPacketScopeHelper: 'Inspect blocked token operations, future approval packet material requirements, and token scope boundary rules. No real approval packet is created.',
+            realExecutionApprovalTokenRiskQualityAuditSafetyHelper: 'Inspect approval token risks, quality checks, audit preview, and disabled real capability boundaries. Audit preview is not written to a database.',
+            realExecutionApprovalTokenNoRealTokenNote: 'No real token is issued, persisted, exported, validated, or used for execution.',
+            realExecutionApprovalTokenBlockerNote: 'token issue, token validation, token use for execution, token persistence, and token export are all blocked.',
+            realExecutionApprovalTokenScopeNote: 'Token scope cannot be used for real provider call, external call, secret read, paid operation, media transfer, database write, or rollback.',
+            realExecutionApprovalTokenRiskNoteText: 'Risk register includes unauthorized execution, missing signoff, secret gate blocked, network blocked, paid blocked, rollback blocked, and database persistence blocked.',
+            realExecutionApprovalTokenSafetyNote: 'Real LLM, provider, image, video, media, paid, registry, rollback, external scraping, database persistence, real restore, real execution, secret read, external call, and token issue remain disabled.',
+            realExecutionApprovalTokenProviderTypesNote: 'Provider types covered: llm_text_generation, video_generation_provider, image_generation_provider, media_storage_provider, external_scraping_provider, translation_provider, analytics_or_tracking_provider, database_persistence_provider, approval_or_ticket_provider, rollback_restore_provider.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceRealExecutionApprovalTokenMarker: 'Project Workspace real execution approval token bundle',
+            realExecutionApprovalTokenPackTitle: '\u5de5\u4f5c\u533a Real Execution Approval Token Preview',
+            realExecutionApprovalTokenPackHelper: '\u4ec5\u67e5\u770b\u786e\u5b9a\u6027 approval token \u9884\u89c8\u3002\u8fd9\u662f approval token preview\uff0c\u4e0d\u662f\u771f\u5b9e token system\u3002',
+            realExecutionApprovalTokenSummaryTitle: 'Approval Token \u6458\u8981',
+            realExecutionApprovalTokenCardsTitle: 'Approval Token Preview \u5361\u7247',
+            realExecutionApprovalTokenGateSignoffTitle: 'Execution Approval Gate \u68c0\u67e5 / Required Signoff \u77e9\u9635',
+            realExecutionApprovalTokenGateTitle: 'Execution Approval Gate \u68c0\u67e5',
+            realExecutionApprovalTokenSignoffTitle: 'Required Signoff \u77e9\u9635',
+            realExecutionApprovalTokenBlockerPacketScopeTitle: 'Token \u963b\u65ad / Approval Packet \u8981\u6c42 / Scope \u8fb9\u754c',
+            realExecutionApprovalTokenBlockerTitle: 'Token Blocker \u5361\u7247',
+            realExecutionApprovalTokenPacketTitle: 'Approval Packet \u8981\u6c42',
+            realExecutionApprovalTokenScopeTitle: 'Token Scope \u8fb9\u754c\u89c4\u5219',
+            realExecutionApprovalTokenRiskQualityAuditSafetyTitle: 'Approval Token Risk / \u8d28\u91cf / \u5ba1\u8ba1 / \u5b89\u5168\u8fb9\u754c',
+            realExecutionApprovalTokenRiskTitle: 'Approval Token Risk Register',
+            realExecutionApprovalTokenQualityTitle: 'Approval Token \u8d28\u91cf\u68c0\u67e5',
+            realExecutionApprovalTokenAuditTitle: '\u5ba1\u8ba1\u9884\u89c8',
+            realExecutionApprovalTokenSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            realExecutionApprovalTokenMode: '\u6a21\u5f0f',
+            realExecutionApprovalTokenPreviewCount: 'Token preview \u6570\u91cf',
+            realExecutionApprovalTokenGateCheckCount: 'Approval gate \u68c0\u67e5\u6570\u91cf',
+            realExecutionApprovalTokenRequiredSignoffCount: 'Required signoff \u6570\u91cf',
+            realExecutionApprovalTokenBlockerCount: 'Token blocker \u6570\u91cf',
+            realExecutionApprovalTokenRecommendedAction: '\u63a8\u8350\u64cd\u4f5c\u5458\u52a8\u4f5c',
+            realExecutionApprovalTokenIssueAllowed: '\u5141\u8bb8\u7b7e\u53d1 token',
+            realExecutionApprovalTokenValidationAllowed: '\u5141\u8bb8\u9a8c\u8bc1 token',
+            realExecutionApprovalTokenRealInvocation: '\u5141\u8bb8\u771f\u5b9e\u8c03\u7528',
+            realExecutionApprovalTokenRealExecution: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            realExecutionApprovalTokenDisabled: '\u5df2\u7981\u7528',
+            realExecutionApprovalTokenNoData: '\u6682\u65e0\u5de5\u4f5c\u533a real execution approval token \u6570\u636e\u3002',
+            realExecutionApprovalTokenCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a real execution approval token \u5185\u5bb9\u3002',
+            realExecutionApprovalTokenCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a real execution approval token \u5185\u5bb9\u3002',
+            realExecutionApprovalTokenCopied: '\u5de5\u4f5c\u533a real execution approval token \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            realExecutionApprovalTokenCopySummary: '\u590d\u5236 approval token \u6458\u8981',
+            realExecutionApprovalTokenCopyCards: '\u590d\u5236 approval token preview \u5361\u7247',
+            realExecutionApprovalTokenCopyGateChecks: '\u590d\u5236 execution approval gate \u68c0\u67e5',
+            realExecutionApprovalTokenCopySignoff: '\u590d\u5236 required signoff \u77e9\u9635',
+            realExecutionApprovalTokenCopyBlockers: '\u590d\u5236 token blocker \u5361\u7247',
+            realExecutionApprovalTokenCopyPacket: '\u590d\u5236 approval packet \u8981\u6c42',
+            realExecutionApprovalTokenCopyScope: '\u590d\u5236 token scope \u8fb9\u754c\u89c4\u5219',
+            realExecutionApprovalTokenCopyRisk: '\u590d\u5236 approval token risk register',
+            realExecutionApprovalTokenCopyFull: '\u590d\u5236\u5b8c\u6574 real execution approval token pack',
+            realExecutionApprovalTokenPreviewId: 'Token preview ID',
+            realExecutionApprovalTokenProviderId: 'Provider ID',
+            realExecutionApprovalTokenProviderType: 'Provider \u7c7b\u578b',
+            realExecutionApprovalTokenSourceCapability: '\u6765\u6e90\u80fd\u529b',
+            realExecutionApprovalTokenPurpose: 'Token \u7528\u9014',
+            realExecutionApprovalTokenScopePreview: 'Token scope \u9884\u89c8',
+            realExecutionApprovalTokenRequiredSignoffs: 'Required signoff',
+            realExecutionApprovalTokenRequiredEvidence: '\u6240\u9700\u8bc1\u636e',
+            realExecutionApprovalTokenBlockedBy: '\u963b\u65ad\u6765\u6e90',
+            realExecutionApprovalTokenRiskNote: '\u98ce\u9669\u5907\u6ce8',
+            realExecutionApprovalTokenGateId: 'Gate ID',
+            realExecutionApprovalTokenGateName: 'Gate \u540d\u79f0',
+            realExecutionApprovalTokenGateStatus: 'Gate \u72b6\u6001',
+            realExecutionApprovalTokenPreviewNote: '\u4ec5\u4e3a approval token \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e token system\uff0c\u4e0d\u7b7e\u53d1\u771f\u5b9e token\uff0c\u4e0d\u9a8c\u8bc1\u771f\u5b9e token\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e\u5ba1\u6279\uff0c\u4e0d\u89e3\u9501\u771f\u5b9e provider \u80fd\u529b\u3002',
+            realExecutionApprovalTokenCardsHelper: '\u67e5\u770b token preview \u5361\u7247\uff0c\u5305\u542b provider \u80fd\u529b\u3001scope \u9884\u89c8\u3001required signoff\u3001required evidence\u3001blocker \u548c\u7981\u7528\u7684\u7b7e\u53d1/\u9a8c\u8bc1/\u6267\u884c\u6807\u5fd7\u3002',
+            realExecutionApprovalTokenGateSignoffHelper: '\u67e5\u770b execution approval gate \u68c0\u67e5\u548c required signoff \u77e9\u9635\uff0c\u5305\u542b human review\u3001cost review\u3001secret review\u3001network review\u3001media review\u3001rollback review \u548c database review\u3002',
+            realExecutionApprovalTokenBlockerPacketScopeHelper: '\u67e5\u770b\u88ab\u963b\u65ad\u7684 token \u64cd\u4f5c\u3001\u672a\u6765 approval packet \u6750\u6599\u8981\u6c42\u548c token scope \u8fb9\u754c\u89c4\u5219\u3002\u4e0d\u521b\u5efa\u771f\u5b9e approval packet\u3002',
+            realExecutionApprovalTokenRiskQualityAuditSafetyHelper: '\u67e5\u770b approval token \u98ce\u9669\u3001\u8d28\u91cf\u68c0\u67e5\u3001\u5ba1\u8ba1\u9884\u89c8\u548c\u5df2\u7981\u7528\u7684\u771f\u5b9e\u80fd\u529b\u8fb9\u754c\u3002Audit preview \u4e0d\u5199\u5165\u6570\u636e\u5e93\u3002',
+            realExecutionApprovalTokenNoRealTokenNote: '\u4e0d\u7b7e\u53d1\u3001\u6301\u4e45\u5316\u3001\u5bfc\u51fa\u3001\u9a8c\u8bc1\u6216\u7528\u4e8e\u6267\u884c\u771f\u5b9e token\u3002',
+            realExecutionApprovalTokenBlockerNote: 'token issue\u3001token validation\u3001token use for execution\u3001token persistence \u548c token export \u5168\u90e8 blocked\u3002',
+            realExecutionApprovalTokenScopeNote: 'Token scope \u4e0d\u80fd\u7528\u4e8e real provider call\u3001external call\u3001secret read\u3001paid operation\u3001media transfer\u3001database write \u6216 rollback\u3002',
+            realExecutionApprovalTokenRiskNoteText: 'Risk register \u5305\u542b unauthorized execution\u3001missing signoff\u3001secret gate blocked\u3001network blocked\u3001paid blocked\u3001rollback blocked \u548c database persistence blocked\u3002',
+            realExecutionApprovalTokenSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001image\u3001video\u3001media\u3001paid\u3001registry\u3001rollback\u3001external scraping\u3001database persistence\u3001real restore\u3001real execution\u3001secret read\u3001external call \u548c token issue \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002',
+            realExecutionApprovalTokenProviderTypesNote: '\u8986\u76d6\u7684 provider \u7c7b\u578b\uff1allm_text_generation\u3001video_generation_provider\u3001image_generation_provider\u3001media_storage_provider\u3001external_scraping_provider\u3001translation_provider\u3001analytics_or_tracking_provider\u3001database_persistence_provider\u3001approval_or_ticket_provider\u3001rollback_restore_provider\u3002'
         });
 
 
@@ -9198,6 +9335,7 @@
                 latestProjectWorkspaceRealProviderReadinessChecklistPack = latestProjectCreativeDecisionPack.workspace_real_provider_readiness_checklist_pack || {};
                 latestProjectWorkspaceSecretEnvironmentGatePack = latestProjectCreativeDecisionPack.workspace_secret_environment_gate_pack || {};
                 latestProjectWorkspaceNetworkExternalCallBlockGuardPack = latestProjectCreativeDecisionPack.workspace_network_external_call_block_guard_pack || {};
+                latestProjectWorkspaceRealExecutionApprovalTokenPack = latestProjectCreativeDecisionPack.workspace_real_execution_approval_token_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -15067,6 +15205,7 @@
         const PROJECT_WORKSPACE_REAL_PROVIDER_READINESS_CHECKLIST_MARKER = 'Project Workspace real provider readiness checklist bundle';
         const PROJECT_WORKSPACE_SECRET_ENVIRONMENT_GATE_MARKER = 'Project Workspace secret environment gate bundle';
         const PROJECT_WORKSPACE_NETWORK_EXTERNAL_CALL_BLOCK_GUARD_MARKER = 'Project Workspace network external call block guard bundle';
+        const PROJECT_WORKSPACE_REAL_EXECUTION_APPROVAL_TOKEN_MARKER = 'Project Workspace real execution approval token bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -20451,6 +20590,112 @@
         function copyProjectWorkspaceNetworkFailurePolicyMap() { return copyProjectWorkspaceNetworkExternalCallBlockGuardText('failure'); }
         function copyProjectWorkspaceNetworkRiskRegister() { return copyProjectWorkspaceNetworkExternalCallBlockGuardText('risk'); }
         function copyProjectWorkspaceFullNetworkExternalCallBlockGuardPack() { return copyProjectWorkspaceNetworkExternalCallBlockGuardText('full'); }
+
+        function projectWorkspaceRealExecutionApprovalTokenPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceRealExecutionApprovalTokenPack && Object.keys(latestProjectWorkspaceRealExecutionApprovalTokenPack).length) return latestProjectWorkspaceRealExecutionApprovalTokenPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_real_execution_approval_token_pack || {};
+        }
+
+        function projectWorkspaceExportRealExecutionApprovalTokenSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceRealExecutionApprovalTokenPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_REAL_EXECUTION_APPROVAL_TOKEN_MARKER,
+                has_workspace_real_execution_approval_token_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                approval_token_summary: pack.approval_token_summary || {},
+                approval_token_preview_cards: Array.isArray(pack.approval_token_preview_cards) ? pack.approval_token_preview_cards : [],
+                execution_approval_gate_checks: Array.isArray(pack.execution_approval_gate_checks) ? pack.execution_approval_gate_checks : [],
+                required_signoff_matrix: Array.isArray(pack.required_signoff_matrix) ? pack.required_signoff_matrix : [],
+                token_blocker_cards: Array.isArray(pack.token_blocker_cards) ? pack.token_blocker_cards : [],
+                approval_packet_requirements: Array.isArray(pack.approval_packet_requirements) ? pack.approval_packet_requirements : [],
+                token_scope_boundary_rules: Array.isArray(pack.token_scope_boundary_rules) ? pack.token_scope_boundary_rules : [],
+                approval_token_risk_register: Array.isArray(pack.approval_token_risk_register) ? pack.approval_token_risk_register : [],
+                approval_token_quality_checks: pack.approval_token_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceRealExecutionApprovalTokenJsonText(value) {
+            if (!value || (Array.isArray(value) && !value.length) || (!Array.isArray(value) && typeof value === 'object' && !Object.keys(value).length)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceRealExecutionApprovalTokenSummaryText(pack = projectWorkspaceExportRealExecutionApprovalTokenSnapshot()) {
+            if (!pack.has_workspace_real_execution_approval_token_pack) return '';
+            const summary = pack.approval_token_summary || {};
+            return [
+                t('realExecutionApprovalTokenSummaryTitle'),
+                `${t('realExecutionApprovalTokenMode')}: ${summary.mode || t('none')}`,
+                `${t('realExecutionApprovalTokenPreviewCount')}: ${summary.token_preview_count ?? pack.approval_token_preview_cards.length}`,
+                `${t('realExecutionApprovalTokenGateCheckCount')}: ${summary.execution_approval_gate_check_count ?? pack.execution_approval_gate_checks.length}`,
+                `${t('realExecutionApprovalTokenRequiredSignoffCount')}: ${summary.required_signoff_count ?? pack.required_signoff_matrix.length}`,
+                `${t('realExecutionApprovalTokenBlockerCount')}: ${summary.token_blocker_count ?? pack.token_blocker_cards.length}`,
+                `${t('realExecutionApprovalTokenRecommendedAction')}: ${summary.recommended_operator_action || t('none')}`,
+                `${t('realExecutionApprovalTokenIssueAllowed')}: ${summary.token_issue_allowed === false ? t('realExecutionApprovalTokenDisabled') : String(summary.token_issue_allowed)}`,
+                `${t('realExecutionApprovalTokenValidationAllowed')}: ${summary.token_validation_allowed === false ? t('realExecutionApprovalTokenDisabled') : String(summary.token_validation_allowed)}`,
+                `${t('realExecutionApprovalTokenRealInvocation')}: ${summary.real_invocation_allowed === false ? t('realExecutionApprovalTokenDisabled') : String(summary.real_invocation_allowed)}`,
+                `${t('realExecutionApprovalTokenRealExecution')}: ${summary.real_execution_allowed === false ? t('realExecutionApprovalTokenDisabled') : String(summary.real_execution_allowed)}`,
+                t('realExecutionApprovalTokenPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceRealExecutionApprovalTokenSectionText(titleKey, value) {
+            const body = projectWorkspaceRealExecutionApprovalTokenJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportRealExecutionApprovalTokenMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRealExecutionApprovalTokenSnapshot(workspace);
+            if (!pack.has_workspace_real_execution_approval_token_pack) return '';
+            return [
+                `## ${t('realExecutionApprovalTokenPackTitle')}`,
+                `## ${t('realExecutionApprovalTokenSummaryTitle')}`,
+                projectWorkspaceRealExecutionApprovalTokenSummaryText(pack), '',
+                projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenCardsTitle', pack.approval_token_preview_cards), '',
+                projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenGateTitle', pack.execution_approval_gate_checks), '',
+                projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenSignoffTitle', pack.required_signoff_matrix), '',
+                projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenBlockerTitle', pack.token_blocker_cards), '',
+                projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenPacketTitle', pack.approval_packet_requirements), '',
+                projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenScopeTitle', pack.token_scope_boundary_rules), '',
+                projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenRiskTitle', pack.approval_token_risk_register), '',
+                projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenQualityTitle', pack.approval_token_quality_checks), '',
+                projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenAuditTitle', pack.audit_preview), '',
+                projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenSafetyTitle', pack.safety_boundaries),
+                t('realExecutionApprovalTokenSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceRealExecutionApprovalTokenText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceRealExecutionApprovalTokenStatus');
+            const pack = projectWorkspaceExportRealExecutionApprovalTokenSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceRealExecutionApprovalTokenSummaryText(pack)
+                : kind === 'cards' ? projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenCardsTitle', pack.approval_token_preview_cards)
+                : kind === 'gates' ? projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenGateTitle', pack.execution_approval_gate_checks)
+                : kind === 'signoff' ? projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenSignoffTitle', pack.required_signoff_matrix)
+                : kind === 'blockers' ? projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenBlockerTitle', pack.token_blocker_cards)
+                : kind === 'packet' ? projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenPacketTitle', pack.approval_packet_requirements)
+                : kind === 'scope' ? projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenScopeTitle', pack.token_scope_boundary_rules)
+                : kind === 'risk' ? projectWorkspaceRealExecutionApprovalTokenSectionText('realExecutionApprovalTokenRiskTitle', pack.approval_token_risk_register)
+                : projectWorkspaceExportRealExecutionApprovalTokenMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('realExecutionApprovalTokenCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('realExecutionApprovalTokenCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('realExecutionApprovalTokenCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('realExecutionApprovalTokenCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceApprovalTokenSummary() { return copyProjectWorkspaceRealExecutionApprovalTokenText('summary'); }
+        function copyProjectWorkspaceApprovalTokenPreviewCards() { return copyProjectWorkspaceRealExecutionApprovalTokenText('cards'); }
+        function copyProjectWorkspaceExecutionApprovalGateChecks() { return copyProjectWorkspaceRealExecutionApprovalTokenText('gates'); }
+        function copyProjectWorkspaceRequiredSignoffMatrix() { return copyProjectWorkspaceRealExecutionApprovalTokenText('signoff'); }
+        function copyProjectWorkspaceTokenBlockerCards() { return copyProjectWorkspaceRealExecutionApprovalTokenText('blockers'); }
+        function copyProjectWorkspaceApprovalPacketRequirements() { return copyProjectWorkspaceRealExecutionApprovalTokenText('packet'); }
+        function copyProjectWorkspaceTokenScopeBoundaryRules() { return copyProjectWorkspaceRealExecutionApprovalTokenText('scope'); }
+        function copyProjectWorkspaceApprovalTokenRiskRegister() { return copyProjectWorkspaceRealExecutionApprovalTokenText('risk'); }
+        function copyProjectWorkspaceFullRealExecutionApprovalTokenPack() { return copyProjectWorkspaceRealExecutionApprovalTokenText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -24325,6 +24570,35 @@
             return `<div class="section-block" id="projectWorkspaceNetworkFailureRiskQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('networkExternalCallBlockGuardFailureRiskQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('networkExternalCallBlockGuardFailureRiskQualityAuditSafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceNetworkFailurePolicyMap()">${escapeHTML(t('networkExternalCallBlockGuardCopyFailure'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceNetworkRiskRegister()">${escapeHTML(t('networkExternalCallBlockGuardCopyRisk'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('networkExternalCallBlockGuardFailureTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceNetworkExternalCallBlockGuardJsonText(pack.network_failure_policy_map) || t('networkExternalCallBlockGuardNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('networkExternalCallBlockGuardRiskTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceNetworkExternalCallBlockGuardJsonText(pack.network_risk_register) || t('networkExternalCallBlockGuardNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('networkExternalCallBlockGuardQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceNetworkExternalCallBlockGuardJsonText(pack.network_guard_quality_checks) || t('networkExternalCallBlockGuardNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('networkExternalCallBlockGuardAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceNetworkExternalCallBlockGuardJsonText(pack.audit_preview) || t('networkExternalCallBlockGuardNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('networkExternalCallBlockGuardSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('networkExternalCallBlockGuardFailureRiskQualityAuditSafetyNote'))}</div><div class="field-helper">${escapeHTML(t('networkExternalCallBlockGuardSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceApprovalTokenSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRealExecutionApprovalTokenSnapshot(workspace); if (!pack.has_workspace_real_execution_approval_token_pack) return '';
+            const summary = pack.approval_token_summary || {};
+            return `<div class="section-block" id="projectWorkspaceApprovalTokenSummaryPanel" data-real-execution-approval-token-marker="${PROJECT_WORKSPACE_REAL_EXECUTION_APPROVAL_TOKEN_MARKER}" data-marker="project_workspace_real_execution_approval_token_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('realExecutionApprovalTokenPackTitle'))}</div><div class="field-helper">${escapeHTML(t('realExecutionApprovalTokenPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullRealExecutionApprovalTokenPack()">${escapeHTML(t('realExecutionApprovalTokenCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('realExecutionApprovalTokenMode'), summary.mode || t('none'))}${metricPill(t('realExecutionApprovalTokenPreviewCount'), String(summary.token_preview_count ?? pack.approval_token_preview_cards.length))}${metricPill(t('realExecutionApprovalTokenGateCheckCount'), String(summary.execution_approval_gate_check_count ?? pack.execution_approval_gate_checks.length))}${metricPill(t('realExecutionApprovalTokenRequiredSignoffCount'), String(summary.required_signoff_count ?? pack.required_signoff_matrix.length))}${metricPill(t('realExecutionApprovalTokenBlockerCount'), String(summary.token_blocker_count ?? pack.token_blocker_cards.length))}${metricPill(t('realExecutionApprovalTokenIssueAllowed'), summary.token_issue_allowed === false ? t('realExecutionApprovalTokenDisabled') : String(summary.token_issue_allowed))}${metricPill(t('realExecutionApprovalTokenValidationAllowed'), summary.token_validation_allowed === false ? t('realExecutionApprovalTokenDisabled') : String(summary.token_validation_allowed))}${metricPill(t('realExecutionApprovalTokenRealInvocation'), summary.real_invocation_allowed === false ? t('realExecutionApprovalTokenDisabled') : String(summary.real_invocation_allowed))}${metricPill(t('realExecutionApprovalTokenRealExecution'), summary.real_execution_allowed === false ? t('realExecutionApprovalTokenDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealExecutionApprovalTokenSummaryText(pack) || t('realExecutionApprovalTokenNoData'))}</pre><div class="field-helper">${escapeHTML(t('realExecutionApprovalTokenPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceRealExecutionApprovalTokenStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceApprovalTokenSummary()">${escapeHTML(t('realExecutionApprovalTokenCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceApprovalTokenPreviewCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRealExecutionApprovalTokenSnapshot(workspace); if (!pack.has_workspace_real_execution_approval_token_pack) return '';
+            const cards = (pack.approval_token_preview_cards || []).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.token_preview_id || t('realExecutionApprovalTokenCardsTitle'))}</strong><span class="metric-pill">${escapeHTML(card.provider_type || t('none'))}</span></div><div><strong>${escapeHTML(t('realExecutionApprovalTokenProviderId'))}:</strong> ${escapeHTML(card.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('realExecutionApprovalTokenSourceCapability'))}:</strong> ${escapeHTML(card.source_capability || t('none'))}</div><div><strong>${escapeHTML(t('realExecutionApprovalTokenPurpose'))}:</strong> ${escapeHTML(card.token_purpose || t('none'))}</div><div><strong>${escapeHTML(t('realExecutionApprovalTokenScopePreview'))}:</strong> ${escapeHTML(card.token_scope_preview || t('none'))}</div><div><strong>${escapeHTML(t('realExecutionApprovalTokenIssueAllowed'))}:</strong> ${escapeHTML(card.token_issue_allowed === false ? t('realExecutionApprovalTokenDisabled') : String(card.token_issue_allowed))}</div><div><strong>${escapeHTML(t('realExecutionApprovalTokenValidationAllowed'))}:</strong> ${escapeHTML(card.token_validation_allowed === false ? t('realExecutionApprovalTokenDisabled') : String(card.token_validation_allowed))}</div><div><strong>${escapeHTML(t('realExecutionApprovalTokenRealInvocation'))}:</strong> ${escapeHTML(card.real_invocation_allowed === false ? t('realExecutionApprovalTokenDisabled') : String(card.real_invocation_allowed))}</div><div><strong>${escapeHTML(t('realExecutionApprovalTokenRealExecution'))}:</strong> ${escapeHTML(card.real_execution_allowed === false ? t('realExecutionApprovalTokenDisabled') : String(card.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealExecutionApprovalTokenJsonText({required_signoffs:card.required_signoffs||[],required_evidence:card.required_evidence||[],blocked_by:card.blocked_by||[],recommended_operator_action:card.recommended_operator_action||'',risk_note:card.risk_note||''}) || t('realExecutionApprovalTokenNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceApprovalTokenPreviewCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('realExecutionApprovalTokenCardsTitle'))}</div><div class="field-helper">${escapeHTML(t('realExecutionApprovalTokenCardsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceApprovalTokenPreviewCards()">${escapeHTML(t('realExecutionApprovalTokenCopyCards'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('realExecutionApprovalTokenNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('realExecutionApprovalTokenNoRealTokenNote'))}</div><div class="field-helper">${escapeHTML(t('realExecutionApprovalTokenProviderTypesNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceExecutionApprovalGateSignoffPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRealExecutionApprovalTokenSnapshot(workspace); if (!pack.has_workspace_real_execution_approval_token_pack) return '';
+            const gates = (pack.execution_approval_gate_checks || []).slice(0, 24).map((gate) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(gate.gate_id || t('realExecutionApprovalTokenGateTitle'))}</strong><span class="metric-pill">${escapeHTML(gate.gate_status || t('none'))}</span></div><div><strong>${escapeHTML(t('realExecutionApprovalTokenProviderId'))}:</strong> ${escapeHTML(gate.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('realExecutionApprovalTokenProviderType'))}:</strong> ${escapeHTML(gate.provider_type || t('none'))}</div><div><strong>${escapeHTML(t('realExecutionApprovalTokenGateName'))}:</strong> ${escapeHTML(gate.gate_name || t('none'))}</div><div><strong>${escapeHTML(t('realExecutionApprovalTokenIssueAllowed'))}:</strong> ${escapeHTML(gate.token_issue_allowed === false ? t('realExecutionApprovalTokenDisabled') : String(gate.token_issue_allowed))}</div><div><strong>${escapeHTML(t('realExecutionApprovalTokenRealInvocation'))}:</strong> ${escapeHTML(gate.real_invocation_allowed === false ? t('realExecutionApprovalTokenDisabled') : String(gate.real_invocation_allowed))}</div><div><strong>${escapeHTML(t('realExecutionApprovalTokenRealExecution'))}:</strong> ${escapeHTML(gate.real_execution_allowed === false ? t('realExecutionApprovalTokenDisabled') : String(gate.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealExecutionApprovalTokenJsonText({required_approval_refs:gate.required_approval_refs||[],missing_approval_refs:gate.missing_approval_refs||[],required_evidence:gate.required_evidence||[],blocked_reason:gate.blocked_reason||'',next_preview_step:gate.next_preview_step||''}) || t('realExecutionApprovalTokenNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceExecutionApprovalGateSignoffPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('realExecutionApprovalTokenGateSignoffTitle'))}</div><div class="field-helper">${escapeHTML(t('realExecutionApprovalTokenGateSignoffHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceExecutionApprovalGateChecks()">${escapeHTML(t('realExecutionApprovalTokenCopyGateChecks'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRequiredSignoffMatrix()">${escapeHTML(t('realExecutionApprovalTokenCopySignoff'))}</button></div></div><div class="graph-os-compact-grid">${gates || `<div class="empty-state">${escapeHTML(t('realExecutionApprovalTokenNoData'))}</div>`}<div class="graph-os-card"><strong>${escapeHTML(t('realExecutionApprovalTokenSignoffTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealExecutionApprovalTokenJsonText(pack.required_signoff_matrix) || t('realExecutionApprovalTokenNoData'))}</pre></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceTokenBlockerPacketScopePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRealExecutionApprovalTokenSnapshot(workspace); if (!pack.has_workspace_real_execution_approval_token_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceTokenBlockerPacketScopePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('realExecutionApprovalTokenBlockerPacketScopeTitle'))}</div><div class="field-helper">${escapeHTML(t('realExecutionApprovalTokenBlockerPacketScopeHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceTokenBlockerCards()">${escapeHTML(t('realExecutionApprovalTokenCopyBlockers'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceApprovalPacketRequirements()">${escapeHTML(t('realExecutionApprovalTokenCopyPacket'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceTokenScopeBoundaryRules()">${escapeHTML(t('realExecutionApprovalTokenCopyScope'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('realExecutionApprovalTokenBlockerTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealExecutionApprovalTokenJsonText(pack.token_blocker_cards) || t('realExecutionApprovalTokenNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('realExecutionApprovalTokenPacketTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealExecutionApprovalTokenJsonText(pack.approval_packet_requirements) || t('realExecutionApprovalTokenNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('realExecutionApprovalTokenScopeTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealExecutionApprovalTokenJsonText(pack.token_scope_boundary_rules) || t('realExecutionApprovalTokenNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('realExecutionApprovalTokenBlockerNote'))}</div><div class="field-helper">${escapeHTML(t('realExecutionApprovalTokenScopeNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceApprovalTokenRiskQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportRealExecutionApprovalTokenSnapshot(workspace); if (!pack.has_workspace_real_execution_approval_token_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('realExecutionApprovalTokenDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceApprovalTokenRiskQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('realExecutionApprovalTokenRiskQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('realExecutionApprovalTokenRiskQualityAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceApprovalTokenRiskRegister()">${escapeHTML(t('realExecutionApprovalTokenCopyRisk'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('realExecutionApprovalTokenRiskTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealExecutionApprovalTokenJsonText(pack.approval_token_risk_register) || t('realExecutionApprovalTokenNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('realExecutionApprovalTokenQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealExecutionApprovalTokenJsonText(pack.approval_token_quality_checks) || t('realExecutionApprovalTokenNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('realExecutionApprovalTokenAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealExecutionApprovalTokenJsonText(pack.audit_preview) || t('realExecutionApprovalTokenNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('realExecutionApprovalTokenSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('realExecutionApprovalTokenRiskNoteText'))}</div><div class="field-helper">${escapeHTML(t('realExecutionApprovalTokenSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -24865,6 +25139,8 @@
                 '',
                 projectWorkspaceExportNetworkExternalCallBlockGuardMarkdown(workspace),
                 '',
+                projectWorkspaceExportRealExecutionApprovalTokenMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -24979,6 +25255,7 @@
                 workspace_real_provider_readiness_checklist_pack: projectWorkspaceExportRealProviderReadinessChecklistSnapshot(workspace),
                 workspace_secret_environment_gate_pack: projectWorkspaceExportSecretEnvironmentGateSnapshot(workspace),
                 workspace_network_external_call_block_guard_pack: projectWorkspaceExportNetworkExternalCallBlockGuardSnapshot(workspace),
+                workspace_real_execution_approval_token_pack: projectWorkspaceExportRealExecutionApprovalTokenSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -37540,6 +37817,11 @@
                     ${renderProjectWorkspaceNetworkGatePreviewContractsPanel(workspace)}
                     ${renderProjectWorkspaceBlockedRealCallEndpointDependencyPanel(workspace)}
                     ${renderProjectWorkspaceNetworkFailureRiskQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceApprovalTokenSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceApprovalTokenPreviewCardsPanel(workspace)}
+                    ${renderProjectWorkspaceExecutionApprovalGateSignoffPanel(workspace)}
+                    ${renderProjectWorkspaceTokenBlockerPacketScopePanel(workspace)}
+                    ${renderProjectWorkspaceApprovalTokenRiskQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}

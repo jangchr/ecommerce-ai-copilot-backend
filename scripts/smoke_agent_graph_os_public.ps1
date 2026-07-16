@@ -174,6 +174,7 @@ Add-Check "project_workspace_provider_cost_quota_risk_guard_marker" ($page.Conte
 Add-Check "project_workspace_real_provider_readiness_checklist_marker" ($page.Content -match "Project Workspace real provider readiness checklist bundle")
 Add-Check "project_workspace_secret_environment_gate_marker" ($page.Content -match "Project Workspace secret environment gate bundle")
 Add-Check "project_workspace_network_external_call_block_guard_marker" ($page.Content -match "Project Workspace network external call block guard bundle")
+Add-Check "project_workspace_real_execution_approval_token_marker" ($page.Content -match "Project Workspace real execution approval token bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")

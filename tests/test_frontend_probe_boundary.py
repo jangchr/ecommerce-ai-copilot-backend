@@ -13216,6 +13216,233 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_real_execution_approval_token_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace real execution approval token bundle",
+            "PROJECT_WORKSPACE_REAL_EXECUTION_APPROVAL_TOKEN_MARKER",
+            "latestProjectWorkspaceRealExecutionApprovalTokenPack",
+            "workspace_real_execution_approval_token_pack",
+            "projectWorkspaceRealExecutionApprovalTokenPackFromWorkspace",
+            "projectWorkspaceExportRealExecutionApprovalTokenSnapshot",
+            "projectWorkspaceExportRealExecutionApprovalTokenMarkdown",
+            "renderProjectWorkspaceApprovalTokenSummaryPanel",
+            "renderProjectWorkspaceApprovalTokenPreviewCardsPanel",
+            "renderProjectWorkspaceExecutionApprovalGateSignoffPanel",
+            "renderProjectWorkspaceTokenBlockerPacketScopePanel",
+            "renderProjectWorkspaceApprovalTokenRiskQualityAuditSafetyPanel",
+            "copyProjectWorkspaceApprovalTokenSummary",
+            "copyProjectWorkspaceApprovalTokenPreviewCards",
+            "copyProjectWorkspaceExecutionApprovalGateChecks",
+            "copyProjectWorkspaceRequiredSignoffMatrix",
+            "copyProjectWorkspaceTokenBlockerCards",
+            "copyProjectWorkspaceApprovalPacketRequirements",
+            "copyProjectWorkspaceTokenScopeBoundaryRules",
+            "copyProjectWorkspaceApprovalTokenRiskRegister",
+            "copyProjectWorkspaceFullRealExecutionApprovalTokenPack",
+            "workspace_real_execution_approval_token_pack: projectWorkspaceExportRealExecutionApprovalTokenSnapshot(workspace)",
+            "Workspace Real Execution Approval Token Preview",
+            "Approval Token Summary",
+            "Approval Token Preview Cards",
+            "Execution Approval Gate Checks",
+            "Required Signoff Matrix",
+            "Token Blocker Cards",
+            "Approval Packet Requirements",
+            "Token Scope Boundary Rules",
+            "Approval Token Risk Register",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for provider_type in [
+            "llm_text_generation", "video_generation_provider",
+            "image_generation_provider", "media_storage_provider",
+            "external_scraping_provider", "translation_provider",
+            "analytics_or_tracking_provider", "database_persistence_provider",
+            "approval_or_ticket_provider", "rollback_restore_provider",
+        ]:
+            with self.subTest(provider_type=provider_type):
+                self.assertIn(provider_type, html)
+        for field in [
+            "pack.approval_token_summary",
+            "pack.approval_token_preview_cards",
+            "pack.execution_approval_gate_checks",
+            "pack.required_signoff_matrix",
+            "pack.token_blocker_cards",
+            "pack.approval_packet_requirements",
+            "pack.token_scope_boundary_rules",
+            "pack.approval_token_risk_register",
+            "pack.approval_token_quality_checks",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.token_preview_count",
+            "summary.execution_approval_gate_check_count",
+            "summary.required_signoff_count",
+            "summary.token_blocker_count",
+            "summary.token_issue_allowed",
+            "summary.token_validation_allowed",
+            "summary.real_invocation_allowed",
+            "summary.real_execution_allowed",
+            "card.token_preview_id",
+            "card.provider_id",
+            "card.provider_type",
+            "card.source_capability",
+            "card.token_purpose",
+            "card.token_scope_preview",
+            "card.required_signoffs",
+            "card.required_evidence",
+            "card.blocked_by",
+            "card.token_issue_allowed",
+            "card.token_validation_allowed",
+            "card.real_invocation_allowed",
+            "card.real_execution_allowed",
+            "card.recommended_operator_action",
+            "card.risk_note",
+            "gate.gate_id",
+            "gate.provider_id",
+            "gate.provider_type",
+            "gate.gate_name",
+            "gate.gate_status",
+            "gate.required_approval_refs",
+            "gate.missing_approval_refs",
+            "gate.required_evidence",
+            "gate.blocked_reason",
+            "gate.next_preview_step",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for required_text in [
+            "human review",
+            "cost review",
+            "secret review",
+            "network review",
+            "media review",
+            "rollback review",
+            "database review",
+            "token issue",
+            "token validation",
+            "token use for execution",
+            "token persistence",
+            "token export",
+            "real provider call",
+            "external call",
+            "secret read",
+            "paid operation",
+            "media transfer",
+            "database write",
+            "rollback",
+            "unauthorized execution",
+            "missing signoff",
+            "secret gate blocked",
+            "network blocked",
+            "paid blocked",
+            "rollback blocked",
+            "database persistence blocked",
+        ]:
+            with self.subTest(required_text=required_text):
+                self.assertIn(required_text, html)
+        previous = html.index("${renderProjectWorkspaceNetworkFailureRiskQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceApprovalTokenSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceApprovalTokenRiskQualityAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_real_execution_approval_token_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "realExecutionApprovalTokenPackTitle",
+            "realExecutionApprovalTokenSummaryTitle",
+            "realExecutionApprovalTokenCardsTitle",
+            "realExecutionApprovalTokenGateTitle",
+            "realExecutionApprovalTokenSignoffTitle",
+            "realExecutionApprovalTokenBlockerTitle",
+            "realExecutionApprovalTokenPacketTitle",
+            "realExecutionApprovalTokenScopeTitle",
+            "realExecutionApprovalTokenRiskTitle",
+            "realExecutionApprovalTokenAuditTitle",
+            "realExecutionApprovalTokenSafetyTitle",
+            "realExecutionApprovalTokenCopySummary",
+            "realExecutionApprovalTokenCopyCards",
+            "realExecutionApprovalTokenCopyGateChecks",
+            "realExecutionApprovalTokenCopySignoff",
+            "realExecutionApprovalTokenCopyBlockers",
+            "realExecutionApprovalTokenCopyPacket",
+            "realExecutionApprovalTokenCopyScope",
+            "realExecutionApprovalTokenCopyRisk",
+            "realExecutionApprovalTokenCopyFull",
+            "realExecutionApprovalTokenCopied",
+            "realExecutionApprovalTokenCopyFailed",
+            "realExecutionApprovalTokenCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn(
+                "Project Workspace real execution approval token bundle",
+                script,
+            )
+            self.assertIn(
+                "project_workspace_real_execution_approval_token_marker",
+                script,
+            )
+        markdown = html[
+            html.index("function projectWorkspaceRealExecutionApprovalTokenSummaryText"):
+            html.index("async function copyProjectWorkspaceRealExecutionApprovalTokenText")
+        ]
+        for key in [
+            "realExecutionApprovalTokenPackTitle",
+            "realExecutionApprovalTokenSummaryTitle",
+            "realExecutionApprovalTokenCardsTitle",
+            "realExecutionApprovalTokenGateTitle",
+            "realExecutionApprovalTokenSignoffTitle",
+            "realExecutionApprovalTokenBlockerTitle",
+            "realExecutionApprovalTokenPacketTitle",
+            "realExecutionApprovalTokenScopeTitle",
+            "realExecutionApprovalTokenRiskTitle",
+            "realExecutionApprovalTokenAuditTitle",
+            "realExecutionApprovalTokenSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_REAL_EXECUTION_APPROVAL_TOKEN_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "approval token preview",
+            "not a real token system",
+            "does not issue a real token",
+            "does not validate a real token",
+            "creates no real approval",
+            "unlocks no real provider capability",
+            "No real token is issued",
+            "Audit preview is not written to a database",
+            "Real LLM",
+            "provider",
+            "image",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+            "real restore",
+            "real execution",
+            "secret read",
+            "external call",
+            "token issue",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [
