@@ -12997,6 +12997,225 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_network_external_call_block_guard_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace network external call block guard bundle",
+            "PROJECT_WORKSPACE_NETWORK_EXTERNAL_CALL_BLOCK_GUARD_MARKER",
+            "latestProjectWorkspaceNetworkExternalCallBlockGuardPack",
+            "workspace_network_external_call_block_guard_pack",
+            "projectWorkspaceNetworkExternalCallBlockGuardPackFromWorkspace",
+            "projectWorkspaceExportNetworkExternalCallBlockGuardSnapshot",
+            "projectWorkspaceExportNetworkExternalCallBlockGuardMarkdown",
+            "renderProjectWorkspaceNetworkBlockGuardSummaryPanel",
+            "renderProjectWorkspaceExternalCallBlockCardsPanel",
+            "renderProjectWorkspaceNetworkGatePreviewContractsPanel",
+            "renderProjectWorkspaceBlockedRealCallEndpointDependencyPanel",
+            "renderProjectWorkspaceNetworkFailureRiskQualityAuditSafetyPanel",
+            "copyProjectWorkspaceNetworkBlockGuardSummary",
+            "copyProjectWorkspaceExternalCallBlockCards",
+            "copyProjectWorkspaceNetworkGateChecks",
+            "copyProjectWorkspaceAllowedPreviewCallContracts",
+            "copyProjectWorkspaceBlockedRealCallOperations",
+            "copyProjectWorkspaceProviderEndpointDependencyMap",
+            "copyProjectWorkspaceNetworkFailurePolicyMap",
+            "copyProjectWorkspaceNetworkRiskRegister",
+            "copyProjectWorkspaceFullNetworkExternalCallBlockGuardPack",
+            "workspace_network_external_call_block_guard_pack: projectWorkspaceExportNetworkExternalCallBlockGuardSnapshot(workspace)",
+            "Workspace Network / External Call Block Guard",
+            "Network Block Guard Summary",
+            "External Call Block Cards",
+            "Network Gate Checks",
+            "Allowed Preview Call Contracts",
+            "Blocked Real Call Operations",
+            "Provider Endpoint Dependency Map",
+            "Network Failure Policy Map",
+            "Network Risk Register",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for provider_type in [
+            "llm_text_generation", "video_generation_provider",
+            "image_generation_provider", "media_storage_provider",
+            "external_scraping_provider", "translation_provider",
+            "analytics_or_tracking_provider", "database_persistence_provider",
+            "approval_or_ticket_provider", "rollback_restore_provider",
+        ]:
+            with self.subTest(provider_type=provider_type):
+                self.assertIn(provider_type, html)
+        for field in [
+            "pack.network_block_guard_summary",
+            "pack.external_call_block_cards",
+            "pack.network_gate_checks",
+            "pack.allowed_preview_call_contracts",
+            "pack.blocked_real_call_operations",
+            "pack.provider_endpoint_dependency_map",
+            "pack.network_failure_policy_map",
+            "pack.network_risk_register",
+            "pack.network_guard_quality_checks",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.external_call_block_card_count",
+            "summary.network_gate_check_count",
+            "summary.external_call_allowed",
+            "summary.real_provider_call_allowed",
+            "summary.secret_use_allowed",
+            "summary.real_invocation_allowed",
+            "summary.real_execution_allowed",
+            "card.block_card_id",
+            "card.provider_id",
+            "card.provider_type",
+            "card.source_capability",
+            "card.external_call_type",
+            "card.target_endpoint_preview",
+            "card.network_access_status",
+            "card.allowed_preview_modes",
+            "card.blocked_real_modes",
+            "card.external_call_allowed",
+            "card.real_provider_call_allowed",
+            "card.secret_use_allowed",
+            "card.real_invocation_allowed",
+            "card.real_execution_allowed",
+            "card.blocked_by",
+            "card.recommended_operator_action",
+            "card.risk_note",
+            "gate.gate_id",
+            "gate.provider_id",
+            "gate.provider_type",
+            "gate.gate_name",
+            "gate.gate_status",
+            "gate.required_evidence",
+            "gate.missing_evidence",
+            "gate.blocked_reason",
+            "gate.next_preview_step",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for blocked_operation in [
+            "http_request", "provider_api_call", "webhook_call",
+            "external_scrape", "media_upload_call", "media_download_call",
+            "billing_api_call", "database_network_call", "rollback_call",
+        ]:
+            with self.subTest(blocked_operation=blocked_operation):
+                self.assertIn(blocked_operation, html)
+        previous = html.index("${renderProjectWorkspaceEnvironmentRiskQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceNetworkBlockGuardSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceNetworkFailureRiskQualityAuditSafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_network_external_call_block_guard_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "networkExternalCallBlockGuardPackTitle",
+            "networkExternalCallBlockGuardSummaryTitle",
+            "networkExternalCallBlockGuardCardsTitle",
+            "networkExternalCallBlockGuardGateTitle",
+            "networkExternalCallBlockGuardPreviewContractsTitle",
+            "networkExternalCallBlockGuardBlockedTitle",
+            "networkExternalCallBlockGuardDependencyTitle",
+            "networkExternalCallBlockGuardFailureTitle",
+            "networkExternalCallBlockGuardRiskTitle",
+            "networkExternalCallBlockGuardAuditTitle",
+            "networkExternalCallBlockGuardSafetyTitle",
+            "networkExternalCallBlockGuardCopySummary",
+            "networkExternalCallBlockGuardCopyCards",
+            "networkExternalCallBlockGuardCopyGateChecks",
+            "networkExternalCallBlockGuardCopyPreviewContracts",
+            "networkExternalCallBlockGuardCopyBlocked",
+            "networkExternalCallBlockGuardCopyDependency",
+            "networkExternalCallBlockGuardCopyFailure",
+            "networkExternalCallBlockGuardCopyRisk",
+            "networkExternalCallBlockGuardCopyFull",
+            "networkExternalCallBlockGuardCopied",
+            "networkExternalCallBlockGuardCopyFailed",
+            "networkExternalCallBlockGuardCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn(
+                "Project Workspace network external call block guard bundle",
+                script,
+            )
+            self.assertIn(
+                "project_workspace_network_external_call_block_guard_marker",
+                script,
+            )
+        markdown = html[
+            html.index("function projectWorkspaceNetworkExternalCallBlockGuardSummaryText"):
+            html.index("async function copyProjectWorkspaceNetworkExternalCallBlockGuardText")
+        ]
+        for key in [
+            "networkExternalCallBlockGuardPackTitle",
+            "networkExternalCallBlockGuardSummaryTitle",
+            "networkExternalCallBlockGuardCardsTitle",
+            "networkExternalCallBlockGuardGateTitle",
+            "networkExternalCallBlockGuardPreviewContractsTitle",
+            "networkExternalCallBlockGuardBlockedTitle",
+            "networkExternalCallBlockGuardDependencyTitle",
+            "networkExternalCallBlockGuardFailureTitle",
+            "networkExternalCallBlockGuardRiskTitle",
+            "networkExternalCallBlockGuardAuditTitle",
+            "networkExternalCallBlockGuardSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_NETWORK_EXTERNAL_CALL_BLOCK_GUARD_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Network block guard preview",
+            "not a real network firewall",
+            "does not send HTTP requests",
+            "call provider APIs",
+            "invoke webhooks",
+            "scrape externally",
+            "transfer media",
+            "use secrets",
+            "validate endpoints",
+            "write databases",
+            "retry",
+            "restore",
+            "rollback",
+            "External call block cards show endpoint",
+            "Allowed preview call contracts describe mock",
+            "external call blocked",
+            "provider endpoint missing",
+            "webhook blocked",
+            "media transfer blocked",
+            "external scraping blocked",
+            "database network blocked",
+            "rollback endpoint blocked",
+            "billing endpoint blocked",
+            "Audit preview is not written to a database",
+            "Real LLM",
+            "provider",
+            "image",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+            "real restore",
+            "real execution",
+            "secret read",
+            "external call",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [

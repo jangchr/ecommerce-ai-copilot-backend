@@ -3632,6 +3632,7 @@
         let latestProjectWorkspaceProviderCostQuotaRiskGuardPack = {};
         let latestProjectWorkspaceRealProviderReadinessChecklistPack = {};
         let latestProjectWorkspaceSecretEnvironmentGatePack = {};
+        let latestProjectWorkspaceNetworkExternalCallBlockGuardPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -6259,6 +6260,136 @@
             secretEnvironmentGateRiskQualityAuditSafetyNote: 'Risk register \u5305\u542b secret missing\u3001secret validation blocked\u3001billing/quota env missing\u3001media storage env missing\u3001rollback token blocked\u3001database env blocked \u548c external provider key missing\u3002Audit preview \u4e0d\u5199\u5165\u6570\u636e\u5e93\u3002',
             secretEnvironmentGateSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001image\u3001video\u3001media\u3001paid\u3001registry\u3001rollback\u3001external scraping\u3001database persistence\u3001real restore\u3001real execution \u548c secret read \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002',
             secretEnvironmentGateProviderTypesNote: '\u8986\u76d6\u7684 provider \u7c7b\u578b\uff1allm_text_generation\u3001video_generation_provider\u3001image_generation_provider\u3001media_storage_provider\u3001external_scraping_provider\u3001translation_provider\u3001analytics_or_tracking_provider\u3001database_persistence_provider\u3001approval_or_ticket_provider\u3001rollback_restore_provider\u3002'
+        });
+
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceNetworkExternalCallBlockGuardMarker: 'Project Workspace network external call block guard bundle',
+            networkExternalCallBlockGuardPackTitle: 'Workspace Network / External Call Block Guard',
+            networkExternalCallBlockGuardPackHelper: 'Review deterministic network block guard preview only. This is not a real network firewall.',
+            networkExternalCallBlockGuardSummaryTitle: 'Network Block Guard Summary',
+            networkExternalCallBlockGuardCardsTitle: 'External Call Block Cards',
+            networkExternalCallBlockGuardGateContractsTitle: 'Network Gate Checks / Preview Call Contracts',
+            networkExternalCallBlockGuardGateTitle: 'Network Gate Checks',
+            networkExternalCallBlockGuardPreviewContractsTitle: 'Allowed Preview Call Contracts',
+            networkExternalCallBlockGuardBlockedDependencyTitle: 'Blocked Real Call Operations / Provider Endpoint Dependency Map',
+            networkExternalCallBlockGuardBlockedTitle: 'Blocked Real Call Operations',
+            networkExternalCallBlockGuardDependencyTitle: 'Provider Endpoint Dependency Map',
+            networkExternalCallBlockGuardFailureRiskQualityAuditSafetyTitle: 'Network Failure / Risk / Quality / Audit / Safety Boundaries',
+            networkExternalCallBlockGuardFailureTitle: 'Network Failure Policy Map',
+            networkExternalCallBlockGuardRiskTitle: 'Network Risk Register',
+            networkExternalCallBlockGuardQualityTitle: 'Network Guard Quality Checks',
+            networkExternalCallBlockGuardAuditTitle: 'Audit Preview',
+            networkExternalCallBlockGuardSafetyTitle: 'Safety Boundaries',
+            networkExternalCallBlockGuardMode: 'Mode',
+            networkExternalCallBlockGuardExternalCallBlockCount: 'External call block count',
+            networkExternalCallBlockGuardNetworkGateCheckCount: 'Network gate check count',
+            networkExternalCallBlockGuardBlockedOperationCount: 'Blocked operation count',
+            networkExternalCallBlockGuardRecommendedAction: 'Recommended operator action',
+            networkExternalCallBlockGuardExternalCall: 'External call allowed',
+            networkExternalCallBlockGuardRealProviderCall: 'Real provider call allowed',
+            networkExternalCallBlockGuardSecretUse: 'Secret use allowed',
+            networkExternalCallBlockGuardRealInvocation: 'Real invocation allowed',
+            networkExternalCallBlockGuardRealExecution: 'Real execution allowed',
+            networkExternalCallBlockGuardDisabled: 'disabled',
+            networkExternalCallBlockGuardNoData: 'No workspace network external call block guard data is available.',
+            networkExternalCallBlockGuardCopyNoData: 'No workspace network external call block guard content is available to copy.',
+            networkExternalCallBlockGuardCopyFailed: 'Unable to copy workspace network external call block guard content.',
+            networkExternalCallBlockGuardCopied: 'Workspace network external call block guard content copied.',
+            networkExternalCallBlockGuardCopySummary: 'Copy network block guard summary',
+            networkExternalCallBlockGuardCopyCards: 'Copy external call block cards',
+            networkExternalCallBlockGuardCopyGateChecks: 'Copy network gate checks',
+            networkExternalCallBlockGuardCopyPreviewContracts: 'Copy allowed preview call contracts',
+            networkExternalCallBlockGuardCopyBlocked: 'Copy blocked real call operations',
+            networkExternalCallBlockGuardCopyDependency: 'Copy provider endpoint dependency map',
+            networkExternalCallBlockGuardCopyFailure: 'Copy network failure policy map',
+            networkExternalCallBlockGuardCopyRisk: 'Copy network risk register',
+            networkExternalCallBlockGuardCopyFull: 'Copy full network external call block guard pack',
+            networkExternalCallBlockGuardProviderId: 'Provider ID',
+            networkExternalCallBlockGuardProviderType: 'Provider type',
+            networkExternalCallBlockGuardSourceCapability: 'Source capability',
+            networkExternalCallBlockGuardExternalCallType: 'External call type',
+            networkExternalCallBlockGuardTargetEndpointPreview: 'Target endpoint preview',
+            networkExternalCallBlockGuardNetworkAccessStatus: 'Network access status',
+            networkExternalCallBlockGuardAllowedPreviewModes: 'Allowed preview modes',
+            networkExternalCallBlockGuardBlockedRealModes: 'Blocked real modes',
+            networkExternalCallBlockGuardGateName: 'Gate name',
+            networkExternalCallBlockGuardGateStatus: 'Gate status',
+            networkExternalCallBlockGuardCardsHelper: 'Inspect provider endpoint and external call previews. No HTTP request is sent and no provider API is called.',
+            networkExternalCallBlockGuardGateContractsHelper: 'Inspect blocked network gate checks and mock/dry-run call shapes. Preview contracts do not execute network requests.',
+            networkExternalCallBlockGuardBlockedDependencyHelper: 'Inspect blocked http_request, provider_api_call, webhook_call, external_scrape, media upload/download, billing, database, and rollback operations plus endpoint/env/secret previews.',
+            networkExternalCallBlockGuardFailureRiskQualityAuditSafetyHelper: 'Inspect failure policy references, risk register, quality checks, audit preview, and disabled real capability boundaries.',
+            networkExternalCallBlockGuardPreviewNote: 'Network block guard preview only. This is not a real network firewall and does not send HTTP requests, call provider APIs, invoke webhooks, scrape externally, transfer media, use secrets, validate endpoints, write databases, retry, restore, or rollback.',
+            networkExternalCallBlockGuardNoRealCallNote: 'External call block cards show endpoint and call-shape previews only; no real HTTP request or provider API call is performed.',
+            networkExternalCallBlockGuardGateContractsNote: 'Allowed preview call contracts describe mock and dry-run shapes only and do not execute network requests.',
+            networkExternalCallBlockGuardBlockedNote: 'Blocked real call operations include http_request, provider_api_call, webhook_call, external_scrape, media_upload_call, media_download_call, billing_api_call, database_network_call, and rollback_call. Secrets are not read, endpoints are not validated, webhooks are not called, and external scraping is not executed.',
+            networkExternalCallBlockGuardFailureRiskQualityAuditSafetyNote: 'Network failure policy references failure taxonomy only; no real retry or rollback is executed. Risk register includes external call blocked, provider endpoint missing, webhook blocked, media transfer blocked, external scraping blocked, database network blocked, rollback endpoint blocked, and billing endpoint blocked. Audit preview is not written to a database.',
+            networkExternalCallBlockGuardSafetyNote: 'Real LLM, provider, image, video, media, paid, registry, rollback, external scraping, database persistence, real restore, real execution, secret read, and external call remain disabled.',
+            networkExternalCallBlockGuardProviderTypesNote: 'Provider types covered: llm_text_generation, video_generation_provider, image_generation_provider, media_storage_provider, external_scraping_provider, translation_provider, analytics_or_tracking_provider, database_persistence_provider, approval_or_ticket_provider, rollback_restore_provider.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceNetworkExternalCallBlockGuardMarker: 'Project Workspace network external call block guard bundle',
+            networkExternalCallBlockGuardPackTitle: '\u5de5\u4f5c\u533a Network / External Call Block Guard',
+            networkExternalCallBlockGuardPackHelper: '\u4ec5\u67e5\u770b deterministic network block guard \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e\u7f51\u7edc\u9632\u706b\u5899\u3002',
+            networkExternalCallBlockGuardSummaryTitle: 'Network Block Guard \u6458\u8981',
+            networkExternalCallBlockGuardCardsTitle: 'External Call Block \u5361\u7247',
+            networkExternalCallBlockGuardGateContractsTitle: 'Network Gate \u68c0\u67e5 / Preview Call Contracts',
+            networkExternalCallBlockGuardGateTitle: 'Network Gate \u68c0\u67e5',
+            networkExternalCallBlockGuardPreviewContractsTitle: 'Allowed Preview Call Contracts',
+            networkExternalCallBlockGuardBlockedDependencyTitle: '\u88ab\u963b\u65ad\u7684 Real Call \u64cd\u4f5c / Provider Endpoint Dependency Map',
+            networkExternalCallBlockGuardBlockedTitle: '\u88ab\u963b\u65ad\u7684 Real Call \u64cd\u4f5c',
+            networkExternalCallBlockGuardDependencyTitle: 'Provider Endpoint Dependency Map',
+            networkExternalCallBlockGuardFailureRiskQualityAuditSafetyTitle: 'Network Failure / Risk / \u8d28\u91cf / \u5ba1\u8ba1 / \u5b89\u5168\u8fb9\u754c',
+            networkExternalCallBlockGuardFailureTitle: 'Network Failure Policy Map',
+            networkExternalCallBlockGuardRiskTitle: 'Network Risk Register',
+            networkExternalCallBlockGuardQualityTitle: 'Network Guard \u8d28\u91cf\u68c0\u67e5',
+            networkExternalCallBlockGuardAuditTitle: '\u5ba1\u8ba1\u9884\u89c8',
+            networkExternalCallBlockGuardSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            networkExternalCallBlockGuardMode: '\u6a21\u5f0f',
+            networkExternalCallBlockGuardExternalCallBlockCount: 'External call block \u6570\u91cf',
+            networkExternalCallBlockGuardNetworkGateCheckCount: 'Network gate \u68c0\u67e5\u6570\u91cf',
+            networkExternalCallBlockGuardBlockedOperationCount: '\u88ab\u963b\u65ad\u64cd\u4f5c\u6570\u91cf',
+            networkExternalCallBlockGuardRecommendedAction: '\u63a8\u8350\u64cd\u4f5c\u5458\u52a8\u4f5c',
+            networkExternalCallBlockGuardExternalCall: '\u5141\u8bb8 external call',
+            networkExternalCallBlockGuardRealProviderCall: '\u5141\u8bb8 real provider call',
+            networkExternalCallBlockGuardSecretUse: '\u5141\u8bb8\u4f7f\u7528 secret',
+            networkExternalCallBlockGuardRealInvocation: '\u5141\u8bb8\u771f\u5b9e\u8c03\u7528',
+            networkExternalCallBlockGuardRealExecution: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            networkExternalCallBlockGuardDisabled: '\u5df2\u7981\u7528',
+            networkExternalCallBlockGuardNoData: '\u6682\u65e0\u5de5\u4f5c\u533a network external call block guard \u6570\u636e\u3002',
+            networkExternalCallBlockGuardCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a network external call block guard \u5185\u5bb9\u3002',
+            networkExternalCallBlockGuardCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a network external call block guard \u5185\u5bb9\u3002',
+            networkExternalCallBlockGuardCopied: '\u5de5\u4f5c\u533a network external call block guard \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            networkExternalCallBlockGuardCopySummary: '\u590d\u5236 network block guard \u6458\u8981',
+            networkExternalCallBlockGuardCopyCards: '\u590d\u5236 external call block \u5361\u7247',
+            networkExternalCallBlockGuardCopyGateChecks: '\u590d\u5236 network gate \u68c0\u67e5',
+            networkExternalCallBlockGuardCopyPreviewContracts: '\u590d\u5236 allowed preview call contracts',
+            networkExternalCallBlockGuardCopyBlocked: '\u590d\u5236\u88ab\u963b\u65ad\u7684 real call \u64cd\u4f5c',
+            networkExternalCallBlockGuardCopyDependency: '\u590d\u5236 provider endpoint dependency map',
+            networkExternalCallBlockGuardCopyFailure: '\u590d\u5236 network failure policy map',
+            networkExternalCallBlockGuardCopyRisk: '\u590d\u5236 network risk register',
+            networkExternalCallBlockGuardCopyFull: '\u590d\u5236\u5b8c\u6574 network external call block guard pack',
+            networkExternalCallBlockGuardProviderId: 'Provider ID',
+            networkExternalCallBlockGuardProviderType: 'Provider \u7c7b\u578b',
+            networkExternalCallBlockGuardSourceCapability: '\u6765\u6e90\u80fd\u529b',
+            networkExternalCallBlockGuardExternalCallType: 'External call \u7c7b\u578b',
+            networkExternalCallBlockGuardTargetEndpointPreview: 'Target endpoint preview',
+            networkExternalCallBlockGuardNetworkAccessStatus: 'Network access \u72b6\u6001',
+            networkExternalCallBlockGuardAllowedPreviewModes: 'Allowed preview modes',
+            networkExternalCallBlockGuardBlockedRealModes: 'Blocked real modes',
+            networkExternalCallBlockGuardGateName: 'Gate \u540d\u79f0',
+            networkExternalCallBlockGuardGateStatus: 'Gate \u72b6\u6001',
+            networkExternalCallBlockGuardCardsHelper: '\u67e5\u770b provider endpoint \u548c external call \u9884\u89c8\u3002\u4e0d\u53d1\u9001 HTTP \u8bf7\u6c42\uff0c\u4e0d\u8c03\u7528 provider API\u3002',
+            networkExternalCallBlockGuardGateContractsHelper: '\u67e5\u770b\u88ab\u963b\u65ad\u7684 network gate \u68c0\u67e5\u548c mock/dry-run call shape\u3002Preview contract \u4e0d\u6267\u884c\u7f51\u7edc\u8bf7\u6c42\u3002',
+            networkExternalCallBlockGuardBlockedDependencyHelper: '\u67e5\u770b\u88ab\u963b\u65ad\u7684 http_request\u3001provider_api_call\u3001webhook_call\u3001external_scrape\u3001media \u4e0a\u4f20/\u4e0b\u8f7d\u3001billing\u3001database \u548c rollback \u64cd\u4f5c\uff0c\u4ee5\u53ca endpoint/env/secret \u9884\u89c8\u3002',
+            networkExternalCallBlockGuardFailureRiskQualityAuditSafetyHelper: '\u67e5\u770b failure policy \u5f15\u7528\u3001risk register\u3001\u8d28\u91cf\u68c0\u67e5\u3001\u5ba1\u8ba1\u9884\u89c8\u548c\u5df2\u7981\u7528\u7684\u771f\u5b9e\u80fd\u529b\u8fb9\u754c\u3002',
+            networkExternalCallBlockGuardPreviewNote: '\u4ec5\u4e3a network block guard \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e\u7f51\u7edc\u9632\u706b\u5899\uff0c\u4e0d\u53d1\u9001 HTTP \u8bf7\u6c42\u3001\u4e0d\u8c03\u7528 provider API\u3001\u4e0d\u8c03\u7528 webhook\u3001\u4e0d\u6267\u884c external scraping\u3001\u4e0d\u4f20\u8f93 media\u3001\u4e0d\u4f7f\u7528 secret\u3001\u4e0d\u9a8c\u8bc1 endpoint\u3001\u4e0d\u5199\u6570\u636e\u5e93\u3001\u4e0d retry\u3001\u4e0d restore\u3001\u4e0d rollback\u3002',
+            networkExternalCallBlockGuardNoRealCallNote: 'External call block \u5361\u7247\u53ea\u663e\u793a endpoint \u548c call-shape \u9884\u89c8\uff1b\u4e0d\u6267\u884c\u771f\u5b9e HTTP \u8bf7\u6c42\u6216 provider API \u8c03\u7528\u3002',
+            networkExternalCallBlockGuardGateContractsNote: 'Allowed preview call contracts \u53ea\u63cf\u8ff0 mock \u548c dry-run shape\uff0c\u4e0d\u6267\u884c\u7f51\u7edc\u8bf7\u6c42\u3002',
+            networkExternalCallBlockGuardBlockedNote: '\u88ab\u963b\u65ad\u7684 real call \u64cd\u4f5c\u5305\u542b http_request\u3001provider_api_call\u3001webhook_call\u3001external_scrape\u3001media_upload_call\u3001media_download_call\u3001billing_api_call\u3001database_network_call \u548c rollback_call\u3002\u4e0d\u8bfb\u53d6 secret\uff0c\u4e0d\u9a8c\u8bc1 endpoint\uff0c\u4e0d\u8c03\u7528 webhook\uff0c\u4e0d\u6267\u884c external scraping\u3002',
+            networkExternalCallBlockGuardFailureRiskQualityAuditSafetyNote: 'Network failure policy \u53ea\u5f15\u7528 failure taxonomy\uff1b\u4e0d\u6267\u884c\u771f\u5b9e retry \u6216 rollback\u3002Risk register \u5305\u542b external call blocked\u3001provider endpoint missing\u3001webhook blocked\u3001media transfer blocked\u3001external scraping blocked\u3001database network blocked\u3001rollback endpoint blocked \u548c billing endpoint blocked\u3002Audit preview \u4e0d\u5199\u5165\u6570\u636e\u5e93\u3002',
+            networkExternalCallBlockGuardSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001image\u3001video\u3001media\u3001paid\u3001registry\u3001rollback\u3001external scraping\u3001database persistence\u3001real restore\u3001real execution\u3001secret read \u548c external call \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002',
+            networkExternalCallBlockGuardProviderTypesNote: '\u8986\u76d6\u7684 provider \u7c7b\u578b\uff1allm_text_generation\u3001video_generation_provider\u3001image_generation_provider\u3001media_storage_provider\u3001external_scraping_provider\u3001translation_provider\u3001analytics_or_tracking_provider\u3001database_persistence_provider\u3001approval_or_ticket_provider\u3001rollback_restore_provider\u3002'
         });
 
 
@@ -9066,6 +9197,7 @@
                 latestProjectWorkspaceProviderCostQuotaRiskGuardPack = latestProjectCreativeDecisionPack.workspace_provider_cost_quota_risk_guard_pack || {};
                 latestProjectWorkspaceRealProviderReadinessChecklistPack = latestProjectCreativeDecisionPack.workspace_real_provider_readiness_checklist_pack || {};
                 latestProjectWorkspaceSecretEnvironmentGatePack = latestProjectCreativeDecisionPack.workspace_secret_environment_gate_pack || {};
+                latestProjectWorkspaceNetworkExternalCallBlockGuardPack = latestProjectCreativeDecisionPack.workspace_network_external_call_block_guard_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -14934,6 +15066,7 @@
         const PROJECT_WORKSPACE_PROVIDER_COST_QUOTA_RISK_GUARD_MARKER = 'Project Workspace provider cost quota risk guard bundle';
         const PROJECT_WORKSPACE_REAL_PROVIDER_READINESS_CHECKLIST_MARKER = 'Project Workspace real provider readiness checklist bundle';
         const PROJECT_WORKSPACE_SECRET_ENVIRONMENT_GATE_MARKER = 'Project Workspace secret environment gate bundle';
+        const PROJECT_WORKSPACE_NETWORK_EXTERNAL_CALL_BLOCK_GUARD_MARKER = 'Project Workspace network external call block guard bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -20048,15 +20181,13 @@
                 `${t('realProviderReadinessRealInvocation')}: ${summary.real_invocation_allowed === false ? t('realProviderReadinessDisabled') : String(summary.real_invocation_allowed)}`,
                 `${t('realProviderReadinessRealExecution')}: ${summary.real_execution_allowed === false ? t('realProviderReadinessDisabled') : String(summary.real_execution_allowed)}`,
                 t('realProviderReadinessPreviewNote')
-            ].join('
-');
+            ].join('\n');
         }
 
         function projectWorkspaceRealProviderReadinessChecklistSectionText(titleKey, value) {
             const body = projectWorkspaceRealProviderReadinessChecklistJsonText(value);
             if (!body) return '';
-            return `## ${t(titleKey)}
-${body}`;
+            return `## ${t(titleKey)}\n${body}`;
         }
 
         function projectWorkspaceExportRealProviderReadinessChecklistMarkdown(workspace = latestProjectWorkspace) {
@@ -20078,8 +20209,7 @@ ${body}`;
                 projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessAuditTitle', pack.audit_preview), '',
                 projectWorkspaceRealProviderReadinessChecklistSectionText('realProviderReadinessSafetyTitle', pack.safety_boundaries),
                 t('realProviderReadinessSafetyNote')
-            ].filter(Boolean).join('
-');
+            ].filter(Boolean).join('\n');
         }
 
         async function copyProjectWorkspaceRealProviderReadinessChecklistText(kind = 'full') {
@@ -20216,6 +20346,111 @@ ${body}`;
         function copyProjectWorkspaceProviderSecretDependencyMap() { return copyProjectWorkspaceSecretEnvironmentGateText('dependency'); }
         function copyProjectWorkspaceEnvironmentRiskRegister() { return copyProjectWorkspaceSecretEnvironmentGateText('risk'); }
         function copyProjectWorkspaceFullSecretEnvironmentGatePack() { return copyProjectWorkspaceSecretEnvironmentGateText('full'); }
+
+        function projectWorkspaceNetworkExternalCallBlockGuardPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceNetworkExternalCallBlockGuardPack && Object.keys(latestProjectWorkspaceNetworkExternalCallBlockGuardPack).length) return latestProjectWorkspaceNetworkExternalCallBlockGuardPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_network_external_call_block_guard_pack || {};
+        }
+
+        function projectWorkspaceExportNetworkExternalCallBlockGuardSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceNetworkExternalCallBlockGuardPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_NETWORK_EXTERNAL_CALL_BLOCK_GUARD_MARKER,
+                has_workspace_network_external_call_block_guard_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                network_block_guard_summary: pack.network_block_guard_summary || {},
+                external_call_block_cards: Array.isArray(pack.external_call_block_cards) ? pack.external_call_block_cards : [],
+                network_gate_checks: Array.isArray(pack.network_gate_checks) ? pack.network_gate_checks : [],
+                allowed_preview_call_contracts: Array.isArray(pack.allowed_preview_call_contracts) ? pack.allowed_preview_call_contracts : [],
+                blocked_real_call_operations: Array.isArray(pack.blocked_real_call_operations) ? pack.blocked_real_call_operations : [],
+                provider_endpoint_dependency_map: Array.isArray(pack.provider_endpoint_dependency_map) ? pack.provider_endpoint_dependency_map : [],
+                network_failure_policy_map: Array.isArray(pack.network_failure_policy_map) ? pack.network_failure_policy_map : [],
+                network_risk_register: Array.isArray(pack.network_risk_register) ? pack.network_risk_register : [],
+                network_guard_quality_checks: pack.network_guard_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceNetworkExternalCallBlockGuardJsonText(value) {
+            if (!value || (Array.isArray(value) && !value.length) || (!Array.isArray(value) && typeof value === 'object' && !Object.keys(value).length)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceNetworkExternalCallBlockGuardSummaryText(pack = projectWorkspaceExportNetworkExternalCallBlockGuardSnapshot()) {
+            if (!pack.has_workspace_network_external_call_block_guard_pack) return '';
+            const summary = pack.network_block_guard_summary || {};
+            return [
+                t('networkExternalCallBlockGuardSummaryTitle'),
+                `${t('networkExternalCallBlockGuardMode')}: ${summary.mode || t('none')}`,
+                `${t('networkExternalCallBlockGuardExternalCallBlockCount')}: ${summary.external_call_block_card_count ?? pack.external_call_block_cards.length}`,
+                `${t('networkExternalCallBlockGuardNetworkGateCheckCount')}: ${summary.network_gate_check_count ?? pack.network_gate_checks.length}`,
+                `${t('networkExternalCallBlockGuardBlockedOperationCount')}: ${pack.blocked_real_call_operations.length}`,
+                `${t('networkExternalCallBlockGuardRecommendedAction')}: ${summary.recommended_operator_action || t('none')}`,
+                `${t('networkExternalCallBlockGuardExternalCall')}: ${summary.external_call_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(summary.external_call_allowed)}`,
+                `${t('networkExternalCallBlockGuardRealProviderCall')}: ${summary.real_provider_call_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(summary.real_provider_call_allowed)}`,
+                `${t('networkExternalCallBlockGuardSecretUse')}: ${summary.secret_use_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(summary.secret_use_allowed)}`,
+                `${t('networkExternalCallBlockGuardRealInvocation')}: ${summary.real_invocation_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(summary.real_invocation_allowed)}`,
+                `${t('networkExternalCallBlockGuardRealExecution')}: ${summary.real_execution_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(summary.real_execution_allowed)}`,
+                t('networkExternalCallBlockGuardPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceNetworkExternalCallBlockGuardSectionText(titleKey, value) {
+            const body = projectWorkspaceNetworkExternalCallBlockGuardJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportNetworkExternalCallBlockGuardMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportNetworkExternalCallBlockGuardSnapshot(workspace);
+            if (!pack.has_workspace_network_external_call_block_guard_pack) return '';
+            return [
+                `## ${t('networkExternalCallBlockGuardPackTitle')}`,
+                `## ${t('networkExternalCallBlockGuardSummaryTitle')}`,
+                projectWorkspaceNetworkExternalCallBlockGuardSummaryText(pack), '',
+                projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardCardsTitle', pack.external_call_block_cards), '',
+                projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardGateTitle', pack.network_gate_checks), '',
+                projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardPreviewContractsTitle', pack.allowed_preview_call_contracts), '',
+                projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardBlockedTitle', pack.blocked_real_call_operations), '',
+                projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardDependencyTitle', pack.provider_endpoint_dependency_map), '',
+                projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardFailureTitle', pack.network_failure_policy_map), '',
+                projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardRiskTitle', pack.network_risk_register), '',
+                projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardAuditTitle', pack.audit_preview), '',
+                projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardSafetyTitle', pack.safety_boundaries),
+                t('networkExternalCallBlockGuardSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceNetworkExternalCallBlockGuardText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceNetworkExternalCallBlockGuardStatus');
+            const pack = projectWorkspaceExportNetworkExternalCallBlockGuardSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceNetworkExternalCallBlockGuardSummaryText(pack)
+                : kind === 'cards' ? projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardCardsTitle', pack.external_call_block_cards)
+                : kind === 'gates' ? projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardGateTitle', pack.network_gate_checks)
+                : kind === 'contracts' ? projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardPreviewContractsTitle', pack.allowed_preview_call_contracts)
+                : kind === 'blocked' ? projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardBlockedTitle', pack.blocked_real_call_operations)
+                : kind === 'dependency' ? projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardDependencyTitle', pack.provider_endpoint_dependency_map)
+                : kind === 'failure' ? projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardFailureTitle', pack.network_failure_policy_map)
+                : kind === 'risk' ? projectWorkspaceNetworkExternalCallBlockGuardSectionText('networkExternalCallBlockGuardRiskTitle', pack.network_risk_register)
+                : projectWorkspaceExportNetworkExternalCallBlockGuardMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('networkExternalCallBlockGuardCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('networkExternalCallBlockGuardCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('networkExternalCallBlockGuardCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('networkExternalCallBlockGuardCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceNetworkBlockGuardSummary() { return copyProjectWorkspaceNetworkExternalCallBlockGuardText('summary'); }
+        function copyProjectWorkspaceExternalCallBlockCards() { return copyProjectWorkspaceNetworkExternalCallBlockGuardText('cards'); }
+        function copyProjectWorkspaceNetworkGateChecks() { return copyProjectWorkspaceNetworkExternalCallBlockGuardText('gates'); }
+        function copyProjectWorkspaceAllowedPreviewCallContracts() { return copyProjectWorkspaceNetworkExternalCallBlockGuardText('contracts'); }
+        function copyProjectWorkspaceBlockedRealCallOperations() { return copyProjectWorkspaceNetworkExternalCallBlockGuardText('blocked'); }
+        function copyProjectWorkspaceProviderEndpointDependencyMap() { return copyProjectWorkspaceNetworkExternalCallBlockGuardText('dependency'); }
+        function copyProjectWorkspaceNetworkFailurePolicyMap() { return copyProjectWorkspaceNetworkExternalCallBlockGuardText('failure'); }
+        function copyProjectWorkspaceNetworkRiskRegister() { return copyProjectWorkspaceNetworkExternalCallBlockGuardText('risk'); }
+        function copyProjectWorkspaceFullNetworkExternalCallBlockGuardPack() { return copyProjectWorkspaceNetworkExternalCallBlockGuardText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -24061,6 +24296,35 @@ ${body}`;
             return `<div class="section-block" id="projectWorkspaceEnvironmentRiskQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('secretEnvironmentGateRiskQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('secretEnvironmentGateRiskQualityAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceEnvironmentRiskRegister()">${escapeHTML(t('secretEnvironmentGateCopyRisk'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('secretEnvironmentGateRiskTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSecretEnvironmentGateJsonText(pack.environment_risk_register) || t('secretEnvironmentGateNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('secretEnvironmentGateQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSecretEnvironmentGateJsonText(pack.secret_gate_quality_checks) || t('secretEnvironmentGateNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('secretEnvironmentGateAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceSecretEnvironmentGateJsonText(pack.audit_preview) || t('secretEnvironmentGateNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('secretEnvironmentGateSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('secretEnvironmentGateRiskQualityAuditSafetyNote'))}</div><div class="field-helper">${escapeHTML(t('secretEnvironmentGateSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceNetworkBlockGuardSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportNetworkExternalCallBlockGuardSnapshot(workspace); if (!pack.has_workspace_network_external_call_block_guard_pack) return '';
+            const summary = pack.network_block_guard_summary || {};
+            return `<div class="section-block" id="projectWorkspaceNetworkBlockGuardSummaryPanel" data-network-external-call-block-guard-marker="${PROJECT_WORKSPACE_NETWORK_EXTERNAL_CALL_BLOCK_GUARD_MARKER}" data-marker="project_workspace_network_external_call_block_guard_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('networkExternalCallBlockGuardPackTitle'))}</div><div class="field-helper">${escapeHTML(t('networkExternalCallBlockGuardPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullNetworkExternalCallBlockGuardPack()">${escapeHTML(t('networkExternalCallBlockGuardCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('networkExternalCallBlockGuardMode'), summary.mode || t('none'))}${metricPill(t('networkExternalCallBlockGuardExternalCallBlockCount'), String(summary.external_call_block_card_count ?? pack.external_call_block_cards.length))}${metricPill(t('networkExternalCallBlockGuardNetworkGateCheckCount'), String(summary.network_gate_check_count ?? pack.network_gate_checks.length))}${metricPill(t('networkExternalCallBlockGuardBlockedOperationCount'), String(pack.blocked_real_call_operations.length))}${metricPill(t('networkExternalCallBlockGuardExternalCall'), summary.external_call_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(summary.external_call_allowed))}${metricPill(t('networkExternalCallBlockGuardRealProviderCall'), summary.real_provider_call_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(summary.real_provider_call_allowed))}${metricPill(t('networkExternalCallBlockGuardSecretUse'), summary.secret_use_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(summary.secret_use_allowed))}${metricPill(t('networkExternalCallBlockGuardRealInvocation'), summary.real_invocation_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(summary.real_invocation_allowed))}${metricPill(t('networkExternalCallBlockGuardRealExecution'), summary.real_execution_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceNetworkExternalCallBlockGuardSummaryText(pack) || t('networkExternalCallBlockGuardNoData'))}</pre><div class="field-helper">${escapeHTML(t('networkExternalCallBlockGuardPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceNetworkExternalCallBlockGuardStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceNetworkBlockGuardSummary()">${escapeHTML(t('networkExternalCallBlockGuardCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceExternalCallBlockCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportNetworkExternalCallBlockGuardSnapshot(workspace); if (!pack.has_workspace_network_external_call_block_guard_pack) return '';
+            const cards = (pack.external_call_block_cards || []).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.block_card_id || t('networkExternalCallBlockGuardCardsTitle'))}</strong><span class="metric-pill">${escapeHTML(card.network_access_status || t('none'))}</span></div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardProviderId'))}:</strong> ${escapeHTML(card.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardProviderType'))}:</strong> ${escapeHTML(card.provider_type || t('none'))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardSourceCapability'))}:</strong> ${escapeHTML(card.source_capability || t('none'))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardExternalCallType'))}:</strong> ${escapeHTML(card.external_call_type || t('none'))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardTargetEndpointPreview'))}:</strong> ${escapeHTML(card.target_endpoint_preview || t('none'))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardAllowedPreviewModes'))}:</strong> ${escapeHTML((card.allowed_preview_modes || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardBlockedRealModes'))}:</strong> ${escapeHTML((card.blocked_real_modes || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardExternalCall'))}:</strong> ${escapeHTML(card.external_call_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(card.external_call_allowed))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardRealProviderCall'))}:</strong> ${escapeHTML(card.real_provider_call_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(card.real_provider_call_allowed))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardSecretUse'))}:</strong> ${escapeHTML(card.secret_use_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(card.secret_use_allowed))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardRealInvocation'))}:</strong> ${escapeHTML(card.real_invocation_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(card.real_invocation_allowed))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardRealExecution'))}:</strong> ${escapeHTML(card.real_execution_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(card.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceNetworkExternalCallBlockGuardJsonText({blocked_by:card.blocked_by||[],recommended_operator_action:card.recommended_operator_action||'',risk_note:card.risk_note||''}) || t('networkExternalCallBlockGuardNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceExternalCallBlockCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('networkExternalCallBlockGuardCardsTitle'))}</div><div class="field-helper">${escapeHTML(t('networkExternalCallBlockGuardCardsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceExternalCallBlockCards()">${escapeHTML(t('networkExternalCallBlockGuardCopyCards'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('networkExternalCallBlockGuardNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('networkExternalCallBlockGuardNoRealCallNote'))}</div><div class="field-helper">${escapeHTML(t('networkExternalCallBlockGuardProviderTypesNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceNetworkGatePreviewContractsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportNetworkExternalCallBlockGuardSnapshot(workspace); if (!pack.has_workspace_network_external_call_block_guard_pack) return '';
+            const gates = (pack.network_gate_checks || []).slice(0, 24).map((gate) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(gate.gate_id || t('networkExternalCallBlockGuardGateTitle'))}</strong><span class="metric-pill">${escapeHTML(gate.gate_status || t('none'))}</span></div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardProviderId'))}:</strong> ${escapeHTML(gate.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardProviderType'))}:</strong> ${escapeHTML(gate.provider_type || t('none'))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardGateName'))}:</strong> ${escapeHTML(gate.gate_name || t('none'))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardExternalCall'))}:</strong> ${escapeHTML(gate.external_call_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(gate.external_call_allowed))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardRealProviderCall'))}:</strong> ${escapeHTML(gate.real_provider_call_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(gate.real_provider_call_allowed))}</div><div><strong>${escapeHTML(t('networkExternalCallBlockGuardRealExecution'))}:</strong> ${escapeHTML(gate.real_execution_allowed === false ? t('networkExternalCallBlockGuardDisabled') : String(gate.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceNetworkExternalCallBlockGuardJsonText({required_evidence:gate.required_evidence||[],missing_evidence:gate.missing_evidence||[],blocked_reason:gate.blocked_reason||'',next_preview_step:gate.next_preview_step||'',risk_note:gate.risk_note||''}) || t('networkExternalCallBlockGuardNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceNetworkGatePreviewContractsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('networkExternalCallBlockGuardGateContractsTitle'))}</div><div class="field-helper">${escapeHTML(t('networkExternalCallBlockGuardGateContractsHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceNetworkGateChecks()">${escapeHTML(t('networkExternalCallBlockGuardCopyGateChecks'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAllowedPreviewCallContracts()">${escapeHTML(t('networkExternalCallBlockGuardCopyPreviewContracts'))}</button></div></div><div class="graph-os-compact-grid">${gates || `<div class="empty-state">${escapeHTML(t('networkExternalCallBlockGuardNoData'))}</div>`}<div class="graph-os-card"><strong>${escapeHTML(t('networkExternalCallBlockGuardPreviewContractsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceNetworkExternalCallBlockGuardJsonText(pack.allowed_preview_call_contracts) || t('networkExternalCallBlockGuardNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('networkExternalCallBlockGuardGateContractsNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceBlockedRealCallEndpointDependencyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportNetworkExternalCallBlockGuardSnapshot(workspace); if (!pack.has_workspace_network_external_call_block_guard_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceBlockedRealCallEndpointDependencyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('networkExternalCallBlockGuardBlockedDependencyTitle'))}</div><div class="field-helper">${escapeHTML(t('networkExternalCallBlockGuardBlockedDependencyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceBlockedRealCallOperations()">${escapeHTML(t('networkExternalCallBlockGuardCopyBlocked'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderEndpointDependencyMap()">${escapeHTML(t('networkExternalCallBlockGuardCopyDependency'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('networkExternalCallBlockGuardBlockedTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceNetworkExternalCallBlockGuardJsonText(pack.blocked_real_call_operations) || t('networkExternalCallBlockGuardNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('networkExternalCallBlockGuardDependencyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceNetworkExternalCallBlockGuardJsonText(pack.provider_endpoint_dependency_map) || t('networkExternalCallBlockGuardNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('networkExternalCallBlockGuardBlockedNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceNetworkFailureRiskQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportNetworkExternalCallBlockGuardSnapshot(workspace); if (!pack.has_workspace_network_external_call_block_guard_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('networkExternalCallBlockGuardDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceNetworkFailureRiskQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('networkExternalCallBlockGuardFailureRiskQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('networkExternalCallBlockGuardFailureRiskQualityAuditSafetyHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceNetworkFailurePolicyMap()">${escapeHTML(t('networkExternalCallBlockGuardCopyFailure'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceNetworkRiskRegister()">${escapeHTML(t('networkExternalCallBlockGuardCopyRisk'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('networkExternalCallBlockGuardFailureTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceNetworkExternalCallBlockGuardJsonText(pack.network_failure_policy_map) || t('networkExternalCallBlockGuardNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('networkExternalCallBlockGuardRiskTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceNetworkExternalCallBlockGuardJsonText(pack.network_risk_register) || t('networkExternalCallBlockGuardNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('networkExternalCallBlockGuardQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceNetworkExternalCallBlockGuardJsonText(pack.network_guard_quality_checks) || t('networkExternalCallBlockGuardNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('networkExternalCallBlockGuardAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceNetworkExternalCallBlockGuardJsonText(pack.audit_preview) || t('networkExternalCallBlockGuardNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('networkExternalCallBlockGuardSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('networkExternalCallBlockGuardFailureRiskQualityAuditSafetyNote'))}</div><div class="field-helper">${escapeHTML(t('networkExternalCallBlockGuardSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -24599,6 +24863,8 @@ ${body}`;
                 '',
                 projectWorkspaceExportSecretEnvironmentGateMarkdown(workspace),
                 '',
+                projectWorkspaceExportNetworkExternalCallBlockGuardMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -24712,6 +24978,7 @@ ${body}`;
                 workspace_provider_cost_quota_risk_guard_pack: projectWorkspaceExportProviderCostQuotaRiskGuardSnapshot(workspace),
                 workspace_real_provider_readiness_checklist_pack: projectWorkspaceExportRealProviderReadinessChecklistSnapshot(workspace),
                 workspace_secret_environment_gate_pack: projectWorkspaceExportSecretEnvironmentGateSnapshot(workspace),
+                workspace_network_external_call_block_guard_pack: projectWorkspaceExportNetworkExternalCallBlockGuardSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -37268,6 +37535,11 @@ ${body}`;
                     ${renderProjectWorkspaceEnvironmentGatePolicyPanel(workspace)}
                     ${renderProjectWorkspaceMissingEnvironmentBlockedSecretDependencyPanel(workspace)}
                     ${renderProjectWorkspaceEnvironmentRiskQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceNetworkBlockGuardSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceExternalCallBlockCardsPanel(workspace)}
+                    ${renderProjectWorkspaceNetworkGatePreviewContractsPanel(workspace)}
+                    ${renderProjectWorkspaceBlockedRealCallEndpointDependencyPanel(workspace)}
+                    ${renderProjectWorkspaceNetworkFailureRiskQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
