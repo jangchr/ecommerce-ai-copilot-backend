@@ -34806,6 +34806,593 @@ def _rw_workspace_secret_environment_gate_pack(
     }
 
 
+def _rw_workspace_network_external_call_block_guard_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    secret_pack = dict(
+        creative_decision_pack.get("workspace_secret_environment_gate_pack")
+        or {}
+    )
+    readiness_pack = dict(
+        creative_decision_pack.get(
+            "workspace_real_provider_readiness_checklist_pack"
+        )
+        or {}
+    )
+    cost_pack = dict(
+        creative_decision_pack.get(
+            "workspace_provider_cost_quota_risk_guard_pack"
+        )
+        or {}
+    )
+    adapter_pack = dict(
+        creative_decision_pack.get("workspace_provider_adapter_contract_pack")
+        or {}
+    )
+    permission_pack = dict(
+        creative_decision_pack.get(
+            "workspace_capability_permission_matrix_pack"
+        )
+        or {}
+    )
+    health_pack = dict(
+        creative_decision_pack.get("workspace_system_integration_health_pack")
+        or {}
+    )
+    taxonomy_pack = dict(
+        creative_decision_pack.get("workspace_provider_failure_taxonomy_pack")
+        or {}
+    )
+    required_source_packs = [
+        "workspace_secret_environment_gate_pack",
+        "workspace_real_provider_readiness_checklist_pack",
+        "workspace_provider_cost_quota_risk_guard_pack",
+        "workspace_provider_adapter_contract_pack",
+        "workspace_capability_permission_matrix_pack",
+        "workspace_system_integration_health_pack",
+        "workspace_provider_failure_taxonomy_pack",
+    ]
+    required_provider_types = [
+        "llm_text_generation",
+        "video_generation_provider",
+        "image_generation_provider",
+        "media_storage_provider",
+        "external_scraping_provider",
+        "translation_provider",
+        "analytics_or_tracking_provider",
+        "database_persistence_provider",
+        "approval_or_ticket_provider",
+        "rollback_restore_provider",
+    ]
+    source_capability_by_type = {
+        "llm_text_generation": "llm_generation",
+        "video_generation_provider": "video_provider",
+        "image_generation_provider": "image_generation",
+        "media_storage_provider": "media_storage",
+        "external_scraping_provider": "external_scraping",
+        "translation_provider": "translation",
+        "analytics_or_tracking_provider": "analytics_tracking",
+        "database_persistence_provider": "database_persistence",
+        "approval_or_ticket_provider": "approval_ticket",
+        "rollback_restore_provider": "rollback_restore",
+    }
+    endpoint_preview_by_type = {
+        "llm_text_generation": "https://provider.example/llm/v1/generate",
+        "video_generation_provider": "https://provider.example/video/v1/jobs",
+        "image_generation_provider": "https://provider.example/image/v1/generate",
+        "media_storage_provider": "https://storage.example/media/object",
+        "external_scraping_provider": "https://scraper.example/pages/fetch",
+        "translation_provider": "https://translate.example/v1/translate",
+        "analytics_or_tracking_provider": "https://analytics.example/v1/events",
+        "database_persistence_provider": "postgres://database-preview/write",
+        "approval_or_ticket_provider": "https://tickets.example/v1/issues",
+        "rollback_restore_provider": "https://rollback.example/v1/restore",
+    }
+    call_type_by_provider_type = {
+        "llm_text_generation": "provider_api_call",
+        "video_generation_provider": "provider_api_call",
+        "image_generation_provider": "provider_api_call",
+        "media_storage_provider": "media_upload_or_download_call",
+        "external_scraping_provider": "external_scrape",
+        "translation_provider": "provider_api_call",
+        "analytics_or_tracking_provider": "webhook_call",
+        "database_persistence_provider": "database_network_call",
+        "approval_or_ticket_provider": "webhook_call",
+        "rollback_restore_provider": "rollback_call",
+    }
+
+    def by_provider(items: list[dict]) -> dict:
+        return {
+            _rw_text(item.get("provider_id")): item
+            for item in items
+            if item.get("provider_id")
+        }
+
+    secret_cards = list(secret_pack.get("secret_requirement_cards") or [])
+    readiness_cards = list(readiness_pack.get("provider_readiness_cards") or [])
+    cost_cards = list(cost_pack.get("provider_cost_risk_cards") or [])
+    adapter_cards = list(adapter_pack.get("provider_contract_cards") or [])
+    failure_cards = list(taxonomy_pack.get("failure_taxonomy_cards") or [])
+    recovery_cards = list(taxonomy_pack.get("recovery_policy_cards") or [])
+    permission_cards = list(
+        permission_pack.get("capability_permission_cards") or []
+    )
+    secret_by_provider = by_provider(secret_cards)
+    readiness_by_provider = by_provider(readiness_cards)
+    cost_by_provider = by_provider(cost_cards)
+    adapter_by_provider = by_provider(adapter_cards)
+    failure_by_provider = by_provider(failure_cards)
+    recovery_by_provider = by_provider(recovery_cards)
+    permission_by_capability = {
+        _rw_text(item.get("capability_id")): item
+        for item in permission_cards
+        if item.get("capability_id")
+    }
+
+    providers = []
+    seen_provider_types = set()
+    for source in (secret_cards, readiness_cards, cost_cards, adapter_cards):
+        for card in source:
+            provider_type = _rw_text(card.get("provider_type"))
+            provider_id = _rw_text(card.get("provider_id"))
+            if provider_type and provider_type not in seen_provider_types:
+                providers.append({
+                    "provider_id": provider_id or provider_type,
+                    "provider_type": provider_type,
+                    "source_capability": _rw_text(
+                        card.get("source_capability")
+                    ) or source_capability_by_type.get(
+                        provider_type, provider_type
+                    ),
+                })
+                seen_provider_types.add(provider_type)
+    for provider_type in required_provider_types:
+        if provider_type not in seen_provider_types:
+            providers.append({
+                "provider_id": provider_type,
+                "provider_type": provider_type,
+                "source_capability": source_capability_by_type[
+                    provider_type
+                ],
+            })
+
+    external_call_block_cards = []
+    network_gate_checks = []
+    allowed_preview_call_contracts = []
+    provider_endpoint_dependency_map = []
+    network_failure_policy_map = []
+    for index, provider in enumerate(providers, start=1):
+        provider_id = _rw_text(provider.get("provider_id")) or f"provider_{index}"
+        provider_type = _rw_text(provider.get("provider_type")) or provider_id
+        source_capability = _rw_text(provider.get("source_capability")) or (
+            source_capability_by_type.get(provider_type, provider_type)
+        )
+        endpoint_preview = endpoint_preview_by_type.get(
+            provider_type, f"https://provider.example/{provider_type}/preview"
+        )
+        external_call_type = call_type_by_provider_type.get(
+            provider_type, "provider_api_call"
+        )
+        secret_card = secret_by_provider.get(provider_id, {})
+        readiness_card = readiness_by_provider.get(provider_id, {})
+        cost_card = cost_by_provider.get(provider_id, {})
+        adapter_card = adapter_by_provider.get(provider_id, {})
+        failure_card = failure_by_provider.get(provider_id, {})
+        recovery_card = recovery_by_provider.get(provider_id, {})
+        permission = permission_by_capability.get(source_capability, {})
+        blocked_by = [
+            "network_external_call_block_guard_preview_only",
+            "secret_use_disabled",
+            "real_provider_call_disabled",
+            "real_invocation_disabled",
+            "real_execution_disabled",
+        ]
+        if not secret_card:
+            blocked_by.append("secret_environment_gate_evidence_missing")
+        if not readiness_card:
+            blocked_by.append("real_provider_readiness_evidence_missing")
+        if not adapter_card:
+            blocked_by.append("provider_adapter_contract_evidence_missing")
+        if not cost_card:
+            blocked_by.append("cost_quota_guard_evidence_missing")
+        if permission:
+            blocked_by.append(
+                _rw_text(permission.get("capability_id"))
+                or source_capability
+            )
+
+        external_call_block_cards.append({
+            "block_card_id": f"external_call_block_{provider_id}",
+            "provider_id": provider_id,
+            "provider_type": provider_type,
+            "source_capability": source_capability,
+            "external_call_type": external_call_type,
+            "target_endpoint_preview": endpoint_preview,
+            "network_access_status": "blocked_preview_only",
+            "allowed_preview_modes": [
+                "mock_contract_shape_preview",
+                "dry_run_payload_preview",
+                "operator_review_preview",
+            ],
+            "blocked_real_modes": [
+                "http_request",
+                "provider_api_call",
+                "webhook_call",
+                "external_scrape",
+                "media_transfer",
+                "database_network_call",
+                "rollback_or_restore_call",
+            ],
+            "external_call_allowed": False,
+            "real_provider_call_allowed": False,
+            "secret_use_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+            "blocked_by": blocked_by,
+            "recommended_operator_action": (
+                "Review endpoint and call-shape preview only; do not send "
+                "HTTP requests, call providers, invoke webhooks, scrape "
+                "externally, transfer media, use secrets, or unlock real "
+                "execution."
+            ),
+            "risk_note": (
+                "Network guard is derived from existing workspace packs and "
+                "does not perform network access, secret use, real retry, "
+                "rollback, persistence, or provider invocation."
+            ),
+        })
+
+        gate_templates = [
+            (
+                "network_access_gate",
+                "External network access lock",
+                ["workspace_network_external_call_block_guard_pack"],
+                ["real_network_access_approval_missing"],
+            ),
+            (
+                "endpoint_contract_gate",
+                "Provider endpoint contract preview",
+                ["workspace_provider_adapter_contract_pack"],
+                ["endpoint_contract_review_required"],
+            ),
+            (
+                "secret_use_gate",
+                "Secret use for external call lock",
+                ["workspace_secret_environment_gate_pack"],
+                ["secret_use_blocked"],
+            ),
+            (
+                "cost_quota_network_gate",
+                "Billing and quota network guard",
+                ["workspace_provider_cost_quota_risk_guard_pack"],
+                ["real_billing_quota_read_blocked"],
+            ),
+        ]
+        for gate_key, gate_name, evidence, missing in gate_templates:
+            network_gate_checks.append({
+                "gate_id": f"{gate_key}_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "gate_name": gate_name,
+                "gate_status": "blocked_missing_review_required_preview_only",
+                "required_evidence": evidence,
+                "missing_evidence": missing,
+                "blocked_reason": (
+                    "External call gate is deterministic preview-only; HTTP, "
+                    "webhook, provider, media, database, scrape, retry, and "
+                    "rollback operations remain blocked."
+                ),
+                "next_preview_step": (
+                    "Document endpoint, environment, and mock payload shape "
+                    "for operator review without executing network access."
+                ),
+                "external_call_allowed": False,
+                "real_provider_call_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Gate status describes missing/review-required network "
+                    "evidence only and does not validate connectivity."
+                ),
+            })
+
+        allowed_preview_call_contracts.append({
+            "contract_id": f"allowed_preview_call_contract_{provider_id}",
+            "provider_id": provider_id,
+            "provider_type": provider_type,
+            "external_call_type": external_call_type,
+            "target_endpoint_preview": endpoint_preview,
+            "allowed_preview_shape": {
+                "method_preview": "POST",
+                "request_body_preview": "mock_payload_shape_only",
+                "response_body_preview": "mock_response_shape_only",
+            },
+            "executes_network_request": False,
+            "external_call_allowed": False,
+            "real_provider_call_allowed": False,
+            "secret_use_allowed": False,
+            "real_execution_allowed": False,
+        })
+        provider_endpoint_dependency_map.append({
+            "dependency_id": f"provider_endpoint_dependency_{provider_id}",
+            "provider_id": provider_id,
+            "provider_type": provider_type,
+            "source_capability": source_capability,
+            "endpoint_previews": [endpoint_preview],
+            "environment_ref_previews": [
+                f"{provider_type.upper()}_ENDPOINT_ENV_PREVIEW",
+                "BILLING_QUOTA_ENV_PREVIEW",
+            ],
+            "secret_name_previews": list(
+                secret_card.get("secret_name_previews")
+                or [secret_card.get("secret_name_preview")]
+                if secret_card.get("secret_name_preview")
+                else [f"{provider_type.upper()}_API_KEY_PREVIEW"]
+            ),
+            "depends_on_adapter_contract": bool(adapter_card),
+            "depends_on_secret_environment_gate": bool(secret_card),
+            "depends_on_cost_quota_guard": bool(cost_card),
+            "depends_on_failure_policy": bool(failure_card or recovery_card),
+            "external_call_allowed": False,
+            "real_provider_call_allowed": False,
+            "secret_use_allowed": False,
+            "real_execution_allowed": False,
+        })
+        network_failure_policy_map.append({
+            "policy_id": f"network_failure_policy_{provider_id}",
+            "provider_id": provider_id,
+            "provider_type": provider_type,
+            "source_failure_taxonomy_pack": (
+                "workspace_provider_failure_taxonomy_pack"
+            ),
+            "failure_taxonomy_preview_present": bool(failure_card),
+            "recovery_policy_preview_present": bool(recovery_card),
+            "retry_policy": "real_retry_blocked_preview_only",
+            "rollback_policy": "real_rollback_blocked_preview_only",
+            "fallback_policy": "operator_review_preview_only",
+            "real_retry_executed": False,
+            "real_rollback_executed": False,
+            "real_restore_executed": False,
+            "external_call_allowed": False,
+            "real_execution_allowed": False,
+        })
+
+    blocked_real_call_operations = [
+        {
+            "operation_id": f"blocked_real_call_operation_{operation}",
+            "operation": operation,
+            "operation_status": "blocked_preview_only",
+            "blocked_reason": (
+                "Network/external call block guard is preview-only and cannot "
+                "execute real network, provider, webhook, scrape, media, "
+                "billing, database, retry, restore, or rollback calls."
+            ),
+            "external_call_allowed": False,
+            "real_provider_call_allowed": False,
+            "secret_use_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for operation in [
+            "http_request",
+            "provider_api_call",
+            "webhook_call",
+            "external_scrape",
+            "media_upload_call",
+            "media_download_call",
+            "billing_api_call",
+            "database_network_call",
+            "rollback_call",
+        ]
+    ]
+    network_risk_register = [
+        {
+            "risk_id": f"network_guard_risk_{risk_type}",
+            "risk_type": risk_type,
+            "severity": "high_preview_only",
+            "blocked_by": [
+                "network_external_call_block_guard_preview_only",
+                "real_execution_disabled",
+            ],
+            "external_call_allowed": False,
+            "real_provider_call_allowed": False,
+            "secret_use_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for risk_type in [
+            "external_call_blocked",
+            "provider_endpoint_missing",
+            "webhook_blocked",
+            "media_transfer_blocked",
+            "external_scraping_blocked",
+            "database_network_blocked",
+            "rollback_endpoint_blocked",
+            "billing_endpoint_blocked",
+        ]
+    ]
+    covered_provider_types = sorted({
+        _rw_text(card.get("provider_type"))
+        for card in external_call_block_cards
+        if card.get("provider_type")
+    })
+    guard_signature = json.dumps(
+        {
+            "source_packs": required_source_packs,
+            "provider_types": covered_provider_types,
+            "block_card_ids": [
+                card["block_card_id"] for card in external_call_block_cards
+            ],
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    guard_id = (
+        "workspace_network_external_call_block_guard_"
+        + hashlib.sha256(guard_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_enabled": False,
+        "provider_invocation_enabled": False,
+        "llm_enabled": False,
+        "llm_api_enabled": False,
+        "image_enabled": False,
+        "image_generation_enabled": False,
+        "video_enabled": False,
+        "video_generation_enabled": False,
+        "media_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_enabled": False,
+        "paid_operation_enabled": False,
+        "billing_read_enabled": False,
+        "quota_read_enabled": False,
+        "registry_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "rollback_execution_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "secret_use_enabled": False,
+        "external_call_enabled": False,
+        "http_request_enabled": False,
+        "webhook_enabled": False,
+        "real_retry_enabled": False,
+        "real_service_health_read_enabled": False,
+        "real_log_read_enabled": False,
+        "real_history_table_read_enabled": False,
+    }
+    return {
+        "pack_version": "workspace_network_external_call_block_guard_pack_v1",
+        "network_block_guard_summary": {
+            "guard_id": guard_id,
+            "mode": (
+                "network_block_guard_preview_"
+                "external_call_block_preview_dry_run_only"
+            ),
+            "source_packs": required_source_packs,
+            "external_call_block_card_count": len(external_call_block_cards),
+            "network_gate_check_count": len(network_gate_checks),
+            "covered_provider_type_count": len(covered_provider_types),
+            "required_provider_type_count": len(required_provider_types),
+            "external_call_allowed": False,
+            "real_provider_call_allowed": False,
+            "secret_use_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": (
+                "Review deterministic network/external call block guard "
+                "preview only; do not send HTTP requests, call providers, "
+                "invoke webhooks, scrape externally, use secrets, transfer "
+                "media, write databases, retry, restore, rollback, or unlock "
+                "real execution."
+            ),
+        },
+        "external_call_block_cards": external_call_block_cards,
+        "network_gate_checks": network_gate_checks,
+        "allowed_preview_call_contracts": allowed_preview_call_contracts,
+        "blocked_real_call_operations": blocked_real_call_operations,
+        "provider_endpoint_dependency_map": provider_endpoint_dependency_map,
+        "network_failure_policy_map": network_failure_policy_map,
+        "network_risk_register": network_risk_register,
+        "network_guard_quality_checks": {
+            "all_required_source_packs_referenced": True,
+            "source_secret_environment_gate_pack_present": bool(secret_pack),
+            "source_real_provider_readiness_pack_present": bool(readiness_pack),
+            "source_cost_quota_guard_pack_present": bool(cost_pack),
+            "source_provider_adapter_contract_pack_present": bool(adapter_pack),
+            "source_permission_matrix_pack_present": bool(permission_pack),
+            "source_system_integration_health_pack_present": bool(health_pack),
+            "source_failure_taxonomy_pack_present": bool(taxonomy_pack),
+            "external_call_block_cards_present": bool(external_call_block_cards),
+            "network_gate_checks_present": bool(network_gate_checks),
+            "allowed_preview_call_contracts_present": bool(
+                allowed_preview_call_contracts
+            ),
+            "blocked_real_call_operations_present": bool(
+                blocked_real_call_operations
+            ),
+            "provider_endpoint_dependency_map_present": bool(
+                provider_endpoint_dependency_map
+            ),
+            "network_failure_policy_map_present": bool(
+                network_failure_policy_map
+            ),
+            "network_risk_register_present": bool(network_risk_register),
+            "all_required_provider_types_covered": all(
+                provider_type in covered_provider_types
+                for provider_type in required_provider_types
+            ),
+            "all_external_calls_disabled": all(
+                not card["external_call_allowed"]
+                for card in external_call_block_cards
+            ),
+            "all_real_provider_calls_disabled": all(
+                not card["real_provider_call_allowed"]
+                for card in external_call_block_cards
+            ),
+            "all_secret_use_disabled": all(
+                not card["secret_use_allowed"]
+                for card in external_call_block_cards
+            ),
+            "all_real_invocation_disabled": all(
+                not card["real_invocation_allowed"]
+                for card in external_call_block_cards
+            ),
+            "all_real_execution_disabled": all(
+                not card["real_execution_allowed"]
+                for card in external_call_block_cards
+            ),
+            "audit_preview_not_persisted": True,
+            "network_firewall_enabled": False,
+            "http_request_performed": False,
+            "provider_invocation_performed": False,
+            "webhook_call_performed": False,
+            "external_scraping_performed": False,
+            "secret_use_performed": False,
+            "database_write_performed": False,
+            "real_retry_executed": False,
+            "real_rollback_executed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "guard_id": guard_id,
+            "audit_mode": "network_external_call_block_guard_preview_only",
+            "is_real_network_firewall": False,
+            "http_request_performed": False,
+            "provider_invocation_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "webhook_call_performed": False,
+            "external_scraping_performed": False,
+            "image_generation_performed": False,
+            "video_generation_performed": False,
+            "media_upload_performed": False,
+            "media_download_performed": False,
+            "secret_read_performed": False,
+            "secret_use_performed": False,
+            "secret_validation_performed": False,
+            "real_billing_read_performed": False,
+            "real_quota_read_performed": False,
+            "paid_operation_executed": False,
+            "database_write_performed": False,
+            "database_network_call_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_service_health_read_performed": False,
+            "operator_task_created": False,
+            "real_approval_created": False,
+            "real_retry_executed": False,
+            "real_rollback_executed": False,
+            "real_restore_executed": False,
+            "registry_write_performed": False,
+            "audit_persisted": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -34985,6 +35572,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_secret_environment_gate_pack"] = (
         _rw_workspace_secret_environment_gate_pack(creative_decision_pack)
+    )
+    creative_decision_pack[
+        "workspace_network_external_call_block_guard_pack"
+    ] = _rw_workspace_network_external_call_block_guard_pack(
+        creative_decision_pack
     )
 
     return ReviewWorkspaceResponse(
