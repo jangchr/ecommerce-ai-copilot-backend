@@ -35986,6 +35986,699 @@ def _rw_workspace_real_execution_approval_token_pack(
     }
 
 
+def _rw_workspace_provider_invocation_audit_packet_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    token_pack = dict(
+        creative_decision_pack.get(
+            "workspace_real_execution_approval_token_pack"
+        )
+        or {}
+    )
+    network_pack = dict(
+        creative_decision_pack.get(
+            "workspace_network_external_call_block_guard_pack"
+        )
+        or {}
+    )
+    secret_pack = dict(
+        creative_decision_pack.get("workspace_secret_environment_gate_pack")
+        or {}
+    )
+    readiness_pack = dict(
+        creative_decision_pack.get(
+            "workspace_real_provider_readiness_checklist_pack"
+        )
+        or {}
+    )
+    cost_pack = dict(
+        creative_decision_pack.get(
+            "workspace_provider_cost_quota_risk_guard_pack"
+        )
+        or {}
+    )
+    asset_pack = dict(
+        creative_decision_pack.get("workspace_provider_asset_contract_pack")
+        or {}
+    )
+    failure_pack = dict(
+        creative_decision_pack.get("workspace_provider_failure_taxonomy_pack")
+        or {}
+    )
+    mock_pack = dict(
+        creative_decision_pack.get(
+            "workspace_provider_mock_invocation_result_pack"
+        )
+        or {}
+    )
+    ledger_pack = dict(
+        creative_decision_pack.get("workspace_agent_run_ledger_pack") or {}
+    )
+    permission_pack = dict(
+        creative_decision_pack.get(
+            "workspace_capability_permission_matrix_pack"
+        )
+        or {}
+    )
+    required_source_packs = [
+        "workspace_real_execution_approval_token_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_real_provider_readiness_checklist_pack",
+        "workspace_provider_cost_quota_risk_guard_pack",
+        "workspace_provider_asset_contract_pack",
+        "workspace_provider_failure_taxonomy_pack",
+        "workspace_provider_mock_invocation_result_pack",
+        "workspace_agent_run_ledger_pack",
+        "workspace_capability_permission_matrix_pack",
+    ]
+    required_provider_types = [
+        "llm_text_generation",
+        "video_generation_provider",
+        "image_generation_provider",
+        "media_storage_provider",
+        "external_scraping_provider",
+        "translation_provider",
+        "analytics_or_tracking_provider",
+        "database_persistence_provider",
+        "approval_or_ticket_provider",
+        "rollback_restore_provider",
+    ]
+    source_capability_by_type = {
+        "llm_text_generation": "llm_generation",
+        "video_generation_provider": "video_provider",
+        "image_generation_provider": "image_generation",
+        "media_storage_provider": "media_storage",
+        "external_scraping_provider": "external_scraping",
+        "translation_provider": "translation",
+        "analytics_or_tracking_provider": "analytics_tracking",
+        "database_persistence_provider": "database_persistence",
+        "approval_or_ticket_provider": "approval_ticket",
+        "rollback_restore_provider": "rollback_restore",
+    }
+
+    def source_items(pack: dict, key: str) -> list[dict]:
+        return list(pack.get(key) or [])
+
+    token_cards = source_items(token_pack, "approval_token_preview_cards")
+    token_gates = source_items(token_pack, "execution_approval_gate_checks")
+    token_signoffs = source_items(token_pack, "required_signoff_matrix")
+    network_cards = source_items(network_pack, "external_call_block_cards")
+    network_gates = source_items(network_pack, "network_gate_checks")
+    secret_cards = source_items(secret_pack, "secret_requirement_cards")
+    secret_gates = source_items(secret_pack, "environment_gate_checks")
+    readiness_cards = source_items(readiness_pack, "provider_readiness_cards")
+    readiness_gates = source_items(readiness_pack, "readiness_gate_checks")
+    cost_cards = source_items(cost_pack, "provider_cost_risk_cards")
+    asset_cards = source_items(asset_pack, "provider_asset_contract_cards")
+    failure_cards = source_items(failure_pack, "failure_taxonomy_cards")
+    mock_cards = source_items(mock_pack, "mock_invocation_result_cards")
+    permission_cards = source_items(
+        permission_pack, "capability_permission_cards"
+    )
+
+    def by_provider(items: list[dict]) -> dict:
+        return {
+            _rw_text(item.get("provider_id")): item
+            for item in items
+            if item.get("provider_id")
+        }
+
+    token_by_provider = by_provider(token_cards)
+    network_by_provider = by_provider(network_cards)
+    secret_by_provider = by_provider(secret_cards)
+    readiness_by_provider = by_provider(readiness_cards)
+    cost_by_provider = by_provider(cost_cards)
+    asset_by_provider = by_provider(asset_cards)
+    failure_by_provider = by_provider(failure_cards)
+    mock_by_provider = by_provider(mock_cards)
+    permission_by_capability = {
+        _rw_text(item.get("capability_id")): item
+        for item in permission_cards
+        if item.get("capability_id")
+    }
+
+    providers = []
+    seen_provider_types = set()
+    provider_sources = [
+        token_cards,
+        network_cards,
+        secret_cards,
+        readiness_cards,
+        cost_cards,
+        asset_cards,
+        failure_cards,
+        mock_cards,
+    ]
+    for source in provider_sources:
+        for card in source:
+            provider_type = _rw_text(card.get("provider_type"))
+            provider_id = _rw_text(card.get("provider_id"))
+            if provider_type and provider_type not in seen_provider_types:
+                providers.append({
+                    "provider_id": provider_id or provider_type,
+                    "provider_type": provider_type,
+                    "source_capability": _rw_text(
+                        card.get("source_capability")
+                    ) or source_capability_by_type.get(
+                        provider_type, provider_type
+                    ),
+                })
+                seen_provider_types.add(provider_type)
+    for provider_type in required_provider_types:
+        if provider_type not in seen_provider_types:
+            providers.append({
+                "provider_id": provider_type,
+                "provider_type": provider_type,
+                "source_capability": source_capability_by_type[
+                    provider_type
+                ],
+            })
+
+    def gate_for_provider(
+        gates: list[dict],
+        provider_id: str,
+        provider_type: str,
+    ) -> dict:
+        for gate in gates:
+            if _rw_text(gate.get("provider_id")) == provider_id:
+                return gate
+        for gate in gates:
+            if _rw_text(gate.get("provider_type")) == provider_type:
+                return gate
+        return {}
+
+    audit_packet_cards = []
+    pre_invocation_evidence_bundle = []
+    gate_snapshot_cards = []
+    audit_traceability_map = []
+    for index, provider in enumerate(providers, start=1):
+        provider_id = _rw_text(provider.get("provider_id")) or f"provider_{index}"
+        provider_type = _rw_text(provider.get("provider_type")) or provider_id
+        source_capability = _rw_text(provider.get("source_capability")) or (
+            source_capability_by_type.get(provider_type, provider_type)
+        )
+        token_card = token_by_provider.get(provider_id, {})
+        network_card = network_by_provider.get(provider_id, {})
+        secret_card = secret_by_provider.get(provider_id, {})
+        readiness_card = readiness_by_provider.get(provider_id, {})
+        cost_card = cost_by_provider.get(provider_id, {})
+        asset_card = asset_by_provider.get(provider_id, {})
+        failure_card = failure_by_provider.get(provider_id, {})
+        mock_card = mock_by_provider.get(provider_id, {})
+        permission_card = permission_by_capability.get(source_capability, {})
+        evidence_refs = [
+            f"token_preview:{_rw_text(token_card.get('token_preview_id')) or provider_id}",
+            f"network_guard:{_rw_text(network_card.get('block_card_id')) or provider_id}",
+            f"secret_gate:{_rw_text(secret_card.get('secret_requirement_id')) or provider_id}",
+            f"readiness:{_rw_text(readiness_card.get('readiness_id')) or provider_id}",
+            f"cost_guard:{_rw_text(cost_card.get('cost_risk_id')) or provider_id}",
+            f"asset_contract:{_rw_text(asset_card.get('asset_contract_id')) or provider_id}",
+            f"failure_taxonomy:{_rw_text(failure_card.get('failure_type_id')) or provider_id}",
+            f"mock_invocation:{_rw_text(mock_card.get('result_card_id')) or provider_id}",
+        ]
+        gate_refs = [
+            f"approval_token_gate_{provider_id}",
+            f"network_gate_{provider_id}",
+            f"secret_gate_{provider_id}",
+            f"readiness_gate_{provider_id}",
+            f"cost_quota_gate_{provider_id}",
+            f"asset_contract_gate_{provider_id}",
+        ]
+        blocked_refs = [
+            "provider_call_blocked",
+            "external_call_blocked",
+            "secret_read_blocked",
+            "token_issue_blocked",
+            "paid_operation_blocked",
+            "media_transfer_blocked",
+            "database_write_blocked",
+            "rollback_blocked",
+        ]
+        signoff_refs = [
+            "human_review_signoff_preview",
+            "cost_review_signoff_preview",
+            "secret_review_signoff_preview",
+            "network_review_signoff_preview",
+            "media_review_signoff_preview",
+            "rollback_review_signoff_preview",
+            "database_review_signoff_preview",
+        ]
+        audit_packet_cards.append({
+            "audit_packet_id": f"provider_invocation_audit_packet_{provider_id}",
+            "provider_id": provider_id,
+            "provider_type": provider_type,
+            "source_capability": source_capability,
+            "packet_status": (
+                "blocked_pre_invocation_audit_preview_only"
+            ),
+            "required_evidence_refs": evidence_refs,
+            "gate_snapshot_refs": gate_refs,
+            "blocked_operation_refs": blocked_refs,
+            "operator_signoff_refs": signoff_refs,
+            "audit_export_allowed": "preview_json_markdown_only",
+            "database_write_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": (
+                "Review provider invocation audit packet preview only; do "
+                "not create audit records, write databases, issue tokens, "
+                "read secrets, call providers, send external calls, perform "
+                "paid operations, transfer media, retry, restore, rollback, "
+                "or unlock real execution."
+            ),
+            "risk_note": (
+                "Audit packet is derived from existing workspace packs and "
+                "cannot authorize or execute provider invocation."
+            ),
+        })
+
+        for source_name, source_pack, source_card, gates in [
+            (
+                "approval_token",
+                "workspace_real_execution_approval_token_pack",
+                token_card,
+                token_gates,
+            ),
+            (
+                "network_block_guard",
+                "workspace_network_external_call_block_guard_pack",
+                network_card,
+                network_gates,
+            ),
+            (
+                "secret_environment_gate",
+                "workspace_secret_environment_gate_pack",
+                secret_card,
+                secret_gates,
+            ),
+            (
+                "readiness_checklist",
+                "workspace_real_provider_readiness_checklist_pack",
+                readiness_card,
+                readiness_gates,
+            ),
+            (
+                "cost_quota_guard",
+                "workspace_provider_cost_quota_risk_guard_pack",
+                cost_card,
+                [],
+            ),
+            (
+                "asset_contract",
+                "workspace_provider_asset_contract_pack",
+                asset_card,
+                [],
+            ),
+        ]:
+            gate = gate_for_provider(gates, provider_id, provider_type)
+            captured_fields = [
+                key for key, value in source_card.items()
+                if value not in (None, "", [], {})
+            ][:12]
+            if gate:
+                captured_fields.extend([
+                    key for key, value in gate.items()
+                    if value not in (None, "", [], {})
+                ][:8])
+            gate_status = _rw_text(
+                gate.get("gate_status")
+                or source_card.get("current_readiness_status")
+                or source_card.get("network_access_status")
+                or source_card.get("current_secret_status")
+                or source_card.get("guard_status")
+                or source_card.get("validation_status")
+            ) or "review_required_preview_only"
+            if not any(
+                marker in gate_status
+                for marker in ["blocked", "preview", "review_required"]
+            ):
+                gate_status = f"{gate_status}_review_required_preview_only"
+            missing_fields = [
+                field for field in [
+                    "provider_id", "provider_type", "source_capability",
+                    "gate_status", "blocked_reason", "required_evidence",
+                ]
+                if not source_card.get(field) and not gate.get(field)
+            ]
+            gate_snapshot_cards.append({
+                "snapshot_id": f"{source_name}_snapshot_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "gate_source": source_pack,
+                "gate_status": gate_status,
+                "captured_fields": sorted(set(captured_fields)),
+                "missing_fields": missing_fields,
+                "blocked_reason": _rw_text(
+                    gate.get("blocked_reason")
+                    or source_card.get("blocked_reason")
+                )
+                or (
+                    "Gate snapshot is preview/review-required only and "
+                    "cannot authorize provider invocation."
+                ),
+                "real_invocation_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Gate snapshot is assembled from workspace preview packs "
+                    "only; no real service health, logs, history tables, "
+                    "secrets, or provider data are read."
+                ),
+            })
+
+        for evidence_type, source_pack, present in [
+            ("token", "workspace_real_execution_approval_token_pack", bool(token_card)),
+            ("secret", "workspace_secret_environment_gate_pack", bool(secret_card)),
+            ("network", "workspace_network_external_call_block_guard_pack", bool(network_card)),
+            ("cost", "workspace_provider_cost_quota_risk_guard_pack", bool(cost_card)),
+            ("asset", "workspace_provider_asset_contract_pack", bool(asset_card)),
+            ("failure", "workspace_provider_failure_taxonomy_pack", bool(failure_card)),
+            ("readiness", "workspace_real_provider_readiness_checklist_pack", bool(readiness_card)),
+        ]:
+            pre_invocation_evidence_bundle.append({
+                "evidence_id": f"{evidence_type}_evidence_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "evidence_type": evidence_type,
+                "source_pack": source_pack,
+                "evidence_ref": (
+                    f"{source_pack}:{provider_id}:preview_reference"
+                ),
+                "evidence_present": present,
+                "preview_only": True,
+                "database_write_allowed": False,
+                "real_invocation_allowed": False,
+                "real_execution_allowed": False,
+            })
+
+        trace_sources = [
+            "workspace_agent_run_ledger_pack",
+            "workspace_real_execution_approval_token_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_provider_cost_quota_risk_guard_pack",
+            "workspace_provider_asset_contract_pack",
+            "workspace_provider_failure_taxonomy_pack",
+            "workspace_provider_mock_invocation_result_pack",
+            "workspace_capability_permission_matrix_pack",
+        ]
+        for source_pack in trace_sources:
+            audit_traceability_map.append({
+                "trace_id": f"trace_{source_pack}_{provider_id}",
+                "provider_id": provider_id,
+                "provider_type": provider_type,
+                "source_pack": source_pack,
+                "trace_mode": "preview_reference_no_real_log_read",
+                "agent_ledger_ref": (
+                    "workspace_agent_run_ledger_pack:preview_only"
+                ),
+                "real_log_read_performed": False,
+                "real_history_table_read_performed": False,
+                "database_write_allowed": False,
+            })
+
+    blocked_operation_summary = [
+        {
+            "operation_id": f"blocked_operation_{operation}",
+            "operation": operation,
+            "operation_status": "blocked_preview_only",
+            "blocked_reason": (
+                "Provider invocation audit packet preview cannot perform "
+                "provider calls, external calls, secret reads, token issue, "
+                "paid operations, media transfer, database writes, rollback, "
+                "restore, retry, registry, or execution."
+            ),
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for operation in [
+            "provider_call",
+            "external_call",
+            "secret_read",
+            "token_issue",
+            "paid_operation",
+            "media_transfer",
+            "database_write",
+            "rollback",
+        ]
+    ]
+    operator_signoff_snapshot = [
+        {
+            "signoff_snapshot_id": f"operator_signoff_{category}",
+            "signoff_category": category,
+            "source_pack": source_pack,
+            "signoff_status": "missing_preview_only",
+            "real_approval_created": False,
+            "operator_task_created": False,
+            "token_issue_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for category, source_pack in [
+            ("human_review", "workspace_real_execution_approval_token_pack"),
+            ("cost_review", "workspace_provider_cost_quota_risk_guard_pack"),
+            ("secret_review", "workspace_secret_environment_gate_pack"),
+            ("network_review", "workspace_network_external_call_block_guard_pack"),
+            ("media_review", "workspace_provider_asset_contract_pack"),
+            ("rollback_review", "workspace_provider_failure_taxonomy_pack"),
+            ("database_review", "workspace_capability_permission_matrix_pack"),
+        ]
+    ]
+    audit_packet_risk_register = [
+        {
+            "risk_id": f"provider_invocation_audit_risk_{risk_type}",
+            "risk_type": risk_type,
+            "severity": "high_preview_only",
+            "blocked_by": [
+                "provider_invocation_audit_packet_preview_only",
+                "real_invocation_disabled",
+                "real_execution_disabled",
+            ],
+            "database_write_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for risk_type in [
+            "missing_signoff",
+            "network_blocked",
+            "secret_blocked",
+            "token_blocked",
+            "paid_blocked",
+            "database_write_blocked",
+            "rollback_blocked",
+            "media_blocked",
+        ]
+    ]
+    covered_provider_types = sorted({
+        _rw_text(card.get("provider_type"))
+        for card in audit_packet_cards
+        if card.get("provider_type")
+    })
+    packet_signature = json.dumps(
+        {
+            "source_packs": required_source_packs,
+            "provider_types": covered_provider_types,
+            "audit_packet_ids": [
+                card["audit_packet_id"] for card in audit_packet_cards
+            ],
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    audit_packet_bundle_id = (
+        "workspace_provider_invocation_audit_packet_"
+        + hashlib.sha256(packet_signature.encode("utf-8")).hexdigest()[:12]
+    )
+    safety_boundaries = {
+        "provider_enabled": False,
+        "provider_invocation_enabled": False,
+        "llm_enabled": False,
+        "llm_api_enabled": False,
+        "image_enabled": False,
+        "image_generation_enabled": False,
+        "video_enabled": False,
+        "video_generation_enabled": False,
+        "media_enabled": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_enabled": False,
+        "paid_operation_enabled": False,
+        "registry_enabled": False,
+        "registry_write_enabled": False,
+        "rollback_enabled": False,
+        "rollback_execution_enabled": False,
+        "external_scraping_enabled": False,
+        "database_persistence_enabled": False,
+        "database_write_enabled": False,
+        "real_restore_enabled": False,
+        "real_execution_enabled": False,
+        "secret_read_enabled": False,
+        "secret_use_enabled": False,
+        "external_call_enabled": False,
+        "token_issue_enabled": False,
+        "token_validation_enabled": False,
+        "real_retry_enabled": False,
+        "real_approval_creation_enabled": False,
+        "operator_task_creation_enabled": False,
+        "real_log_read_enabled": False,
+        "real_history_table_read_enabled": False,
+        "real_service_health_read_enabled": False,
+        "audit_record_creation_enabled": False,
+        "audit_packet_upload_enabled": False,
+    }
+    return {
+        "pack_version": "workspace_provider_invocation_audit_packet_pack_v1",
+        "invocation_audit_packet_summary": {
+            "audit_packet_bundle_id": audit_packet_bundle_id,
+            "mode": (
+                "invocation_audit_packet_preview_"
+                "pre_invocation_audit_preview_dry_run_only"
+            ),
+            "source_packs": required_source_packs,
+            "audit_packet_card_count": len(audit_packet_cards),
+            "pre_invocation_evidence_count": len(
+                pre_invocation_evidence_bundle
+            ),
+            "gate_snapshot_card_count": len(gate_snapshot_cards),
+            "blocked_operation_count": len(blocked_operation_summary),
+            "covered_provider_type_count": len(covered_provider_types),
+            "required_provider_type_count": len(required_provider_types),
+            "audit_export_allowed": "preview_json_markdown_only",
+            "database_write_allowed": False,
+            "real_invocation_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": (
+                "Review deterministic provider invocation audit packet "
+                "preview only; do not write databases, upload audit packets, "
+                "issue or validate tokens, read secrets, call providers, send "
+                "HTTP requests, invoke webhooks, scrape externally, perform "
+                "paid operations, transfer media, retry, restore, rollback, "
+                "read real logs/history/service health, create operator "
+                "tasks, create approvals, or unlock real execution."
+            ),
+        },
+        "audit_packet_cards": audit_packet_cards,
+        "pre_invocation_evidence_bundle": pre_invocation_evidence_bundle,
+        "gate_snapshot_cards": gate_snapshot_cards,
+        "blocked_operation_summary": blocked_operation_summary,
+        "operator_signoff_snapshot": operator_signoff_snapshot,
+        "audit_export_manifest": {
+            "manifest_id": f"audit_export_manifest_{audit_packet_bundle_id}",
+            "export_mode": "preview_json_markdown_only",
+            "included_sections": [
+                "invocation_audit_packet_summary",
+                "audit_packet_cards",
+                "pre_invocation_evidence_bundle",
+                "gate_snapshot_cards",
+                "blocked_operation_summary",
+                "operator_signoff_snapshot",
+                "audit_traceability_map",
+                "audit_packet_risk_register",
+                "safety_boundaries",
+            ],
+            "json_preview_export_allowed": True,
+            "markdown_preview_export_allowed": True,
+            "database_write_allowed": False,
+            "file_upload_allowed": False,
+            "audit_record_created": False,
+            "audit_packet_uploaded": False,
+        },
+        "audit_traceability_map": audit_traceability_map,
+        "audit_packet_risk_register": audit_packet_risk_register,
+        "audit_packet_quality_checks": {
+            "all_required_source_packs_referenced": True,
+            "source_approval_token_pack_present": bool(token_pack),
+            "source_network_block_guard_pack_present": bool(network_pack),
+            "source_secret_environment_gate_pack_present": bool(secret_pack),
+            "source_real_provider_readiness_pack_present": bool(readiness_pack),
+            "source_cost_quota_guard_pack_present": bool(cost_pack),
+            "source_asset_contract_pack_present": bool(asset_pack),
+            "source_failure_taxonomy_pack_present": bool(failure_pack),
+            "source_mock_invocation_result_pack_present": bool(mock_pack),
+            "source_agent_run_ledger_pack_present": bool(ledger_pack),
+            "source_capability_permission_matrix_pack_present": bool(
+                permission_pack
+            ),
+            "audit_packet_cards_present": bool(audit_packet_cards),
+            "pre_invocation_evidence_bundle_present": bool(
+                pre_invocation_evidence_bundle
+            ),
+            "gate_snapshot_cards_present": bool(gate_snapshot_cards),
+            "blocked_operation_summary_present": bool(
+                blocked_operation_summary
+            ),
+            "operator_signoff_snapshot_present": bool(
+                operator_signoff_snapshot
+            ),
+            "audit_export_manifest_present": True,
+            "audit_traceability_map_present": bool(audit_traceability_map),
+            "audit_packet_risk_register_present": bool(
+                audit_packet_risk_register
+            ),
+            "all_required_provider_types_covered": all(
+                provider_type in covered_provider_types
+                for provider_type in required_provider_types
+            ),
+            "all_database_writes_disabled": all(
+                not card["database_write_allowed"]
+                for card in audit_packet_cards
+            ),
+            "all_real_invocation_disabled": all(
+                not card["real_invocation_allowed"]
+                for card in audit_packet_cards
+            )
+            and all(
+                not card["real_invocation_allowed"]
+                for card in gate_snapshot_cards
+            ),
+            "all_real_execution_disabled": all(
+                not card["real_execution_allowed"]
+                for card in audit_packet_cards
+            )
+            and all(
+                not card["real_execution_allowed"]
+                for card in gate_snapshot_cards
+            ),
+            "audit_export_preview_only": True,
+            "audit_manifest_does_not_write_database": True,
+            "audit_manifest_does_not_upload_file": True,
+            "traceability_map_does_not_read_real_logs": all(
+                not item["real_log_read_performed"]
+                and not item["real_history_table_read_performed"]
+                for item in audit_traceability_map
+            ),
+            "operator_signoff_does_not_create_real_approval": all(
+                not item["real_approval_created"]
+                for item in operator_signoff_snapshot
+            ),
+            "provider_invocation_performed": False,
+            "llm_called": False,
+            "http_request_performed": False,
+            "webhook_call_performed": False,
+            "external_scraping_performed": False,
+            "secret_read_performed": False,
+            "secret_use_performed": False,
+            "secret_validation_performed": False,
+            "token_issued": False,
+            "token_validated": False,
+            "real_approval_created": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_service_health_read_performed": False,
+            "operator_task_created": False,
+            "paid_operation_executed": False,
+            "media_upload_performed": False,
+            "media_download_performed": False,
+            "real_retry_executed": False,
+            "real_rollback_executed": False,
+            "real_restore_executed": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -36174,6 +36867,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     creative_decision_pack[
         "workspace_real_execution_approval_token_pack"
     ] = _rw_workspace_real_execution_approval_token_pack(
+        creative_decision_pack
+    )
+    creative_decision_pack[
+        "workspace_provider_invocation_audit_packet_pack"
+    ] = _rw_workspace_provider_invocation_audit_packet_pack(
         creative_decision_pack
     )
 
