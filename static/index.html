@@ -3634,6 +3634,7 @@
         let latestProjectWorkspaceSecretEnvironmentGatePack = {};
         let latestProjectWorkspaceNetworkExternalCallBlockGuardPack = {};
         let latestProjectWorkspaceRealExecutionApprovalTokenPack = {};
+        let latestProjectWorkspaceProviderInvocationAuditPacketPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -6529,6 +6530,132 @@
             realExecutionApprovalTokenProviderTypesNote: '\u8986\u76d6\u7684 provider \u7c7b\u578b\uff1allm_text_generation\u3001video_generation_provider\u3001image_generation_provider\u3001media_storage_provider\u3001external_scraping_provider\u3001translation_provider\u3001analytics_or_tracking_provider\u3001database_persistence_provider\u3001approval_or_ticket_provider\u3001rollback_restore_provider\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProviderInvocationAuditPacketMarker: 'Project Workspace provider invocation audit packet bundle',
+            providerInvocationAuditPacketPackTitle: 'Workspace Provider Invocation Audit Packet',
+            providerInvocationAuditPacketPackHelper: 'Review deterministic provider invocation audit packet preview only. This is not a real provider invocation audit system.',
+            providerInvocationAuditPacketSummaryTitle: 'Invocation Audit Packet Summary',
+            providerInvocationAuditPacketCardsTitle: 'Audit Packet Cards',
+            providerInvocationAuditPacketEvidenceGateTitle: 'Pre-Invocation Evidence Bundle / Gate Snapshots',
+            providerInvocationAuditPacketEvidenceTitle: 'Pre-Invocation Evidence Bundle',
+            providerInvocationAuditPacketGateTitle: 'Gate Snapshot Cards',
+            providerInvocationAuditPacketBlockedSignoffExportTitle: 'Blocked Operation Summary / Operator Signoff / Export Manifest',
+            providerInvocationAuditPacketBlockedTitle: 'Blocked Operation Summary',
+            providerInvocationAuditPacketSignoffTitle: 'Operator Signoff Snapshot',
+            providerInvocationAuditPacketExportTitle: 'Audit Export Manifest',
+            providerInvocationAuditPacketTraceRiskQualitySafetyTitle: 'Audit Traceability / Risk / Quality / Safety Boundaries',
+            providerInvocationAuditPacketTraceTitle: 'Audit Traceability Map',
+            providerInvocationAuditPacketRiskTitle: 'Audit Packet Risk Register',
+            providerInvocationAuditPacketQualityTitle: 'Audit Packet Quality Checks',
+            providerInvocationAuditPacketSafetyTitle: 'Safety Boundaries',
+            providerInvocationAuditPacketMode: 'Mode',
+            providerInvocationAuditPacketCount: 'Audit packet count',
+            providerInvocationAuditPacketEvidenceCount: 'Evidence bundle count',
+            providerInvocationAuditPacketGateCount: 'Gate snapshot count',
+            providerInvocationAuditPacketBlockedCount: 'Blocked operation count',
+            providerInvocationAuditPacketRecommendedAction: 'Recommended operator action',
+            providerInvocationAuditPacketDatabaseWrite: 'Database write allowed',
+            providerInvocationAuditPacketRealInvocation: 'Real invocation allowed',
+            providerInvocationAuditPacketRealExecution: 'Real execution allowed',
+            providerInvocationAuditPacketDisabled: 'disabled',
+            providerInvocationAuditPacketNoData: 'No workspace provider invocation audit packet data is available.',
+            providerInvocationAuditPacketCopyNoData: 'No workspace provider invocation audit packet content is available to copy.',
+            providerInvocationAuditPacketCopyFailed: 'Unable to copy workspace provider invocation audit packet content.',
+            providerInvocationAuditPacketCopied: 'Workspace provider invocation audit packet content copied.',
+            providerInvocationAuditPacketCopySummary: 'Copy invocation audit packet summary',
+            providerInvocationAuditPacketCopyCards: 'Copy audit packet cards',
+            providerInvocationAuditPacketCopyEvidence: 'Copy pre-invocation evidence bundle',
+            providerInvocationAuditPacketCopyGate: 'Copy gate snapshot cards',
+            providerInvocationAuditPacketCopyBlocked: 'Copy blocked operation summary',
+            providerInvocationAuditPacketCopySignoff: 'Copy operator signoff snapshot',
+            providerInvocationAuditPacketCopyExport: 'Copy audit export manifest',
+            providerInvocationAuditPacketCopyTrace: 'Copy audit traceability map',
+            providerInvocationAuditPacketCopyFull: 'Copy full provider invocation audit packet pack',
+            providerInvocationAuditPacketId: 'Audit packet ID',
+            providerInvocationAuditPacketProviderId: 'Provider ID',
+            providerInvocationAuditPacketProviderType: 'Provider type',
+            providerInvocationAuditPacketSourceCapability: 'Source capability',
+            providerInvocationAuditPacketStatus: 'Packet status',
+            providerInvocationAuditPacketExportAllowed: 'Audit export allowed',
+            providerInvocationAuditPacketSnapshotId: 'Snapshot ID',
+            providerInvocationAuditPacketGateSource: 'Gate source',
+            providerInvocationAuditPacketGateStatus: 'Gate status',
+            providerInvocationAuditPacketPreviewNote: 'Invocation audit packet preview only. This is not a real provider invocation audit system, creates no real audit record, writes no database, uploads no audit packet, issues no token, reads no secret, calls no provider, sends no HTTP request, invokes no webhook, and unlocks no real capability.',
+            providerInvocationAuditPacketCardsHelper: 'Inspect audit packet cards with provider identity, packet status, required evidence refs, gate snapshot refs, blocked operation refs, signoff refs, preview export status, and disabled database/invocation/execution flags.',
+            providerInvocationAuditPacketEvidenceGateHelper: 'Inspect token, secret, network, cost, asset, failure, and readiness evidence references plus gate snapshots that remain blocked, preview, or review-required.',
+            providerInvocationAuditPacketBlockedSignoffExportHelper: 'Inspect blocked provider call, external call, secret read, token issue, paid operation, media transfer, database write, and rollback operations. Signoff is preview-only and export manifest is JSON/Markdown preview only.',
+            providerInvocationAuditPacketTraceRiskQualitySafetyHelper: 'Inspect traceability map to agent ledger and previous packs, risk register, quality checks, and disabled safety boundaries. No real logs, history tables, or service health are read.',
+            providerInvocationAuditPacketEvidenceNote: 'Evidence bundle references token, secret, network, cost, asset, failure, and readiness packs only; it does not create a real invocation audit pass.',
+            providerInvocationAuditPacketBlockedNote: 'Blocked operations include provider call, external call, secret read, token issue, paid operation, media transfer, database write, and rollback.',
+            providerInvocationAuditPacketExportNote: 'Audit export manifest describes JSON/Markdown preview export only; it does not write databases or upload files.',
+            providerInvocationAuditPacketRiskNote: 'Risk register includes missing signoff, network blocked, secret blocked, token blocked, paid blocked, database write blocked, rollback blocked, and media blocked.',
+            providerInvocationAuditPacketSafetyNote: 'Real LLM, provider, image, video, media, paid, registry, rollback, external scraping, database persistence, real restore, real execution, secret read, external call, and token issue remain disabled.',
+            providerInvocationAuditPacketProviderTypesNote: 'Provider types covered: llm_text_generation, video_generation_provider, image_generation_provider, media_storage_provider, external_scraping_provider, translation_provider, analytics_or_tracking_provider, database_persistence_provider, approval_or_ticket_provider, rollback_restore_provider.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProviderInvocationAuditPacketMarker: 'Project Workspace provider invocation audit packet bundle',
+            providerInvocationAuditPacketPackTitle: '\u5de5\u4f5c\u533a Provider Invocation Audit Packet',
+            providerInvocationAuditPacketPackHelper: '\u4ec5\u67e5\u770b\u786e\u5b9a\u6027 provider invocation audit packet \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e provider invocation audit system\u3002',
+            providerInvocationAuditPacketSummaryTitle: 'Invocation Audit Packet \u6458\u8981',
+            providerInvocationAuditPacketCardsTitle: 'Audit Packet \u5361\u7247',
+            providerInvocationAuditPacketEvidenceGateTitle: 'Pre-Invocation Evidence Bundle / Gate Snapshots',
+            providerInvocationAuditPacketEvidenceTitle: 'Pre-Invocation Evidence Bundle',
+            providerInvocationAuditPacketGateTitle: 'Gate Snapshot \u5361\u7247',
+            providerInvocationAuditPacketBlockedSignoffExportTitle: 'Blocked Operation \u6458\u8981 / Operator Signoff / Export Manifest',
+            providerInvocationAuditPacketBlockedTitle: 'Blocked Operation \u6458\u8981',
+            providerInvocationAuditPacketSignoffTitle: 'Operator Signoff Snapshot',
+            providerInvocationAuditPacketExportTitle: 'Audit Export Manifest',
+            providerInvocationAuditPacketTraceRiskQualitySafetyTitle: 'Audit Traceability / Risk / \u8d28\u91cf / \u5b89\u5168\u8fb9\u754c',
+            providerInvocationAuditPacketTraceTitle: 'Audit Traceability Map',
+            providerInvocationAuditPacketRiskTitle: 'Audit Packet Risk Register',
+            providerInvocationAuditPacketQualityTitle: 'Audit Packet \u8d28\u91cf\u68c0\u67e5',
+            providerInvocationAuditPacketSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            providerInvocationAuditPacketMode: '\u6a21\u5f0f',
+            providerInvocationAuditPacketCount: 'Audit packet \u6570\u91cf',
+            providerInvocationAuditPacketEvidenceCount: 'Evidence bundle \u6570\u91cf',
+            providerInvocationAuditPacketGateCount: 'Gate snapshot \u6570\u91cf',
+            providerInvocationAuditPacketBlockedCount: 'Blocked operation \u6570\u91cf',
+            providerInvocationAuditPacketRecommendedAction: '\u63a8\u8350\u64cd\u4f5c\u5458\u52a8\u4f5c',
+            providerInvocationAuditPacketDatabaseWrite: '\u5141\u8bb8\u5199\u6570\u636e\u5e93',
+            providerInvocationAuditPacketRealInvocation: '\u5141\u8bb8\u771f\u5b9e\u8c03\u7528',
+            providerInvocationAuditPacketRealExecution: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            providerInvocationAuditPacketDisabled: '\u5df2\u7981\u7528',
+            providerInvocationAuditPacketNoData: '\u6682\u65e0\u5de5\u4f5c\u533a provider invocation audit packet \u6570\u636e\u3002',
+            providerInvocationAuditPacketCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684\u5de5\u4f5c\u533a provider invocation audit packet \u5185\u5bb9\u3002',
+            providerInvocationAuditPacketCopyFailed: '\u65e0\u6cd5\u590d\u5236\u5de5\u4f5c\u533a provider invocation audit packet \u5185\u5bb9\u3002',
+            providerInvocationAuditPacketCopied: '\u5de5\u4f5c\u533a provider invocation audit packet \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            providerInvocationAuditPacketCopySummary: '\u590d\u5236 invocation audit packet \u6458\u8981',
+            providerInvocationAuditPacketCopyCards: '\u590d\u5236 audit packet \u5361\u7247',
+            providerInvocationAuditPacketCopyEvidence: '\u590d\u5236 pre-invocation evidence bundle',
+            providerInvocationAuditPacketCopyGate: '\u590d\u5236 gate snapshot \u5361\u7247',
+            providerInvocationAuditPacketCopyBlocked: '\u590d\u5236 blocked operation \u6458\u8981',
+            providerInvocationAuditPacketCopySignoff: '\u590d\u5236 operator signoff snapshot',
+            providerInvocationAuditPacketCopyExport: '\u590d\u5236 audit export manifest',
+            providerInvocationAuditPacketCopyTrace: '\u590d\u5236 audit traceability map',
+            providerInvocationAuditPacketCopyFull: '\u590d\u5236\u5b8c\u6574 provider invocation audit packet pack',
+            providerInvocationAuditPacketId: 'Audit packet ID',
+            providerInvocationAuditPacketProviderId: 'Provider ID',
+            providerInvocationAuditPacketProviderType: 'Provider \u7c7b\u578b',
+            providerInvocationAuditPacketSourceCapability: '\u6765\u6e90\u80fd\u529b',
+            providerInvocationAuditPacketStatus: 'Packet \u72b6\u6001',
+            providerInvocationAuditPacketExportAllowed: '\u5141\u8bb8 audit export',
+            providerInvocationAuditPacketSnapshotId: 'Snapshot ID',
+            providerInvocationAuditPacketGateSource: 'Gate \u6765\u6e90',
+            providerInvocationAuditPacketGateStatus: 'Gate \u72b6\u6001',
+            providerInvocationAuditPacketPreviewNote: '\u4ec5\u4e3a invocation audit packet \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e provider invocation audit system\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e audit record\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u4e0a\u4f20 audit packet\uff0c\u4e0d\u7b7e\u53d1 token\uff0c\u4e0d\u8bfb\u53d6 secret\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u53d1 HTTP request\uff0c\u4e0d\u8c03\u7528 webhook\uff0c\u4e0d\u89e3\u9501\u771f\u5b9e\u80fd\u529b\u3002',
+            providerInvocationAuditPacketCardsHelper: '\u67e5\u770b audit packet \u5361\u7247\uff0c\u5305\u542b provider \u8eab\u4efd\u3001packet \u72b6\u6001\u3001required evidence refs\u3001gate snapshot refs\u3001blocked operation refs\u3001signoff refs\u3001preview export \u72b6\u6001\u548c\u7981\u7528\u7684 database/invocation/execution \u6807\u5fd7\u3002',
+            providerInvocationAuditPacketEvidenceGateHelper: '\u67e5\u770b token\u3001secret\u3001network\u3001cost\u3001asset\u3001failure \u548c readiness evidence \u5f15\u7528\uff0c\u4ee5\u53ca\u4fdd\u6301 blocked\u3001preview \u6216 review-required \u7684 gate snapshot\u3002',
+            providerInvocationAuditPacketBlockedSignoffExportHelper: '\u67e5\u770b provider call\u3001external call\u3001secret read\u3001token issue\u3001paid operation\u3001media transfer\u3001database write \u548c rollback \u963b\u65ad\u9879\u3002Signoff \u4ec5\u4e3a preview\uff0cexport manifest \u4ec5\u4e3a JSON/Markdown preview\u3002',
+            providerInvocationAuditPacketTraceRiskQualitySafetyHelper: '\u67e5\u770b\u6620\u5c04\u5230 agent ledger \u548c previous packs \u7684 traceability map\u3001risk register\u3001\u8d28\u91cf\u68c0\u67e5\u548c\u5df2\u7981\u7528\u7684\u5b89\u5168\u8fb9\u754c\u3002\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u3001history table \u6216 service health\u3002',
+            providerInvocationAuditPacketEvidenceNote: 'Evidence bundle \u53ea\u5f15\u7528 token\u3001secret\u3001network\u3001cost\u3001asset\u3001failure \u548c readiness packs\uff1b\u4e0d\u521b\u5efa\u771f\u5b9e invocation audit pass\u3002',
+            providerInvocationAuditPacketBlockedNote: 'Blocked operations \u5305\u542b provider call\u3001external call\u3001secret read\u3001token issue\u3001paid operation\u3001media transfer\u3001database write \u548c rollback\u3002',
+            providerInvocationAuditPacketExportNote: 'Audit export manifest \u53ea\u63cf\u8ff0 JSON/Markdown preview export\uff1b\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\u3002',
+            providerInvocationAuditPacketRiskNote: 'Risk register \u5305\u542b missing signoff\u3001network blocked\u3001secret blocked\u3001token blocked\u3001paid blocked\u3001database write blocked\u3001rollback blocked \u548c media blocked\u3002',
+            providerInvocationAuditPacketSafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001image\u3001video\u3001media\u3001paid\u3001registry\u3001rollback\u3001external scraping\u3001database persistence\u3001real restore\u3001real execution\u3001secret read\u3001external call \u548c token issue \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002',
+            providerInvocationAuditPacketProviderTypesNote: '\u8986\u76d6\u7684 provider \u7c7b\u578b\uff1allm_text_generation\u3001video_generation_provider\u3001image_generation_provider\u3001media_storage_provider\u3001external_scraping_provider\u3001translation_provider\u3001analytics_or_tracking_provider\u3001database_persistence_provider\u3001approval_or_ticket_provider\u3001rollback_restore_provider\u3002'
+        });
+
 
         // L21-E stable language body classes for CSS-driven copy
         function updateLanguageBodyClass(language) {
@@ -9336,6 +9463,7 @@
                 latestProjectWorkspaceSecretEnvironmentGatePack = latestProjectCreativeDecisionPack.workspace_secret_environment_gate_pack || {};
                 latestProjectWorkspaceNetworkExternalCallBlockGuardPack = latestProjectCreativeDecisionPack.workspace_network_external_call_block_guard_pack || {};
                 latestProjectWorkspaceRealExecutionApprovalTokenPack = latestProjectCreativeDecisionPack.workspace_real_execution_approval_token_pack || {};
+                latestProjectWorkspaceProviderInvocationAuditPacketPack = latestProjectCreativeDecisionPack.workspace_provider_invocation_audit_packet_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -15206,6 +15334,7 @@
         const PROJECT_WORKSPACE_SECRET_ENVIRONMENT_GATE_MARKER = 'Project Workspace secret environment gate bundle';
         const PROJECT_WORKSPACE_NETWORK_EXTERNAL_CALL_BLOCK_GUARD_MARKER = 'Project Workspace network external call block guard bundle';
         const PROJECT_WORKSPACE_REAL_EXECUTION_APPROVAL_TOKEN_MARKER = 'Project Workspace real execution approval token bundle';
+        const PROJECT_WORKSPACE_PROVIDER_INVOCATION_AUDIT_PACKET_MARKER = 'Project Workspace provider invocation audit packet bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -20696,6 +20825,111 @@
         function copyProjectWorkspaceTokenScopeBoundaryRules() { return copyProjectWorkspaceRealExecutionApprovalTokenText('scope'); }
         function copyProjectWorkspaceApprovalTokenRiskRegister() { return copyProjectWorkspaceRealExecutionApprovalTokenText('risk'); }
         function copyProjectWorkspaceFullRealExecutionApprovalTokenPack() { return copyProjectWorkspaceRealExecutionApprovalTokenText('full'); }
+
+        function projectWorkspaceProviderInvocationAuditPacketPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceProviderInvocationAuditPacketPack && Object.keys(latestProjectWorkspaceProviderInvocationAuditPacketPack).length) return latestProjectWorkspaceProviderInvocationAuditPacketPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_provider_invocation_audit_packet_pack || {};
+        }
+
+        function projectWorkspaceExportProviderInvocationAuditPacketSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceProviderInvocationAuditPacketPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PROVIDER_INVOCATION_AUDIT_PACKET_MARKER,
+                has_workspace_provider_invocation_audit_packet_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                invocation_audit_packet_summary: pack.invocation_audit_packet_summary || {},
+                audit_packet_cards: Array.isArray(pack.audit_packet_cards) ? pack.audit_packet_cards : [],
+                pre_invocation_evidence_bundle: Array.isArray(pack.pre_invocation_evidence_bundle) ? pack.pre_invocation_evidence_bundle : [],
+                gate_snapshot_cards: Array.isArray(pack.gate_snapshot_cards) ? pack.gate_snapshot_cards : [],
+                blocked_operation_summary: Array.isArray(pack.blocked_operation_summary) ? pack.blocked_operation_summary : [],
+                operator_signoff_snapshot: Array.isArray(pack.operator_signoff_snapshot) ? pack.operator_signoff_snapshot : [],
+                audit_export_manifest: pack.audit_export_manifest || {},
+                audit_traceability_map: Array.isArray(pack.audit_traceability_map) ? pack.audit_traceability_map : [],
+                audit_packet_risk_register: Array.isArray(pack.audit_packet_risk_register) ? pack.audit_packet_risk_register : [],
+                audit_packet_quality_checks: pack.audit_packet_quality_checks || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceProviderInvocationAuditPacketJsonText(value) {
+            if (!value || (Array.isArray(value) && !value.length) || (!Array.isArray(value) && typeof value === 'object' && !Object.keys(value).length)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceProviderInvocationAuditPacketSummaryText(pack = projectWorkspaceExportProviderInvocationAuditPacketSnapshot()) {
+            if (!pack.has_workspace_provider_invocation_audit_packet_pack) return '';
+            const summary = pack.invocation_audit_packet_summary || {};
+            return [
+                t('providerInvocationAuditPacketSummaryTitle'),
+                `${t('providerInvocationAuditPacketMode')}: ${summary.mode || t('none')}`,
+                `${t('providerInvocationAuditPacketCount')}: ${summary.audit_packet_card_count ?? pack.audit_packet_cards.length}`,
+                `${t('providerInvocationAuditPacketEvidenceCount')}: ${summary.pre_invocation_evidence_count ?? pack.pre_invocation_evidence_bundle.length}`,
+                `${t('providerInvocationAuditPacketGateCount')}: ${summary.gate_snapshot_card_count ?? pack.gate_snapshot_cards.length}`,
+                `${t('providerInvocationAuditPacketBlockedCount')}: ${summary.blocked_operation_count ?? pack.blocked_operation_summary.length}`,
+                `${t('providerInvocationAuditPacketRecommendedAction')}: ${summary.recommended_operator_action || t('none')}`,
+                `${t('providerInvocationAuditPacketDatabaseWrite')}: ${summary.database_write_allowed === false ? t('providerInvocationAuditPacketDisabled') : String(summary.database_write_allowed)}`,
+                `${t('providerInvocationAuditPacketRealInvocation')}: ${summary.real_invocation_allowed === false ? t('providerInvocationAuditPacketDisabled') : String(summary.real_invocation_allowed)}`,
+                `${t('providerInvocationAuditPacketRealExecution')}: ${summary.real_execution_allowed === false ? t('providerInvocationAuditPacketDisabled') : String(summary.real_execution_allowed)}`,
+                t('providerInvocationAuditPacketPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceProviderInvocationAuditPacketSectionText(titleKey, value) {
+            const body = projectWorkspaceProviderInvocationAuditPacketJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportProviderInvocationAuditPacketMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderInvocationAuditPacketSnapshot(workspace);
+            if (!pack.has_workspace_provider_invocation_audit_packet_pack) return '';
+            return [
+                `## ${t('providerInvocationAuditPacketPackTitle')}`,
+                `## ${t('providerInvocationAuditPacketSummaryTitle')}`,
+                projectWorkspaceProviderInvocationAuditPacketSummaryText(pack), '',
+                projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketCardsTitle', pack.audit_packet_cards), '',
+                projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketEvidenceTitle', pack.pre_invocation_evidence_bundle), '',
+                projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketGateTitle', pack.gate_snapshot_cards), '',
+                projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketBlockedTitle', pack.blocked_operation_summary), '',
+                projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketSignoffTitle', pack.operator_signoff_snapshot), '',
+                projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketExportTitle', pack.audit_export_manifest), '',
+                projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketTraceTitle', pack.audit_traceability_map), '',
+                projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketRiskTitle', pack.audit_packet_risk_register), '',
+                projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketQualityTitle', pack.audit_packet_quality_checks), '',
+                projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketSafetyTitle', pack.safety_boundaries),
+                t('providerInvocationAuditPacketSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceProviderInvocationAuditPacketText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceProviderInvocationAuditPacketStatus');
+            const pack = projectWorkspaceExportProviderInvocationAuditPacketSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceProviderInvocationAuditPacketSummaryText(pack)
+                : kind === 'cards' ? projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketCardsTitle', pack.audit_packet_cards)
+                : kind === 'evidence' ? projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketEvidenceTitle', pack.pre_invocation_evidence_bundle)
+                : kind === 'gates' ? projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketGateTitle', pack.gate_snapshot_cards)
+                : kind === 'blocked' ? projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketBlockedTitle', pack.blocked_operation_summary)
+                : kind === 'signoff' ? projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketSignoffTitle', pack.operator_signoff_snapshot)
+                : kind === 'export' ? projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketExportTitle', pack.audit_export_manifest)
+                : kind === 'trace' ? projectWorkspaceProviderInvocationAuditPacketSectionText('providerInvocationAuditPacketTraceTitle', pack.audit_traceability_map)
+                : projectWorkspaceExportProviderInvocationAuditPacketMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('providerInvocationAuditPacketCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('providerInvocationAuditPacketCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('providerInvocationAuditPacketCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('providerInvocationAuditPacketCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceInvocationAuditPacketSummary() { return copyProjectWorkspaceProviderInvocationAuditPacketText('summary'); }
+        function copyProjectWorkspaceAuditPacketCards() { return copyProjectWorkspaceProviderInvocationAuditPacketText('cards'); }
+        function copyProjectWorkspacePreInvocationEvidenceBundle() { return copyProjectWorkspaceProviderInvocationAuditPacketText('evidence'); }
+        function copyProjectWorkspaceGateSnapshotCards() { return copyProjectWorkspaceProviderInvocationAuditPacketText('gates'); }
+        function copyProjectWorkspaceBlockedOperationSummary() { return copyProjectWorkspaceProviderInvocationAuditPacketText('blocked'); }
+        function copyProjectWorkspaceOperatorSignoffSnapshot() { return copyProjectWorkspaceProviderInvocationAuditPacketText('signoff'); }
+        function copyProjectWorkspaceAuditExportManifest() { return copyProjectWorkspaceProviderInvocationAuditPacketText('export'); }
+        function copyProjectWorkspaceAuditTraceabilityMap() { return copyProjectWorkspaceProviderInvocationAuditPacketText('trace'); }
+        function copyProjectWorkspaceFullProviderInvocationAuditPacketPack() { return copyProjectWorkspaceProviderInvocationAuditPacketText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -24599,6 +24833,35 @@
             return `<div class="section-block" id="projectWorkspaceApprovalTokenRiskQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('realExecutionApprovalTokenRiskQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('realExecutionApprovalTokenRiskQualityAuditSafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceApprovalTokenRiskRegister()">${escapeHTML(t('realExecutionApprovalTokenCopyRisk'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('realExecutionApprovalTokenRiskTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealExecutionApprovalTokenJsonText(pack.approval_token_risk_register) || t('realExecutionApprovalTokenNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('realExecutionApprovalTokenQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealExecutionApprovalTokenJsonText(pack.approval_token_quality_checks) || t('realExecutionApprovalTokenNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('realExecutionApprovalTokenAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceRealExecutionApprovalTokenJsonText(pack.audit_preview) || t('realExecutionApprovalTokenNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('realExecutionApprovalTokenSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('realExecutionApprovalTokenRiskNoteText'))}</div><div class="field-helper">${escapeHTML(t('realExecutionApprovalTokenSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceInvocationAuditPacketSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderInvocationAuditPacketSnapshot(workspace); if (!pack.has_workspace_provider_invocation_audit_packet_pack) return '';
+            const summary = pack.invocation_audit_packet_summary || {};
+            return `<div class="section-block" id="projectWorkspaceInvocationAuditPacketSummaryPanel" data-provider-invocation-audit-packet-marker="${PROJECT_WORKSPACE_PROVIDER_INVOCATION_AUDIT_PACKET_MARKER}" data-marker="project_workspace_provider_invocation_audit_packet_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerInvocationAuditPacketPackTitle'))}</div><div class="field-helper">${escapeHTML(t('providerInvocationAuditPacketPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullProviderInvocationAuditPacketPack()">${escapeHTML(t('providerInvocationAuditPacketCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('providerInvocationAuditPacketMode'), summary.mode || t('none'))}${metricPill(t('providerInvocationAuditPacketCount'), String(summary.audit_packet_card_count ?? pack.audit_packet_cards.length))}${metricPill(t('providerInvocationAuditPacketEvidenceCount'), String(summary.pre_invocation_evidence_count ?? pack.pre_invocation_evidence_bundle.length))}${metricPill(t('providerInvocationAuditPacketGateCount'), String(summary.gate_snapshot_card_count ?? pack.gate_snapshot_cards.length))}${metricPill(t('providerInvocationAuditPacketBlockedCount'), String(summary.blocked_operation_count ?? pack.blocked_operation_summary.length))}${metricPill(t('providerInvocationAuditPacketDatabaseWrite'), summary.database_write_allowed === false ? t('providerInvocationAuditPacketDisabled') : String(summary.database_write_allowed))}${metricPill(t('providerInvocationAuditPacketRealInvocation'), summary.real_invocation_allowed === false ? t('providerInvocationAuditPacketDisabled') : String(summary.real_invocation_allowed))}${metricPill(t('providerInvocationAuditPacketRealExecution'), summary.real_execution_allowed === false ? t('providerInvocationAuditPacketDisabled') : String(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderInvocationAuditPacketSummaryText(pack) || t('providerInvocationAuditPacketNoData'))}</pre><div class="field-helper">${escapeHTML(t('providerInvocationAuditPacketPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceProviderInvocationAuditPacketStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceInvocationAuditPacketSummary()">${escapeHTML(t('providerInvocationAuditPacketCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceAuditPacketCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderInvocationAuditPacketSnapshot(workspace); if (!pack.has_workspace_provider_invocation_audit_packet_pack) return '';
+            const cards = (pack.audit_packet_cards || []).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.audit_packet_id || t('providerInvocationAuditPacketCardsTitle'))}</strong><span class="metric-pill">${escapeHTML(card.provider_type || t('none'))}</span></div><div><strong>${escapeHTML(t('providerInvocationAuditPacketProviderId'))}:</strong> ${escapeHTML(card.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('providerInvocationAuditPacketSourceCapability'))}:</strong> ${escapeHTML(card.source_capability || t('none'))}</div><div><strong>${escapeHTML(t('providerInvocationAuditPacketStatus'))}:</strong> ${escapeHTML(card.packet_status || t('none'))}</div><div><strong>${escapeHTML(t('providerInvocationAuditPacketExportAllowed'))}:</strong> ${escapeHTML(card.audit_export_allowed || t('none'))}</div><div><strong>${escapeHTML(t('providerInvocationAuditPacketDatabaseWrite'))}:</strong> ${escapeHTML(card.database_write_allowed === false ? t('providerInvocationAuditPacketDisabled') : String(card.database_write_allowed))}</div><div><strong>${escapeHTML(t('providerInvocationAuditPacketRealInvocation'))}:</strong> ${escapeHTML(card.real_invocation_allowed === false ? t('providerInvocationAuditPacketDisabled') : String(card.real_invocation_allowed))}</div><div><strong>${escapeHTML(t('providerInvocationAuditPacketRealExecution'))}:</strong> ${escapeHTML(card.real_execution_allowed === false ? t('providerInvocationAuditPacketDisabled') : String(card.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderInvocationAuditPacketJsonText({required_evidence_refs:card.required_evidence_refs||[],gate_snapshot_refs:card.gate_snapshot_refs||[],blocked_operation_refs:card.blocked_operation_refs||[],operator_signoff_refs:card.operator_signoff_refs||[],recommended_operator_action:card.recommended_operator_action||'',risk_note:card.risk_note||''}) || t('providerInvocationAuditPacketNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceAuditPacketCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerInvocationAuditPacketCardsTitle'))}</div><div class="field-helper">${escapeHTML(t('providerInvocationAuditPacketCardsHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAuditPacketCards()">${escapeHTML(t('providerInvocationAuditPacketCopyCards'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('providerInvocationAuditPacketNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('providerInvocationAuditPacketProviderTypesNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePreInvocationEvidenceGatePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderInvocationAuditPacketSnapshot(workspace); if (!pack.has_workspace_provider_invocation_audit_packet_pack) return '';
+            const gates = (pack.gate_snapshot_cards || []).slice(0, 24).map((gate) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(gate.snapshot_id || t('providerInvocationAuditPacketGateTitle'))}</strong><span class="metric-pill">${escapeHTML(gate.gate_status || t('none'))}</span></div><div><strong>${escapeHTML(t('providerInvocationAuditPacketProviderId'))}:</strong> ${escapeHTML(gate.provider_id || t('none'))}</div><div><strong>${escapeHTML(t('providerInvocationAuditPacketProviderType'))}:</strong> ${escapeHTML(gate.provider_type || t('none'))}</div><div><strong>${escapeHTML(t('providerInvocationAuditPacketGateSource'))}:</strong> ${escapeHTML(gate.gate_source || t('none'))}</div><div><strong>${escapeHTML(t('providerInvocationAuditPacketRealInvocation'))}:</strong> ${escapeHTML(gate.real_invocation_allowed === false ? t('providerInvocationAuditPacketDisabled') : String(gate.real_invocation_allowed))}</div><div><strong>${escapeHTML(t('providerInvocationAuditPacketRealExecution'))}:</strong> ${escapeHTML(gate.real_execution_allowed === false ? t('providerInvocationAuditPacketDisabled') : String(gate.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderInvocationAuditPacketJsonText({captured_fields:gate.captured_fields||[],missing_fields:gate.missing_fields||[],blocked_reason:gate.blocked_reason||'',risk_note:gate.risk_note||''}) || t('providerInvocationAuditPacketNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspacePreInvocationEvidenceGatePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerInvocationAuditPacketEvidenceGateTitle'))}</div><div class="field-helper">${escapeHTML(t('providerInvocationAuditPacketEvidenceGateHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePreInvocationEvidenceBundle()">${escapeHTML(t('providerInvocationAuditPacketCopyEvidence'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceGateSnapshotCards()">${escapeHTML(t('providerInvocationAuditPacketCopyGate'))}</button></div></div><div class="graph-os-compact-grid">${gates || `<div class="empty-state">${escapeHTML(t('providerInvocationAuditPacketNoData'))}</div>`}<div class="graph-os-card"><strong>${escapeHTML(t('providerInvocationAuditPacketEvidenceTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderInvocationAuditPacketJsonText(pack.pre_invocation_evidence_bundle) || t('providerInvocationAuditPacketNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('providerInvocationAuditPacketEvidenceNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceBlockedOperationSignoffExportPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderInvocationAuditPacketSnapshot(workspace); if (!pack.has_workspace_provider_invocation_audit_packet_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceBlockedOperationSignoffExportPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerInvocationAuditPacketBlockedSignoffExportTitle'))}</div><div class="field-helper">${escapeHTML(t('providerInvocationAuditPacketBlockedSignoffExportHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceBlockedOperationSummary()">${escapeHTML(t('providerInvocationAuditPacketCopyBlocked'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceOperatorSignoffSnapshot()">${escapeHTML(t('providerInvocationAuditPacketCopySignoff'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAuditExportManifest()">${escapeHTML(t('providerInvocationAuditPacketCopyExport'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerInvocationAuditPacketBlockedTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderInvocationAuditPacketJsonText(pack.blocked_operation_summary) || t('providerInvocationAuditPacketNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerInvocationAuditPacketSignoffTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderInvocationAuditPacketJsonText(pack.operator_signoff_snapshot) || t('providerInvocationAuditPacketNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerInvocationAuditPacketExportTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderInvocationAuditPacketJsonText(pack.audit_export_manifest) || t('providerInvocationAuditPacketNoData'))}</pre></div></div><div class="field-helper">${escapeHTML(t('providerInvocationAuditPacketBlockedNote'))}</div><div class="field-helper">${escapeHTML(t('providerInvocationAuditPacketExportNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceAuditTraceRiskQualitySafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProviderInvocationAuditPacketSnapshot(workspace); if (!pack.has_workspace_provider_invocation_audit_packet_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('providerInvocationAuditPacketDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceAuditTraceRiskQualitySafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerInvocationAuditPacketTraceRiskQualitySafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('providerInvocationAuditPacketTraceRiskQualitySafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAuditTraceabilityMap()">${escapeHTML(t('providerInvocationAuditPacketCopyTrace'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerInvocationAuditPacketTraceTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderInvocationAuditPacketJsonText(pack.audit_traceability_map) || t('providerInvocationAuditPacketNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerInvocationAuditPacketRiskTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderInvocationAuditPacketJsonText(pack.audit_packet_risk_register) || t('providerInvocationAuditPacketNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerInvocationAuditPacketQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderInvocationAuditPacketJsonText(pack.audit_packet_quality_checks) || t('providerInvocationAuditPacketNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('providerInvocationAuditPacketSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('providerInvocationAuditPacketRiskNote'))}</div><div class="field-helper">${escapeHTML(t('providerInvocationAuditPacketSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -25141,6 +25404,8 @@
                 '',
                 projectWorkspaceExportRealExecutionApprovalTokenMarkdown(workspace),
                 '',
+                projectWorkspaceExportProviderInvocationAuditPacketMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -25256,6 +25521,7 @@
                 workspace_secret_environment_gate_pack: projectWorkspaceExportSecretEnvironmentGateSnapshot(workspace),
                 workspace_network_external_call_block_guard_pack: projectWorkspaceExportNetworkExternalCallBlockGuardSnapshot(workspace),
                 workspace_real_execution_approval_token_pack: projectWorkspaceExportRealExecutionApprovalTokenSnapshot(workspace),
+                workspace_provider_invocation_audit_packet_pack: projectWorkspaceExportProviderInvocationAuditPacketSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -37822,6 +38088,11 @@
                     ${renderProjectWorkspaceExecutionApprovalGateSignoffPanel(workspace)}
                     ${renderProjectWorkspaceTokenBlockerPacketScopePanel(workspace)}
                     ${renderProjectWorkspaceApprovalTokenRiskQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceInvocationAuditPacketSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceAuditPacketCardsPanel(workspace)}
+                    ${renderProjectWorkspacePreInvocationEvidenceGatePanel(workspace)}
+                    ${renderProjectWorkspaceBlockedOperationSignoffExportPanel(workspace)}
+                    ${renderProjectWorkspaceAuditTraceRiskQualitySafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}

@@ -13443,6 +13443,215 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_provider_invocation_audit_packet_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace provider invocation audit packet bundle",
+            "PROJECT_WORKSPACE_PROVIDER_INVOCATION_AUDIT_PACKET_MARKER",
+            "latestProjectWorkspaceProviderInvocationAuditPacketPack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "projectWorkspaceProviderInvocationAuditPacketPackFromWorkspace",
+            "projectWorkspaceExportProviderInvocationAuditPacketSnapshot",
+            "projectWorkspaceExportProviderInvocationAuditPacketMarkdown",
+            "renderProjectWorkspaceInvocationAuditPacketSummaryPanel",
+            "renderProjectWorkspaceAuditPacketCardsPanel",
+            "renderProjectWorkspacePreInvocationEvidenceGatePanel",
+            "renderProjectWorkspaceBlockedOperationSignoffExportPanel",
+            "renderProjectWorkspaceAuditTraceRiskQualitySafetyPanel",
+            "copyProjectWorkspaceInvocationAuditPacketSummary",
+            "copyProjectWorkspaceAuditPacketCards",
+            "copyProjectWorkspacePreInvocationEvidenceBundle",
+            "copyProjectWorkspaceGateSnapshotCards",
+            "copyProjectWorkspaceBlockedOperationSummary",
+            "copyProjectWorkspaceOperatorSignoffSnapshot",
+            "copyProjectWorkspaceAuditExportManifest",
+            "copyProjectWorkspaceAuditTraceabilityMap",
+            "copyProjectWorkspaceFullProviderInvocationAuditPacketPack",
+            "workspace_provider_invocation_audit_packet_pack: projectWorkspaceExportProviderInvocationAuditPacketSnapshot(workspace)",
+            "Workspace Provider Invocation Audit Packet",
+            "Invocation Audit Packet Summary",
+            "Audit Packet Cards",
+            "Pre-Invocation Evidence Bundle",
+            "Gate Snapshot Cards",
+            "Blocked Operation Summary",
+            "Operator Signoff Snapshot",
+            "Audit Export Manifest",
+            "Audit Traceability Map",
+            "Audit Packet Risk Register",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for provider_type in [
+            "llm_text_generation", "video_generation_provider",
+            "image_generation_provider", "media_storage_provider",
+            "external_scraping_provider", "translation_provider",
+            "analytics_or_tracking_provider", "database_persistence_provider",
+            "approval_or_ticket_provider", "rollback_restore_provider",
+        ]:
+            with self.subTest(provider_type=provider_type):
+                self.assertIn(provider_type, html)
+        for field in [
+            "pack.invocation_audit_packet_summary",
+            "pack.audit_packet_cards",
+            "pack.pre_invocation_evidence_bundle",
+            "pack.gate_snapshot_cards",
+            "pack.blocked_operation_summary",
+            "pack.operator_signoff_snapshot",
+            "pack.audit_export_manifest",
+            "pack.audit_traceability_map",
+            "pack.audit_packet_risk_register",
+            "pack.audit_packet_quality_checks",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.audit_packet_card_count",
+            "summary.pre_invocation_evidence_count",
+            "summary.gate_snapshot_card_count",
+            "summary.blocked_operation_count",
+            "summary.database_write_allowed",
+            "summary.real_invocation_allowed",
+            "summary.real_execution_allowed",
+            "card.audit_packet_id",
+            "card.provider_id",
+            "card.provider_type",
+            "card.source_capability",
+            "card.packet_status",
+            "card.required_evidence_refs",
+            "card.gate_snapshot_refs",
+            "card.blocked_operation_refs",
+            "card.operator_signoff_refs",
+            "card.audit_export_allowed",
+            "card.database_write_allowed",
+            "card.real_invocation_allowed",
+            "card.real_execution_allowed",
+            "gate.snapshot_id",
+            "gate.provider_id",
+            "gate.provider_type",
+            "gate.gate_source",
+            "gate.gate_status",
+            "gate.captured_fields",
+            "gate.missing_fields",
+            "gate.blocked_reason",
+            "gate.real_invocation_allowed",
+            "gate.real_execution_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for required_text in [
+            "provider call", "external call", "secret read",
+            "token issue", "paid operation", "media transfer",
+            "database write", "rollback", "token", "secret",
+            "network", "cost", "asset", "failure", "readiness",
+            "agent ledger", "previous packs", "real logs",
+            "missing signoff", "network blocked", "secret blocked",
+            "token blocked", "paid blocked", "database write blocked",
+            "rollback blocked", "media blocked",
+        ]:
+            with self.subTest(required_text=required_text):
+                self.assertIn(required_text, html)
+        previous = html.index("${renderProjectWorkspaceApprovalTokenRiskQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspaceInvocationAuditPacketSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspaceAuditTraceRiskQualitySafetyPanel(workspace)}")
+        core = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_provider_invocation_audit_packet_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "providerInvocationAuditPacketPackTitle",
+            "providerInvocationAuditPacketSummaryTitle",
+            "providerInvocationAuditPacketCardsTitle",
+            "providerInvocationAuditPacketEvidenceTitle",
+            "providerInvocationAuditPacketGateTitle",
+            "providerInvocationAuditPacketBlockedTitle",
+            "providerInvocationAuditPacketSignoffTitle",
+            "providerInvocationAuditPacketExportTitle",
+            "providerInvocationAuditPacketTraceTitle",
+            "providerInvocationAuditPacketRiskTitle",
+            "providerInvocationAuditPacketSafetyTitle",
+            "providerInvocationAuditPacketCopySummary",
+            "providerInvocationAuditPacketCopyCards",
+            "providerInvocationAuditPacketCopyEvidence",
+            "providerInvocationAuditPacketCopyGate",
+            "providerInvocationAuditPacketCopyBlocked",
+            "providerInvocationAuditPacketCopySignoff",
+            "providerInvocationAuditPacketCopyExport",
+            "providerInvocationAuditPacketCopyTrace",
+            "providerInvocationAuditPacketCopyFull",
+            "providerInvocationAuditPacketCopied",
+            "providerInvocationAuditPacketCopyFailed",
+            "providerInvocationAuditPacketCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn(
+                "Project Workspace provider invocation audit packet bundle",
+                script,
+            )
+            self.assertIn(
+                "project_workspace_provider_invocation_audit_packet_marker",
+                script,
+            )
+        markdown = html[
+            html.index("function projectWorkspaceProviderInvocationAuditPacketSummaryText"):
+            html.index("async function copyProjectWorkspaceProviderInvocationAuditPacketText")
+        ]
+        for key in [
+            "providerInvocationAuditPacketPackTitle",
+            "providerInvocationAuditPacketSummaryTitle",
+            "providerInvocationAuditPacketCardsTitle",
+            "providerInvocationAuditPacketEvidenceTitle",
+            "providerInvocationAuditPacketGateTitle",
+            "providerInvocationAuditPacketBlockedTitle",
+            "providerInvocationAuditPacketSignoffTitle",
+            "providerInvocationAuditPacketExportTitle",
+            "providerInvocationAuditPacketTraceTitle",
+            "providerInvocationAuditPacketRiskTitle",
+            "providerInvocationAuditPacketSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PROVIDER_INVOCATION_AUDIT_PACKET_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "invocation audit packet preview",
+            "not a real provider invocation audit system",
+            "creates no real audit record",
+            "writes no database",
+            "uploads no audit packet",
+            "issues no token",
+            "reads no secret",
+            "calls no provider",
+            "sends no HTTP request",
+            "invokes no webhook",
+            "No real logs",
+            "Real LLM",
+            "provider",
+            "image",
+            "video",
+            "media",
+            "paid",
+            "registry",
+            "rollback",
+            "external scraping",
+            "database persistence",
+            "real restore",
+            "real execution",
+            "secret read",
+            "external call",
+            "token issue",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [
