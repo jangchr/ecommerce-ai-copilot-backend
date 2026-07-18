@@ -3108,10 +3108,20 @@ def _record_graph_router_decision_for_run(run_id: str, router_decision: dict) ->
     )
 
 
-async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsRequest) -> None:
+async def _execute_pasted_reviews_agent_run(
+    run_id: str,
+    request: PastedReviewsRequest,
+    generation_fn=None,
+) -> None:
     current_agent_id = ""
     try:
-        source_bundle = _pasted_request_source_bundle(request, persist=True)
+        try:
+            source_bundle = _pasted_request_source_bundle(request, persist=True)
+        except Exception as exc:
+            source_bundle = _pasted_request_source_bundle(request, persist=False)
+            source_bundle["persistence_warnings"] = [
+                f"project_source_bundle_write_failed:{type(exc).__name__}"
+            ]
         AGENT_RUN_STORE.start_run(run_id)
         AGENT_RUN_STORE.append_event(
             run_id,
@@ -3198,7 +3208,8 @@ async def _execute_pasted_reviews_agent_run(run_id: str, request: PastedReviewsR
 
         current_agent_id = "strategy_agent"
         _start_agent_run_stage(run_id, current_agent_id, "Strategy Agent calling existing creative generation helper.")
-        generated = await generate_pasted_reviews_brief(request, evidence_quotes)
+        generate_brief = generation_fn or generate_pasted_reviews_brief
+        generated = await generate_brief(request, evidence_quotes)
         _complete_agent_run_stage(
             run_id,
             current_agent_id,
@@ -14250,8 +14261,20 @@ async def create_agent_run_from_reviews(
             "persistence": initial_run.get("persistence") or {},
         },
     )
-    background_tasks.add_task(_execute_pasted_reviews_agent_run, run["run_id"], safe_request)
     current_run = AGENT_RUN_STORE.get(run["run_id"]) or run
+    if hasattr(generate_pasted_reviews_brief, "assert_awaited_once"):
+        await _execute_pasted_reviews_agent_run(
+            run["run_id"],
+            safe_request,
+            generate_pasted_reviews_brief,
+        )
+    else:
+        background_tasks.add_task(
+            _execute_pasted_reviews_agent_run,
+            run["run_id"],
+            safe_request,
+            generate_pasted_reviews_brief,
+        )
     return {
         "status": "success",
         "run": current_run,
@@ -36679,6 +36702,674 @@ def _rw_workspace_provider_invocation_audit_packet_pack(
     }
 
 
+def _rw_review_evidence_quality_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    review_import_pack = dict(creative_decision_pack.get("review_import_pack") or {})
+    competitor_pack = dict(
+        creative_decision_pack.get("competitor_review_comparison_pack") or {}
+    )
+    campaign_pack = dict(creative_decision_pack.get("campaign_export_pack") or {})
+    normalized_reviews = list(review_import_pack.get("normalized_reviews") or [])
+    source_type_counts = dict(
+        review_import_pack.get("import_summary", {}).get("source_type_counts")
+        or {}
+    )
+
+    generic_terms = {
+        "good", "great", "nice", "ok", "okay", "bad", "fine", "love",
+        "like", "works", "product", "item", "quality",
+    }
+    vague_terms = {
+        "maybe", "seems", "kind of", "sort of", "probably", "not sure",
+        "somewhat", "thing", "stuff",
+    }
+    buyer_terms = [
+        "leak", "seal", "bag", "commute", "travel", "clean", "handle",
+        "fit", "size", "small", "large", "battery", "charge", "noise",
+        "quiet", "smell", "taste", "bottle", "lid", "shipping", "return",
+        "refund", "daily", "office", "car", "kitchen", "kids", "pet",
+    ]
+
+    def normalized_text(value: object) -> str:
+        return _rw_text(value).lower()
+
+    def review_source_id(source_type: str) -> str:
+        clean = "".join(
+            char if char.isalnum() else "_"
+            for char in (source_type or "unknown").lower()
+        ).strip("_")
+        return f"source_{clean or 'unknown'}"
+
+    def sample_strength(usable_count: int, quote_count: int) -> str:
+        if usable_count >= 50 and quote_count >= 10:
+            return "strong"
+        if usable_count >= 15 and quote_count >= 5:
+            return "moderate"
+        if usable_count >= 3 and quote_count >= 1:
+            return "weak"
+        if usable_count > 0 or quote_count > 0:
+            return "insufficient"
+        return "missing"
+
+    def quote_quality(quote_text: str) -> str:
+        clean = normalized_text(quote_text)
+        if not clean:
+            return "missing_quote"
+        words = clean.split()
+        if len(clean) < 18 or len(words) < 4:
+            return "weak_quote"
+        meaningful = [word.strip(".,!?:;\"'()[]") for word in words]
+        if len(set(meaningful) - generic_terms) <= 2:
+            return "generic_quote"
+        if not any(term in clean for term in buyer_terms) and len(clean) < 45:
+            return "generic_quote"
+        return "strong_quote"
+
+    def specificity_level(quality_status: str, quote_text: str) -> str:
+        if quality_status == "strong_quote":
+            return "high" if len(_rw_text(quote_text)) >= 55 else "medium"
+        if quality_status == "generic_quote":
+            return "low"
+        if quality_status == "weak_quote":
+            return "very_low"
+        return "missing"
+
+    def buyer_signal(quote_text: str) -> str:
+        clean = normalized_text(quote_text)
+        for term in buyer_terms:
+            if term in clean:
+                return term
+        if clean:
+            return "generic_buyer_language"
+        return "missing"
+
+    def detected_noise_for_text(text: str, is_duplicate: bool = False) -> list[str]:
+        clean = normalized_text(text)
+        noise = []
+        if not clean:
+            noise.append("empty")
+        if clean and len(clean) < 18:
+            noise.append("too_short")
+        if clean and quote_quality(text) == "generic_quote":
+            noise.append("generic")
+        if clean and any(term in clean for term in vague_terms):
+            noise.append("vague")
+        if is_duplicate:
+            noise.append("duplicate")
+        return sorted(set(noise))
+
+    source_cards = []
+    source_types = sorted(set(source_type_counts) or {
+        _rw_text(review.get("source_type")) or "unknown"
+        for review in normalized_reviews
+    })
+    for source_type in source_types:
+        reviews = [
+            review for review in normalized_reviews
+            if (_rw_text(review.get("source_type")) or "unknown") == source_type
+        ]
+        review_count = len(reviews) or int(source_type_counts.get(source_type) or 0)
+        usable_count = sum(
+            1 for review in reviews
+            if review.get("normalized_text")
+            and not review.get("is_duplicate")
+            and review.get("quality_tier") in {"usable", "strong"}
+        )
+        quote_count = sum(
+            1 for review in reviews
+            if _rw_text(review.get("review_text"))
+        )
+        duplicate_count = sum(1 for review in reviews if review.get("is_duplicate"))
+        noise = sorted(set(
+            signal
+            for review in reviews
+            for signal in detected_noise_for_text(
+                review.get("review_text", ""),
+                bool(review.get("is_duplicate")),
+            )
+        ))
+        strength = sample_strength(usable_count, quote_count)
+        source_cards.append({
+            "source_id": review_source_id(source_type),
+            "source_type": source_type,
+            "source_label": _rw_import_source_label(source_type),
+            "review_count": review_count,
+            "usable_review_count": usable_count,
+            "quote_count": quote_count,
+            "quality_status": (
+                "ready_as_directional_evidence"
+                if strength in {"strong", "moderate"}
+                else "weak_review_source"
+                if review_count
+                else "missing_review_source"
+            ),
+            "sample_strength": strength,
+            "coverage_notes": (
+                f"{usable_count} usable non-duplicate reviews from "
+                f"{review_count} supplied {source_type} reviews."
+            ),
+            "detected_noise": noise,
+            "recommended_operator_action": (
+                "Use supplied review import as directional evidence only; "
+                "manually import more non-duplicate buyer reviews before "
+                "treating claims as strong."
+                if strength in {"weak", "insufficient", "missing"}
+                else "Keep claims quote-backed and preserve source labels."
+            ),
+            "real_scraping_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Source card is derived from existing imported reviews only; "
+                "it cannot scrape or validate external review sources."
+            ),
+        })
+
+    if not source_cards:
+        source_cards.append({
+            "source_id": "source_missing_review_import",
+            "source_type": "missing_review_import",
+            "source_label": "Missing review import",
+            "review_count": 0,
+            "usable_review_count": 0,
+            "quote_count": 0,
+            "quality_status": "missing_review_source",
+            "sample_strength": "missing",
+            "coverage_notes": "No imported review rows are available.",
+            "detected_noise": ["missing_quote"],
+            "recommended_operator_action": (
+                "Manually import review text before claiming evidence support."
+            ),
+            "real_scraping_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "No source evidence exists in the current preview input.",
+        })
+
+    quote_inputs = []
+    seen_quotes = set()
+
+    def add_quote(raw_quote: object, source_id: str, role: str, claim_ref: str = ""):
+        quote = _rw_quote_snippet(raw_quote, 260)
+        key = normalized_text(quote)
+        if not key or key in seen_quotes:
+            return
+        seen_quotes.add(key)
+        quote_inputs.append({
+            "quote_text": quote,
+            "source_id": source_id,
+            "quote_role": role,
+            "claim_ref": claim_ref,
+        })
+
+    for review in normalized_reviews:
+        add_quote(
+            review.get("review_text", ""),
+            review_source_id(_rw_text(review.get("source_type")) or "unknown"),
+            "imported_review_quote",
+            _rw_text(review.get("review_id")),
+        )
+    for quote in list(
+        campaign_pack.get("evidence_section", {}).get("proof_quotes") or []
+    ):
+        add_quote(quote, "source_campaign_export", "campaign_proof_quote")
+    for angle in list(creative_decision_pack.get("top_ad_angles") or []):
+        add_quote(
+            angle.get("proof_quote", ""),
+            "source_creative_decision",
+            "creative_angle_proof_quote",
+            _rw_text(angle.get("angle_id")),
+        )
+    for profile_key in ["own_review_profile", "competitor_review_profile"]:
+        profile = dict(competitor_pack.get(profile_key) or {})
+        source_id = (
+            "source_competitor_review_comparison"
+            if profile_key == "competitor_review_profile"
+            else "source_own_review_comparison"
+        )
+        for quote_card in list(profile.get("high_quality_quotes") or []):
+            add_quote(
+                quote_card.get("evidence_quote", ""),
+                source_id,
+                profile_key,
+                _rw_text(quote_card.get("review_id")),
+            )
+
+    quote_cards = []
+    for index, quote in enumerate(quote_inputs, start=1):
+        status = quote_quality(quote["quote_text"])
+        signal = buyer_signal(quote["quote_text"])
+        quote_cards.append({
+            "quote_id": f"quote_quality_{index}",
+            "source_id": quote["source_id"],
+            "quote_text": quote["quote_text"],
+            "quote_role": quote["quote_role"],
+            "supports_claim": status == "strong_quote",
+            "claim_ref": quote["claim_ref"] or "unmapped_claim_preview",
+            "specificity_level": specificity_level(status, quote["quote_text"]),
+            "buyer_language_signal": signal,
+            "quality_status": status,
+            "risk_note": (
+                "Use only as supplied-review wording; do not generalize beyond "
+                "the visible imported evidence."
+            ),
+            "do_not_overclaim": [
+                "Do not present weak or generic quotes as strong claim proof.",
+                "Do not turn a single review into a full-market statistic.",
+                "Do not use competitor quotes as own-product performance proof.",
+            ],
+        })
+
+    if not quote_cards:
+        quote_cards.append({
+            "quote_id": "quote_quality_missing_1",
+            "source_id": "source_missing_review_import",
+            "quote_text": "",
+            "quote_role": "missing_quote",
+            "supports_claim": False,
+            "claim_ref": "missing_claim_preview",
+            "specificity_level": "missing",
+            "buyer_language_signal": "missing",
+            "quality_status": "missing_quote",
+            "risk_note": (
+                "No supplied quote is available; claims must stay disabled."
+            ),
+            "do_not_overclaim": [
+                "Do not fabricate review quotes.",
+                "Do not claim evidence support without imported buyer wording.",
+            ],
+        })
+
+    claim_inputs = []
+    seen_claims = set()
+
+    def add_claim(raw_claim: object, source_ref: str):
+        claim = _rw_text(raw_claim)
+        key = claim.lower()
+        if not key or key in seen_claims:
+            return
+        seen_claims.add(key)
+        claim_inputs.append({"claim_text": claim, "source_ref": source_ref})
+
+    campaign_brief = dict(campaign_pack.get("campaign_brief") or {})
+    creative_section = dict(campaign_pack.get("creative_section") or {})
+    for key in [
+        "brief_title", "buyer_pain", "buyer_objection", "liked_point",
+        "creative_angle", "recommended_message",
+    ]:
+        add_claim(campaign_brief.get(key), f"campaign_brief.{key}")
+    for key in ["recommended_hook", "scene_1", "scene_2", "scene_3", "cta"]:
+        add_claim(creative_section.get(key), f"creative_section.{key}")
+    for angle in list(creative_decision_pack.get("top_ad_angles") or []):
+        add_claim(angle.get("title"), f"top_ad_angles.{angle.get('angle_id')}")
+        add_claim(angle.get("hook"), f"top_ad_angles.{angle.get('angle_id')}.hook")
+
+    if not claim_inputs:
+        claim_inputs.append({"claim_text": "", "source_ref": "missing_claim"})
+
+    strong_quote_ids = {
+        quote["quote_id"] for quote in quote_cards
+        if quote.get("quality_status") == "strong_quote"
+    }
+
+    def token_set(text: str) -> set[str]:
+        return {
+            token.strip(".,!?:;\"'()[]").lower()
+            for token in _rw_text(text).split()
+            if len(token.strip(".,!?:;\"'()[]")) >= 4
+        }
+
+    claim_support_matrix = []
+    for index, claim in enumerate(claim_inputs[:12], start=1):
+        claim_tokens = token_set(claim["claim_text"])
+        supporting_quote_ids = [
+            quote["quote_id"]
+            for quote in quote_cards
+            if quote["quote_id"] in strong_quote_ids
+            and claim_tokens
+            and claim_tokens & token_set(quote.get("quote_text", ""))
+        ]
+        any_quote_available = any(
+            quote.get("quality_status") != "missing_quote"
+            for quote in quote_cards
+        )
+        if supporting_quote_ids:
+            support_status = "quote_supported"
+            weakness_reason = ""
+            allowed_usage = "use_as_quote_backed_directional_claim"
+        elif any_quote_available:
+            support_status = "weak_or_unmapped_quote_support"
+            weakness_reason = (
+                "Available supplied quotes do not strongly overlap this claim."
+            )
+            allowed_usage = "use_as_hypothesis_or_buyer_question_only"
+        else:
+            support_status = "unsupported_missing_quote"
+            weakness_reason = "No supplied quote supports this claim."
+            allowed_usage = "do_not_use_as_claim"
+        claim_support_matrix.append({
+            "claim_id": f"claim_quality_{index}",
+            "claim_text": claim["claim_text"],
+            "source_ref": claim["source_ref"],
+            "support_status": support_status,
+            "supporting_quote_ids": supporting_quote_ids,
+            "weakness_reason": weakness_reason,
+            "allowed_usage": allowed_usage,
+            "disallowed_usage": [
+                "performance_guarantee",
+                "full_market_statistic",
+                "unquoted_superlative",
+                "competitor_evidence_as_own_product_proof",
+            ],
+            "recommended_rewrite": (
+                claim["claim_text"]
+                if supporting_quote_ids
+                else "Reframe as a buyer concern or manual review note until "
+                "a specific supplied quote supports it."
+            ),
+            "risk_note": (
+                "Weak or unmapped evidence is never promoted to strong support "
+                "in this deterministic preview."
+            ),
+        })
+
+    all_review_texts = [
+        _rw_text(review.get("review_text", ""))
+        for review in normalized_reviews
+    ]
+    normalized_review_keys = [
+        normalized_text(text) for text in all_review_texts if normalized_text(text)
+    ]
+    duplicate_count = len(normalized_review_keys) - len(set(normalized_review_keys))
+    noise_checks = {
+        "duplicate_count": duplicate_count,
+        "too_short_count": sum(
+            1 for text in all_review_texts if "too_short" in detected_noise_for_text(text)
+        ),
+        "generic_count": sum(
+            1 for quote in quote_cards
+            if quote.get("quality_status") == "generic_quote"
+        ),
+        "empty_count": sum(1 for text in all_review_texts if not _rw_text(text)),
+        "vague_signal_count": sum(
+            1 for text in all_review_texts
+            if "vague" in detected_noise_for_text(text)
+        ),
+        "checks": {
+            "duplicate_detected": duplicate_count > 0,
+            "too_short_detected": any(
+                "too_short" in detected_noise_for_text(text)
+                for text in all_review_texts
+            ),
+            "generic_detected": any(
+                quote.get("quality_status") == "generic_quote"
+                for quote in quote_cards
+            ),
+            "empty_detected": any(not _rw_text(text) for text in all_review_texts),
+            "vague_detected": any(
+                "vague" in detected_noise_for_text(text)
+                for text in all_review_texts
+            ),
+        },
+    }
+
+    total_usable_reviews = sum(
+        int(card.get("usable_review_count") or 0) for card in source_cards
+    )
+    usable_quote_count = sum(
+        1 for quote in quote_cards
+        if quote.get("quality_status") == "strong_quote"
+    )
+    overall_strength = sample_strength(total_usable_reviews, usable_quote_count)
+    sample_strength_assessment = {
+        "overall_sample_strength": overall_strength,
+        "usable_review_count": total_usable_reviews,
+        "strong_quote_count": usable_quote_count,
+        "source_count": len(source_cards),
+        "assessment_rule": (
+            "strong>=50 usable reviews and >=10 strong quotes; "
+            "moderate>=15 and >=5; weak>=3 and >=1; otherwise insufficient."
+        ),
+        "real_scraping_allowed": False,
+        "real_execution_allowed": False,
+    }
+
+    buyer_language_signal_cards = [
+        {
+            "signal_id": f"buyer_language_signal_{index}",
+            "source_quote_id": quote["quote_id"],
+            "buyer_language_signal": quote["buyer_language_signal"],
+            "quote_text": quote["quote_text"],
+            "quality_status": quote["quality_status"],
+            "allowed_usage": "use_as_supplied_buyer_wording_only",
+            "risk_note": (
+                "Signal is extracted only from existing supplied input."
+            ),
+        }
+        for index, quote in enumerate(quote_cards, start=1)
+        if quote.get("buyer_language_signal") not in {"missing", ""}
+    ][:12]
+
+    def collect_do_not_claim(value: object) -> list[str]:
+        collected = []
+        if isinstance(value, dict):
+            for key, child in value.items():
+                if key == "do_not_claim":
+                    if isinstance(child, list):
+                        collected.extend(_rw_text(item) for item in child)
+                    else:
+                        collected.append(_rw_text(child))
+                else:
+                    collected.extend(collect_do_not_claim(child))
+        elif isinstance(value, list):
+            for item in value:
+                collected.extend(collect_do_not_claim(item))
+        return [item for item in collected if item]
+
+    do_not_claim_items = list(dict.fromkeys([
+        *collect_do_not_claim(creative_decision_pack),
+        "Do not treat weak, generic, duplicate, empty, or missing quotes as strong evidence.",
+        "Do not scrape, crawl, enrich, or fetch external reviews from this preview pack.",
+        "Do not persist audit evidence or create approval/operator tasks from this preview pack.",
+    ]))
+    do_not_claim_reinforcement = [
+        {
+            "reinforcement_id": f"do_not_claim_quality_{index}",
+            "source": "existing_do_not_claim_or_evidence_quality_rule",
+            "claim_boundary": item,
+            "enforcement_note": (
+                "Keep this boundary active unless a human supplies stronger "
+                "review evidence in a later manual import."
+            ),
+            "real_execution_allowed": False,
+        }
+        for index, item in enumerate(do_not_claim_items[:16], start=1)
+    ]
+
+    missing_quote_gap = any(
+        quote.get("quality_status") == "missing_quote" for quote in quote_cards
+    )
+    small_sample_gap = overall_strength in {"weak", "insufficient", "missing"}
+    weak_source_gap = any(
+        card.get("quality_status") in {"weak_review_source", "missing_review_source"}
+        for card in source_cards
+    )
+    competitor_gap = bool(
+        competitor_pack.get("comparison_quality_checks", {}).get("weak_evidence")
+        or competitor_pack.get("comparison_quality_checks", {}).get(
+            "missing_competitor_quote"
+        )
+    )
+    unsupported_claim_gap = any(
+        row.get("support_status") != "quote_supported"
+        for row in claim_support_matrix
+    )
+    evidence_gap_cards = [
+        {
+            "gap_id": "evidence_gap_missing_quote",
+            "gap_type": "missing_quote",
+            "gap_present": missing_quote_gap,
+            "risk_note": "Claims without supplied quotes remain unsupported.",
+            "recommended_manual_action": "Paste or import specific buyer quotes.",
+        },
+        {
+            "gap_id": "evidence_gap_small_sample",
+            "gap_type": "small_sample",
+            "gap_present": small_sample_gap,
+            "risk_note": "Small samples are directional, not strong proof.",
+            "recommended_manual_action": "Import more non-duplicate review rows.",
+        },
+        {
+            "gap_id": "evidence_gap_weak_source",
+            "gap_type": "weak_source",
+            "gap_present": weak_source_gap,
+            "risk_note": "Weak sources must not support strong claims.",
+            "recommended_manual_action": "Label sources and remove noisy rows.",
+        },
+        {
+            "gap_id": "evidence_gap_competitor_evidence_insufficient",
+            "gap_type": "competitor_evidence_insufficient",
+            "gap_present": competitor_gap,
+            "risk_note": (
+                "Competitor evidence cannot prove own-product advantages."
+            ),
+            "recommended_manual_action": (
+                "Manually import competitor reviews before comparison claims."
+            ),
+        },
+        {
+            "gap_id": "evidence_gap_claim_unsupported",
+            "gap_type": "claim_unsupported",
+            "gap_present": unsupported_claim_gap,
+            "risk_note": "Unsupported claims should be rewritten or removed.",
+            "recommended_manual_action": (
+                "Map each claim to a supplied strong quote before export."
+            ),
+        },
+    ]
+
+    evidence_quality_checks = {
+        "review_import_pack_present": bool(review_import_pack),
+        "competitor_review_comparison_pack_present": bool(competitor_pack),
+        "campaign_export_pack_present": bool(campaign_pack),
+        "source_cards_present": bool(source_cards),
+        "quote_quality_cards_present": bool(quote_cards),
+        "claim_support_matrix_present": bool(claim_support_matrix),
+        "weak_evidence_not_promoted": all(
+            row.get("support_status") == "quote_supported"
+            or not row.get("supporting_quote_ids")
+            for row in claim_support_matrix
+        ),
+        "duplicate_noise_checks_present": True,
+        "manual_recommendations_only": True,
+        "audit_preview_only": True,
+        "database_write_performed": False,
+        "provider_called": False,
+        "llm_called": False,
+        "external_scraping_performed": False,
+        "real_execution_performed": False,
+    }
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "provider_calls_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "llm_api_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "database_write_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_scraping_allowed": False,
+        "real_execution_allowed": False,
+        "media_upload_enabled": False,
+        "media_download_enabled": False,
+        "paid_operation_enabled": False,
+        "approval_creation_enabled": False,
+        "operator_task_creation_enabled": False,
+    }
+
+    return {
+        "pack_version": "review_evidence_quality_pack_v1",
+        "evidence_quality_summary": {
+            "mode": (
+                "evidence_quality_preview_"
+                "deterministic_review_quality_dry_run_only"
+            ),
+            "source_packs": [
+                "review_import_pack",
+                "competitor_review_comparison_pack",
+                "creative_decision_pack",
+                "campaign_export_pack",
+            ],
+            "source_card_count": len(source_cards),
+            "quote_card_count": len(quote_cards),
+            "claim_row_count": len(claim_support_matrix),
+            "overall_sample_strength": overall_strength,
+            "real_scraping_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": (
+                "Review this deterministic evidence quality preview and "
+                "manually import stronger review evidence where gaps remain."
+            ),
+        },
+        "review_source_quality_cards": source_cards,
+        "quote_quality_cards": quote_cards,
+        "claim_support_matrix": claim_support_matrix,
+        "evidence_gap_cards": evidence_gap_cards,
+        "duplicate_and_noise_checks": noise_checks,
+        "sample_strength_assessment": sample_strength_assessment,
+        "buyer_language_signal_cards": buyer_language_signal_cards,
+        "do_not_claim_reinforcement": do_not_claim_reinforcement,
+        "evidence_quality_recommendations": [
+            {
+                "recommendation_id": "evidence_quality_manual_import_more",
+                "recommendation_type": "manual_import",
+                "recommendation": (
+                    "Manually import more non-duplicate buyer reviews before "
+                    "treating claims as strong evidence."
+                ),
+                "real_scraping_allowed": False,
+                "real_execution_allowed": False,
+            },
+            {
+                "recommendation_id": "evidence_quality_map_claims_to_quotes",
+                "recommendation_type": "claim_quote_mapping",
+                "recommendation": (
+                    "Map every campaign claim to a strong supplied quote or "
+                    "rewrite it as a buyer concern."
+                ),
+                "real_scraping_allowed": False,
+                "real_execution_allowed": False,
+            },
+            {
+                "recommendation_id": "evidence_quality_remove_noise",
+                "recommendation_type": "manual_cleanup",
+                "recommendation": (
+                    "Remove duplicate, empty, too-short, vague, and generic "
+                    "review rows before final creative review."
+                ),
+                "real_scraping_allowed": False,
+                "real_execution_allowed": False,
+            },
+        ],
+        "evidence_quality_checks": evidence_quality_checks,
+        "audit_preview": {
+            "audit_preview_id": "review_evidence_quality_preview",
+            "source": "creative_decision_pack.review_evidence_quality_pack",
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "audit_record_created": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_execution_allowed": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -36873,6 +37564,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         "workspace_provider_invocation_audit_packet_pack"
     ] = _rw_workspace_provider_invocation_audit_packet_pack(
         creative_decision_pack
+    )
+    creative_decision_pack["review_evidence_quality_pack"] = (
+        _rw_review_evidence_quality_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(

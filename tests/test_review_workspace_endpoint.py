@@ -6991,6 +6991,189 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_review_evidence_quality_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "review-evidence-quality-preview",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "EVIDENCEQUALITY001",
+                "title": "Compact Travel Mug",
+                "reviews": [
+                    {
+                        "rating": 2,
+                        "title": "Leaks during commute",
+                        "text": (
+                            "Leaks during commute and the lid seal drips "
+                            "into my bag every morning."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 2,
+                        "title": "Same leak",
+                        "text": (
+                            "Leaks during commute and the lid seal drips "
+                            "into my bag every morning."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 4,
+                        "title": "Good",
+                        "text": "Good",
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 1,
+                        "title": "Competitor seal issue",
+                        "text": (
+                            "Competitor lid also leaks in a work bag, so I "
+                            "would not trust it for travel."
+                        ),
+                        "source_section": "competitor_review",
+                        "metadata": {"source_type": "competitor"},
+                    },
+                ],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "campaign_export_pack",
+            "workspace_provider_mock_invocation_result_pack",
+            "workspace_provider_failure_taxonomy_pack",
+            "workspace_provider_asset_contract_pack",
+            "workspace_provider_cost_quota_risk_guard_pack",
+            "workspace_real_provider_readiness_checklist_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_real_execution_approval_token_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "review_evidence_quality_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["review_evidence_quality_pack"]
+        self.assertEqual(pack["pack_version"], "review_evidence_quality_pack_v1")
+        summary = pack["evidence_quality_summary"]
+        self.assertIn("evidence_quality_preview", summary["mode"])
+        self.assertIn("deterministic_review_quality", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        self.assertFalse(summary["real_scraping_allowed"])
+        self.assertFalse(summary["real_execution_allowed"])
+
+        source_cards = pack["review_source_quality_cards"]
+        self.assertTrue(source_cards)
+        for card in source_cards:
+            for field in [
+                "source_id", "source_type", "review_count",
+                "quality_status", "sample_strength",
+            ]:
+                with self.subTest(source=card["source_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertIn("usable_review_count", card)
+            self.assertIn("quote_count", card)
+            self.assertIn("detected_noise", card)
+            self.assertFalse(card["real_scraping_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        quote_cards = pack["quote_quality_cards"]
+        self.assertTrue(quote_cards)
+        for card in quote_cards:
+            for field in [
+                "quote_id", "quote_text", "quality_status",
+                "buyer_language_signal",
+            ]:
+                with self.subTest(quote=card["quote_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertIn(
+                card["quality_status"],
+                {"strong_quote", "weak_quote", "generic_quote", "missing_quote"},
+            )
+        self.assertTrue(any(
+            card["quality_status"] == "strong_quote"
+            for card in quote_cards
+        ))
+
+        matrix = pack["claim_support_matrix"]
+        self.assertTrue(matrix)
+        for row in matrix:
+            for field in [
+                "claim_id", "support_status", "allowed_usage",
+                "disallowed_usage",
+            ]:
+                with self.subTest(claim=row["claim_id"], field=field):
+                    self.assertIn(field, row)
+            self.assertFalse(
+                row["support_status"] == "quote_supported"
+                and not row["supporting_quote_ids"]
+            )
+
+        for key in [
+            "evidence_gap_cards", "duplicate_and_noise_checks",
+            "sample_strength_assessment", "buyer_language_signal_cards",
+            "do_not_claim_reinforcement",
+            "evidence_quality_recommendations",
+            "evidence_quality_checks", "audit_preview",
+        ]:
+            with self.subTest(required_key=key):
+                self.assertIn(key, pack)
+                self.assertTrue(pack[key])
+
+        gap_types = {
+            card["gap_type"] for card in pack["evidence_gap_cards"]
+        }
+        self.assertTrue({
+            "missing_quote", "small_sample", "weak_source",
+            "competitor_evidence_insufficient", "claim_unsupported",
+        } <= gap_types)
+
+        noise = pack["duplicate_and_noise_checks"]
+        self.assertGreaterEqual(noise["duplicate_count"], 1)
+        self.assertTrue(noise["checks"]["duplicate_detected"])
+        self.assertTrue(noise["checks"]["too_short_detected"])
+
+        checks = pack["evidence_quality_checks"]
+        self.assertTrue(checks["review_import_pack_present"])
+        self.assertTrue(checks["competitor_review_comparison_pack_present"])
+        self.assertTrue(checks["campaign_export_pack_present"])
+        self.assertTrue(checks["weak_evidence_not_promoted"])
+        self.assertTrue(checks["audit_preview_only"])
+        self.assertFalse(checks["database_write_performed"])
+        self.assertFalse(checks["provider_called"])
+        self.assertFalse(checks["llm_called"])
+        self.assertFalse(checks["external_scraping_performed"])
+        self.assertFalse(checks["real_execution_performed"])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["database_write_allowed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["audit_record_created"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["real_execution_allowed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider", "provider_enabled", "provider_calls_enabled",
+            "llm", "llm_enabled", "llm_api_enabled",
+            "external_scraping", "external_scraping_enabled",
+            "database_persistence", "database_persistence_enabled",
+            "database_write_enabled", "real_execution",
+            "real_execution_enabled", "real_scraping_allowed",
+            "real_execution_allowed",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
