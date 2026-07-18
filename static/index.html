@@ -3636,6 +3636,7 @@
         let latestProjectWorkspaceRealExecutionApprovalTokenPack = {};
         let latestProjectWorkspaceProviderInvocationAuditPacketPack = {};
         let latestProjectWorkspaceReviewEvidenceQualityPack = {};
+        let latestProjectWorkspaceClaimRiskGuardPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -6202,6 +6203,157 @@
             secretEnvironmentGateProviderTypesNote: 'Provider types covered: llm_text_generation, video_generation_provider, image_generation_provider, media_storage_provider, external_scraping_provider, translation_provider, analytics_or_tracking_provider, database_persistence_provider, approval_or_ticket_provider, rollback_restore_provider.'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
+            claimRiskGuardPackTitle: 'Claim Risk Guard / Evidence Claim Safety',
+            claimRiskGuardPackHelper: 'Project Workspace claim risk guard bundle. Inspect deterministic claim risk preview derived only from existing evidence packs. This is not legal advice, not a real policy API check, and not a compliance conclusion.',
+            claimRiskGuardSummaryTitle: 'Claim Risk Summary',
+            claimRiskGuardCardsTitle: 'Claim Risk Cards',
+            claimRiskGuardBucketTitle: 'Allowed / Restricted / Blocked Claim Cards',
+            claimRiskGuardAllowedTitle: 'Allowed Claim Cards',
+            claimRiskGuardRestrictedTitle: 'Restricted Claim Cards',
+            claimRiskGuardBlockedTitle: 'Blocked Claim Cards',
+            claimRiskGuardRewriteTraceChecksTitle: 'Claim Rewrite / Evidence Trace / Overclaim Checks',
+            claimRiskGuardRewriteTitle: 'Claim Rewrite Suggestions',
+            claimRiskGuardTraceTitle: 'Evidence To Claim Trace',
+            claimRiskGuardOverclaimTitle: 'Overclaim Pattern Checks',
+            claimRiskGuardPlatformQualityAuditSafetyTitle: 'Platform Notes / Do Not Claim / Quality / Audit / Safety',
+            claimRiskGuardPlatformNotesTitle: 'Platform Claim Safety Notes',
+            claimRiskGuardDoNotClaimTitle: 'Do Not Claim Enforcement',
+            claimRiskGuardQualityChecksTitle: 'Claim Risk Quality Checks',
+            claimRiskGuardAuditPreviewTitle: 'Audit Preview',
+            claimRiskGuardSafetyTitle: 'Safety Boundaries',
+            claimRiskGuardMode: 'Mode',
+            claimRiskGuardClaimCount: 'Claim risk card count',
+            claimRiskGuardAllowedCount: 'Allowed claim count',
+            claimRiskGuardRestrictedCount: 'Restricted claim count',
+            claimRiskGuardBlockedCount: 'Blocked claim count',
+            claimRiskGuardRecommendedAction: 'Recommended operator action',
+            claimRiskGuardRealPolicyCheck: 'Real policy check allowed',
+            claimRiskGuardRealExecution: 'Real execution allowed',
+            claimRiskGuardDisabled: 'disabled',
+            claimRiskGuardNoData: 'No claim risk guard pack data is available.',
+            claimRiskGuardCopyNoData: 'No claim risk guard content is available to copy.',
+            claimRiskGuardCopyFailed: 'Unable to copy claim risk guard content.',
+            claimRiskGuardCopied: 'Claim risk guard content copied.',
+            claimRiskGuardCopySummary: 'Copy claim risk summary',
+            claimRiskGuardCopyRiskCards: 'Copy claim risk cards',
+            claimRiskGuardCopyAllowed: 'Copy allowed claim cards',
+            claimRiskGuardCopyRestricted: 'Copy restricted claim cards',
+            claimRiskGuardCopyBlocked: 'Copy blocked claim cards',
+            claimRiskGuardCopyRewrite: 'Copy claim rewrite suggestions',
+            claimRiskGuardCopyTrace: 'Copy evidence to claim trace',
+            claimRiskGuardCopyOverclaim: 'Copy overclaim pattern checks',
+            claimRiskGuardCopyDoNotClaim: 'Copy do not claim enforcement',
+            claimRiskGuardCopyFull: 'Copy full claim risk guard pack',
+            claimRiskGuardClaimId: 'Claim ID',
+            claimRiskGuardClaimText: 'Claim text',
+            claimRiskGuardClaimSource: 'Claim source',
+            claimRiskGuardSupportStatus: 'Support status',
+            claimRiskGuardRiskLevel: 'Risk level',
+            claimRiskGuardRiskCategory: 'Risk category',
+            claimRiskGuardSupportingQuoteIds: 'Supporting quote IDs',
+            claimRiskGuardEvidenceGapRefs: 'Evidence gap refs',
+            claimRiskGuardAllowedUsage: 'Allowed usage',
+            claimRiskGuardRestrictedUsage: 'Restricted usage',
+            claimRiskGuardDisallowedUsage: 'Disallowed usage',
+            claimRiskGuardRecommendedRewrite: 'Recommended rewrite',
+            claimRiskGuardOperatorReview: 'Operator review required',
+            claimRiskGuardRiskNote: 'Risk note',
+            claimRiskGuardSafeClaimText: 'Safe claim text',
+            claimRiskGuardEvidenceBasis: 'Evidence basis',
+            claimRiskGuardAllowedChannels: 'Allowed channels',
+            claimRiskGuardUsageNote: 'Usage note',
+            claimRiskGuardBlockedClaimText: 'Blocked claim text',
+            claimRiskGuardBlockedReason: 'Blocked reason',
+            claimRiskGuardDoNotClaimRefs: 'Do not claim refs',
+            claimRiskGuardSafeAlternative: 'Recommended safe alternative',
+            claimRiskGuardBlockedUsageWarning: 'Blocked claims cannot be used directly for generated copy.',
+            claimRiskGuardSupportedLegend: 'Supported / weakly supported / unsupported / overclaim / missing evidence / do_not_claim violation are shown separately.',
+            claimRiskGuardPreviewNote: 'Deterministic claim risk preview only. It uses existing review workspace, review evidence quality, import, comparison, campaign, variant, and asset packs; it does not query real law, real policy APIs, real logs, real history tables, LLMs, providers, scraping, crawlers, media, approvals, operator tasks, databases, or paid operations.',
+            claimRiskGuardRewriteNote: 'Rewrite suggestions are deterministic safe rewrites only and do not call an LLM.',
+            claimRiskGuardTraceNote: 'Evidence trace maps each claim to supplied quote, source, and evidence quality; it does not read real logs or history tables.',
+            claimRiskGuardPatternNote: 'Pattern checks include absolute wording, guaranteed outcome, medical-like claim, unsupported comparison, best/first/only, external policy needed, and missing quote.',
+            claimRiskGuardPlatformNote: 'Platform notes are generic creative safety prompts only; they are not legal advice, not real policy API output, and not compliance conclusions.',
+            claimRiskGuardDoNotClaimNote: 'Do not claim enforcement keeps blocked and unsafe claim boundaries visible before copy generation.',
+            claimRiskGuardSafetyNote: 'Provider, LLM, external scraping, database persistence, real execution, and real policy check remain disabled.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
+            claimRiskGuardPackTitle: 'Claim Risk Guard / Evidence Claim Safety',
+            claimRiskGuardPackHelper: '\u67e5\u770b\u4ec5\u57fa\u4e8e\u5df2\u6709 evidence pack \u7684\u786e\u5b9a\u6027 claim risk \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u68c0\u67e5\uff0c\u4e5f\u4e0d\u662f\u5408\u89c4\u7ed3\u8bba\u3002',
+            claimRiskGuardSummaryTitle: 'Claim Risk \u6458\u8981',
+            claimRiskGuardCardsTitle: 'Claim Risk \u5361\u7247',
+            claimRiskGuardBucketTitle: 'Allowed / Restricted / Blocked Claim \u5361\u7247',
+            claimRiskGuardAllowedTitle: 'Allowed Claim \u5361\u7247',
+            claimRiskGuardRestrictedTitle: 'Restricted Claim \u5361\u7247',
+            claimRiskGuardBlockedTitle: 'Blocked Claim \u5361\u7247',
+            claimRiskGuardRewriteTraceChecksTitle: 'Claim Rewrite / Evidence Trace / Overclaim Checks',
+            claimRiskGuardRewriteTitle: 'Claim Rewrite \u5efa\u8bae',
+            claimRiskGuardTraceTitle: 'Evidence To Claim Trace',
+            claimRiskGuardOverclaimTitle: 'Overclaim Pattern Checks',
+            claimRiskGuardPlatformQualityAuditSafetyTitle: 'Platform Notes / Do Not Claim / Quality / Audit / Safety',
+            claimRiskGuardPlatformNotesTitle: 'Platform Claim Safety Notes',
+            claimRiskGuardDoNotClaimTitle: 'Do Not Claim Enforcement',
+            claimRiskGuardQualityChecksTitle: 'Claim Risk Quality Checks',
+            claimRiskGuardAuditPreviewTitle: 'Audit Preview',
+            claimRiskGuardSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            claimRiskGuardMode: '\u6a21\u5f0f',
+            claimRiskGuardClaimCount: 'Claim risk \u5361\u7247\u6570\u91cf',
+            claimRiskGuardAllowedCount: 'Allowed claim \u6570\u91cf',
+            claimRiskGuardRestrictedCount: 'Restricted claim \u6570\u91cf',
+            claimRiskGuardBlockedCount: 'Blocked claim \u6570\u91cf',
+            claimRiskGuardRecommendedAction: '\u63a8\u8350\u64cd\u4f5c\u5458\u52a8\u4f5c',
+            claimRiskGuardRealPolicyCheck: '\u5141\u8bb8\u771f\u5b9e policy \u68c0\u67e5',
+            claimRiskGuardRealExecution: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            claimRiskGuardDisabled: '\u5df2\u7981\u7528',
+            claimRiskGuardNoData: '\u6682\u65e0 claim risk guard pack \u6570\u636e\u3002',
+            claimRiskGuardCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 claim risk guard \u5185\u5bb9\u3002',
+            claimRiskGuardCopyFailed: '\u65e0\u6cd5\u590d\u5236 claim risk guard \u5185\u5bb9\u3002',
+            claimRiskGuardCopied: 'Claim risk guard \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            claimRiskGuardCopySummary: '\u590d\u5236 claim risk \u6458\u8981',
+            claimRiskGuardCopyRiskCards: '\u590d\u5236 claim risk \u5361\u7247',
+            claimRiskGuardCopyAllowed: '\u590d\u5236 allowed claim \u5361\u7247',
+            claimRiskGuardCopyRestricted: '\u590d\u5236 restricted claim \u5361\u7247',
+            claimRiskGuardCopyBlocked: '\u590d\u5236 blocked claim \u5361\u7247',
+            claimRiskGuardCopyRewrite: '\u590d\u5236 claim rewrite \u5efa\u8bae',
+            claimRiskGuardCopyTrace: '\u590d\u5236 evidence to claim trace',
+            claimRiskGuardCopyOverclaim: '\u590d\u5236 overclaim pattern checks',
+            claimRiskGuardCopyDoNotClaim: '\u590d\u5236 do not claim enforcement',
+            claimRiskGuardCopyFull: '\u590d\u5236\u5b8c\u6574 claim risk guard pack',
+            claimRiskGuardClaimId: 'Claim ID',
+            claimRiskGuardClaimText: 'Claim \u6587\u6848',
+            claimRiskGuardClaimSource: 'Claim \u6765\u6e90',
+            claimRiskGuardSupportStatus: 'Support \u72b6\u6001',
+            claimRiskGuardRiskLevel: 'Risk level',
+            claimRiskGuardRiskCategory: 'Risk category',
+            claimRiskGuardSupportingQuoteIds: 'Supporting quote IDs',
+            claimRiskGuardEvidenceGapRefs: 'Evidence gap refs',
+            claimRiskGuardAllowedUsage: 'Allowed usage',
+            claimRiskGuardRestrictedUsage: 'Restricted usage',
+            claimRiskGuardDisallowedUsage: 'Disallowed usage',
+            claimRiskGuardRecommendedRewrite: 'Recommended rewrite',
+            claimRiskGuardOperatorReview: '\u9700\u8981 operator review',
+            claimRiskGuardRiskNote: '\u98ce\u9669\u5907\u6ce8',
+            claimRiskGuardSafeClaimText: 'Safe claim \u6587\u6848',
+            claimRiskGuardEvidenceBasis: 'Evidence basis',
+            claimRiskGuardAllowedChannels: 'Allowed channels',
+            claimRiskGuardUsageNote: 'Usage note',
+            claimRiskGuardBlockedClaimText: 'Blocked claim \u6587\u6848',
+            claimRiskGuardBlockedReason: 'Blocked reason',
+            claimRiskGuardDoNotClaimRefs: 'Do not claim refs',
+            claimRiskGuardSafeAlternative: 'Recommended safe alternative',
+            claimRiskGuardBlockedUsageWarning: 'Blocked claims \u4e0d\u80fd\u76f4\u63a5\u7528\u4e8e\u751f\u6210\u6587\u6848\u3002',
+            claimRiskGuardSupportedLegend: 'Supported / weakly supported / unsupported / overclaim / missing evidence / do_not_claim violation \u4f1a\u5206\u5f00\u663e\u793a\u3002',
+            claimRiskGuardPreviewNote: '\u4ec5\u4e3a\u786e\u5b9a\u6027 claim risk \u9884\u89c8\u3002\u53ea\u4f7f\u7528\u5df2\u6709 review workspace\u3001review evidence quality\u3001import\u3001comparison\u3001campaign\u3001variant \u548c asset packs\uff1b\u4e0d\u67e5\u8be2\u771f\u5b9e\u6cd5\u5f8b\u3001\u771f\u5b9e policy API\u3001\u771f\u5b9e\u65e5\u5fd7\u3001\u771f\u5b9e\u5386\u53f2\u8868\u3001LLM\u3001provider\u3001scraping\u3001crawler\u3001media\u3001approval\u3001operator task\u3001database \u6216 paid operation\u3002',
+            claimRiskGuardRewriteNote: 'Rewrite suggestions \u53ea\u662f deterministic safe rewrite\uff0c\u4e0d\u8c03\u7528 LLM\u3002',
+            claimRiskGuardTraceNote: 'Evidence trace \u6620\u5c04 claim \u5230\u5df2\u63d0\u4f9b quote / source / evidence quality\uff1b\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u5386\u53f2\u8868\u3002',
+            claimRiskGuardPatternNote: 'Pattern checks \u5305\u542b absolute wording\u3001guaranteed outcome\u3001medical-like claim\u3001unsupported comparison\u3001best/first/only\u3001external policy needed \u548c missing quote\u3002',
+            claimRiskGuardPlatformNote: 'Platform notes \u4ec5\u4e3a\u901a\u7528\u521b\u610f\u5b89\u5168\u63d0\u793a\uff1b\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u8f93\u51fa\uff0c\u4e5f\u4e0d\u662f\u5408\u89c4\u7ed3\u8bba\u3002',
+            claimRiskGuardDoNotClaimNote: 'Do not claim enforcement \u5728\u751f\u6210\u6587\u6848\u524d\u4fdd\u6301 blocked \u548c unsafe claim \u8fb9\u754c\u53ef\u89c1\u3002',
+            claimRiskGuardSafetyNote: 'Provider\u3001LLM\u3001external scraping\u3001database persistence\u3001real execution \u548c real policy check \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceSecretEnvironmentGateMarker: 'Project Workspace secret environment gate bundle',
             secretEnvironmentGatePackTitle: '\u5de5\u4f5c\u533a Secret Requirement / Environment Gate Preview',
@@ -9616,6 +9768,7 @@
                 latestProjectWorkspaceRealExecutionApprovalTokenPack = latestProjectCreativeDecisionPack.workspace_real_execution_approval_token_pack || {};
                 latestProjectWorkspaceProviderInvocationAuditPacketPack = latestProjectCreativeDecisionPack.workspace_provider_invocation_audit_packet_pack || {};
                 latestProjectWorkspaceReviewEvidenceQualityPack = latestProjectCreativeDecisionPack.review_evidence_quality_pack || {};
+                latestProjectWorkspaceClaimRiskGuardPack = latestProjectCreativeDecisionPack.claim_risk_guard_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -15488,6 +15641,7 @@
         const PROJECT_WORKSPACE_REAL_EXECUTION_APPROVAL_TOKEN_MARKER = 'Project Workspace real execution approval token bundle';
         const PROJECT_WORKSPACE_PROVIDER_INVOCATION_AUDIT_PACKET_MARKER = 'Project Workspace provider invocation audit packet bundle';
         const PROJECT_WORKSPACE_REVIEW_EVIDENCE_QUALITY_MARKER = 'Project Workspace review evidence quality bundle';
+        const PROJECT_WORKSPACE_CLAIM_RISK_GUARD_MARKER = 'Project Workspace claim risk guard bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -21200,6 +21354,124 @@
         function copyProjectWorkspaceEvidenceQualityRecommendations() { return copyProjectWorkspaceReviewEvidenceQualityText('recommendations'); }
         function copyProjectWorkspaceFullReviewEvidenceQualityPack() { return copyProjectWorkspaceReviewEvidenceQualityText('full'); }
 
+        function projectWorkspaceClaimRiskGuardPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceClaimRiskGuardPack && Object.keys(latestProjectWorkspaceClaimRiskGuardPack).length) return latestProjectWorkspaceClaimRiskGuardPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.claim_risk_guard_pack || {};
+        }
+
+        function projectWorkspaceClaimRiskGuardHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspaceClaimRiskGuardJsonText(value) {
+            if (!projectWorkspaceClaimRiskGuardHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceClaimRiskGuardDisabledText(value) {
+            return value === false ? t('claimRiskGuardDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportClaimRiskGuardSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceClaimRiskGuardPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_CLAIM_RISK_GUARD_MARKER,
+                has_claim_risk_guard_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                claim_risk_summary: pack.claim_risk_summary || {},
+                claim_risk_cards: Array.isArray(pack.claim_risk_cards) ? pack.claim_risk_cards : [],
+                allowed_claim_cards: Array.isArray(pack.allowed_claim_cards) ? pack.allowed_claim_cards : [],
+                restricted_claim_cards: Array.isArray(pack.restricted_claim_cards) ? pack.restricted_claim_cards : [],
+                blocked_claim_cards: Array.isArray(pack.blocked_claim_cards) ? pack.blocked_claim_cards : [],
+                claim_rewrite_suggestions: Array.isArray(pack.claim_rewrite_suggestions) ? pack.claim_rewrite_suggestions : [],
+                evidence_to_claim_trace: Array.isArray(pack.evidence_to_claim_trace) ? pack.evidence_to_claim_trace : [],
+                overclaim_pattern_checks: pack.overclaim_pattern_checks || {},
+                platform_claim_safety_notes: Array.isArray(pack.platform_claim_safety_notes) ? pack.platform_claim_safety_notes : [],
+                do_not_claim_enforcement: Array.isArray(pack.do_not_claim_enforcement) ? pack.do_not_claim_enforcement : [],
+                claim_risk_quality_checks: pack.claim_risk_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceClaimRiskGuardSummaryText(pack = projectWorkspaceExportClaimRiskGuardSnapshot()) {
+            if (!pack.has_claim_risk_guard_pack) return '';
+            const summary = pack.claim_risk_summary || {};
+            return [
+                t('claimRiskGuardSummaryTitle'),
+                `${t('claimRiskGuardMode')}: ${summary.mode || t('none')}`,
+                `${t('claimRiskGuardClaimCount')}: ${summary.claim_count ?? pack.claim_risk_cards.length}`,
+                `${t('claimRiskGuardAllowedCount')}: ${summary.allowed_claim_count ?? pack.allowed_claim_cards.length}`,
+                `${t('claimRiskGuardRestrictedCount')}: ${summary.restricted_claim_count ?? pack.restricted_claim_cards.length}`,
+                `${t('claimRiskGuardBlockedCount')}: ${summary.blocked_claim_count ?? pack.blocked_claim_cards.length}`,
+                `${t('claimRiskGuardRecommendedAction')}: ${summary.recommended_operator_action || t('claimRiskGuardPreviewNote')}`,
+                `${t('claimRiskGuardRealPolicyCheck')}: ${projectWorkspaceClaimRiskGuardDisabledText(summary.real_policy_check_allowed)}`,
+                `${t('claimRiskGuardRealExecution')}: ${projectWorkspaceClaimRiskGuardDisabledText(summary.real_execution_allowed)}`,
+                t('claimRiskGuardSupportedLegend'),
+                t('claimRiskGuardPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceClaimRiskGuardSectionText(titleKey, value) {
+            const body = projectWorkspaceClaimRiskGuardJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportClaimRiskGuardMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimRiskGuardSnapshot(workspace);
+            if (!pack.has_claim_risk_guard_pack) return '';
+            return [
+                `## ${t('claimRiskGuardPackTitle')}`,
+                `## ${t('claimRiskGuardSummaryTitle')}`,
+                projectWorkspaceClaimRiskGuardSummaryText(pack), '',
+                projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardCardsTitle', pack.claim_risk_cards), '',
+                projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardAllowedTitle', pack.allowed_claim_cards), '',
+                projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardRestrictedTitle', pack.restricted_claim_cards), '',
+                projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardBlockedTitle', pack.blocked_claim_cards), '',
+                projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardRewriteTitle', pack.claim_rewrite_suggestions), '',
+                projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardTraceTitle', pack.evidence_to_claim_trace), '',
+                projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardOverclaimTitle', pack.overclaim_pattern_checks), '',
+                projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardPlatformNotesTitle', pack.platform_claim_safety_notes), '',
+                projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardDoNotClaimTitle', pack.do_not_claim_enforcement), '',
+                projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardAuditPreviewTitle', pack.audit_preview), '',
+                projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardSafetyTitle', pack.safety_boundaries),
+                t('claimRiskGuardPlatformNote'),
+                t('claimRiskGuardSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceClaimRiskGuardText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceClaimRiskGuardStatus');
+            const pack = projectWorkspaceExportClaimRiskGuardSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceClaimRiskGuardSummaryText(pack)
+                : kind === 'riskCards' ? projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardCardsTitle', pack.claim_risk_cards)
+                : kind === 'allowed' ? projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardAllowedTitle', pack.allowed_claim_cards)
+                : kind === 'restricted' ? projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardRestrictedTitle', pack.restricted_claim_cards)
+                : kind === 'blocked' ? projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardBlockedTitle', pack.blocked_claim_cards)
+                : kind === 'rewrite' ? projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardRewriteTitle', pack.claim_rewrite_suggestions)
+                : kind === 'trace' ? projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardTraceTitle', pack.evidence_to_claim_trace)
+                : kind === 'overclaim' ? projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardOverclaimTitle', pack.overclaim_pattern_checks)
+                : kind === 'doNotClaim' ? projectWorkspaceClaimRiskGuardSectionText('claimRiskGuardDoNotClaimTitle', pack.do_not_claim_enforcement)
+                : projectWorkspaceExportClaimRiskGuardMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('claimRiskGuardCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('claimRiskGuardCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('claimRiskGuardCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('claimRiskGuardCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceClaimRiskSummary() { return copyProjectWorkspaceClaimRiskGuardText('summary'); }
+        function copyProjectWorkspaceClaimRiskCards() { return copyProjectWorkspaceClaimRiskGuardText('riskCards'); }
+        function copyProjectWorkspaceAllowedClaimCards() { return copyProjectWorkspaceClaimRiskGuardText('allowed'); }
+        function copyProjectWorkspaceRestrictedClaimCards() { return copyProjectWorkspaceClaimRiskGuardText('restricted'); }
+        function copyProjectWorkspaceBlockedClaimCards() { return copyProjectWorkspaceClaimRiskGuardText('blocked'); }
+        function copyProjectWorkspaceClaimRewriteSuggestions() { return copyProjectWorkspaceClaimRiskGuardText('rewrite'); }
+        function copyProjectWorkspaceEvidenceToClaimTrace() { return copyProjectWorkspaceClaimRiskGuardText('trace'); }
+        function copyProjectWorkspaceOverclaimPatternChecks() { return copyProjectWorkspaceClaimRiskGuardText('overclaim'); }
+        function copyProjectWorkspaceClaimDoNotClaimEnforcement() { return copyProjectWorkspaceClaimRiskGuardText('doNotClaim'); }
+        function copyProjectWorkspaceFullClaimRiskGuardPack() { return copyProjectWorkspaceClaimRiskGuardText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -25162,6 +25434,36 @@
             return `<div class="section-block" id="projectWorkspaceNoiseDoNotClaimRecommendationSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('reviewEvidenceQualityNoiseSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('reviewEvidenceQualityNoiseNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDoNotClaimReinforcement()">${escapeHTML(t('reviewEvidenceQualityCopyDoNotClaim'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceEvidenceQualityRecommendations()">${escapeHTML(t('reviewEvidenceQualityCopyRecommendations'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('reviewEvidenceQualityNoiseChecksTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText(pack.duplicate_and_noise_checks) || t('reviewEvidenceQualityNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('reviewEvidenceQualitySampleStrengthTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText(pack.sample_strength_assessment) || t('reviewEvidenceQualityNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('reviewEvidenceQualityDoNotClaimTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText(pack.do_not_claim_reinforcement) || t('reviewEvidenceQualityNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('reviewEvidenceQualityRecommendationsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText(pack.evidence_quality_recommendations) || t('reviewEvidenceQualityNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('reviewEvidenceQualityChecksTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText(pack.evidence_quality_checks) || t('reviewEvidenceQualityNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('reviewEvidenceQualityAuditPreviewTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText(pack.audit_preview) || t('reviewEvidenceQualityNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('reviewEvidenceQualitySafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('reviewEvidenceQualitySafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceClaimRiskSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimRiskGuardSnapshot(workspace); if (!pack.has_claim_risk_guard_pack) return '';
+            const summary = pack.claim_risk_summary || {};
+            return `<div class="section-block" id="projectWorkspaceClaimRiskSummaryPanel" data-claim-risk-guard-marker="${PROJECT_WORKSPACE_CLAIM_RISK_GUARD_MARKER}" data-marker="project_workspace_claim_risk_guard_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimRiskGuardPackTitle'))}</div><div class="field-helper">${escapeHTML(t('claimRiskGuardPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullClaimRiskGuardPack()">${escapeHTML(t('claimRiskGuardCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('claimRiskGuardMode'), summary.mode || t('none'))}${metricPill(t('claimRiskGuardClaimCount'), String(summary.claim_count ?? pack.claim_risk_cards.length))}${metricPill(t('claimRiskGuardAllowedCount'), String(summary.allowed_claim_count ?? pack.allowed_claim_cards.length))}${metricPill(t('claimRiskGuardRestrictedCount'), String(summary.restricted_claim_count ?? pack.restricted_claim_cards.length))}${metricPill(t('claimRiskGuardBlockedCount'), String(summary.blocked_claim_count ?? pack.blocked_claim_cards.length))}${metricPill(t('claimRiskGuardRealPolicyCheck'), projectWorkspaceClaimRiskGuardDisabledText(summary.real_policy_check_allowed))}${metricPill(t('claimRiskGuardRealExecution'), projectWorkspaceClaimRiskGuardDisabledText(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimRiskGuardSummaryText(pack) || t('claimRiskGuardNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimRiskGuardPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceClaimRiskGuardStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceClaimRiskSummary()">${escapeHTML(t('claimRiskGuardCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceClaimRiskCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimRiskGuardSnapshot(workspace); if (!pack.has_claim_risk_guard_pack) return '';
+            const cards = (pack.claim_risk_cards || []).slice(0, 24).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.claim_id || t('claimRiskGuardClaimId'))}</strong><span class="metric-pill">${escapeHTML(card.risk_level || t('none'))}</span></div><div><strong>${escapeHTML(t('claimRiskGuardClaimText'))}:</strong> ${escapeHTML(card.claim_text || t('none'))}</div><div><strong>${escapeHTML(t('claimRiskGuardClaimSource'))}:</strong> ${escapeHTML(card.claim_source || t('none'))}</div><div><strong>${escapeHTML(t('claimRiskGuardSupportStatus'))}:</strong> ${escapeHTML(card.support_status || t('none'))}</div><div><strong>${escapeHTML(t('claimRiskGuardRiskCategory'))}:</strong> ${escapeHTML(card.risk_category || t('none'))}</div><div><strong>${escapeHTML(t('claimRiskGuardSupportingQuoteIds'))}:</strong> ${escapeHTML((card.supporting_quote_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimRiskGuardEvidenceGapRefs'))}:</strong> ${escapeHTML((card.evidence_gap_refs || []).join(', ') || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimRiskGuardJsonText({allowed_usage:card.allowed_usage||'',restricted_usage:card.restricted_usage||[],disallowed_usage:card.disallowed_usage||[],recommended_rewrite:card.recommended_rewrite||'',operator_review_required:card.operator_review_required,real_policy_check_allowed:card.real_policy_check_allowed,real_execution_allowed:card.real_execution_allowed,risk_note:card.risk_note||''}) || t('claimRiskGuardNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceClaimRiskCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimRiskGuardCardsTitle'))}</div><div class="field-helper">${escapeHTML(t('claimRiskGuardSupportedLegend'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceClaimRiskCards()">${escapeHTML(t('claimRiskGuardCopyRiskCards'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('claimRiskGuardNoData'))}</div>`}</div></div>`;
+        }
+
+        function renderProjectWorkspaceAllowedRestrictedBlockedClaimCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimRiskGuardSnapshot(workspace); if (!pack.has_claim_risk_guard_pack) return '';
+            const allowed = (pack.allowed_claim_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.claim_id || t('claimRiskGuardAllowedTitle'))}</strong><div><strong>${escapeHTML(t('claimRiskGuardSafeClaimText'))}:</strong> ${escapeHTML(card.safe_claim_text || t('none'))}</div><div><strong>${escapeHTML(t('claimRiskGuardEvidenceBasis'))}:</strong> ${escapeHTML(card.evidence_basis || t('none'))}</div><div><strong>${escapeHTML(t('claimRiskGuardSupportingQuoteIds'))}:</strong> ${escapeHTML((card.supporting_quote_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimRiskGuardAllowedChannels'))}:</strong> ${escapeHTML((card.allowed_channels || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimRiskGuardUsageNote'))}:</strong> ${escapeHTML(card.usage_note || t('none'))}</div><div><strong>${escapeHTML(t('claimRiskGuardRiskNote'))}:</strong> ${escapeHTML(card.risk_note || t('none'))}</div></div>`).join('');
+            const restricted = (pack.restricted_claim_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.claim_id || t('claimRiskGuardRestrictedTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimRiskGuardJsonText(card) || t('claimRiskGuardNoData'))}</pre></div>`).join('');
+            const blocked = (pack.blocked_claim_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.claim_id || t('claimRiskGuardBlockedTitle'))}</strong><span class="metric-pill">${escapeHTML(t('claimRiskGuardBlockedUsageWarning'))}</span></div><div><strong>${escapeHTML(t('claimRiskGuardBlockedClaimText'))}:</strong> ${escapeHTML(card.blocked_claim_text || t('none'))}</div><div><strong>${escapeHTML(t('claimRiskGuardBlockedReason'))}:</strong> ${escapeHTML(card.blocked_reason || t('none'))}</div><div><strong>${escapeHTML(t('claimRiskGuardEvidenceGapRefs'))}:</strong> ${escapeHTML((card.missing_evidence_refs || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimRiskGuardDoNotClaimRefs'))}:</strong> ${escapeHTML((card.do_not_claim_refs || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimRiskGuardSafeAlternative'))}:</strong> ${escapeHTML(card.recommended_safe_alternative || t('none'))}</div><div><strong>${escapeHTML(t('claimRiskGuardOperatorReview'))}:</strong> ${escapeHTML(String(Boolean(card.operator_review_required)))}</div><div><strong>${escapeHTML(t('claimRiskGuardRiskNote'))}:</strong> ${escapeHTML(card.risk_note || t('none'))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceAllowedRestrictedBlockedClaimCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimRiskGuardBucketTitle'))}</div><div class="field-helper">${escapeHTML(t('claimRiskGuardBlockedUsageWarning'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAllowedClaimCards()">${escapeHTML(t('claimRiskGuardCopyAllowed'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRestrictedClaimCards()">${escapeHTML(t('claimRiskGuardCopyRestricted'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceBlockedClaimCards()">${escapeHTML(t('claimRiskGuardCopyBlocked'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimRiskGuardAllowedTitle'))}</strong><div class="graph-os-compact-grid">${allowed || `<div class="empty-state">${escapeHTML(t('claimRiskGuardNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimRiskGuardRestrictedTitle'))}</strong><div class="graph-os-compact-grid">${restricted || `<div class="empty-state">${escapeHTML(t('claimRiskGuardNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimRiskGuardBlockedTitle'))}</strong><div class="graph-os-compact-grid">${blocked || `<div class="empty-state">${escapeHTML(t('claimRiskGuardNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceClaimRewriteTraceOverclaimPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimRiskGuardSnapshot(workspace); if (!pack.has_claim_risk_guard_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceClaimRewriteTraceOverclaimPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimRiskGuardRewriteTraceChecksTitle'))}</div><div class="field-helper">${escapeHTML(t('claimRiskGuardPatternNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceClaimRewriteSuggestions()">${escapeHTML(t('claimRiskGuardCopyRewrite'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceEvidenceToClaimTrace()">${escapeHTML(t('claimRiskGuardCopyTrace'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceOverclaimPatternChecks()">${escapeHTML(t('claimRiskGuardCopyOverclaim'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimRiskGuardRewriteTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimRiskGuardJsonText(pack.claim_rewrite_suggestions) || t('claimRiskGuardNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimRiskGuardRewriteNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimRiskGuardTraceTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimRiskGuardJsonText(pack.evidence_to_claim_trace) || t('claimRiskGuardNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimRiskGuardTraceNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimRiskGuardOverclaimTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimRiskGuardJsonText(pack.overclaim_pattern_checks) || t('claimRiskGuardNoData'))}</pre></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceClaimPlatformDoNotClaimQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimRiskGuardSnapshot(workspace); if (!pack.has_claim_risk_guard_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('claimRiskGuardDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceClaimPlatformDoNotClaimQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimRiskGuardPlatformQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('claimRiskGuardPlatformNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceClaimDoNotClaimEnforcement()">${escapeHTML(t('claimRiskGuardCopyDoNotClaim'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimRiskGuardPlatformNotesTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimRiskGuardJsonText(pack.platform_claim_safety_notes) || t('claimRiskGuardNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('claimRiskGuardDoNotClaimTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimRiskGuardJsonText(pack.do_not_claim_enforcement) || t('claimRiskGuardNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimRiskGuardDoNotClaimNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimRiskGuardQualityChecksTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimRiskGuardJsonText(pack.claim_risk_quality_checks) || t('claimRiskGuardNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('claimRiskGuardAuditPreviewTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimRiskGuardJsonText(pack.audit_preview) || t('claimRiskGuardNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('claimRiskGuardSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('claimRiskGuardSafetyNote'))}</div></div>`;
+        }
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -25708,6 +26010,8 @@
                 '',
                 projectWorkspaceExportReviewEvidenceQualityMarkdown(workspace),
                 '',
+                projectWorkspaceExportClaimRiskGuardMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -25825,6 +26129,7 @@
                 workspace_real_execution_approval_token_pack: projectWorkspaceExportRealExecutionApprovalTokenSnapshot(workspace),
                 workspace_provider_invocation_audit_packet_pack: projectWorkspaceExportProviderInvocationAuditPacketSnapshot(workspace),
                 review_evidence_quality_pack: projectWorkspaceExportReviewEvidenceQualitySnapshot(workspace),
+                claim_risk_guard_pack: projectWorkspaceExportClaimRiskGuardSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -38401,6 +38706,11 @@
                     ${renderProjectWorkspaceQuoteBuyerLanguagePanel(workspace)}
                     ${renderProjectWorkspaceClaimSupportEvidenceGapsPanel(workspace)}
                     ${renderProjectWorkspaceNoiseDoNotClaimRecommendationSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceClaimRiskSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceClaimRiskCardsPanel(workspace)}
+                    ${renderProjectWorkspaceAllowedRestrictedBlockedClaimCardsPanel(workspace)}
+                    ${renderProjectWorkspaceClaimRewriteTraceOverclaimPanel(workspace)}
+                    ${renderProjectWorkspaceClaimPlatformDoNotClaimQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}

@@ -13853,6 +13853,201 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_claim_risk_guard_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace claim risk guard bundle",
+            "project_workspace_claim_risk_guard_marker",
+            "PROJECT_WORKSPACE_CLAIM_RISK_GUARD_MARKER",
+            "latestProjectWorkspaceClaimRiskGuardPack",
+            "claim_risk_guard_pack",
+            "projectWorkspaceClaimRiskGuardPackFromWorkspace",
+            "projectWorkspaceExportClaimRiskGuardSnapshot",
+            "projectWorkspaceExportClaimRiskGuardMarkdown",
+            "renderProjectWorkspaceClaimRiskSummaryPanel",
+            "renderProjectWorkspaceClaimRiskCardsPanel",
+            "renderProjectWorkspaceAllowedRestrictedBlockedClaimCardsPanel",
+            "renderProjectWorkspaceClaimRewriteTraceOverclaimPanel",
+            "renderProjectWorkspaceClaimPlatformDoNotClaimQualityAuditSafetyPanel",
+            "copyProjectWorkspaceClaimRiskSummary",
+            "copyProjectWorkspaceClaimRiskCards",
+            "copyProjectWorkspaceAllowedClaimCards",
+            "copyProjectWorkspaceRestrictedClaimCards",
+            "copyProjectWorkspaceBlockedClaimCards",
+            "copyProjectWorkspaceClaimRewriteSuggestions",
+            "copyProjectWorkspaceEvidenceToClaimTrace",
+            "copyProjectWorkspaceOverclaimPatternChecks",
+            "copyProjectWorkspaceClaimDoNotClaimEnforcement",
+            "copyProjectWorkspaceFullClaimRiskGuardPack",
+            "claim_risk_guard_pack: projectWorkspaceExportClaimRiskGuardSnapshot(workspace)",
+            "Claim Risk Guard / Evidence Claim Safety",
+            "Claim Risk Summary",
+            "Claim Risk Cards",
+            "Allowed Claim Cards",
+            "Restricted Claim Cards",
+            "Blocked Claim Cards",
+            "Claim Rewrite Suggestions",
+            "Evidence To Claim Trace",
+            "Overclaim Pattern Checks",
+            "Platform Claim Safety Notes",
+            "Do Not Claim Enforcement",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "pack.claim_risk_summary",
+            "pack.claim_risk_cards",
+            "pack.allowed_claim_cards",
+            "pack.restricted_claim_cards",
+            "pack.blocked_claim_cards",
+            "pack.claim_rewrite_suggestions",
+            "pack.evidence_to_claim_trace",
+            "pack.overclaim_pattern_checks",
+            "pack.platform_claim_safety_notes",
+            "pack.do_not_claim_enforcement",
+            "pack.claim_risk_quality_checks",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.claim_count",
+            "summary.allowed_claim_count",
+            "summary.restricted_claim_count",
+            "summary.blocked_claim_count",
+            "summary.recommended_operator_action",
+            "summary.real_policy_check_allowed",
+            "summary.real_execution_allowed",
+            "card.claim_id",
+            "card.claim_text",
+            "card.claim_source",
+            "card.support_status",
+            "card.risk_level",
+            "card.risk_category",
+            "card.supporting_quote_ids",
+            "card.evidence_gap_refs",
+            "card.allowed_usage",
+            "card.restricted_usage",
+            "card.disallowed_usage",
+            "card.recommended_rewrite",
+            "card.operator_review_required",
+            "card.real_policy_check_allowed",
+            "card.real_execution_allowed",
+            "card.risk_note",
+            "card.safe_claim_text",
+            "card.evidence_basis",
+            "card.allowed_channels",
+            "card.usage_note",
+            "card.blocked_claim_text",
+            "card.blocked_reason",
+            "card.missing_evidence_refs",
+            "card.do_not_claim_refs",
+            "card.recommended_safe_alternative",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("renderProjectWorkspaceNoiseDoNotClaimRecommendationSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceClaimRiskSummaryPanel(workspace)")
+        cards = html.index("renderProjectWorkspaceClaimRiskCardsPanel(workspace)")
+        buckets = html.index("renderProjectWorkspaceAllowedRestrictedBlockedClaimCardsPanel(workspace)")
+        rewrite = html.index("renderProjectWorkspaceClaimRewriteTraceOverclaimPanel(workspace)")
+        safety = html.index("renderProjectWorkspaceClaimPlatformDoNotClaimQualityAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, cards)
+        self.assertLess(cards, buckets)
+        self.assertLess(buckets, rewrite)
+        self.assertLess(rewrite, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_claim_risk_guard_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "claimRiskGuardPackTitle",
+            "claimRiskGuardSummaryTitle",
+            "claimRiskGuardCardsTitle",
+            "claimRiskGuardAllowedTitle",
+            "claimRiskGuardRestrictedTitle",
+            "claimRiskGuardBlockedTitle",
+            "claimRiskGuardRewriteTitle",
+            "claimRiskGuardTraceTitle",
+            "claimRiskGuardOverclaimTitle",
+            "claimRiskGuardPlatformNotesTitle",
+            "claimRiskGuardDoNotClaimTitle",
+            "claimRiskGuardQualityChecksTitle",
+            "claimRiskGuardAuditPreviewTitle",
+            "claimRiskGuardSafetyTitle",
+            "claimRiskGuardCopySummary",
+            "claimRiskGuardCopyRiskCards",
+            "claimRiskGuardCopyAllowed",
+            "claimRiskGuardCopyRestricted",
+            "claimRiskGuardCopyBlocked",
+            "claimRiskGuardCopyRewrite",
+            "claimRiskGuardCopyTrace",
+            "claimRiskGuardCopyOverclaim",
+            "claimRiskGuardCopyDoNotClaim",
+            "claimRiskGuardCopyFull",
+            "claimRiskGuardCopied",
+            "claimRiskGuardCopyFailed",
+            "claimRiskGuardCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace claim risk guard bundle", script)
+            self.assertIn("project_workspace_claim_risk_guard_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceClaimRiskGuardSummaryText"):
+            html.index("async function copyProjectWorkspaceClaimRiskGuardText")
+        ]
+        for key in [
+            "claimRiskGuardPackTitle",
+            "claimRiskGuardSummaryTitle",
+            "claimRiskGuardCardsTitle",
+            "claimRiskGuardAllowedTitle",
+            "claimRiskGuardRestrictedTitle",
+            "claimRiskGuardBlockedTitle",
+            "claimRiskGuardRewriteTitle",
+            "claimRiskGuardTraceTitle",
+            "claimRiskGuardOverclaimTitle",
+            "claimRiskGuardPlatformNotesTitle",
+            "claimRiskGuardDoNotClaimTitle",
+            "claimRiskGuardAuditPreviewTitle",
+            "claimRiskGuardSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_CLAIM_RISK_GUARD_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "deterministic claim risk preview",
+            "not legal advice",
+            "not a real policy API check",
+            "not a compliance conclusion",
+            "Supported / weakly supported / unsupported / overclaim / missing evidence / do_not_claim violation",
+            "absolute wording",
+            "guaranteed outcome",
+            "medical-like claim",
+            "unsupported comparison",
+            "best/first/only",
+            "external policy needed",
+            "missing quote",
+            "does not query real law",
+            "real policy APIs",
+            "real logs",
+            "real history tables",
+            "do not call an LLM",
+            "Provider, LLM, external scraping, database persistence, real execution, and real policy check remain disabled.",
+            "Blocked claims cannot be used directly for generated copy.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [
