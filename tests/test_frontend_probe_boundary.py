@@ -14470,6 +14470,224 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_claim_safe_platform_delivery_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace claim-safe platform delivery bundle",
+            "project_workspace_claim_safe_platform_delivery_marker",
+            "PROJECT_WORKSPACE_CLAIM_SAFE_PLATFORM_DELIVERY_MARKER",
+            "latestProjectWorkspaceClaimSafePlatformDeliveryPack",
+            "claim_safe_platform_delivery_pack",
+            "projectWorkspaceClaimSafePlatformDeliveryPackFromWorkspace",
+            "projectWorkspaceExportClaimSafePlatformDeliverySnapshot",
+            "projectWorkspaceExportClaimSafePlatformDeliveryMarkdown",
+            "renderProjectWorkspaceClaimSafePlatformDeliverySummaryPanel",
+            "renderProjectWorkspaceClaimSafePlatformDeliveryCardsPanel",
+            "renderProjectWorkspaceClaimSafePlatformChannelPanel",
+            "renderProjectWorkspaceClaimSafePlatformAssetClaimBlockerPanel",
+            "renderProjectWorkspaceClaimSafePlatformReadinessExportAuditSafetyPanel",
+            "copyProjectWorkspacePlatformDeliverySummary",
+            "copyProjectWorkspacePlatformDeliveryCards",
+            "copyProjectWorkspaceChannelCopyCards",
+            "copyProjectWorkspaceChannelVideoPromptCards",
+            "copyProjectWorkspaceAssetRequirementCards",
+            "copyProjectWorkspaceChannelClaimSafetyMap",
+            "copyProjectWorkspaceDeliveryBlockerCards",
+            "copyProjectWorkspaceDeliveryReadinessChecks",
+            "copyProjectWorkspaceOperatorHandoffNotes",
+            "copyProjectWorkspaceFullClaimSafePlatformDeliveryPack",
+            "claim_safe_platform_delivery_pack: projectWorkspaceExportClaimSafePlatformDeliverySnapshot(workspace)",
+            "Claim-Safe Platform Delivery Pack",
+            "Platform Delivery Summary",
+            "Platform Delivery Cards",
+            "Channel Copy Cards",
+            "Channel Video Prompt Cards",
+            "Channel Asset Requirement Cards",
+            "Channel Claim Safety Map",
+            "Delivery Blocker Cards",
+            "Delivery Readiness Checks",
+            "Export Bundle Manifest",
+            "Operator Handoff Notes",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "platform_delivery_summary",
+            "platform_delivery_cards",
+            "channel_copy_cards",
+            "channel_video_prompt_cards",
+            "channel_asset_requirement_cards",
+            "channel_claim_safety_map",
+            "delivery_blocker_cards",
+            "delivery_readiness_checks",
+            "export_bundle_manifest",
+            "operator_handoff_notes",
+            "audit_preview",
+            "safety_boundaries",
+            "card.platform_delivery_id",
+            "card.platform_label",
+            "card.delivery_surface",
+            "card.recommended_output_refs",
+            "card.recommended_hook_refs",
+            "card.recommended_script_refs",
+            "card.recommended_cta_refs",
+            "card.recommended_video_prompt_refs",
+            "card.format_notes",
+            "card.claim_safety_status",
+            "card.readiness_status",
+            "card.operator_review_required",
+            "card.blocked_reason",
+            "card.real_platform_upload_allowed",
+            "card.real_policy_check_allowed",
+            "card.real_execution_allowed",
+            "card.copy_card_id",
+            "card.copy_type",
+            "card.copy_text",
+            "card.source_output_refs",
+            "card.source_claim_ids",
+            "card.supporting_quote_ids",
+            "card.claim_risk_level",
+            "card.support_status",
+            "card.allowed_usage",
+            "card.restricted_usage",
+            "card.disallowed_usage",
+            "card.video_delivery_id",
+            "card.prompt_text",
+            "card.visual_direction",
+            "card.shot_refs",
+            "card.disallowed_visual_claims",
+            "card.real_provider_allowed",
+            "card.real_media_upload_allowed",
+            "row.evidence_quality",
+            "row.do_not_claim_refs",
+            "card.blocker_type",
+            "card.blocked_text",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for surface in [
+            "tiktok_short_video",
+            "instagram_reel",
+            "youtube_short",
+            "amazon_listing_video",
+            "product_page_asset",
+            "ad_copy_snippet",
+        ]:
+            with self.subTest(surface=surface):
+                self.assertIn(surface, html)
+        previous = html.index("renderProjectWorkspaceClaimSafeRewriteQualityExportAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceClaimSafePlatformDeliverySummaryPanel(workspace)")
+        cards = html.index("renderProjectWorkspaceClaimSafePlatformDeliveryCardsPanel(workspace)")
+        channel = html.index("renderProjectWorkspaceClaimSafePlatformChannelPanel(workspace)")
+        blockers = html.index("renderProjectWorkspaceClaimSafePlatformAssetClaimBlockerPanel(workspace)")
+        safety = html.index("renderProjectWorkspaceClaimSafePlatformReadinessExportAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, cards)
+        self.assertLess(cards, channel)
+        self.assertLess(channel, blockers)
+        self.assertLess(blockers, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_claim_safe_platform_delivery_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "claimSafePlatformDeliveryPackTitle",
+            "claimSafePlatformDeliverySummaryTitle",
+            "claimSafePlatformDeliveryCardsTitle",
+            "claimSafePlatformDeliveryChannelTitle",
+            "claimSafePlatformDeliveryCopyTitle",
+            "claimSafePlatformDeliveryVideoTitle",
+            "claimSafePlatformDeliveryAssetTitle",
+            "claimSafePlatformDeliveryClaimMapTitle",
+            "claimSafePlatformDeliveryBlockerTitle",
+            "claimSafePlatformDeliveryReadinessTitle",
+            "claimSafePlatformDeliveryExportTitle",
+            "claimSafePlatformDeliveryHandoffTitle",
+            "claimSafePlatformDeliveryAuditTitle",
+            "claimSafePlatformDeliverySafetyTitle",
+            "claimSafePlatformDeliveryCopySummary",
+            "claimSafePlatformDeliveryCopyCards",
+            "claimSafePlatformDeliveryCopyChannelCopy",
+            "claimSafePlatformDeliveryCopyVideo",
+            "claimSafePlatformDeliveryCopyAssets",
+            "claimSafePlatformDeliveryCopyClaimMap",
+            "claimSafePlatformDeliveryCopyBlockers",
+            "claimSafePlatformDeliveryCopyReadiness",
+            "claimSafePlatformDeliveryCopyHandoff",
+            "claimSafePlatformDeliveryCopyFull",
+            "claimSafePlatformDeliveryCopied",
+            "claimSafePlatformDeliveryCopyFailed",
+            "claimSafePlatformDeliveryCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace claim-safe platform delivery bundle", script)
+            self.assertIn("project_workspace_claim_safe_platform_delivery_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceClaimSafePlatformDeliverySummaryText"):
+            html.index("async function copyProjectWorkspaceClaimSafePlatformDeliveryText")
+        ]
+        for key in [
+            "claimSafePlatformDeliveryPackTitle",
+            "claimSafePlatformDeliverySummaryTitle",
+            "claimSafePlatformDeliveryCardsTitle",
+            "claimSafePlatformDeliveryCopyTitle",
+            "claimSafePlatformDeliveryVideoTitle",
+            "claimSafePlatformDeliveryAssetTitle",
+            "claimSafePlatformDeliveryClaimMapTitle",
+            "claimSafePlatformDeliveryBlockerTitle",
+            "claimSafePlatformDeliveryReadinessTitle",
+            "claimSafePlatformDeliveryExportTitle",
+            "claimSafePlatformDeliveryHandoffTitle",
+            "claimSafePlatformDeliveryAuditTitle",
+            "claimSafePlatformDeliverySafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_CLAIM_SAFE_PLATFORM_DELIVERY_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "deterministic platform delivery preview",
+            "not a real publication",
+            "not a real platform policy API check",
+            "does not upload files",
+            "does not call a provider",
+            "not legal advice",
+            "not a real policy API check",
+            "not a real platform compliance conclusion",
+            "not a real platform policy judgment",
+            "does not upload or download files",
+            "does not upload media",
+            "does not call providers",
+            "does not call an LLM",
+            "does not scrape reviews",
+            "does not read real logs",
+            "history tables",
+            "does not write databases",
+            "does not create approvals or operator tasks",
+            "does not execute paid operations",
+            "generic delivery previews only",
+            "not real platform policy judgments",
+            "do not generate real video",
+            "publish to a platform",
+            "Delivery blockers cannot be delivered to public channels",
+            "does not upload files or write databases",
+            "do not create real operator tasks",
+            "Audit preview is display-only and does not write databases.",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, and platform upload remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [
