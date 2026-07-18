@@ -38327,6 +38327,565 @@ def _rw_claim_safe_creative_brief_pack(creative_decision_pack: dict) -> dict:
     }
 
 
+def _rw_claim_safe_creative_output_pack(creative_decision_pack: dict) -> dict:
+    brief_pack = dict(creative_decision_pack.get("claim_safe_creative_brief_pack") or {})
+    claim_risk_pack = dict(creative_decision_pack.get("claim_risk_guard_pack") or {})
+    evidence_pack = dict(
+        creative_decision_pack.get("review_evidence_quality_pack") or {}
+    )
+    campaign_pack = dict(creative_decision_pack.get("campaign_export_pack") or {})
+    variant_pack = dict(creative_decision_pack.get("creative_variant_pack") or {})
+    asset_pack = dict(creative_decision_pack.get("creative_asset_pack") or {})
+    multi_platform_pack = dict(
+        creative_decision_pack.get("multi_platform_asset_pack") or {}
+    )
+    video_prompt_pack = dict(creative_decision_pack.get("video_prompt_pack") or {})
+
+    approved_pillars = list(brief_pack.get("approved_message_pillars") or [])
+    restricted_pillars = list(brief_pack.get("restricted_message_pillars") or [])
+    blocked_pillars = list(brief_pack.get("blocked_message_pillars") or [])
+    usage_map = list(brief_pack.get("creative_claim_usage_map") or [])
+    evidence_rows = list(brief_pack.get("evidence_backing_map") or [])
+    quote_cards = {
+        _rw_text(card.get("quote_id")): card
+        for card in list(evidence_pack.get("quote_quality_cards") or [])
+        if _rw_text(card.get("quote_id"))
+    }
+
+    def unique(values: list[object]) -> list[str]:
+        return list(dict.fromkeys(_rw_text(value) for value in values if _rw_text(value)))
+
+    def as_list(value: object) -> list[str]:
+        if isinstance(value, list):
+            return unique(value)
+        return [_rw_text(value)] if _rw_text(value) else []
+
+    def surface_usage(surface: str) -> list[dict]:
+        return [row for row in usage_map if row.get("creative_surface") == surface]
+
+    def usage_for_text(surface: str, text: object) -> dict:
+        candidate = _rw_text(text).lower()
+        rows = surface_usage(surface)
+        for row in rows:
+            row_text = _rw_text(row.get("candidate_copy")).lower()
+            if candidate and row_text and (candidate in row_text or row_text in candidate):
+                return row
+        return rows[0] if rows else {}
+
+    def claim_refs_from_pillar(pillar: dict) -> tuple[list[str], list[str], str, str]:
+        claim_ids = as_list(pillar.get("source_claim_ids"))
+        quote_ids = as_list(pillar.get("supporting_quote_ids"))
+        support = _rw_text(pillar.get("support_status")) or "quote_supported"
+        risk = "low" if support == "quote_supported" and quote_ids else "medium"
+        return claim_ids, quote_ids, risk, support
+
+    def refs_for_output(surface: str, text: object, pillar: dict | None = None) -> dict:
+        usage = usage_for_text(surface, text)
+        claim_ids = as_list(usage.get("source_claim_ids"))
+        quote_ids = as_list(usage.get("supporting_quote_ids"))
+        risk = _rw_text(usage.get("claim_risk_level")) or "medium"
+        support = _rw_text(usage.get("support_status")) or "weak_or_unmapped_quote_support"
+        pillar_ids: list[str] = []
+        if pillar:
+            pillar_ids = as_list(pillar.get("pillar_id"))
+            p_claims, p_quotes, p_risk, p_support = claim_refs_from_pillar(pillar)
+            claim_ids = unique([*claim_ids, *p_claims])
+            quote_ids = unique([*quote_ids, *p_quotes])
+            risk = "low" if p_risk == "low" and risk != "high" else risk
+            support = p_support if p_support == "quote_supported" else support
+        return {
+            "source_pillar_ids": pillar_ids,
+            "source_claim_ids": claim_ids,
+            "supporting_quote_ids": quote_ids,
+            "claim_risk_level": risk,
+            "support_status": support,
+        }
+
+    hard_block_terms = [
+        "guarantee", "guaranteed", "risk-free", "100%", "perfect",
+        "cure", "treat", "diagnose", "better than", "beats", "outperforms",
+        "best", "first", "only",
+    ]
+
+    def blocked_terms(text: object) -> list[str]:
+        clean = _rw_text(text).lower()
+        return [term for term in hard_block_terms if term in clean]
+
+    def is_safe_text(text: object, refs: dict) -> bool:
+        return bool(
+            _rw_text(text)
+            and refs.get("supporting_quote_ids")
+            and refs.get("claim_risk_level") != "high"
+            and not blocked_terms(text)
+        )
+
+    primary_pillars = approved_pillars or [
+        pillar for pillar in restricted_pillars
+        if not pillar.get("disallowed_public_use")
+    ]
+
+    safe_hook_cards: list[dict] = []
+    for index, pillar in enumerate(primary_pillars[:8], start=1):
+        hook_text = _rw_text(pillar.get("pillar_text") or pillar.get("safe_claim_text"))
+        refs = refs_for_output("hook", hook_text, pillar)
+        if not is_safe_text(hook_text, refs):
+            continue
+        safe_hook_cards.append({
+            "hook_id": f"claim_safe_hook_{index}",
+            "hook_text": hook_text,
+            **refs,
+            "allowed_usage": "claim_safe_preview_with_quote_context",
+            "restricted_usage": ["preserve_quote_context", "operator_review_before_public_use"],
+            "disallowed_usage": [
+                "guaranteed_outcome", "medical_like_claim",
+                "absolute_wording", "unsupported_comparison",
+            ],
+            "safe_usage_note": pillar.get("safe_usage_note") or (
+                "Use only as deterministic preview copy with supplied quote context."
+            ),
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": pillar.get("risk_note") or "Hook card is preview only.",
+        })
+    if not safe_hook_cards:
+        for index, quote in enumerate(list(quote_cards.values())[:4], start=1):
+            quote_id = _rw_text(quote.get("quote_id"))
+            hook_text = _rw_quote_snippet(quote.get("quote_text", ""), 160)
+            if not hook_text or blocked_terms(hook_text):
+                continue
+            safe_hook_cards.append({
+                "hook_id": f"claim_safe_hook_quote_{index}",
+                "hook_text": hook_text,
+                "source_pillar_ids": [],
+                "source_claim_ids": [],
+                "supporting_quote_ids": [quote_id] if quote_id else [],
+                "claim_risk_level": "low",
+                "support_status": "quote_supported",
+                "allowed_usage": "claim_safe_preview_with_quote_context",
+                "restricted_usage": [
+                    "preserve_quote_context",
+                    "operator_review_before_public_use",
+                ],
+                "disallowed_usage": [
+                    "guaranteed_outcome", "medical_like_claim",
+                    "absolute_wording", "unsupported_comparison",
+                ],
+                "safe_usage_note": (
+                    "Use only as deterministic preview copy with supplied quote context."
+                ),
+                "real_policy_check_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": "Hook card is derived from supplied evidence only.",
+            })
+            break
+
+    def collect_script_lines() -> list[tuple[str, list[str]]]:
+        rows: list[tuple[str, list[str]]] = []
+        creative_section = dict(campaign_pack.get("creative_section") or {})
+        campaign_lines = [
+            creative_section.get("recommended_hook"),
+            creative_section.get("scene_1"),
+            creative_section.get("scene_2"),
+            creative_section.get("scene_3"),
+            creative_section.get("cta"),
+        ]
+        if any(_rw_text(line) for line in campaign_lines):
+            rows.append(("campaign_export_script", as_list(campaign_lines)))
+        for variant in list(variant_pack.get("variants") or [])[:4]:
+            variant_id = _rw_text(variant.get("variant_id")) or "variant"
+            rows.append((
+                f"variant_script_{variant_id}",
+                as_list([
+                    variant.get("hook"), variant.get("scene_1"),
+                    variant.get("scene_2"), variant.get("scene_3"),
+                    variant.get("cta"),
+                ]),
+            ))
+        for asset in list(asset_pack.get("asset_packs") or [])[:4]:
+            asset_id = _rw_text(asset.get("asset_pack_id")) or "asset"
+            script = dict(asset.get("shooting_script") or {})
+            rows.append((
+                f"asset_script_{asset_id}",
+                as_list([
+                    script.get("hook"), script.get("scene_1"),
+                    script.get("scene_2"), script.get("scene_3"),
+                    script.get("cta"),
+                ]),
+            ))
+        return [(script_id, lines) for script_id, lines in rows if lines]
+
+    safe_script_cards: list[dict] = []
+    for index, (script_id, lines) in enumerate(collect_script_lines()[:8], start=1):
+        joined = " ".join(lines)
+        refs = refs_for_output("script", joined, primary_pillars[0] if primary_pillars else None)
+        safe_lines = [
+            line for line in lines
+            if not blocked_terms(line)
+        ] or lines[:1]
+        safe_script_cards.append({
+            "script_id": f"claim_safe_script_{index}",
+            "script_title": script_id,
+            "script_lines": safe_lines,
+            **refs,
+            "safe_usage_note": (
+                "Claim-safe script preview only; weak evidence is not treated as strong evidence."
+            ),
+            "blocked_terms": unique([
+                term for line in lines for term in blocked_terms(line)
+            ]),
+            "operator_review_required": refs.get("claim_risk_level") != "low",
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Script card is deterministic preview only.",
+        })
+
+    def output_card(surface: str, prefix: str, text: object, index: int) -> dict:
+        refs = refs_for_output(surface, text, primary_pillars[0] if primary_pillars else None)
+        return {
+            f"{prefix}_id": f"claim_safe_{prefix}_{index}",
+            f"{prefix}_text": _rw_text(text),
+            **refs,
+            "allowed_usage": "internal_claim_safe_output_preview",
+            "restricted_usage": ["operator_review_before_public_use"],
+            "disallowed_usage": [
+                "guaranteed_outcome", "medical_like_claim",
+                "absolute_wording", "unsupported_comparison",
+                "best_first_only_superlative",
+            ],
+            "safe_usage_note": f"{surface} output is deterministic preview only.",
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{surface} card avoids guaranteed outcomes and unsupported claims.",
+        }
+
+    cta_candidates = [
+        row.get("candidate_copy") for row in usage_map
+        if row.get("creative_surface") == "CTA" and _rw_text(row.get("candidate_copy"))
+    ]
+    safe_cta_cards = [
+        output_card("CTA", "cta", text, index)
+        for index, text in enumerate(cta_candidates[:8], start=1)
+        if not blocked_terms(text)
+    ]
+
+    caption_candidates = [
+        row.get("pillar_text") for row in approved_pillars
+        if _rw_text(row.get("pillar_text"))
+    ] + [
+        dict(campaign_pack.get("campaign_brief") or {}).get("recommended_message")
+    ]
+    safe_caption_cards = [
+        output_card("caption", "caption", text, index)
+        for index, text in enumerate(caption_candidates[:8], start=1)
+        if _rw_text(text) and not blocked_terms(text)
+    ]
+
+    prompt_candidates = [
+        row.get("candidate_copy") for row in usage_map
+        if row.get("creative_surface") == "video_prompt"
+        and _rw_text(row.get("candidate_copy"))
+    ] + as_list(video_prompt_pack.get("video_prompt"))
+    safe_video_prompt_cards: list[dict] = []
+    for index, prompt in enumerate(unique(prompt_candidates)[:8], start=1):
+        refs = refs_for_output(
+            "video_prompt", prompt, primary_pillars[0] if primary_pillars else None
+        )
+        safe_video_prompt_cards.append({
+            "video_prompt_id": f"claim_safe_video_prompt_{index}",
+            "prompt_text": _rw_text(prompt),
+            "visual_direction": (
+                "Shootable preview direction only; avoid implied outcomes, "
+                "medical-like, safety, or performance overclaims."
+            ),
+            **refs,
+            "disallowed_visual_claims": [
+                "unverified_result_visual", "medical_like_visual_claim",
+                "safety_or_performance_overclaim", "real_provider_call",
+            ],
+            "safe_usage_note": "Video prompt preview only; no media or provider call is triggered.",
+            "real_provider_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Video prompt card is deterministic and cannot invoke a real provider.",
+        })
+
+    shot_candidates: list[tuple[str, str]] = []
+    for asset in list(asset_pack.get("asset_packs") or [])[:4]:
+        asset_id = _rw_text(asset.get("asset_pack_id")) or "asset"
+        for frame in list(asset.get("keyframe_prompts") or [])[:6]:
+            shot_candidates.append((
+                f"{asset_id}_keyframe",
+                _rw_text(frame.get("prompt") or frame.get("description")),
+            ))
+    for platform_pack in list(multi_platform_pack.get("platform_packs") or [])[:4]:
+        platform_id = _rw_text(platform_pack.get("platform_pack_id")) or "platform"
+        for scene in list(dict(platform_pack.get("shooting_script") or {}).get("scenes") or [])[:6]:
+            shot_candidates.append((f"{platform_id}_scene", _rw_text(scene.get("scene_text"))))
+    if not shot_candidates and safe_hook_cards:
+        shot_candidates.append(("quote_backed_static_shot", safe_hook_cards[0]["hook_text"]))
+
+    safe_shot_list_cards = [
+        {
+            "shot_id": f"claim_safe_shot_{index}",
+            "shot_surface": "shot_list",
+            "shot_description": text,
+            "source_ref": source_ref,
+            **refs_for_output("shot_list", text, primary_pillars[0] if primary_pillars else None),
+            "safe_usage_note": "Shootable shot suggestion only; no real video is generated.",
+            "real_provider_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Shot list card describes a preview shot and does not create media.",
+        }
+        for index, (source_ref, text) in enumerate(shot_candidates[:12], start=1)
+        if _rw_text(text)
+    ]
+
+    blocked_output_cards = [
+        {
+            "blocked_output_id": f"claim_safe_blocked_output_{index}",
+            "blocked_surface": pillar.get("blocked_surface") or "public_creative_copy",
+            "blocked_text": pillar.get("blocked_text") or pillar.get("pillar_text", ""),
+            "blocked_reason": pillar.get("blocked_reason") or "blocked_claim",
+            "source_claim_ids": as_list(pillar.get("source_claim_ids")),
+            "missing_evidence_refs": as_list(pillar.get("missing_evidence_refs")),
+            "do_not_claim_refs": as_list(pillar.get("do_not_claim_refs")),
+            "recommended_safe_alternative": pillar.get("recommended_safe_alternative") or (
+                "Use only supplied buyer language as internal context."
+            ),
+            "operator_review_required": True,
+            "risk_note": pillar.get("risk_note") or (
+                "Blocked output cannot enter public copy or video prompts."
+            ),
+        }
+        for index, pillar in enumerate(blocked_pillars[:12], start=1)
+    ]
+    for card in list(claim_risk_pack.get("blocked_claim_cards") or [])[:8]:
+        blocked_output_cards.append({
+            "blocked_output_id": f"claim_safe_blocked_claim_{len(blocked_output_cards) + 1}",
+            "blocked_surface": "public_creative_copy",
+            "blocked_text": card.get("blocked_claim_text", ""),
+            "blocked_reason": card.get("blocked_reason") or "blocked_claim",
+            "source_claim_ids": as_list(card.get("claim_id")),
+            "missing_evidence_refs": as_list(card.get("missing_evidence_refs")),
+            "do_not_claim_refs": as_list(card.get("do_not_claim_refs")),
+            "recommended_safe_alternative": card.get("recommended_safe_alternative") or (
+                "Use a conservative quote-backed alternative."
+            ),
+            "operator_review_required": True,
+            "risk_note": card.get("risk_note") or "Blocked claim is not public output.",
+        })
+
+    output_rows: list[tuple[str, str, dict]] = []
+    output_rows.extend(("hook", card["hook_text"], card) for card in safe_hook_cards)
+    output_rows.extend(("script", " ".join(card["script_lines"]), card) for card in safe_script_cards)
+    output_rows.extend(("CTA", card["cta_text"], card) for card in safe_cta_cards)
+    output_rows.extend(("caption", card["caption_text"], card) for card in safe_caption_cards)
+    output_rows.extend(("video_prompt", card["prompt_text"], card) for card in safe_video_prompt_cards)
+    output_rows.extend(("shot_list", card["shot_description"], card) for card in safe_shot_list_cards)
+
+    def evidence_quality_for_quotes(quote_ids: list[str]) -> str:
+        qualities = [
+            _rw_text(quote_cards.get(quote_id, {}).get("quality_status"))
+            for quote_id in quote_ids
+            if quote_id in quote_cards
+        ]
+        return qualities[0] if qualities else "not_read_from_real_logs"
+
+    output_claim_trace_map = [
+        {
+            "trace_id": f"claim_safe_output_trace_{index}",
+            "output_surface": surface,
+            "output_text": text,
+            "source_claim_ids": as_list(card.get("source_claim_ids")),
+            "supporting_quote_ids": as_list(card.get("supporting_quote_ids")),
+            "evidence_quality": evidence_quality_for_quotes(
+                as_list(card.get("supporting_quote_ids"))
+            ),
+            "claim_risk_level": card.get("claim_risk_level", "medium"),
+            "support_status": card.get("support_status", "weak_or_unmapped_quote_support"),
+            "source_packs": [
+                "claim_safe_creative_brief_pack",
+                "claim_risk_guard_pack",
+                "review_evidence_quality_pack",
+                "campaign_export_pack",
+                "creative_variant_pack",
+                "creative_asset_pack",
+                "multi_platform_asset_pack",
+            ],
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+        }
+        for index, (surface, text, card) in enumerate(output_rows, start=1)
+    ]
+
+    output_rewrite_guidance = [
+        {
+            "guidance_id": f"claim_safe_output_rewrite_{index}",
+            "output_surface": card.get("blocked_surface") or "restricted_output",
+            "source_text": card.get("blocked_text", ""),
+            "deterministic_safe_guidance": card.get("recommended_safe_alternative", ""),
+            "llm_used": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for index, card in enumerate(blocked_output_cards[:16], start=1)
+    ] + [
+        {
+            "guidance_id": f"claim_safe_output_rewrite_preview_{index}",
+            "output_surface": row.get("creative_surface", "restricted_output"),
+            "source_text": row.get("source_copy", ""),
+            "deterministic_safe_guidance": row.get(
+                "deterministic_safe_guidance",
+                "Keep wording conservative and quote-bounded.",
+            ),
+            "llm_used": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for index, row in enumerate(
+            list(brief_pack.get("creative_brief_rewrite_guidance") or [])[:16],
+            start=len(blocked_output_cards[:16]) + 1,
+        )
+    ]
+
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "policy_api_called": False,
+        "real_provider_called": False,
+        "media_upload_download_performed": False,
+        "real_ad_launch_created": False,
+    }
+
+    surfaces_present = sorted({
+        row["output_surface"] for row in output_claim_trace_map
+    })
+    return {
+        "pack_version": "claim_safe_creative_output_pack_v1",
+        "claim_safe_output_summary": {
+            "mode": (
+                "claim_safe_creative_output_preview_"
+                "deterministic_output_pack_dry_run_only"
+            ),
+            "source_packs": [
+                "claim_safe_creative_brief_pack",
+                "claim_risk_guard_pack",
+                "review_evidence_quality_pack",
+                "campaign_export_pack",
+                "creative_variant_pack",
+                "creative_asset_pack",
+                "multi_platform_asset_pack",
+                "video_prompt_pack",
+            ],
+            "safe_hook_count": len(safe_hook_cards),
+            "safe_script_count": len(safe_script_cards),
+            "safe_cta_count": len(safe_cta_cards),
+            "safe_caption_count": len(safe_caption_cards),
+            "safe_video_prompt_count": len(safe_video_prompt_cards),
+            "safe_shot_list_count": len(safe_shot_list_cards),
+            "blocked_output_count": len(blocked_output_cards),
+            "trace_surface_count": len(surfaces_present),
+            "trace_surfaces_present": surfaces_present,
+            "recommended_operator_action": (
+                "Use this as a claim-safe creative output preview only; "
+                "review all public copy before launch."
+            ),
+            "real_provider_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "safe_hook_cards": safe_hook_cards,
+        "safe_script_cards": safe_script_cards,
+        "safe_cta_cards": safe_cta_cards,
+        "safe_caption_cards": safe_caption_cards,
+        "safe_video_prompt_cards": safe_video_prompt_cards,
+        "safe_shot_list_cards": safe_shot_list_cards,
+        "blocked_output_cards": blocked_output_cards,
+        "output_claim_trace_map": output_claim_trace_map,
+        "output_rewrite_guidance": output_rewrite_guidance,
+        "output_quality_checks": {
+            "claim_safe_creative_brief_pack_present": bool(brief_pack),
+            "claim_risk_guard_pack_present": bool(claim_risk_pack),
+            "review_evidence_quality_pack_present": bool(evidence_pack),
+            "campaign_export_pack_present": bool(campaign_pack),
+            "creative_variant_pack_present": bool(variant_pack),
+            "creative_asset_pack_present": bool(asset_pack),
+            "multi_platform_asset_pack_present": bool(multi_platform_pack),
+            "required_output_surfaces_covered": all(
+                surface in surfaces_present
+                for surface in [
+                    "hook", "script", "CTA", "caption",
+                    "video_prompt", "shot_list",
+                ]
+            ),
+            "safe_hooks_quote_backed": all(
+                bool(card.get("supporting_quote_ids"))
+                and card.get("claim_risk_level") != "high"
+                for card in safe_hook_cards
+            ),
+            "weak_evidence_not_treated_as_strong": True,
+            "deterministic_rewrite_only": True,
+            "json_markdown_preview_only": True,
+            "file_upload_performed": False,
+            "database_write_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "media_operation_performed": False,
+            "external_scraping_performed": False,
+            "real_policy_api_called": False,
+            "real_execution_performed": False,
+        },
+        "export_preview_manifest": {
+            "manifest_id": "claim_safe_creative_output_export_preview",
+            "json_preview_includes": [
+                "claim_safe_output_summary",
+                "safe_hook_cards",
+                "safe_script_cards",
+                "safe_cta_cards",
+                "safe_caption_cards",
+                "safe_video_prompt_cards",
+                "safe_shot_list_cards",
+                "blocked_output_cards",
+                "output_claim_trace_map",
+                "output_rewrite_guidance",
+            ],
+            "markdown_preview_available": True,
+            "json_preview_available": True,
+            "file_upload_allowed": False,
+            "file_upload_performed": False,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "claim_safe_creative_output_preview",
+            "source": "creative_decision_pack.claim_safe_creative_output_pack",
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "audit_record_created": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "real_provider_allowed": False,
+            "media_operation_allowed": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -38530,6 +39089,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["claim_safe_creative_brief_pack"] = (
         _rw_claim_safe_creative_brief_pack(creative_decision_pack)
+    )
+    creative_decision_pack["claim_safe_creative_output_pack"] = (
+        _rw_claim_safe_creative_output_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(

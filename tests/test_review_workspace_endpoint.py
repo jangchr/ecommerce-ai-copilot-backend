@@ -7522,6 +7522,247 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_claim_safe_creative_output_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "claim-safe-creative-output-preview",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "CLAIMSAFEOUTPUT001",
+                "title": "Compact Travel Mug",
+                "reviews": [
+                    {
+                        "rating": 2,
+                        "title": "Leaks during commute",
+                        "text": (
+                            "Leaks during commute and the lid seal drips "
+                            "into my bag every morning."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 5,
+                        "title": "Easy to clean",
+                        "text": (
+                            "The cup is easy to clean after coffee and fits "
+                            "my office bag."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 4,
+                        "title": "Good office fit",
+                        "text": (
+                            "It fits my work bag and is simple to rinse "
+                            "between meetings."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 1,
+                        "title": "Competitor seal problem",
+                        "text": (
+                            "Competitor lid also leaks in a work bag, so I "
+                            "would not trust it for travel."
+                        ),
+                        "source_section": "competitor_review",
+                        "metadata": {"source_type": "competitor"},
+                    },
+                ],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "campaign_export_pack",
+            "creative_variant_pack",
+            "creative_asset_pack",
+            "multi_platform_asset_pack",
+            "review_evidence_quality_pack",
+            "claim_risk_guard_pack",
+            "claim_safe_creative_brief_pack",
+            "claim_safe_creative_output_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["claim_safe_creative_output_pack"]
+        self.assertEqual(
+            pack["pack_version"], "claim_safe_creative_output_pack_v1"
+        )
+        for required_key in [
+            "claim_safe_output_summary",
+            "safe_hook_cards",
+            "safe_script_cards",
+            "safe_cta_cards",
+            "safe_caption_cards",
+            "safe_video_prompt_cards",
+            "safe_shot_list_cards",
+            "blocked_output_cards",
+            "output_claim_trace_map",
+            "output_rewrite_guidance",
+            "output_quality_checks",
+            "export_preview_manifest",
+            "audit_preview",
+            "safety_boundaries",
+        ]:
+            with self.subTest(required_key=required_key):
+                self.assertIn(required_key, pack)
+                self.assertTrue(pack[required_key])
+
+        summary = pack["claim_safe_output_summary"]
+        self.assertIn("claim_safe_creative_output_preview", summary["mode"])
+        self.assertIn("deterministic_output_pack", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        self.assertFalse(summary["real_provider_allowed"])
+        self.assertFalse(summary["real_policy_check_allowed"])
+        self.assertFalse(summary["real_execution_allowed"])
+
+        for hook in pack["safe_hook_cards"]:
+            for field in [
+                "hook_id", "hook_text", "source_pillar_ids",
+                "source_claim_ids", "supporting_quote_ids",
+                "claim_risk_level", "support_status", "allowed_usage",
+                "restricted_usage", "disallowed_usage", "safe_usage_note",
+                "real_policy_check_allowed", "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(hook=hook["hook_id"], field=field):
+                    self.assertIn(field, hook)
+            self.assertFalse(hook["real_policy_check_allowed"])
+            self.assertFalse(hook["real_execution_allowed"])
+
+        for script in pack["safe_script_cards"]:
+            for field in [
+                "script_id", "script_title", "script_lines",
+                "source_pillar_ids", "source_claim_ids",
+                "supporting_quote_ids", "claim_risk_level",
+                "support_status", "safe_usage_note", "blocked_terms",
+                "operator_review_required", "real_policy_check_allowed",
+                "real_execution_allowed", "risk_note",
+            ]:
+                with self.subTest(script=script["script_id"], field=field):
+                    self.assertIn(field, script)
+            self.assertTrue(script["script_lines"])
+            self.assertFalse(script["real_policy_check_allowed"])
+            self.assertFalse(script["real_execution_allowed"])
+
+        for key in ["safe_cta_cards", "safe_caption_cards"]:
+            for card in pack[key]:
+                self.assertFalse(card["real_policy_check_allowed"])
+                self.assertFalse(card["real_execution_allowed"])
+
+        for prompt in pack["safe_video_prompt_cards"]:
+            for field in [
+                "video_prompt_id", "prompt_text", "visual_direction",
+                "source_pillar_ids", "source_claim_ids",
+                "supporting_quote_ids", "claim_risk_level",
+                "support_status", "disallowed_visual_claims",
+                "safe_usage_note", "real_provider_allowed",
+                "real_policy_check_allowed", "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(prompt=prompt["video_prompt_id"], field=field):
+                    self.assertIn(field, prompt)
+            self.assertFalse(prompt["real_provider_allowed"])
+            self.assertFalse(prompt["real_policy_check_allowed"])
+            self.assertFalse(prompt["real_execution_allowed"])
+
+        for shot in pack["safe_shot_list_cards"]:
+            self.assertIn("shot_id", shot)
+            self.assertIn("shot_description", shot)
+            self.assertFalse(shot["real_provider_allowed"])
+            self.assertFalse(shot["real_policy_check_allowed"])
+            self.assertFalse(shot["real_execution_allowed"])
+
+        for blocked in pack["blocked_output_cards"]:
+            for field in [
+                "blocked_output_id", "blocked_surface", "blocked_text",
+                "blocked_reason", "source_claim_ids",
+                "missing_evidence_refs", "do_not_claim_refs",
+                "recommended_safe_alternative", "operator_review_required",
+                "risk_note",
+            ]:
+                with self.subTest(blocked=blocked["blocked_output_id"], field=field):
+                    self.assertIn(field, blocked)
+            self.assertTrue(blocked["operator_review_required"])
+
+        traces = pack["output_claim_trace_map"]
+        surfaces = {trace["output_surface"] for trace in traces}
+        self.assertGreaterEqual(
+            len(surfaces & {
+                "hook", "script", "CTA", "caption",
+                "video_prompt", "shot_list",
+            }),
+            4,
+        )
+        for trace in traces:
+            for field in [
+                "output_surface", "source_claim_ids",
+                "supporting_quote_ids", "evidence_quality",
+                "claim_risk_level", "support_status",
+                "real_log_read_performed",
+                "real_history_table_read_performed",
+            ]:
+                with self.subTest(trace=trace["trace_id"], field=field):
+                    self.assertIn(field, trace)
+            self.assertFalse(trace["real_log_read_performed"])
+            self.assertFalse(trace["real_history_table_read_performed"])
+
+        checks = pack["output_quality_checks"]
+        self.assertTrue(checks["claim_safe_creative_brief_pack_present"])
+        self.assertTrue(checks["claim_risk_guard_pack_present"])
+        self.assertTrue(checks["review_evidence_quality_pack_present"])
+        self.assertTrue(checks["campaign_export_pack_present"])
+        self.assertTrue(checks["deterministic_rewrite_only"])
+        self.assertTrue(checks["json_markdown_preview_only"])
+        self.assertFalse(checks["file_upload_performed"])
+        self.assertFalse(checks["database_write_performed"])
+        self.assertFalse(checks["provider_called"])
+        self.assertFalse(checks["llm_called"])
+        self.assertFalse(checks["media_operation_performed"])
+        self.assertFalse(checks["external_scraping_performed"])
+        self.assertFalse(checks["real_policy_api_called"])
+        self.assertFalse(checks["real_execution_performed"])
+
+        manifest = pack["export_preview_manifest"]
+        self.assertTrue(manifest["json_preview_available"])
+        self.assertTrue(manifest["markdown_preview_available"])
+        self.assertFalse(manifest["file_upload_allowed"])
+        self.assertFalse(manifest["file_upload_performed"])
+        self.assertFalse(manifest["database_write_allowed"])
+        self.assertFalse(manifest["database_write_performed"])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["database_write_allowed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["audit_record_created"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["real_policy_check_allowed"])
+        self.assertFalse(audit["real_execution_allowed"])
+        self.assertFalse(audit["real_provider_allowed"])
+        self.assertFalse(audit["media_operation_allowed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider", "provider_enabled", "llm", "llm_enabled",
+            "media", "media_enabled", "external_scraping",
+            "external_scraping_enabled", "database_persistence",
+            "database_persistence_enabled", "real_execution",
+            "real_execution_enabled", "real_policy_check",
+            "real_policy_check_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertIn(key, boundaries)
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
