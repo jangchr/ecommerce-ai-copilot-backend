@@ -14250,6 +14250,226 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_claim_safe_creative_output_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace claim-safe creative output bundle",
+            "project_workspace_claim_safe_creative_output_marker",
+            "PROJECT_WORKSPACE_CLAIM_SAFE_CREATIVE_OUTPUT_MARKER",
+            "latestProjectWorkspaceClaimSafeCreativeOutputPack",
+            "claim_safe_creative_output_pack",
+            "projectWorkspaceClaimSafeCreativeOutputPackFromWorkspace",
+            "projectWorkspaceExportClaimSafeCreativeOutputSnapshot",
+            "projectWorkspaceExportClaimSafeCreativeOutputMarkdown",
+            "renderProjectWorkspaceClaimSafeCreativeOutputSummaryPanel",
+            "renderProjectWorkspaceClaimSafeCopyCardsPanel",
+            "renderProjectWorkspaceClaimSafeVideoShotPanel",
+            "renderProjectWorkspaceClaimSafeBlockedTracePanel",
+            "renderProjectWorkspaceClaimSafeRewriteQualityExportAuditSafetyPanel",
+            "copyProjectWorkspaceClaimSafeOutputSummary",
+            "copyProjectWorkspaceSafeHookCards",
+            "copyProjectWorkspaceSafeScriptCards",
+            "copyProjectWorkspaceSafeCtaCards",
+            "copyProjectWorkspaceSafeCaptionCards",
+            "copyProjectWorkspaceSafeVideoPromptCards",
+            "copyProjectWorkspaceSafeShotListCards",
+            "copyProjectWorkspaceBlockedOutputCards",
+            "copyProjectWorkspaceOutputClaimTraceMap",
+            "copyProjectWorkspaceOutputRewriteGuidance",
+            "copyProjectWorkspaceFullClaimSafeCreativeOutputPack",
+            "claim_safe_creative_output_pack: projectWorkspaceExportClaimSafeCreativeOutputSnapshot(workspace)",
+            "Claim-Safe Creative Output Pack",
+            "Claim-Safe Output Summary",
+            "Safe Hook Cards",
+            "Safe Script Cards",
+            "Safe CTA Cards",
+            "Safe Caption Cards",
+            "Safe Video Prompt Cards",
+            "Safe Shot List Cards",
+            "Blocked Output Cards",
+            "Output Claim Trace Map",
+            "Output Rewrite Guidance",
+            "Export Preview Manifest",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "pack.claim_safe_output_summary",
+            "pack.safe_hook_cards",
+            "pack.safe_script_cards",
+            "pack.safe_cta_cards",
+            "pack.safe_caption_cards",
+            "pack.safe_video_prompt_cards",
+            "pack.safe_shot_list_cards",
+            "pack.blocked_output_cards",
+            "pack.output_claim_trace_map",
+            "pack.output_rewrite_guidance",
+            "pack.output_quality_checks",
+            "pack.export_preview_manifest",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.safe_hook_count",
+            "summary.safe_script_count",
+            "summary.safe_cta_count",
+            "summary.safe_caption_count",
+            "summary.safe_video_prompt_count",
+            "summary.safe_shot_list_count",
+            "summary.blocked_output_count",
+            "summary.recommended_operator_action",
+            "summary.real_provider_allowed",
+            "summary.real_policy_check_allowed",
+            "summary.real_execution_allowed",
+            "card.hook_id",
+            "card.hook_text",
+            "card.script_id",
+            "card.script_title",
+            "card.script_lines",
+            "card.cta_text",
+            "card.caption_text",
+            "card.video_prompt_id",
+            "card.prompt_text",
+            "card.visual_direction",
+            "card.disallowed_visual_claims",
+            "card.shot_id",
+            "card.shot_description",
+            "card.source_pillar_ids",
+            "card.source_claim_ids",
+            "card.supporting_quote_ids",
+            "card.claim_risk_level",
+            "card.support_status",
+            "card.allowed_usage",
+            "card.restricted_usage",
+            "card.disallowed_usage",
+            "card.safe_usage_note",
+            "card.blocked_terms",
+            "card.operator_review_required",
+            "card.real_provider_allowed",
+            "card.real_policy_check_allowed",
+            "card.real_execution_allowed",
+            "card.blocked_output_id",
+            "card.blocked_surface",
+            "card.blocked_text",
+            "card.blocked_reason",
+            "card.missing_evidence_refs",
+            "card.do_not_claim_refs",
+            "card.recommended_safe_alternative",
+            "trace.output_surface",
+            "trace.source_claim_ids",
+            "trace.supporting_quote_ids",
+            "trace.evidence_quality",
+            "trace.claim_risk_level",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("renderProjectWorkspaceClaimSafeRewriteEvidenceQualityAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceClaimSafeCreativeOutputSummaryPanel(workspace)")
+        copy_cards = html.index("renderProjectWorkspaceClaimSafeCopyCardsPanel(workspace)")
+        video_shot = html.index("renderProjectWorkspaceClaimSafeVideoShotPanel(workspace)")
+        blocked_trace = html.index("renderProjectWorkspaceClaimSafeBlockedTracePanel(workspace)")
+        safety = html.index("renderProjectWorkspaceClaimSafeRewriteQualityExportAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, copy_cards)
+        self.assertLess(copy_cards, video_shot)
+        self.assertLess(video_shot, blocked_trace)
+        self.assertLess(blocked_trace, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_claim_safe_creative_output_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "claimSafeCreativeOutputPackTitle",
+            "claimSafeCreativeOutputSummaryTitle",
+            "claimSafeCreativeOutputHookTitle",
+            "claimSafeCreativeOutputScriptTitle",
+            "claimSafeCreativeOutputCtaTitle",
+            "claimSafeCreativeOutputCaptionTitle",
+            "claimSafeCreativeOutputVideoPromptTitle",
+            "claimSafeCreativeOutputShotListTitle",
+            "claimSafeCreativeOutputBlockedTitle",
+            "claimSafeCreativeOutputTraceTitle",
+            "claimSafeCreativeOutputRewriteTitle",
+            "claimSafeCreativeOutputExportTitle",
+            "claimSafeCreativeOutputAuditTitle",
+            "claimSafeCreativeOutputSafetyTitle",
+            "claimSafeCreativeOutputCopySummary",
+            "claimSafeCreativeOutputCopyHooks",
+            "claimSafeCreativeOutputCopyScripts",
+            "claimSafeCreativeOutputCopyCtas",
+            "claimSafeCreativeOutputCopyCaptions",
+            "claimSafeCreativeOutputCopyVideoPrompts",
+            "claimSafeCreativeOutputCopyShotList",
+            "claimSafeCreativeOutputCopyBlocked",
+            "claimSafeCreativeOutputCopyTrace",
+            "claimSafeCreativeOutputCopyRewrite",
+            "claimSafeCreativeOutputCopyFull",
+            "claimSafeCreativeOutputCopied",
+            "claimSafeCreativeOutputCopyFailed",
+            "claimSafeCreativeOutputCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace claim-safe creative output bundle", script)
+            self.assertIn("project_workspace_claim_safe_creative_output_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceClaimSafeCreativeOutputSummaryText"):
+            html.index("async function copyProjectWorkspaceClaimSafeCreativeOutputText")
+        ]
+        for key in [
+            "claimSafeCreativeOutputPackTitle",
+            "claimSafeCreativeOutputSummaryTitle",
+            "claimSafeCreativeOutputHookTitle",
+            "claimSafeCreativeOutputScriptTitle",
+            "claimSafeCreativeOutputCtaTitle",
+            "claimSafeCreativeOutputCaptionTitle",
+            "claimSafeCreativeOutputVideoPromptTitle",
+            "claimSafeCreativeOutputShotListTitle",
+            "claimSafeCreativeOutputBlockedTitle",
+            "claimSafeCreativeOutputTraceTitle",
+            "claimSafeCreativeOutputRewriteTitle",
+            "claimSafeCreativeOutputExportTitle",
+            "claimSafeCreativeOutputAuditTitle",
+            "claimSafeCreativeOutputSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_CLAIM_SAFE_CREATIVE_OUTPUT_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "deterministic creative output preview",
+            "not real ad launch content",
+            "does not generate real ad launch content",
+            "does not generate a real video",
+            "does not upload or download media",
+            "does not call an LLM",
+            "does not call a real provider",
+            "does not call providers",
+            "does not scrape reviews",
+            "does not read real logs",
+            "history tables",
+            "does not write databases",
+            "not legal advice",
+            "not a real policy API check",
+            "not a compliance conclusion",
+            "claim-safe copy preview cards only",
+            "not real launched ads",
+            "Blocked outputs cannot enter public creative copy or video prompt.",
+            "does not upload files or write databases",
+            "Audit preview is display-only and does not write databases.",
+            "Provider, LLM, media, external scraping, database persistence, real execution, and real policy check remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [

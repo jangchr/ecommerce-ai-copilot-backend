@@ -3638,6 +3638,7 @@
         let latestProjectWorkspaceReviewEvidenceQualityPack = {};
         let latestProjectWorkspaceClaimRiskGuardPack = {};
         let latestProjectWorkspaceClaimSafeCreativeBriefPack = {};
+        let latestProjectWorkspaceClaimSafeCreativeOutputPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -6448,7 +6449,198 @@
             claimSafeCreativeBriefPolicyNote: '\u8fd9\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u68c0\u67e5\uff0c\u4e5f\u4e0d\u662f\u5408\u89c4\u7ed3\u8bba\u3002',
             claimSafeCreativeBriefSafetyNote: 'Provider\u3001LLM\u3001external scraping\u3001database persistence\u3001real execution \u548c real policy check \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
+            claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
+            claimSafeCreativeOutputPackHelper: 'Project Workspace claim-safe creative output bundle. Inspect deterministic creative output preview derived only from existing claim-safe brief, claim risk, evidence, campaign, variant, asset, and video prompt packs. This is not real ad launch content, does not call an LLM, does not call a real provider, is not legal advice, not a real policy API check, and not a compliance conclusion.',
+            claimSafeCreativeOutputSummaryTitle: 'Claim-Safe Output Summary',
+            claimSafeCreativeOutputCopyBundleTitle: 'Safe Hooks / Scripts / CTAs / Captions',
+            claimSafeCreativeOutputHookTitle: 'Safe Hook Cards',
+            claimSafeCreativeOutputScriptTitle: 'Safe Script Cards',
+            claimSafeCreativeOutputCtaTitle: 'Safe CTA Cards',
+            claimSafeCreativeOutputCaptionTitle: 'Safe Caption Cards',
+            claimSafeCreativeOutputVideoShotTitle: 'Safe Video Prompts / Shot Lists',
+            claimSafeCreativeOutputVideoPromptTitle: 'Safe Video Prompt Cards',
+            claimSafeCreativeOutputShotListTitle: 'Safe Shot List Cards',
+            claimSafeCreativeOutputBlockedTraceTitle: 'Blocked Outputs / Output Claim Trace',
+            claimSafeCreativeOutputBlockedTitle: 'Blocked Output Cards',
+            claimSafeCreativeOutputTraceTitle: 'Output Claim Trace Map',
+            claimSafeCreativeOutputRewriteQualityExportAuditSafetyTitle: 'Rewrite Guidance / Quality / Export / Audit / Safety',
+            claimSafeCreativeOutputRewriteTitle: 'Output Rewrite Guidance',
+            claimSafeCreativeOutputQualityTitle: 'Output Quality Checks',
+            claimSafeCreativeOutputExportTitle: 'Export Preview Manifest',
+            claimSafeCreativeOutputAuditTitle: 'Audit Preview',
+            claimSafeCreativeOutputSafetyTitle: 'Safety Boundaries',
+            claimSafeCreativeOutputMode: 'Mode',
+            claimSafeCreativeOutputHookCount: 'Safe hook count',
+            claimSafeCreativeOutputScriptCount: 'Safe script count',
+            claimSafeCreativeOutputCtaCount: 'Safe CTA count',
+            claimSafeCreativeOutputCaptionCount: 'Safe caption count',
+            claimSafeCreativeOutputVideoPromptCount: 'Safe video prompt count',
+            claimSafeCreativeOutputShotListCount: 'Safe shot list count',
+            claimSafeCreativeOutputBlockedCount: 'Blocked output count',
+            claimSafeCreativeOutputRecommendedAction: 'Recommended operator action',
+            claimSafeCreativeOutputRealProvider: 'Real provider allowed',
+            claimSafeCreativeOutputRealPolicyCheck: 'Real policy check allowed',
+            claimSafeCreativeOutputRealExecution: 'Real execution allowed',
+            claimSafeCreativeOutputDisabled: 'disabled',
+            claimSafeCreativeOutputNoData: 'No claim-safe creative output pack data is available.',
+            claimSafeCreativeOutputCopyNoData: 'No claim-safe creative output content is available to copy.',
+            claimSafeCreativeOutputCopyFailed: 'Unable to copy claim-safe creative output content.',
+            claimSafeCreativeOutputCopied: 'Claim-safe creative output content copied.',
+            claimSafeCreativeOutputCopySummary: 'Copy claim-safe output summary',
+            claimSafeCreativeOutputCopyHooks: 'Copy safe hook cards',
+            claimSafeCreativeOutputCopyScripts: 'Copy safe script cards',
+            claimSafeCreativeOutputCopyCtas: 'Copy safe CTA cards',
+            claimSafeCreativeOutputCopyCaptions: 'Copy safe caption cards',
+            claimSafeCreativeOutputCopyVideoPrompts: 'Copy safe video prompt cards',
+            claimSafeCreativeOutputCopyShotList: 'Copy safe shot list cards',
+            claimSafeCreativeOutputCopyBlocked: 'Copy blocked output cards',
+            claimSafeCreativeOutputCopyTrace: 'Copy output claim trace map',
+            claimSafeCreativeOutputCopyRewrite: 'Copy output rewrite guidance',
+            claimSafeCreativeOutputCopyFull: 'Copy full claim-safe creative output pack',
+            claimSafeCreativeOutputHookId: 'Hook ID',
+            claimSafeCreativeOutputHookText: 'Hook text',
+            claimSafeCreativeOutputScriptId: 'Script ID',
+            claimSafeCreativeOutputScriptTitleField: 'Script title',
+            claimSafeCreativeOutputScriptLines: 'Script lines',
+            claimSafeCreativeOutputCtaText: 'CTA text',
+            claimSafeCreativeOutputCaptionText: 'Caption text',
+            claimSafeCreativeOutputVideoPromptId: 'Video prompt ID',
+            claimSafeCreativeOutputPromptText: 'Prompt text',
+            claimSafeCreativeOutputVisualDirection: 'Visual direction',
+            claimSafeCreativeOutputDisallowedVisualClaims: 'Disallowed visual claims',
+            claimSafeCreativeOutputShotId: 'Shot ID',
+            claimSafeCreativeOutputShotDescription: 'Shot / scene / frame suggestion',
+            claimSafeCreativeOutputSourcePillars: 'Source pillar IDs',
+            claimSafeCreativeOutputSourceClaims: 'Source claim IDs',
+            claimSafeCreativeOutputSupportingQuotes: 'Supporting quote IDs',
+            claimSafeCreativeOutputClaimRiskLevel: 'Claim risk level',
+            claimSafeCreativeOutputSupportStatus: 'Support status',
+            claimSafeCreativeOutputAllowedUsage: 'Allowed usage',
+            claimSafeCreativeOutputRestrictedUsage: 'Restricted usage',
+            claimSafeCreativeOutputDisallowedUsage: 'Disallowed usage',
+            claimSafeCreativeOutputSafeUsageNote: 'Safe usage note',
+            claimSafeCreativeOutputBlockedTerms: 'Blocked terms',
+            claimSafeCreativeOutputOperatorReview: 'Operator review required',
+            claimSafeCreativeOutputBlockedId: 'Blocked output ID',
+            claimSafeCreativeOutputBlockedSurface: 'Blocked surface',
+            claimSafeCreativeOutputBlockedText: 'Blocked text',
+            claimSafeCreativeOutputBlockedReason: 'Blocked reason',
+            claimSafeCreativeOutputMissingEvidence: 'Missing evidence refs',
+            claimSafeCreativeOutputDoNotClaimRefs: 'Do not claim refs',
+            claimSafeCreativeOutputSafeAlternative: 'Recommended safe alternative',
+            claimSafeCreativeOutputRiskNote: 'Risk note',
+            claimSafeCreativeOutputTraceSurface: 'Output surface',
+            claimSafeCreativeOutputTraceText: 'Output text',
+            claimSafeCreativeOutputEvidenceQuality: 'Evidence quality',
+            claimSafeCreativeOutputPreviewNote: 'Deterministic creative output preview only. It does not generate real ad launch content, does not generate a real video, does not upload or download media, does not call an LLM, does not call providers, does not scrape reviews, does not read real logs or history tables, does not write databases, does not create approvals or operator tasks, and does not execute paid operations.',
+            claimSafeCreativeOutputCopyNote: 'These are claim-safe copy preview cards only, not real launched ads.',
+            claimSafeCreativeOutputVideoNote: 'Video prompts and shot lists are preview instructions only; they do not generate real video, upload or download media, or call a provider.',
+            claimSafeCreativeOutputBlockedNote: 'Blocked outputs cannot enter public creative copy or video prompt.',
+            claimSafeCreativeOutputTraceNote: 'Trace map links each output surface to claim, quote, evidence quality, and claim risk without reading real logs.',
+            claimSafeCreativeOutputRewriteNote: 'Rewrite guidance is deterministic guidance only and does not call an LLM.',
+            claimSafeCreativeOutputExportNote: 'Export preview only describes JSON/Markdown preview export; it does not upload files or write databases.',
+            claimSafeCreativeOutputAuditNote: 'Audit preview is display-only and does not write databases.',
+            claimSafeCreativeOutputPolicyNote: 'This is not legal advice, not a real policy API check, and not a compliance conclusion.',
+            claimSafeCreativeOutputSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, and real policy check remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
+            claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
+            claimSafeCreativeOutputPackHelper: '\u67e5\u770b\u4ec5\u57fa\u4e8e\u5df2\u6709 claim-safe brief\u3001claim risk\u3001evidence\u3001campaign\u3001variant\u3001asset \u548c video prompt pack \u7684\u786e\u5b9a\u6027 creative output \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e\u5e7f\u544a\u6295\u653e\u5185\u5bb9\uff0c\u4e0d\u8c03\u7528 LLM\uff0c\u4e0d\u8c03\u7528\u771f\u5b9e provider\uff0c\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u68c0\u67e5\uff0c\u4e5f\u4e0d\u662f\u5408\u89c4\u7ed3\u8bba\u3002',
+            claimSafeCreativeOutputSummaryTitle: 'Claim-Safe Output \u6458\u8981',
+            claimSafeCreativeOutputCopyBundleTitle: 'Safe Hooks / Scripts / CTAs / Captions',
+            claimSafeCreativeOutputHookTitle: 'Safe Hook Cards',
+            claimSafeCreativeOutputScriptTitle: 'Safe Script Cards',
+            claimSafeCreativeOutputCtaTitle: 'Safe CTA Cards',
+            claimSafeCreativeOutputCaptionTitle: 'Safe Caption Cards',
+            claimSafeCreativeOutputVideoShotTitle: 'Safe Video Prompts / Shot Lists',
+            claimSafeCreativeOutputVideoPromptTitle: 'Safe Video Prompt Cards',
+            claimSafeCreativeOutputShotListTitle: 'Safe Shot List Cards',
+            claimSafeCreativeOutputBlockedTraceTitle: 'Blocked Outputs / Output Claim Trace',
+            claimSafeCreativeOutputBlockedTitle: 'Blocked Output Cards',
+            claimSafeCreativeOutputTraceTitle: 'Output Claim Trace Map',
+            claimSafeCreativeOutputRewriteQualityExportAuditSafetyTitle: 'Rewrite Guidance / Quality / Export / Audit / Safety',
+            claimSafeCreativeOutputRewriteTitle: 'Output Rewrite Guidance',
+            claimSafeCreativeOutputQualityTitle: 'Output Quality Checks',
+            claimSafeCreativeOutputExportTitle: 'Export Preview Manifest',
+            claimSafeCreativeOutputAuditTitle: 'Audit Preview',
+            claimSafeCreativeOutputSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            claimSafeCreativeOutputMode: '\u6a21\u5f0f',
+            claimSafeCreativeOutputHookCount: 'Safe hook \u6570\u91cf',
+            claimSafeCreativeOutputScriptCount: 'Safe script \u6570\u91cf',
+            claimSafeCreativeOutputCtaCount: 'Safe CTA \u6570\u91cf',
+            claimSafeCreativeOutputCaptionCount: 'Safe caption \u6570\u91cf',
+            claimSafeCreativeOutputVideoPromptCount: 'Safe video prompt \u6570\u91cf',
+            claimSafeCreativeOutputShotListCount: 'Safe shot list \u6570\u91cf',
+            claimSafeCreativeOutputBlockedCount: 'Blocked output \u6570\u91cf',
+            claimSafeCreativeOutputRecommendedAction: '\u63a8\u8350\u64cd\u4f5c\u5458\u52a8\u4f5c',
+            claimSafeCreativeOutputRealProvider: '\u5141\u8bb8\u771f\u5b9e provider',
+            claimSafeCreativeOutputRealPolicyCheck: '\u5141\u8bb8\u771f\u5b9e policy \u68c0\u67e5',
+            claimSafeCreativeOutputRealExecution: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            claimSafeCreativeOutputDisabled: '\u5df2\u7981\u7528',
+            claimSafeCreativeOutputNoData: '\u6682\u65e0 claim-safe creative output pack \u6570\u636e\u3002',
+            claimSafeCreativeOutputCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 claim-safe creative output \u5185\u5bb9\u3002',
+            claimSafeCreativeOutputCopyFailed: '\u65e0\u6cd5\u590d\u5236 claim-safe creative output \u5185\u5bb9\u3002',
+            claimSafeCreativeOutputCopied: 'Claim-safe creative output \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            claimSafeCreativeOutputCopySummary: '\u590d\u5236 claim-safe output \u6458\u8981',
+            claimSafeCreativeOutputCopyHooks: '\u590d\u5236 safe hook cards',
+            claimSafeCreativeOutputCopyScripts: '\u590d\u5236 safe script cards',
+            claimSafeCreativeOutputCopyCtas: '\u590d\u5236 safe CTA cards',
+            claimSafeCreativeOutputCopyCaptions: '\u590d\u5236 safe caption cards',
+            claimSafeCreativeOutputCopyVideoPrompts: '\u590d\u5236 safe video prompt cards',
+            claimSafeCreativeOutputCopyShotList: '\u590d\u5236 safe shot list cards',
+            claimSafeCreativeOutputCopyBlocked: '\u590d\u5236 blocked output cards',
+            claimSafeCreativeOutputCopyTrace: '\u590d\u5236 output claim trace map',
+            claimSafeCreativeOutputCopyRewrite: '\u590d\u5236 output rewrite guidance',
+            claimSafeCreativeOutputCopyFull: '\u590d\u5236\u5b8c\u6574 claim-safe creative output pack',
+            claimSafeCreativeOutputHookId: 'Hook ID',
+            claimSafeCreativeOutputHookText: 'Hook \u6587\u6848',
+            claimSafeCreativeOutputScriptId: 'Script ID',
+            claimSafeCreativeOutputScriptTitleField: 'Script title',
+            claimSafeCreativeOutputScriptLines: 'Script lines',
+            claimSafeCreativeOutputCtaText: 'CTA \u6587\u6848',
+            claimSafeCreativeOutputCaptionText: 'Caption \u6587\u6848',
+            claimSafeCreativeOutputVideoPromptId: 'Video prompt ID',
+            claimSafeCreativeOutputPromptText: 'Prompt \u6587\u6848',
+            claimSafeCreativeOutputVisualDirection: 'Visual direction',
+            claimSafeCreativeOutputDisallowedVisualClaims: 'Disallowed visual claims',
+            claimSafeCreativeOutputShotId: 'Shot ID',
+            claimSafeCreativeOutputShotDescription: 'Shot / scene / frame \u5efa\u8bae',
+            claimSafeCreativeOutputSourcePillars: 'Source pillar IDs',
+            claimSafeCreativeOutputSourceClaims: 'Source claim IDs',
+            claimSafeCreativeOutputSupportingQuotes: 'Supporting quote IDs',
+            claimSafeCreativeOutputClaimRiskLevel: 'Claim risk level',
+            claimSafeCreativeOutputSupportStatus: 'Support \u72b6\u6001',
+            claimSafeCreativeOutputAllowedUsage: 'Allowed usage',
+            claimSafeCreativeOutputRestrictedUsage: 'Restricted usage',
+            claimSafeCreativeOutputDisallowedUsage: 'Disallowed usage',
+            claimSafeCreativeOutputSafeUsageNote: 'Safe usage note',
+            claimSafeCreativeOutputBlockedTerms: 'Blocked terms',
+            claimSafeCreativeOutputOperatorReview: '\u9700\u8981 operator review',
+            claimSafeCreativeOutputBlockedId: 'Blocked output ID',
+            claimSafeCreativeOutputBlockedSurface: 'Blocked surface',
+            claimSafeCreativeOutputBlockedText: 'Blocked \u6587\u6848',
+            claimSafeCreativeOutputBlockedReason: 'Blocked reason',
+            claimSafeCreativeOutputMissingEvidence: 'Missing evidence refs',
+            claimSafeCreativeOutputDoNotClaimRefs: 'Do not claim refs',
+            claimSafeCreativeOutputSafeAlternative: 'Recommended safe alternative',
+            claimSafeCreativeOutputRiskNote: '\u98ce\u9669\u5907\u6ce8',
+            claimSafeCreativeOutputTraceSurface: 'Output surface',
+            claimSafeCreativeOutputTraceText: 'Output \u6587\u6848',
+            claimSafeCreativeOutputEvidenceQuality: 'Evidence quality',
+            claimSafeCreativeOutputPreviewNote: '\u4ec5\u4e3a\u786e\u5b9a\u6027 creative output \u9884\u89c8\u3002\u4e0d\u751f\u6210\u771f\u5b9e\u5e7f\u544a\u6295\u653e\u5185\u5bb9\uff0c\u4e0d\u751f\u6210\u771f\u5b9e\u89c6\u9891\uff0c\u4e0d\u4e0a\u4f20\u6216\u4e0b\u8f7d\u5a92\u4f53\uff0c\u4e0d\u8c03\u7528 LLM\u3001provider\u3001scraping \u6216 review crawler\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u5386\u53f2\u8868\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u521b\u5efa\u5ba1\u6279\u6216 operator task\uff0c\u4e0d\u6267\u884c paid operation\u3002',
+            claimSafeCreativeOutputCopyNote: '\u8fd9\u4e9b\u53ea\u662f claim-safe copy preview cards\uff0c\u4e0d\u662f\u771f\u5b9e\u6295\u653e\u5e7f\u544a\u3002',
+            claimSafeCreativeOutputVideoNote: 'Video prompts \u548c shot lists \u53ea\u662f\u9884\u89c8\u6307\u4ee4\uff1b\u4e0d\u751f\u6210\u771f\u5b9e\u89c6\u9891\uff0c\u4e0d\u4e0a\u4f20\u6216\u4e0b\u8f7d\u5a92\u4f53\uff0c\u4e0d\u8c03\u7528 provider\u3002',
+            claimSafeCreativeOutputBlockedNote: 'Blocked outputs \u4e0d\u80fd\u8fdb\u5165\u516c\u5f00\u521b\u610f\u6587\u6848\u6216 video prompt\u3002',
+            claimSafeCreativeOutputTraceNote: 'Trace map \u628a\u6bcf\u4e2a output surface \u6620\u5c04\u5230 claim / quote / evidence quality / claim risk\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u3002',
+            claimSafeCreativeOutputRewriteNote: 'Rewrite guidance \u53ea\u662f deterministic guidance\uff0c\u4e0d\u8c03\u7528 LLM\u3002',
+            claimSafeCreativeOutputExportNote: 'Export preview \u53ea\u63cf\u8ff0 JSON/Markdown preview export\uff1b\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
+            claimSafeCreativeOutputAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
+            claimSafeCreativeOutputPolicyNote: '\u8fd9\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u68c0\u67e5\uff0c\u4e5f\u4e0d\u662f\u5408\u89c4\u7ed3\u8bba\u3002',
+            claimSafeCreativeOutputSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution \u548c real policy check \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
+        });        Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
             claimRiskGuardPackTitle: 'Claim Risk Guard / Evidence Claim Safety',
             claimRiskGuardPackHelper: '\u67e5\u770b\u4ec5\u57fa\u4e8e\u5df2\u6709 evidence pack \u7684\u786e\u5b9a\u6027 claim risk \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u68c0\u67e5\uff0c\u4e5f\u4e0d\u662f\u5408\u89c4\u7ed3\u8bba\u3002',
@@ -9939,6 +10131,7 @@
                 latestProjectWorkspaceReviewEvidenceQualityPack = latestProjectCreativeDecisionPack.review_evidence_quality_pack || {};
                 latestProjectWorkspaceClaimRiskGuardPack = latestProjectCreativeDecisionPack.claim_risk_guard_pack || {};
                 latestProjectWorkspaceClaimSafeCreativeBriefPack = latestProjectCreativeDecisionPack.claim_safe_creative_brief_pack || {};
+                latestProjectWorkspaceClaimSafeCreativeOutputPack = latestProjectCreativeDecisionPack.claim_safe_creative_output_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -15813,6 +16006,7 @@
         const PROJECT_WORKSPACE_REVIEW_EVIDENCE_QUALITY_MARKER = 'Project Workspace review evidence quality bundle';
         const PROJECT_WORKSPACE_CLAIM_RISK_GUARD_MARKER = 'Project Workspace claim risk guard bundle';
         const PROJECT_WORKSPACE_CLAIM_SAFE_CREATIVE_BRIEF_MARKER = 'Project Workspace claim-safe creative brief bundle';
+        const PROJECT_WORKSPACE_CLAIM_SAFE_CREATIVE_OUTPUT_MARKER = 'Project Workspace claim-safe creative output bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -21770,6 +21964,134 @@
         function copyProjectWorkspaceCreativeBriefRewriteGuidance() { return copyProjectWorkspaceClaimSafeCreativeBriefText('rewrite'); }
         function copyProjectWorkspaceEvidenceBackingMap() { return copyProjectWorkspaceClaimSafeCreativeBriefText('evidence'); }
         function copyProjectWorkspaceFullClaimSafeCreativeBriefPack() { return copyProjectWorkspaceClaimSafeCreativeBriefText('full'); }
+
+        function projectWorkspaceClaimSafeCreativeOutputPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceClaimSafeCreativeOutputPack && Object.keys(latestProjectWorkspaceClaimSafeCreativeOutputPack).length) return latestProjectWorkspaceClaimSafeCreativeOutputPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.claim_safe_creative_output_pack || {};
+        }
+
+        function projectWorkspaceClaimSafeCreativeOutputHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspaceClaimSafeCreativeOutputJsonText(value) {
+            if (!projectWorkspaceClaimSafeCreativeOutputHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceClaimSafeCreativeOutputDisabledText(value) {
+            return value === false ? t('claimSafeCreativeOutputDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportClaimSafeCreativeOutputSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceClaimSafeCreativeOutputPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_CLAIM_SAFE_CREATIVE_OUTPUT_MARKER,
+                has_claim_safe_creative_output_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                claim_safe_output_summary: pack.claim_safe_output_summary || {},
+                safe_hook_cards: Array.isArray(pack.safe_hook_cards) ? pack.safe_hook_cards : [],
+                safe_script_cards: Array.isArray(pack.safe_script_cards) ? pack.safe_script_cards : [],
+                safe_cta_cards: Array.isArray(pack.safe_cta_cards) ? pack.safe_cta_cards : [],
+                safe_caption_cards: Array.isArray(pack.safe_caption_cards) ? pack.safe_caption_cards : [],
+                safe_video_prompt_cards: Array.isArray(pack.safe_video_prompt_cards) ? pack.safe_video_prompt_cards : [],
+                safe_shot_list_cards: Array.isArray(pack.safe_shot_list_cards) ? pack.safe_shot_list_cards : [],
+                blocked_output_cards: Array.isArray(pack.blocked_output_cards) ? pack.blocked_output_cards : [],
+                output_claim_trace_map: Array.isArray(pack.output_claim_trace_map) ? pack.output_claim_trace_map : [],
+                output_rewrite_guidance: Array.isArray(pack.output_rewrite_guidance) ? pack.output_rewrite_guidance : [],
+                output_quality_checks: pack.output_quality_checks || {},
+                export_preview_manifest: pack.export_preview_manifest || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceClaimSafeCreativeOutputSummaryText(pack = projectWorkspaceExportClaimSafeCreativeOutputSnapshot()) {
+            if (!pack.has_claim_safe_creative_output_pack) return '';
+            const summary = pack.claim_safe_output_summary || {};
+            return [
+                t('claimSafeCreativeOutputSummaryTitle'),
+                `${t('claimSafeCreativeOutputMode')}: ${summary.mode || t('none')}`,
+                `${t('claimSafeCreativeOutputHookCount')}: ${summary.safe_hook_count ?? pack.safe_hook_cards.length}`,
+                `${t('claimSafeCreativeOutputScriptCount')}: ${summary.safe_script_count ?? pack.safe_script_cards.length}`,
+                `${t('claimSafeCreativeOutputCtaCount')}: ${summary.safe_cta_count ?? pack.safe_cta_cards.length}`,
+                `${t('claimSafeCreativeOutputCaptionCount')}: ${summary.safe_caption_count ?? pack.safe_caption_cards.length}`,
+                `${t('claimSafeCreativeOutputVideoPromptCount')}: ${summary.safe_video_prompt_count ?? pack.safe_video_prompt_cards.length}`,
+                `${t('claimSafeCreativeOutputShotListCount')}: ${summary.safe_shot_list_count ?? pack.safe_shot_list_cards.length}`,
+                `${t('claimSafeCreativeOutputBlockedCount')}: ${summary.blocked_output_count ?? pack.blocked_output_cards.length}`,
+                `${t('claimSafeCreativeOutputRecommendedAction')}: ${summary.recommended_operator_action || t('claimSafeCreativeOutputPreviewNote')}`,
+                `${t('claimSafeCreativeOutputRealProvider')}: ${projectWorkspaceClaimSafeCreativeOutputDisabledText(summary.real_provider_allowed)}`,
+                `${t('claimSafeCreativeOutputRealPolicyCheck')}: ${projectWorkspaceClaimSafeCreativeOutputDisabledText(summary.real_policy_check_allowed)}`,
+                `${t('claimSafeCreativeOutputRealExecution')}: ${projectWorkspaceClaimSafeCreativeOutputDisabledText(summary.real_execution_allowed)}`,
+                t('claimSafeCreativeOutputPreviewNote'),
+                t('claimSafeCreativeOutputPolicyNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceClaimSafeCreativeOutputSectionText(titleKey, value) {
+            const body = projectWorkspaceClaimSafeCreativeOutputJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportClaimSafeCreativeOutputMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeCreativeOutputSnapshot(workspace);
+            if (!pack.has_claim_safe_creative_output_pack) return '';
+            return [
+                `## ${t('claimSafeCreativeOutputPackTitle')}`,
+                `## ${t('claimSafeCreativeOutputSummaryTitle')}`,
+                projectWorkspaceClaimSafeCreativeOutputSummaryText(pack), '',
+                projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputHookTitle', pack.safe_hook_cards), '',
+                projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputScriptTitle', pack.safe_script_cards), '',
+                projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputCtaTitle', pack.safe_cta_cards), '',
+                projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputCaptionTitle', pack.safe_caption_cards), '',
+                projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputVideoPromptTitle', pack.safe_video_prompt_cards), '',
+                projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputShotListTitle', pack.safe_shot_list_cards), '',
+                projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputBlockedTitle', pack.blocked_output_cards), '',
+                projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputTraceTitle', pack.output_claim_trace_map), '',
+                projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputRewriteTitle', pack.output_rewrite_guidance), '',
+                projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputExportTitle', pack.export_preview_manifest), '',
+                projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputAuditTitle', pack.audit_preview), '',
+                projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputSafetyTitle', pack.safety_boundaries),
+                t('claimSafeCreativeOutputRewriteNote'),
+                t('claimSafeCreativeOutputExportNote'),
+                t('claimSafeCreativeOutputSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceClaimSafeCreativeOutputText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceClaimSafeCreativeOutputStatus');
+            const pack = projectWorkspaceExportClaimSafeCreativeOutputSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceClaimSafeCreativeOutputSummaryText(pack)
+                : kind === 'hooks' ? projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputHookTitle', pack.safe_hook_cards)
+                : kind === 'scripts' ? projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputScriptTitle', pack.safe_script_cards)
+                : kind === 'ctas' ? projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputCtaTitle', pack.safe_cta_cards)
+                : kind === 'captions' ? projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputCaptionTitle', pack.safe_caption_cards)
+                : kind === 'videoPrompts' ? projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputVideoPromptTitle', pack.safe_video_prompt_cards)
+                : kind === 'shotList' ? projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputShotListTitle', pack.safe_shot_list_cards)
+                : kind === 'blocked' ? projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputBlockedTitle', pack.blocked_output_cards)
+                : kind === 'trace' ? projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputTraceTitle', pack.output_claim_trace_map)
+                : kind === 'rewrite' ? projectWorkspaceClaimSafeCreativeOutputSectionText('claimSafeCreativeOutputRewriteTitle', pack.output_rewrite_guidance)
+                : projectWorkspaceExportClaimSafeCreativeOutputMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('claimSafeCreativeOutputCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('claimSafeCreativeOutputCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('claimSafeCreativeOutputCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('claimSafeCreativeOutputCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceClaimSafeOutputSummary() { return copyProjectWorkspaceClaimSafeCreativeOutputText('summary'); }
+        function copyProjectWorkspaceSafeHookCards() { return copyProjectWorkspaceClaimSafeCreativeOutputText('hooks'); }
+        function copyProjectWorkspaceSafeScriptCards() { return copyProjectWorkspaceClaimSafeCreativeOutputText('scripts'); }
+        function copyProjectWorkspaceSafeCtaCards() { return copyProjectWorkspaceClaimSafeCreativeOutputText('ctas'); }
+        function copyProjectWorkspaceSafeCaptionCards() { return copyProjectWorkspaceClaimSafeCreativeOutputText('captions'); }
+        function copyProjectWorkspaceSafeVideoPromptCards() { return copyProjectWorkspaceClaimSafeCreativeOutputText('videoPrompts'); }
+        function copyProjectWorkspaceSafeShotListCards() { return copyProjectWorkspaceClaimSafeCreativeOutputText('shotList'); }
+        function copyProjectWorkspaceBlockedOutputCards() { return copyProjectWorkspaceClaimSafeCreativeOutputText('blocked'); }
+        function copyProjectWorkspaceOutputClaimTraceMap() { return copyProjectWorkspaceClaimSafeCreativeOutputText('trace'); }
+        function copyProjectWorkspaceOutputRewriteGuidance() { return copyProjectWorkspaceClaimSafeCreativeOutputText('rewrite'); }
+        function copyProjectWorkspaceFullClaimSafeCreativeOutputPack() { return copyProjectWorkspaceClaimSafeCreativeOutputText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -25794,6 +26116,41 @@
             const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('claimSafeCreativeBriefDisabled'):String(value)}`).join(' | ');
             return `<div class="section-block" id="projectWorkspaceClaimSafeRewriteEvidenceQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeCreativeBriefRewriteEvidenceQualityTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeCreativeBriefRewriteNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCreativeBriefRewriteGuidance()">${escapeHTML(t('claimSafeCreativeBriefCopyRewrite'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceEvidenceBackingMap()">${escapeHTML(t('claimSafeCreativeBriefCopyEvidence'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeBriefRewriteTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeBriefJsonText(pack.creative_brief_rewrite_guidance) || t('claimSafeCreativeBriefNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeCreativeBriefRewriteNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeBriefEvidenceTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeBriefJsonText(pack.evidence_backing_map) || t('claimSafeCreativeBriefNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeCreativeBriefEvidenceNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeBriefQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeBriefJsonText(pack.claim_safe_brief_quality_checks) || t('claimSafeCreativeBriefNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeBriefAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeBriefJsonText(pack.audit_preview) || t('claimSafeCreativeBriefNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeCreativeBriefAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('claimSafeCreativeBriefSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('claimSafeCreativeBriefSafetyNote'))}</div></div>`;
         }
+
+        function renderProjectWorkspaceClaimSafeCreativeOutputSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeCreativeOutputSnapshot(workspace); if (!pack.has_claim_safe_creative_output_pack) return '';
+            const summary = pack.claim_safe_output_summary || {};
+            return `<div class="section-block" id="projectWorkspaceClaimSafeCreativeOutputSummaryPanel" data-claim-safe-creative-output-marker="${PROJECT_WORKSPACE_CLAIM_SAFE_CREATIVE_OUTPUT_MARKER}" data-marker="project_workspace_claim_safe_creative_output_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeCreativeOutputPackTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeCreativeOutputPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullClaimSafeCreativeOutputPack()">${escapeHTML(t('claimSafeCreativeOutputCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('claimSafeCreativeOutputMode'), summary.mode || t('none'))}${metricPill(t('claimSafeCreativeOutputHookCount'), String(summary.safe_hook_count ?? pack.safe_hook_cards.length))}${metricPill(t('claimSafeCreativeOutputScriptCount'), String(summary.safe_script_count ?? pack.safe_script_cards.length))}${metricPill(t('claimSafeCreativeOutputCtaCount'), String(summary.safe_cta_count ?? pack.safe_cta_cards.length))}${metricPill(t('claimSafeCreativeOutputCaptionCount'), String(summary.safe_caption_count ?? pack.safe_caption_cards.length))}${metricPill(t('claimSafeCreativeOutputVideoPromptCount'), String(summary.safe_video_prompt_count ?? pack.safe_video_prompt_cards.length))}${metricPill(t('claimSafeCreativeOutputShotListCount'), String(summary.safe_shot_list_count ?? pack.safe_shot_list_cards.length))}${metricPill(t('claimSafeCreativeOutputBlockedCount'), String(summary.blocked_output_count ?? pack.blocked_output_cards.length))}${metricPill(t('claimSafeCreativeOutputRealProvider'), projectWorkspaceClaimSafeCreativeOutputDisabledText(summary.real_provider_allowed))}${metricPill(t('claimSafeCreativeOutputRealPolicyCheck'), projectWorkspaceClaimSafeCreativeOutputDisabledText(summary.real_policy_check_allowed))}${metricPill(t('claimSafeCreativeOutputRealExecution'), projectWorkspaceClaimSafeCreativeOutputDisabledText(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeOutputSummaryText(pack) || t('claimSafeCreativeOutputNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeCreativeOutputPreviewNote'))}</div><div class="field-helper">${escapeHTML(t('claimSafeCreativeOutputPolicyNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceClaimSafeCreativeOutputStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceClaimSafeOutputSummary()">${escapeHTML(t('claimSafeCreativeOutputCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceClaimSafeCopyCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeCreativeOutputSnapshot(workspace); if (!pack.has_claim_safe_creative_output_pack) return '';
+            const hooks = (pack.safe_hook_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.hook_id || t('claimSafeCreativeOutputHookId'))}</strong><div><strong>${escapeHTML(t('claimSafeCreativeOutputHookText'))}:</strong> ${escapeHTML(card.hook_text || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSourcePillars'))}:</strong> ${escapeHTML((card.source_pillar_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSourceClaims'))}:</strong> ${escapeHTML((card.source_claim_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSupportingQuotes'))}:</strong> ${escapeHTML((card.supporting_quote_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputClaimRiskLevel'))}:</strong> ${escapeHTML(card.claim_risk_level || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSupportStatus'))}:</strong> ${escapeHTML(card.support_status || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeOutputJsonText({allowed_usage:card.allowed_usage,restricted_usage:card.restricted_usage,disallowed_usage:card.disallowed_usage,safe_usage_note:card.safe_usage_note,real_policy_check_allowed:card.real_policy_check_allowed,real_execution_allowed:card.real_execution_allowed,risk_note:card.risk_note}) || t('claimSafeCreativeOutputNoData'))}</pre></div>`).join('');
+            const scripts = (pack.safe_script_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.script_id || t('claimSafeCreativeOutputScriptId'))}</strong><div><strong>${escapeHTML(t('claimSafeCreativeOutputScriptTitleField'))}:</strong> ${escapeHTML(card.script_title || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputScriptLines'))}:</strong> ${escapeHTML((card.script_lines || []).join(' | ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSourcePillars'))}:</strong> ${escapeHTML((card.source_pillar_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSourceClaims'))}:</strong> ${escapeHTML((card.source_claim_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSupportingQuotes'))}:</strong> ${escapeHTML((card.supporting_quote_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputClaimRiskLevel'))}:</strong> ${escapeHTML(card.claim_risk_level || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSupportStatus'))}:</strong> ${escapeHTML(card.support_status || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputBlockedTerms'))}:</strong> ${escapeHTML((card.blocked_terms || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputOperatorReview'))}:</strong> ${escapeHTML(String(Boolean(card.operator_review_required)))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeOutputJsonText({safe_usage_note:card.safe_usage_note,allowed_usage:card.allowed_usage,restricted_usage:card.restricted_usage,disallowed_usage:card.disallowed_usage,real_policy_check_allowed:card.real_policy_check_allowed,real_execution_allowed:card.real_execution_allowed,risk_note:card.risk_note}) || t('claimSafeCreativeOutputNoData'))}</pre></div>`).join('');
+            const ctas = (pack.safe_cta_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.cta_id || t('claimSafeCreativeOutputCtaTitle'))}</strong><div><strong>${escapeHTML(t('claimSafeCreativeOutputCtaText'))}:</strong> ${escapeHTML(card.cta_text || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeOutputJsonText(card) || t('claimSafeCreativeOutputNoData'))}</pre></div>`).join('');
+            const captions = (pack.safe_caption_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.caption_id || t('claimSafeCreativeOutputCaptionTitle'))}</strong><div><strong>${escapeHTML(t('claimSafeCreativeOutputCaptionText'))}:</strong> ${escapeHTML(card.caption_text || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeOutputJsonText(card) || t('claimSafeCreativeOutputNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceClaimSafeCopyCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeCreativeOutputCopyBundleTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeCreativeOutputCopyNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSafeHookCards()">${escapeHTML(t('claimSafeCreativeOutputCopyHooks'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSafeScriptCards()">${escapeHTML(t('claimSafeCreativeOutputCopyScripts'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSafeCtaCards()">${escapeHTML(t('claimSafeCreativeOutputCopyCtas'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSafeCaptionCards()">${escapeHTML(t('claimSafeCreativeOutputCopyCaptions'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeOutputHookTitle'))}</strong><div class="graph-os-compact-grid">${hooks || `<div class="empty-state">${escapeHTML(t('claimSafeCreativeOutputNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeOutputScriptTitle'))}</strong><div class="graph-os-compact-grid">${scripts || `<div class="empty-state">${escapeHTML(t('claimSafeCreativeOutputNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeOutputCtaTitle'))}</strong><div class="graph-os-compact-grid">${ctas || `<div class="empty-state">${escapeHTML(t('claimSafeCreativeOutputNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeOutputCaptionTitle'))}</strong><div class="graph-os-compact-grid">${captions || `<div class="empty-state">${escapeHTML(t('claimSafeCreativeOutputNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceClaimSafeVideoShotPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeCreativeOutputSnapshot(workspace); if (!pack.has_claim_safe_creative_output_pack) return '';
+            const prompts = (pack.safe_video_prompt_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.video_prompt_id || t('claimSafeCreativeOutputVideoPromptId'))}</strong><div><strong>${escapeHTML(t('claimSafeCreativeOutputPromptText'))}:</strong> ${escapeHTML(card.prompt_text || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputVisualDirection'))}:</strong> ${escapeHTML(card.visual_direction || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputDisallowedVisualClaims'))}:</strong> ${escapeHTML((card.disallowed_visual_claims || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSourcePillars'))}:</strong> ${escapeHTML((card.source_pillar_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSourceClaims'))}:</strong> ${escapeHTML((card.source_claim_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSupportingQuotes'))}:</strong> ${escapeHTML((card.supporting_quote_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputClaimRiskLevel'))}:</strong> ${escapeHTML(card.claim_risk_level || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSupportStatus'))}:</strong> ${escapeHTML(card.support_status || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeOutputJsonText({safe_usage_note:card.safe_usage_note,real_provider_allowed:card.real_provider_allowed,real_policy_check_allowed:card.real_policy_check_allowed,real_execution_allowed:card.real_execution_allowed,risk_note:card.risk_note}) || t('claimSafeCreativeOutputNoData'))}</pre></div>`).join('');
+            const shots = (pack.safe_shot_list_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.shot_id || t('claimSafeCreativeOutputShotId'))}</strong><div><strong>${escapeHTML(t('claimSafeCreativeOutputShotDescription'))}:</strong> ${escapeHTML(card.shot_description || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSourcePillars'))}:</strong> ${escapeHTML((card.source_pillar_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSourceClaims'))}:</strong> ${escapeHTML((card.source_claim_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSupportingQuotes'))}:</strong> ${escapeHTML((card.supporting_quote_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputClaimRiskLevel'))}:</strong> ${escapeHTML(card.claim_risk_level || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSupportStatus'))}:</strong> ${escapeHTML(card.support_status || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeOutputJsonText({safe_usage_note:card.safe_usage_note,real_provider_allowed:card.real_provider_allowed,real_policy_check_allowed:card.real_policy_check_allowed,real_execution_allowed:card.real_execution_allowed,risk_note:card.risk_note}) || t('claimSafeCreativeOutputNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceClaimSafeVideoShotPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeCreativeOutputVideoShotTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeCreativeOutputVideoNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSafeVideoPromptCards()">${escapeHTML(t('claimSafeCreativeOutputCopyVideoPrompts'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSafeShotListCards()">${escapeHTML(t('claimSafeCreativeOutputCopyShotList'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeOutputVideoPromptTitle'))}</strong><div class="graph-os-compact-grid">${prompts || `<div class="empty-state">${escapeHTML(t('claimSafeCreativeOutputNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeOutputShotListTitle'))}</strong><div class="graph-os-compact-grid">${shots || `<div class="empty-state">${escapeHTML(t('claimSafeCreativeOutputNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceClaimSafeBlockedTracePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeCreativeOutputSnapshot(workspace); if (!pack.has_claim_safe_creative_output_pack) return '';
+            const blocked = (pack.blocked_output_cards || []).slice(0, 16).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.blocked_output_id || t('claimSafeCreativeOutputBlockedId'))}</strong><span class="metric-pill">${escapeHTML(t('claimSafeCreativeOutputBlockedNote'))}</span></div><div><strong>${escapeHTML(t('claimSafeCreativeOutputBlockedSurface'))}:</strong> ${escapeHTML(card.blocked_surface || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputBlockedText'))}:</strong> ${escapeHTML(card.blocked_text || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputBlockedReason'))}:</strong> ${escapeHTML(card.blocked_reason || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSourceClaims'))}:</strong> ${escapeHTML((card.source_claim_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputMissingEvidence'))}:</strong> ${escapeHTML((card.missing_evidence_refs || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputDoNotClaimRefs'))}:</strong> ${escapeHTML((card.do_not_claim_refs || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSafeAlternative'))}:</strong> ${escapeHTML(card.recommended_safe_alternative || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputOperatorReview'))}:</strong> ${escapeHTML(String(Boolean(card.operator_review_required)))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputRiskNote'))}:</strong> ${escapeHTML(card.risk_note || t('none'))}</div></div>`).join('');
+            const traces = (pack.output_claim_trace_map || []).slice(0, 24).map((trace) => `<div class="graph-os-card"><strong>${escapeHTML(trace.trace_id || t('claimSafeCreativeOutputTraceTitle'))}</strong><div><strong>${escapeHTML(t('claimSafeCreativeOutputTraceSurface'))}:</strong> ${escapeHTML(trace.output_surface || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputTraceText'))}:</strong> ${escapeHTML(trace.output_text || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSourceClaims'))}:</strong> ${escapeHTML((trace.source_claim_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSupportingQuotes'))}:</strong> ${escapeHTML((trace.supporting_quote_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputEvidenceQuality'))}:</strong> ${escapeHTML(trace.evidence_quality || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputClaimRiskLevel'))}:</strong> ${escapeHTML(trace.claim_risk_level || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeCreativeOutputSupportStatus'))}:</strong> ${escapeHTML(trace.support_status || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeOutputJsonText(trace) || t('claimSafeCreativeOutputNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceClaimSafeBlockedTracePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeCreativeOutputBlockedTraceTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeCreativeOutputTraceNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceBlockedOutputCards()">${escapeHTML(t('claimSafeCreativeOutputCopyBlocked'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceOutputClaimTraceMap()">${escapeHTML(t('claimSafeCreativeOutputCopyTrace'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeOutputBlockedTitle'))}</strong><div class="field-helper">${escapeHTML(t('claimSafeCreativeOutputBlockedNote'))}</div><div class="graph-os-compact-grid">${blocked || `<div class="empty-state">${escapeHTML(t('claimSafeCreativeOutputNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeOutputTraceTitle'))}</strong><div class="graph-os-compact-grid">${traces || `<div class="empty-state">${escapeHTML(t('claimSafeCreativeOutputNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceClaimSafeRewriteQualityExportAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeCreativeOutputSnapshot(workspace); if (!pack.has_claim_safe_creative_output_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('claimSafeCreativeOutputDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceClaimSafeRewriteQualityExportAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeCreativeOutputRewriteQualityExportAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeCreativeOutputRewriteNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceOutputRewriteGuidance()">${escapeHTML(t('claimSafeCreativeOutputCopyRewrite'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeOutputRewriteTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeOutputJsonText(pack.output_rewrite_guidance) || t('claimSafeCreativeOutputNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeCreativeOutputRewriteNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeOutputQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeOutputJsonText(pack.output_quality_checks) || t('claimSafeCreativeOutputNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeOutputExportTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeOutputJsonText(pack.export_preview_manifest) || t('claimSafeCreativeOutputNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeCreativeOutputExportNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeCreativeOutputAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeCreativeOutputJsonText(pack.audit_preview) || t('claimSafeCreativeOutputNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeCreativeOutputAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('claimSafeCreativeOutputSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('claimSafeCreativeOutputSafetyNote'))}</div></div>`;
+        }
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -26344,6 +26701,8 @@
                 '',
                 projectWorkspaceExportClaimSafeCreativeBriefMarkdown(workspace),
                 '',
+                projectWorkspaceExportClaimSafeCreativeOutputMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -26463,6 +26822,7 @@
                 review_evidence_quality_pack: projectWorkspaceExportReviewEvidenceQualitySnapshot(workspace),
                 claim_risk_guard_pack: projectWorkspaceExportClaimRiskGuardSnapshot(workspace),
                 claim_safe_creative_brief_pack: projectWorkspaceExportClaimSafeCreativeBriefSnapshot(workspace),
+                claim_safe_creative_output_pack: projectWorkspaceExportClaimSafeCreativeOutputSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -39049,6 +39409,11 @@
                     ${renderProjectWorkspaceCreativeClaimUsageMapPanel(workspace)}
                     ${renderProjectWorkspaceClaimSafeSurfaceSafetyCardsPanel(workspace)}
                     ${renderProjectWorkspaceClaimSafeRewriteEvidenceQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceClaimSafeCreativeOutputSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceClaimSafeCopyCardsPanel(workspace)}
+                    ${renderProjectWorkspaceClaimSafeVideoShotPanel(workspace)}
+                    ${renderProjectWorkspaceClaimSafeBlockedTracePanel(workspace)}
+                    ${renderProjectWorkspaceClaimSafeRewriteQualityExportAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
