@@ -3635,6 +3635,7 @@
         let latestProjectWorkspaceNetworkExternalCallBlockGuardPack = {};
         let latestProjectWorkspaceRealExecutionApprovalTokenPack = {};
         let latestProjectWorkspaceProviderInvocationAuditPacketPack = {};
+        let latestProjectWorkspaceReviewEvidenceQualityPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -6656,6 +6657,156 @@
             providerInvocationAuditPacketProviderTypesNote: '\u8986\u76d6\u7684 provider \u7c7b\u578b\uff1allm_text_generation\u3001video_generation_provider\u3001image_generation_provider\u3001media_storage_provider\u3001external_scraping_provider\u3001translation_provider\u3001analytics_or_tracking_provider\u3001database_persistence_provider\u3001approval_or_ticket_provider\u3001rollback_restore_provider\u3002'
         });
 
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceReviewEvidenceQualityMarker: 'Project Workspace review evidence quality bundle',
+            reviewEvidenceQualityPackTitle: 'Review Evidence Quality Upgrade',
+            reviewEvidenceQualityPackHelper: 'Inspect deterministic evidence quality preview derived only from existing review workspace outputs. This is not real scraping or LLM evidence generation.',
+            reviewEvidenceQualitySummaryTitle: 'Evidence Quality Summary',
+            reviewEvidenceQualitySourceCardsTitle: 'Review Source Quality Cards',
+            reviewEvidenceQualityQuoteBuyerTitle: 'Quote Quality Cards / Buyer Language Signal Cards',
+            reviewEvidenceQualityQuoteCardsTitle: 'Quote Quality Cards',
+            reviewEvidenceQualityBuyerSignalsTitle: 'Buyer Language Signal Cards',
+            reviewEvidenceQualityClaimGapTitle: 'Claim Support Matrix / Evidence Gap Cards',
+            reviewEvidenceQualityClaimMatrixTitle: 'Claim Support Matrix',
+            reviewEvidenceQualityGapCardsTitle: 'Evidence Gap Cards',
+            reviewEvidenceQualityNoiseSafetyTitle: 'Duplicate And Noise Checks / Safety Boundaries',
+            reviewEvidenceQualityNoiseChecksTitle: 'Duplicate And Noise Checks',
+            reviewEvidenceQualitySampleStrengthTitle: 'Sample Strength Assessment',
+            reviewEvidenceQualityDoNotClaimTitle: 'Do Not Claim Reinforcement',
+            reviewEvidenceQualityRecommendationsTitle: 'Evidence Quality Recommendations',
+            reviewEvidenceQualityChecksTitle: 'Evidence Quality Checks',
+            reviewEvidenceQualityAuditPreviewTitle: 'Audit Preview',
+            reviewEvidenceQualitySafetyTitle: 'Safety Boundaries',
+            reviewEvidenceQualityMode: 'Mode',
+            reviewEvidenceQualitySourceCount: 'Source quality count',
+            reviewEvidenceQualityQuoteCount: 'Quote quality count',
+            reviewEvidenceQualityClaimCount: 'Claim support count',
+            reviewEvidenceQualityGapCount: 'Evidence gap count',
+            reviewEvidenceQualitySampleStrength: 'Sample strength',
+            reviewEvidenceQualityRecommendedAction: 'Recommended operator action',
+            reviewEvidenceQualityRealScraping: 'Real scraping allowed',
+            reviewEvidenceQualityRealExecution: 'Real execution allowed',
+            reviewEvidenceQualityDisabled: 'disabled',
+            reviewEvidenceQualityNoData: 'No review evidence quality pack data is available.',
+            reviewEvidenceQualityCopyNoData: 'No review evidence quality content is available to copy.',
+            reviewEvidenceQualityCopyFailed: 'Unable to copy review evidence quality content.',
+            reviewEvidenceQualityCopied: 'Review evidence quality content copied.',
+            reviewEvidenceQualityCopySummary: 'Copy evidence quality summary',
+            reviewEvidenceQualityCopySourceCards: 'Copy review source quality cards',
+            reviewEvidenceQualityCopyQuoteCards: 'Copy quote quality cards',
+            reviewEvidenceQualityCopyClaimMatrix: 'Copy claim support matrix',
+            reviewEvidenceQualityCopyGapCards: 'Copy evidence gap cards',
+            reviewEvidenceQualityCopyBuyerSignals: 'Copy buyer language signals',
+            reviewEvidenceQualityCopyDoNotClaim: 'Copy do not claim reinforcement',
+            reviewEvidenceQualityCopyRecommendations: 'Copy evidence quality recommendations',
+            reviewEvidenceQualityCopyFull: 'Copy full review evidence quality pack',
+            reviewEvidenceQualitySourceId: 'Source ID',
+            reviewEvidenceQualitySourceType: 'Source type',
+            reviewEvidenceQualitySourceLabel: 'Source label',
+            reviewEvidenceQualityReviewCount: 'Review count',
+            reviewEvidenceQualityUsableReviewCount: 'Usable review count',
+            reviewEvidenceQualityQuoteCountLabel: 'Quote count',
+            reviewEvidenceQualityQualityStatus: 'Quality status',
+            reviewEvidenceQualityCoverageNotes: 'Coverage notes',
+            reviewEvidenceQualityDetectedNoise: 'Detected noise',
+            reviewEvidenceQualityRiskNote: 'Risk note',
+            reviewEvidenceQualityQuoteId: 'Quote ID',
+            reviewEvidenceQualityQuoteRole: 'Quote role',
+            reviewEvidenceQualitySupportsClaim: 'Supports claim',
+            reviewEvidenceQualityClaimRef: 'Claim ref',
+            reviewEvidenceQualitySpecificity: 'Specificity level',
+            reviewEvidenceQualityBuyerSignal: 'Buyer language signal',
+            reviewEvidenceQualityDoNotOverclaim: 'Do not overclaim',
+            reviewEvidenceQualityClaimId: 'Claim ID',
+            reviewEvidenceQualitySupportStatus: 'Support status',
+            reviewEvidenceQualitySupportingQuotes: 'Supporting quote IDs',
+            reviewEvidenceQualityWeaknessReason: 'Weakness reason',
+            reviewEvidenceQualityAllowedUsage: 'Allowed usage',
+            reviewEvidenceQualityDisallowedUsage: 'Disallowed usage',
+            reviewEvidenceQualityRecommendedRewrite: 'Recommended rewrite',
+            reviewEvidenceQualityPreviewNote: 'Deterministic evidence quality preview only. It uses existing review workspace, creative decision, campaign export, and comparison data; it does not scrape reviews, call an LLM, create buyer evidence, persist audit records, create approvals, create operator tasks, call providers, or execute paid operations.',
+            reviewEvidenceQualitySourceNote: 'Review source cards are based only on already supplied input and do not fetch new reviews.',
+            reviewEvidenceQualityQuoteNote: 'Quote status distinguishes strong_quote, weak_quote, generic_quote, and missing_quote without promoting weak evidence to strong support.',
+            reviewEvidenceQualityClaimNote: 'Unsupported and weakly supported claims stay clearly separated from supported claims.',
+            reviewEvidenceQualityNoiseNote: 'Duplicate, too_short, generic, empty, and vague signals are displayed as manual cleanup guidance only.',
+            reviewEvidenceQualitySafetyNote: 'Real LLM, provider, external scraping, database persistence, real execution, media, approvals, operator tasks, and paid operations remain disabled.'
+        });
+
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceReviewEvidenceQualityMarker: 'Project Workspace review evidence quality bundle',
+            reviewEvidenceQualityPackTitle: 'Review Evidence Quality Upgrade',
+            reviewEvidenceQualityPackHelper: '\u4ec5\u67e5\u770b\u57fa\u4e8e\u5df2\u6709 review workspace \u8f93\u51fa\u7684\u786e\u5b9a\u6027 evidence quality \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e scraping \u6216 LLM evidence generation\u3002',
+            reviewEvidenceQualitySummaryTitle: 'Evidence Quality \u6458\u8981',
+            reviewEvidenceQualitySourceCardsTitle: 'Review Source Quality \u5361\u7247',
+            reviewEvidenceQualityQuoteBuyerTitle: 'Quote Quality \u5361\u7247 / Buyer Language Signal \u5361\u7247',
+            reviewEvidenceQualityQuoteCardsTitle: 'Quote Quality \u5361\u7247',
+            reviewEvidenceQualityBuyerSignalsTitle: 'Buyer Language Signal \u5361\u7247',
+            reviewEvidenceQualityClaimGapTitle: 'Claim Support Matrix / Evidence Gap \u5361\u7247',
+            reviewEvidenceQualityClaimMatrixTitle: 'Claim Support Matrix',
+            reviewEvidenceQualityGapCardsTitle: 'Evidence Gap \u5361\u7247',
+            reviewEvidenceQualityNoiseSafetyTitle: 'Duplicate And Noise Checks / \u5b89\u5168\u8fb9\u754c',
+            reviewEvidenceQualityNoiseChecksTitle: 'Duplicate And Noise Checks',
+            reviewEvidenceQualitySampleStrengthTitle: 'Sample Strength Assessment',
+            reviewEvidenceQualityDoNotClaimTitle: 'Do Not Claim Reinforcement',
+            reviewEvidenceQualityRecommendationsTitle: 'Evidence Quality \u5efa\u8bae',
+            reviewEvidenceQualityChecksTitle: 'Evidence Quality \u68c0\u67e5',
+            reviewEvidenceQualityAuditPreviewTitle: 'Audit Preview',
+            reviewEvidenceQualitySafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            reviewEvidenceQualityMode: '\u6a21\u5f0f',
+            reviewEvidenceQualitySourceCount: 'Source quality \u6570\u91cf',
+            reviewEvidenceQualityQuoteCount: 'Quote quality \u6570\u91cf',
+            reviewEvidenceQualityClaimCount: 'Claim support \u6570\u91cf',
+            reviewEvidenceQualityGapCount: 'Evidence gap \u6570\u91cf',
+            reviewEvidenceQualitySampleStrength: 'Sample strength',
+            reviewEvidenceQualityRecommendedAction: '\u63a8\u8350\u64cd\u4f5c\u5458\u52a8\u4f5c',
+            reviewEvidenceQualityRealScraping: '\u5141\u8bb8\u771f\u5b9e scraping',
+            reviewEvidenceQualityRealExecution: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            reviewEvidenceQualityDisabled: '\u5df2\u7981\u7528',
+            reviewEvidenceQualityNoData: '\u6682\u65e0 review evidence quality pack \u6570\u636e\u3002',
+            reviewEvidenceQualityCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 review evidence quality \u5185\u5bb9\u3002',
+            reviewEvidenceQualityCopyFailed: '\u65e0\u6cd5\u590d\u5236 review evidence quality \u5185\u5bb9\u3002',
+            reviewEvidenceQualityCopied: 'Review evidence quality \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            reviewEvidenceQualityCopySummary: '\u590d\u5236 evidence quality \u6458\u8981',
+            reviewEvidenceQualityCopySourceCards: '\u590d\u5236 review source quality \u5361\u7247',
+            reviewEvidenceQualityCopyQuoteCards: '\u590d\u5236 quote quality \u5361\u7247',
+            reviewEvidenceQualityCopyClaimMatrix: '\u590d\u5236 claim support matrix',
+            reviewEvidenceQualityCopyGapCards: '\u590d\u5236 evidence gap \u5361\u7247',
+            reviewEvidenceQualityCopyBuyerSignals: '\u590d\u5236 buyer language signals',
+            reviewEvidenceQualityCopyDoNotClaim: '\u590d\u5236 do not claim reinforcement',
+            reviewEvidenceQualityCopyRecommendations: '\u590d\u5236 evidence quality \u5efa\u8bae',
+            reviewEvidenceQualityCopyFull: '\u590d\u5236\u5b8c\u6574 review evidence quality pack',
+            reviewEvidenceQualitySourceId: 'Source ID',
+            reviewEvidenceQualitySourceType: 'Source \u7c7b\u578b',
+            reviewEvidenceQualitySourceLabel: 'Source label',
+            reviewEvidenceQualityReviewCount: 'Review \u6570\u91cf',
+            reviewEvidenceQualityUsableReviewCount: 'Usable review \u6570\u91cf',
+            reviewEvidenceQualityQuoteCountLabel: 'Quote \u6570\u91cf',
+            reviewEvidenceQualityQualityStatus: 'Quality \u72b6\u6001',
+            reviewEvidenceQualityCoverageNotes: 'Coverage notes',
+            reviewEvidenceQualityDetectedNoise: 'Detected noise',
+            reviewEvidenceQualityRiskNote: '\u98ce\u9669\u5907\u6ce8',
+            reviewEvidenceQualityQuoteId: 'Quote ID',
+            reviewEvidenceQualityQuoteRole: 'Quote role',
+            reviewEvidenceQualitySupportsClaim: '\u652f\u6301 claim',
+            reviewEvidenceQualityClaimRef: 'Claim ref',
+            reviewEvidenceQualitySpecificity: 'Specificity level',
+            reviewEvidenceQualityBuyerSignal: 'Buyer language signal',
+            reviewEvidenceQualityDoNotOverclaim: 'Do not overclaim',
+            reviewEvidenceQualityClaimId: 'Claim ID',
+            reviewEvidenceQualitySupportStatus: 'Support \u72b6\u6001',
+            reviewEvidenceQualitySupportingQuotes: 'Supporting quote IDs',
+            reviewEvidenceQualityWeaknessReason: 'Weakness reason',
+            reviewEvidenceQualityAllowedUsage: 'Allowed usage',
+            reviewEvidenceQualityDisallowedUsage: 'Disallowed usage',
+            reviewEvidenceQualityRecommendedRewrite: 'Recommended rewrite',
+            reviewEvidenceQualityPreviewNote: '\u4ec5\u4e3a\u786e\u5b9a\u6027 evidence quality \u9884\u89c8\u3002\u5b83\u53ea\u4f7f\u7528\u5df2\u6709 review workspace\u3001creative decision\u3001campaign export \u548c comparison \u6570\u636e\uff1b\u4e0d\u6293\u53d6\u8bc4\u8bba\uff0c\u4e0d\u8c03\u7528 LLM\uff0c\u4e0d\u521b\u5efa\u4e70\u5bb6\u8bc1\u636e\uff0c\u4e0d\u6301\u4e45\u5316 audit record\uff0c\u4e0d\u521b\u5efa\u5ba1\u6279\uff0c\u4e0d\u521b\u5efa operator task\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u6267\u884c paid operation\u3002',
+            reviewEvidenceQualitySourceNote: 'Review source \u5361\u7247\u53ea\u57fa\u4e8e\u5df2\u63d0\u4f9b\u8f93\u5165\uff0c\u4e0d\u6293\u53d6\u65b0\u8bc4\u8bba\u3002',
+            reviewEvidenceQualityQuoteNote: 'Quote \u72b6\u6001\u533a\u5206 strong_quote\u3001weak_quote\u3001generic_quote \u548c missing_quote\uff0c\u4e0d\u4f1a\u628a\u5f31\u8bc1\u636e\u63d0\u5347\u4e3a\u5f3a\u652f\u6301\u3002',
+            reviewEvidenceQualityClaimNote: 'Unsupported \u548c weakly supported claims \u4e0e supported claims \u4fdd\u6301\u6e05\u6670\u5206\u79bb\u3002',
+            reviewEvidenceQualityNoiseNote: 'Duplicate\u3001too_short\u3001generic\u3001empty \u548c vague signals \u53ea\u4f5c\u4e3a\u4eba\u5de5\u6e05\u7406\u6307\u5f15\u5c55\u793a\u3002',
+            reviewEvidenceQualitySafetyNote: '\u771f\u5b9e LLM\u3001provider\u3001external scraping\u3001database persistence\u3001real execution\u3001media\u3001approval\u3001operator task \u548c paid operation \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
+        });
+
 
         // L21-E stable language body classes for CSS-driven copy
         function updateLanguageBodyClass(language) {
@@ -9464,6 +9615,7 @@
                 latestProjectWorkspaceNetworkExternalCallBlockGuardPack = latestProjectCreativeDecisionPack.workspace_network_external_call_block_guard_pack || {};
                 latestProjectWorkspaceRealExecutionApprovalTokenPack = latestProjectCreativeDecisionPack.workspace_real_execution_approval_token_pack || {};
                 latestProjectWorkspaceProviderInvocationAuditPacketPack = latestProjectCreativeDecisionPack.workspace_provider_invocation_audit_packet_pack || {};
+                latestProjectWorkspaceReviewEvidenceQualityPack = latestProjectCreativeDecisionPack.review_evidence_quality_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -15335,6 +15487,7 @@
         const PROJECT_WORKSPACE_NETWORK_EXTERNAL_CALL_BLOCK_GUARD_MARKER = 'Project Workspace network external call block guard bundle';
         const PROJECT_WORKSPACE_REAL_EXECUTION_APPROVAL_TOKEN_MARKER = 'Project Workspace real execution approval token bundle';
         const PROJECT_WORKSPACE_PROVIDER_INVOCATION_AUDIT_PACKET_MARKER = 'Project Workspace provider invocation audit packet bundle';
+        const PROJECT_WORKSPACE_REVIEW_EVIDENCE_QUALITY_MARKER = 'Project Workspace review evidence quality bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -20930,6 +21083,123 @@
         function copyProjectWorkspaceAuditExportManifest() { return copyProjectWorkspaceProviderInvocationAuditPacketText('export'); }
         function copyProjectWorkspaceAuditTraceabilityMap() { return copyProjectWorkspaceProviderInvocationAuditPacketText('trace'); }
         function copyProjectWorkspaceFullProviderInvocationAuditPacketPack() { return copyProjectWorkspaceProviderInvocationAuditPacketText('full'); }
+
+        function projectWorkspaceReviewEvidenceQualityPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceReviewEvidenceQualityPack && Object.keys(latestProjectWorkspaceReviewEvidenceQualityPack).length) return latestProjectWorkspaceReviewEvidenceQualityPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.review_evidence_quality_pack || {};
+        }
+
+        function projectWorkspaceReviewEvidenceQualityHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspaceReviewEvidenceQualityJsonText(value) {
+            if (!projectWorkspaceReviewEvidenceQualityHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceReviewEvidenceQualityDisabledText(value) {
+            return value === false ? t('reviewEvidenceQualityDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportReviewEvidenceQualitySnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceReviewEvidenceQualityPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_REVIEW_EVIDENCE_QUALITY_MARKER,
+                has_review_evidence_quality_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                evidence_quality_summary: pack.evidence_quality_summary || {},
+                review_source_quality_cards: Array.isArray(pack.review_source_quality_cards) ? pack.review_source_quality_cards : [],
+                quote_quality_cards: Array.isArray(pack.quote_quality_cards) ? pack.quote_quality_cards : [],
+                claim_support_matrix: Array.isArray(pack.claim_support_matrix) ? pack.claim_support_matrix : [],
+                evidence_gap_cards: Array.isArray(pack.evidence_gap_cards) ? pack.evidence_gap_cards : [],
+                duplicate_and_noise_checks: pack.duplicate_and_noise_checks || {},
+                sample_strength_assessment: pack.sample_strength_assessment || {},
+                buyer_language_signal_cards: Array.isArray(pack.buyer_language_signal_cards) ? pack.buyer_language_signal_cards : [],
+                do_not_claim_reinforcement: Array.isArray(pack.do_not_claim_reinforcement) ? pack.do_not_claim_reinforcement : [],
+                evidence_quality_recommendations: Array.isArray(pack.evidence_quality_recommendations) ? pack.evidence_quality_recommendations : [],
+                evidence_quality_checks: pack.evidence_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceReviewEvidenceQualitySummaryText(pack = projectWorkspaceExportReviewEvidenceQualitySnapshot()) {
+            if (!pack.has_review_evidence_quality_pack) return '';
+            const summary = pack.evidence_quality_summary || {};
+            return [
+                t('reviewEvidenceQualitySummaryTitle'),
+                `${t('reviewEvidenceQualityMode')}: ${summary.mode || t('none')}`,
+                `${t('reviewEvidenceQualitySourceCount')}: ${summary.source_card_count ?? pack.review_source_quality_cards.length}`,
+                `${t('reviewEvidenceQualityQuoteCount')}: ${summary.quote_card_count ?? pack.quote_quality_cards.length}`,
+                `${t('reviewEvidenceQualityClaimCount')}: ${summary.claim_row_count ?? pack.claim_support_matrix.length}`,
+                `${t('reviewEvidenceQualityGapCount')}: ${pack.evidence_gap_cards.length}`,
+                `${t('reviewEvidenceQualitySampleStrength')}: ${summary.overall_sample_strength || t('none')}`,
+                `${t('reviewEvidenceQualityRecommendedAction')}: ${summary.recommended_operator_action || t('none')}`,
+                `${t('reviewEvidenceQualityRealScraping')}: ${projectWorkspaceReviewEvidenceQualityDisabledText(summary.real_scraping_allowed)}`,
+                `${t('reviewEvidenceQualityRealExecution')}: ${projectWorkspaceReviewEvidenceQualityDisabledText(summary.real_execution_allowed)}`,
+                t('reviewEvidenceQualityPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceReviewEvidenceQualitySectionText(titleKey, value) {
+            const body = projectWorkspaceReviewEvidenceQualityJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportReviewEvidenceQualityMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReviewEvidenceQualitySnapshot(workspace);
+            if (!pack.has_review_evidence_quality_pack) return '';
+            return [
+                `## ${t('reviewEvidenceQualityPackTitle')}`,
+                `## ${t('reviewEvidenceQualitySummaryTitle')}`,
+                projectWorkspaceReviewEvidenceQualitySummaryText(pack), '',
+                projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualitySourceCardsTitle', pack.review_source_quality_cards), '',
+                projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualityQuoteCardsTitle', pack.quote_quality_cards), '',
+                projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualityBuyerSignalsTitle', pack.buyer_language_signal_cards), '',
+                projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualityClaimMatrixTitle', pack.claim_support_matrix), '',
+                projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualityGapCardsTitle', pack.evidence_gap_cards), '',
+                projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualityNoiseChecksTitle', pack.duplicate_and_noise_checks), '',
+                projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualitySampleStrengthTitle', pack.sample_strength_assessment), '',
+                projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualityDoNotClaimTitle', pack.do_not_claim_reinforcement), '',
+                projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualityRecommendationsTitle', pack.evidence_quality_recommendations), '',
+                projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualityAuditPreviewTitle', pack.audit_preview), '',
+                projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualitySafetyTitle', pack.safety_boundaries),
+                t('reviewEvidenceQualitySafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceReviewEvidenceQualityText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceReviewEvidenceQualityStatus');
+            const pack = projectWorkspaceExportReviewEvidenceQualitySnapshot();
+            const text = kind === 'summary' ? projectWorkspaceReviewEvidenceQualitySummaryText(pack)
+                : kind === 'sources' ? projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualitySourceCardsTitle', pack.review_source_quality_cards)
+                : kind === 'quotes' ? projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualityQuoteCardsTitle', pack.quote_quality_cards)
+                : kind === 'claims' ? projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualityClaimMatrixTitle', pack.claim_support_matrix)
+                : kind === 'gaps' ? projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualityGapCardsTitle', pack.evidence_gap_cards)
+                : kind === 'buyer' ? projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualityBuyerSignalsTitle', pack.buyer_language_signal_cards)
+                : kind === 'doNotClaim' ? projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualityDoNotClaimTitle', pack.do_not_claim_reinforcement)
+                : kind === 'recommendations' ? projectWorkspaceReviewEvidenceQualitySectionText('reviewEvidenceQualityRecommendationsTitle', pack.evidence_quality_recommendations)
+                : projectWorkspaceExportReviewEvidenceQualityMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('reviewEvidenceQualityCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('reviewEvidenceQualityCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('reviewEvidenceQualityCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('reviewEvidenceQualityCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceEvidenceQualitySummary() { return copyProjectWorkspaceReviewEvidenceQualityText('summary'); }
+        function copyProjectWorkspaceReviewSourceQualityCards() { return copyProjectWorkspaceReviewEvidenceQualityText('sources'); }
+        function copyProjectWorkspaceQuoteQualityCards() { return copyProjectWorkspaceReviewEvidenceQualityText('quotes'); }
+        function copyProjectWorkspaceClaimSupportMatrix() { return copyProjectWorkspaceReviewEvidenceQualityText('claims'); }
+        function copyProjectWorkspaceEvidenceGapCards() { return copyProjectWorkspaceReviewEvidenceQualityText('gaps'); }
+        function copyProjectWorkspaceBuyerLanguageSignals() { return copyProjectWorkspaceReviewEvidenceQualityText('buyer'); }
+        function copyProjectWorkspaceDoNotClaimReinforcement() { return copyProjectWorkspaceReviewEvidenceQualityText('doNotClaim'); }
+        function copyProjectWorkspaceEvidenceQualityRecommendations() { return copyProjectWorkspaceReviewEvidenceQualityText('recommendations'); }
+        function copyProjectWorkspaceFullReviewEvidenceQualityPack() { return copyProjectWorkspaceReviewEvidenceQualityText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -24862,6 +25132,36 @@
             return `<div class="section-block" id="projectWorkspaceAuditTraceRiskQualitySafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('providerInvocationAuditPacketTraceRiskQualitySafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('providerInvocationAuditPacketTraceRiskQualitySafetyHelper'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAuditTraceabilityMap()">${escapeHTML(t('providerInvocationAuditPacketCopyTrace'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('providerInvocationAuditPacketTraceTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderInvocationAuditPacketJsonText(pack.audit_traceability_map) || t('providerInvocationAuditPacketNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerInvocationAuditPacketRiskTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderInvocationAuditPacketJsonText(pack.audit_packet_risk_register) || t('providerInvocationAuditPacketNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('providerInvocationAuditPacketQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProviderInvocationAuditPacketJsonText(pack.audit_packet_quality_checks) || t('providerInvocationAuditPacketNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('providerInvocationAuditPacketSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('providerInvocationAuditPacketRiskNote'))}</div><div class="field-helper">${escapeHTML(t('providerInvocationAuditPacketSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceReviewEvidenceQualitySummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReviewEvidenceQualitySnapshot(workspace); if (!pack.has_review_evidence_quality_pack) return '';
+            const summary = pack.evidence_quality_summary || {};
+            return `<div class="section-block" id="projectWorkspaceReviewEvidenceQualitySummaryPanel" data-review-evidence-quality-marker="${PROJECT_WORKSPACE_REVIEW_EVIDENCE_QUALITY_MARKER}" data-marker="project_workspace_review_evidence_quality_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('reviewEvidenceQualityPackTitle'))}</div><div class="field-helper">${escapeHTML(t('reviewEvidenceQualityPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullReviewEvidenceQualityPack()">${escapeHTML(t('reviewEvidenceQualityCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('reviewEvidenceQualityMode'), summary.mode || t('none'))}${metricPill(t('reviewEvidenceQualitySourceCount'), String(summary.source_card_count ?? pack.review_source_quality_cards.length))}${metricPill(t('reviewEvidenceQualityQuoteCount'), String(summary.quote_card_count ?? pack.quote_quality_cards.length))}${metricPill(t('reviewEvidenceQualityClaimCount'), String(summary.claim_row_count ?? pack.claim_support_matrix.length))}${metricPill(t('reviewEvidenceQualityGapCount'), String(pack.evidence_gap_cards.length))}${metricPill(t('reviewEvidenceQualitySampleStrength'), summary.overall_sample_strength || t('none'))}${metricPill(t('reviewEvidenceQualityRealScraping'), projectWorkspaceReviewEvidenceQualityDisabledText(summary.real_scraping_allowed))}${metricPill(t('reviewEvidenceQualityRealExecution'), projectWorkspaceReviewEvidenceQualityDisabledText(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualitySummaryText(pack) || t('reviewEvidenceQualityNoData'))}</pre><div class="field-helper">${escapeHTML(t('reviewEvidenceQualityPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceReviewEvidenceQualityStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceEvidenceQualitySummary()">${escapeHTML(t('reviewEvidenceQualityCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceReviewSourceQualityCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReviewEvidenceQualitySnapshot(workspace); if (!pack.has_review_evidence_quality_pack) return '';
+            const cards = (pack.review_source_quality_cards || []).map((card) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(card.source_id || t('reviewEvidenceQualitySourceCardsTitle'))}</strong><span class="metric-pill">${escapeHTML(card.sample_strength || t('none'))}</span></div><div><strong>${escapeHTML(t('reviewEvidenceQualitySourceType'))}:</strong> ${escapeHTML(card.source_type || t('none'))}</div><div><strong>${escapeHTML(t('reviewEvidenceQualitySourceLabel'))}:</strong> ${escapeHTML(card.source_label || t('none'))}</div><div><strong>${escapeHTML(t('reviewEvidenceQualityReviewCount'))}:</strong> ${escapeHTML(String(card.review_count ?? 0))}</div><div><strong>${escapeHTML(t('reviewEvidenceQualityUsableReviewCount'))}:</strong> ${escapeHTML(String(card.usable_review_count ?? 0))}</div><div><strong>${escapeHTML(t('reviewEvidenceQualityQuoteCountLabel'))}:</strong> ${escapeHTML(String(card.quote_count ?? 0))}</div><div><strong>${escapeHTML(t('reviewEvidenceQualityQualityStatus'))}:</strong> ${escapeHTML(card.quality_status || t('none'))}</div><div><strong>${escapeHTML(t('reviewEvidenceQualityDetectedNoise'))}:</strong> ${escapeHTML((card.detected_noise || []).join(', ') || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText({coverage_notes:card.coverage_notes||'',recommended_operator_action:card.recommended_operator_action||'',real_scraping_allowed:card.real_scraping_allowed,real_execution_allowed:card.real_execution_allowed,risk_note:card.risk_note||''}) || t('reviewEvidenceQualityNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceReviewSourceQualityCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('reviewEvidenceQualitySourceCardsTitle'))}</div><div class="field-helper">${escapeHTML(t('reviewEvidenceQualitySourceNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceReviewSourceQualityCards()">${escapeHTML(t('reviewEvidenceQualityCopySourceCards'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('reviewEvidenceQualityNoData'))}</div>`}</div></div>`;
+        }
+
+        function renderProjectWorkspaceQuoteBuyerLanguagePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReviewEvidenceQualitySnapshot(workspace); if (!pack.has_review_evidence_quality_pack) return '';
+            const quoteCards = (pack.quote_quality_cards || []).slice(0, 24).map((quote) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(quote.quote_id || t('reviewEvidenceQualityQuoteId'))}</strong><span class="metric-pill">${escapeHTML(quote.quality_status || t('none'))}</span></div><div><strong>${escapeHTML(t('reviewEvidenceQualitySourceId'))}:</strong> ${escapeHTML(quote.source_id || t('none'))}</div><div><strong>${escapeHTML(t('reviewEvidenceQualityQuoteRole'))}:</strong> ${escapeHTML(quote.quote_role || t('none'))}</div><div><strong>${escapeHTML(t('reviewEvidenceQualitySupportsClaim'))}:</strong> ${escapeHTML(String(Boolean(quote.supports_claim)))}</div><div><strong>${escapeHTML(t('reviewEvidenceQualityClaimRef'))}:</strong> ${escapeHTML(quote.claim_ref || t('none'))}</div><div><strong>${escapeHTML(t('reviewEvidenceQualitySpecificity'))}:</strong> ${escapeHTML(quote.specificity_level || t('none'))}</div><div><strong>${escapeHTML(t('reviewEvidenceQualityBuyerSignal'))}:</strong> ${escapeHTML(quote.buyer_language_signal || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText({quote_text:quote.quote_text||'',risk_note:quote.risk_note||'',do_not_overclaim:quote.do_not_overclaim||[]}) || t('reviewEvidenceQualityNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceQuoteBuyerLanguagePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('reviewEvidenceQualityQuoteBuyerTitle'))}</div><div class="field-helper">${escapeHTML(t('reviewEvidenceQualityQuoteNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceQuoteQualityCards()">${escapeHTML(t('reviewEvidenceQualityCopyQuoteCards'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceBuyerLanguageSignals()">${escapeHTML(t('reviewEvidenceQualityCopyBuyerSignals'))}</button></div></div><div class="graph-os-compact-grid">${quoteCards || `<div class="empty-state">${escapeHTML(t('reviewEvidenceQualityNoData'))}</div>`}<div class="graph-os-card"><strong>${escapeHTML(t('reviewEvidenceQualityBuyerSignalsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText(pack.buyer_language_signal_cards) || t('reviewEvidenceQualityNoData'))}</pre></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceClaimSupportEvidenceGapsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReviewEvidenceQualitySnapshot(workspace); if (!pack.has_review_evidence_quality_pack) return '';
+            const claims = (pack.claim_support_matrix || []).slice(0, 24).map((claim) => `<div class="graph-os-card"><div class="section-header"><strong>${escapeHTML(claim.claim_id || t('reviewEvidenceQualityClaimId'))}</strong><span class="metric-pill">${escapeHTML(claim.support_status || t('none'))}</span></div><div><strong>${escapeHTML(t('reviewEvidenceQualityClaimRef'))}:</strong> ${escapeHTML(claim.source_ref || t('none'))}</div><div><strong>${escapeHTML(t('reviewEvidenceQualitySupportingQuotes'))}:</strong> ${escapeHTML((claim.supporting_quote_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('reviewEvidenceQualityWeaknessReason'))}:</strong> ${escapeHTML(claim.weakness_reason || t('none'))}</div><div><strong>${escapeHTML(t('reviewEvidenceQualityAllowedUsage'))}:</strong> ${escapeHTML(claim.allowed_usage || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText({claim_text:claim.claim_text||'',disallowed_usage:claim.disallowed_usage||[],recommended_rewrite:claim.recommended_rewrite||'',risk_note:claim.risk_note||''}) || t('reviewEvidenceQualityNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceClaimSupportEvidenceGapsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('reviewEvidenceQualityClaimGapTitle'))}</div><div class="field-helper">${escapeHTML(t('reviewEvidenceQualityClaimNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceClaimSupportMatrix()">${escapeHTML(t('reviewEvidenceQualityCopyClaimMatrix'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceEvidenceGapCards()">${escapeHTML(t('reviewEvidenceQualityCopyGapCards'))}</button></div></div><div class="graph-os-compact-grid">${claims || `<div class="empty-state">${escapeHTML(t('reviewEvidenceQualityNoData'))}</div>`}<div class="graph-os-card"><strong>${escapeHTML(t('reviewEvidenceQualityGapCardsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText(pack.evidence_gap_cards) || t('reviewEvidenceQualityNoData'))}</pre></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceNoiseDoNotClaimRecommendationSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportReviewEvidenceQualitySnapshot(workspace); if (!pack.has_review_evidence_quality_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('reviewEvidenceQualityDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceNoiseDoNotClaimRecommendationSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('reviewEvidenceQualityNoiseSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('reviewEvidenceQualityNoiseNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDoNotClaimReinforcement()">${escapeHTML(t('reviewEvidenceQualityCopyDoNotClaim'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceEvidenceQualityRecommendations()">${escapeHTML(t('reviewEvidenceQualityCopyRecommendations'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('reviewEvidenceQualityNoiseChecksTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText(pack.duplicate_and_noise_checks) || t('reviewEvidenceQualityNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('reviewEvidenceQualitySampleStrengthTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText(pack.sample_strength_assessment) || t('reviewEvidenceQualityNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('reviewEvidenceQualityDoNotClaimTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText(pack.do_not_claim_reinforcement) || t('reviewEvidenceQualityNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('reviewEvidenceQualityRecommendationsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText(pack.evidence_quality_recommendations) || t('reviewEvidenceQualityNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('reviewEvidenceQualityChecksTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText(pack.evidence_quality_checks) || t('reviewEvidenceQualityNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('reviewEvidenceQualityAuditPreviewTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceReviewEvidenceQualityJsonText(pack.audit_preview) || t('reviewEvidenceQualityNoData'))}</pre></div></div><div class="demo-warning"><strong>${escapeHTML(t('reviewEvidenceQualitySafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('reviewEvidenceQualitySafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -25406,6 +25706,8 @@
                 '',
                 projectWorkspaceExportProviderInvocationAuditPacketMarkdown(workspace),
                 '',
+                projectWorkspaceExportReviewEvidenceQualityMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -25522,6 +25824,7 @@
                 workspace_network_external_call_block_guard_pack: projectWorkspaceExportNetworkExternalCallBlockGuardSnapshot(workspace),
                 workspace_real_execution_approval_token_pack: projectWorkspaceExportRealExecutionApprovalTokenSnapshot(workspace),
                 workspace_provider_invocation_audit_packet_pack: projectWorkspaceExportProviderInvocationAuditPacketSnapshot(workspace),
+                review_evidence_quality_pack: projectWorkspaceExportReviewEvidenceQualitySnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -38093,6 +38396,11 @@
                     ${renderProjectWorkspacePreInvocationEvidenceGatePanel(workspace)}
                     ${renderProjectWorkspaceBlockedOperationSignoffExportPanel(workspace)}
                     ${renderProjectWorkspaceAuditTraceRiskQualitySafetyPanel(workspace)}
+                    ${renderProjectWorkspaceReviewEvidenceQualitySummaryPanel(workspace)}
+                    ${renderProjectWorkspaceReviewSourceQualityCardsPanel(workspace)}
+                    ${renderProjectWorkspaceQuoteBuyerLanguagePanel(workspace)}
+                    ${renderProjectWorkspaceClaimSupportEvidenceGapsPanel(workspace)}
+                    ${renderProjectWorkspaceNoiseDoNotClaimRecommendationSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}

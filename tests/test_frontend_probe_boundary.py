@@ -13652,6 +13652,207 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_review_evidence_quality_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace review evidence quality bundle",
+            "PROJECT_WORKSPACE_REVIEW_EVIDENCE_QUALITY_MARKER",
+            "latestProjectWorkspaceReviewEvidenceQualityPack",
+            "review_evidence_quality_pack",
+            "projectWorkspaceReviewEvidenceQualityPackFromWorkspace",
+            "projectWorkspaceExportReviewEvidenceQualitySnapshot",
+            "projectWorkspaceExportReviewEvidenceQualityMarkdown",
+            "renderProjectWorkspaceReviewEvidenceQualitySummaryPanel",
+            "renderProjectWorkspaceReviewSourceQualityCardsPanel",
+            "renderProjectWorkspaceQuoteBuyerLanguagePanel",
+            "renderProjectWorkspaceClaimSupportEvidenceGapsPanel",
+            "renderProjectWorkspaceNoiseDoNotClaimRecommendationSafetyPanel",
+            "copyProjectWorkspaceEvidenceQualitySummary",
+            "copyProjectWorkspaceReviewSourceQualityCards",
+            "copyProjectWorkspaceQuoteQualityCards",
+            "copyProjectWorkspaceClaimSupportMatrix",
+            "copyProjectWorkspaceEvidenceGapCards",
+            "copyProjectWorkspaceBuyerLanguageSignals",
+            "copyProjectWorkspaceDoNotClaimReinforcement",
+            "copyProjectWorkspaceEvidenceQualityRecommendations",
+            "copyProjectWorkspaceFullReviewEvidenceQualityPack",
+            "review_evidence_quality_pack: projectWorkspaceExportReviewEvidenceQualitySnapshot(workspace)",
+            "Review Evidence Quality Upgrade",
+            "Evidence Quality Summary",
+            "Review Source Quality Cards",
+            "Quote Quality Cards",
+            "Buyer Language Signal Cards",
+            "Claim Support Matrix",
+            "Evidence Gap Cards",
+            "Duplicate And Noise Checks",
+            "Sample Strength Assessment",
+            "Do Not Claim Reinforcement",
+            "Evidence Quality Recommendations",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "pack.evidence_quality_summary",
+            "pack.review_source_quality_cards",
+            "pack.quote_quality_cards",
+            "pack.claim_support_matrix",
+            "pack.evidence_gap_cards",
+            "pack.duplicate_and_noise_checks",
+            "pack.sample_strength_assessment",
+            "pack.buyer_language_signal_cards",
+            "pack.do_not_claim_reinforcement",
+            "pack.evidence_quality_recommendations",
+            "pack.evidence_quality_checks",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.source_card_count",
+            "summary.quote_card_count",
+            "summary.claim_row_count",
+            "summary.overall_sample_strength",
+            "summary.recommended_operator_action",
+            "summary.real_scraping_allowed",
+            "summary.real_execution_allowed",
+            "card.source_id",
+            "card.source_type",
+            "card.source_label",
+            "card.review_count",
+            "card.usable_review_count",
+            "card.quote_count",
+            "card.quality_status",
+            "card.sample_strength",
+            "card.coverage_notes",
+            "card.detected_noise",
+            "quote.quote_id",
+            "quote.quote_text",
+            "quote.quote_role",
+            "quote.supports_claim",
+            "quote.claim_ref",
+            "quote.specificity_level",
+            "quote.buyer_language_signal",
+            "quote.quality_status",
+            "claim.claim_id",
+            "claim.claim_text",
+            "claim.support_status",
+            "claim.supporting_quote_ids",
+            "claim.weakness_reason",
+            "claim.allowed_usage",
+            "claim.disallowed_usage",
+            "claim.recommended_rewrite",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("renderProjectWorkspaceAuditTraceRiskQualitySafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceReviewEvidenceQualitySummaryPanel(workspace)")
+        sources = html.index("renderProjectWorkspaceReviewSourceQualityCardsPanel(workspace)")
+        quotes = html.index("renderProjectWorkspaceQuoteBuyerLanguagePanel(workspace)")
+        claims = html.index("renderProjectWorkspaceClaimSupportEvidenceGapsPanel(workspace)")
+        noise = html.index("renderProjectWorkspaceNoiseDoNotClaimRecommendationSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, sources)
+        self.assertLess(sources, quotes)
+        self.assertLess(quotes, claims)
+        self.assertLess(claims, noise)
+        self.assertLess(noise, core)
+
+    def test_workspace_review_evidence_quality_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "reviewEvidenceQualityPackTitle",
+            "reviewEvidenceQualitySummaryTitle",
+            "reviewEvidenceQualitySourceCardsTitle",
+            "reviewEvidenceQualityQuoteCardsTitle",
+            "reviewEvidenceQualityBuyerSignalsTitle",
+            "reviewEvidenceQualityClaimMatrixTitle",
+            "reviewEvidenceQualityGapCardsTitle",
+            "reviewEvidenceQualityNoiseChecksTitle",
+            "reviewEvidenceQualitySampleStrengthTitle",
+            "reviewEvidenceQualityDoNotClaimTitle",
+            "reviewEvidenceQualityRecommendationsTitle",
+            "reviewEvidenceQualityAuditPreviewTitle",
+            "reviewEvidenceQualitySafetyTitle",
+            "reviewEvidenceQualityCopySummary",
+            "reviewEvidenceQualityCopySourceCards",
+            "reviewEvidenceQualityCopyQuoteCards",
+            "reviewEvidenceQualityCopyClaimMatrix",
+            "reviewEvidenceQualityCopyGapCards",
+            "reviewEvidenceQualityCopyBuyerSignals",
+            "reviewEvidenceQualityCopyDoNotClaim",
+            "reviewEvidenceQualityCopyRecommendations",
+            "reviewEvidenceQualityCopyFull",
+            "reviewEvidenceQualityCopied",
+            "reviewEvidenceQualityCopyFailed",
+            "reviewEvidenceQualityCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace review evidence quality bundle", script)
+            self.assertIn("project_workspace_review_evidence_quality_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceReviewEvidenceQualitySummaryText"):
+            html.index("async function copyProjectWorkspaceReviewEvidenceQualityText")
+        ]
+        for key in [
+            "reviewEvidenceQualityPackTitle",
+            "reviewEvidenceQualitySummaryTitle",
+            "reviewEvidenceQualitySourceCardsTitle",
+            "reviewEvidenceQualityQuoteCardsTitle",
+            "reviewEvidenceQualityBuyerSignalsTitle",
+            "reviewEvidenceQualityClaimMatrixTitle",
+            "reviewEvidenceQualityGapCardsTitle",
+            "reviewEvidenceQualityNoiseChecksTitle",
+            "reviewEvidenceQualitySampleStrengthTitle",
+            "reviewEvidenceQualityDoNotClaimTitle",
+            "reviewEvidenceQualityRecommendationsTitle",
+            "reviewEvidenceQualityAuditPreviewTitle",
+            "reviewEvidenceQualitySafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_REVIEW_EVIDENCE_QUALITY_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "deterministic evidence quality preview",
+            "not real scraping",
+            "LLM evidence generation",
+            "does not scrape reviews",
+            "call an LLM",
+            "create buyer evidence",
+            "persist audit records",
+            "create approvals",
+            "create operator tasks",
+            "call providers",
+            "paid operation",
+            "strong_quote",
+            "weak_quote",
+            "generic_quote",
+            "missing_quote",
+            "Unsupported",
+            "weakly supported",
+            "supported",
+            "Duplicate",
+            "too_short",
+            "generic",
+            "empty",
+            "vague",
+            "Real LLM",
+            "provider",
+            "external scraping",
+            "database persistence",
+            "real execution",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [
