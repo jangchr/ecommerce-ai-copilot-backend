@@ -38886,6 +38886,616 @@ def _rw_claim_safe_creative_output_pack(creative_decision_pack: dict) -> dict:
     }
 
 
+def _rw_claim_safe_platform_delivery_pack(creative_decision_pack: dict) -> dict:
+    output_pack = dict(
+        creative_decision_pack.get("claim_safe_creative_output_pack") or {}
+    )
+    brief_pack = dict(creative_decision_pack.get("claim_safe_creative_brief_pack") or {})
+    claim_risk_pack = dict(creative_decision_pack.get("claim_risk_guard_pack") or {})
+    evidence_pack = dict(
+        creative_decision_pack.get("review_evidence_quality_pack") or {}
+    )
+    campaign_pack = dict(creative_decision_pack.get("campaign_export_pack") or {})
+    variant_pack = dict(creative_decision_pack.get("creative_variant_pack") or {})
+    asset_pack = dict(creative_decision_pack.get("creative_asset_pack") or {})
+    multi_platform_pack = dict(
+        creative_decision_pack.get("multi_platform_asset_pack") or {}
+    )
+
+    def unique(values: list[object]) -> list[str]:
+        return list(dict.fromkeys(_rw_text(value) for value in values if _rw_text(value)))
+
+    def as_list(value: object) -> list[str]:
+        if isinstance(value, list):
+            return unique(value)
+        return [_rw_text(value)] if _rw_text(value) else []
+
+    safe_hooks = list(output_pack.get("safe_hook_cards") or [])
+    safe_scripts = list(output_pack.get("safe_script_cards") or [])
+    safe_ctas = list(output_pack.get("safe_cta_cards") or [])
+    safe_captions = list(output_pack.get("safe_caption_cards") or [])
+    safe_video_prompts = list(output_pack.get("safe_video_prompt_cards") or [])
+    safe_shots = list(output_pack.get("safe_shot_list_cards") or [])
+    blocked_outputs = list(output_pack.get("blocked_output_cards") or [])
+    output_trace_rows = list(output_pack.get("output_claim_trace_map") or [])
+
+    delivery_surfaces = [
+        {
+            "surface": "tiktok_short_video",
+            "label": "TikTok short video",
+            "delivery_surface": "short_video",
+            "format_notes": (
+                "Preview a vertical short-form script, hook, CTA, caption, "
+                "video prompt, and shot list. This is not a real platform "
+                "policy decision or upload."
+            ),
+            "asset_requirements": [
+                "vertical_video_preview",
+                "caption_copy_preview",
+                "hook_text_preview",
+                "cta_text_preview",
+            ],
+            "duration_preview": "15-35s preview only",
+            "copy_fields": ["hook", "script", "CTA", "caption"],
+        },
+        {
+            "surface": "instagram_reel",
+            "label": "Instagram Reel",
+            "delivery_surface": "short_video",
+            "format_notes": (
+                "Preview short video copy and caption fields only; no real "
+                "platform upload, media upload, or policy API is called."
+            ),
+            "asset_requirements": [
+                "vertical_video_preview",
+                "caption_copy_preview",
+                "safe_visual_prompt_preview",
+            ],
+            "duration_preview": "15-45s preview only",
+            "copy_fields": ["hook", "script", "caption"],
+        },
+        {
+            "surface": "youtube_short",
+            "label": "YouTube Short",
+            "delivery_surface": "short_video",
+            "format_notes": (
+                "Preview vertical short-form delivery copy with conservative "
+                "claim language; not a real upload or compliance conclusion."
+            ),
+            "asset_requirements": [
+                "vertical_video_preview",
+                "title_or_caption_preview",
+                "safe_shot_list_preview",
+            ],
+            "duration_preview": "15-60s preview only",
+            "copy_fields": ["hook", "script", "caption"],
+        },
+        {
+            "surface": "amazon_listing_video",
+            "label": "Amazon listing video",
+            "delivery_surface": "listing_video",
+            "format_notes": (
+                "Preview product-page video prompt requirements only; this "
+                "does not query Amazon policy, upload media, or publish."
+            ),
+            "asset_requirements": [
+                "product_demo_video_preview",
+                "claim_safe_script_preview",
+                "visual_direction_preview",
+            ],
+            "duration_preview": "30-60s preview only",
+            "copy_fields": ["script", "caption"],
+        },
+        {
+            "surface": "product_page_asset",
+            "label": "Product page asset",
+            "delivery_surface": "product_page_asset",
+            "format_notes": (
+                "Preview static asset copy and visual requirements only; no "
+                "real media is read, generated, uploaded, or downloaded."
+            ),
+            "asset_requirements": [
+                "static_image_copy_preview",
+                "proof_quote_context_preview",
+                "alt_text_or_caption_preview",
+            ],
+            "duration_preview": "static asset preview only",
+            "copy_fields": ["caption", "CTA"],
+        },
+        {
+            "surface": "ad_copy_snippet",
+            "label": "Ad copy snippet",
+            "delivery_surface": "ad_copy",
+            "format_notes": (
+                "Preview claim-safe ad copy snippets only; not a real ad "
+                "launch, platform decision, legal advice, or policy API check."
+            ),
+            "asset_requirements": [
+                "hook_copy_preview",
+                "body_copy_preview",
+                "cta_copy_preview",
+            ],
+            "duration_preview": "copy-only preview",
+            "copy_fields": ["hook", "CTA", "caption"],
+        },
+    ]
+
+    def pick_card(cards: list[dict], index: int) -> dict:
+        return cards[index % len(cards)] if cards else {}
+
+    def first_text(card: dict, keys: list[str]) -> str:
+        for key in keys:
+            value = card.get(key)
+            if isinstance(value, list):
+                text = " ".join(_rw_text(item) for item in value if _rw_text(item))
+            else:
+                text = _rw_text(value)
+            if text:
+                return text
+        return ""
+
+    def refs_from_cards(cards: list[dict]) -> dict:
+        return {
+            "source_output_refs": unique(
+                card.get("hook_id")
+                or card.get("script_id")
+                or card.get("cta_id")
+                or card.get("caption_id")
+                or card.get("video_prompt_id")
+                or card.get("shot_id")
+                for card in cards
+            ),
+            "source_claim_ids": unique(
+                claim_id
+                for card in cards
+                for claim_id in as_list(card.get("source_claim_ids"))
+            ),
+            "supporting_quote_ids": unique(
+                quote_id
+                for card in cards
+                for quote_id in as_list(card.get("supporting_quote_ids"))
+            ),
+        }
+
+    def risk_level(cards: list[dict]) -> str:
+        risks = [card.get("claim_risk_level") for card in cards if card.get("claim_risk_level")]
+        if "high" in risks:
+            return "high"
+        if "medium" in risks:
+            return "medium"
+        return risks[0] if risks else "preview_only_unmapped"
+
+    def support_status(cards: list[dict]) -> str:
+        statuses = [
+            card.get("support_status")
+            for card in cards
+            if card.get("support_status")
+        ]
+        if "quote_supported" in statuses:
+            return "quote_supported"
+        return statuses[0] if statuses else "preview_only_unmapped"
+
+    def output_ref(card: dict) -> str:
+        return _rw_text(
+            card.get("hook_id")
+            or card.get("script_id")
+            or card.get("cta_id")
+            or card.get("caption_id")
+            or card.get("video_prompt_id")
+            or card.get("shot_id")
+        )
+
+    platform_delivery_cards: list[dict] = []
+    channel_copy_cards: list[dict] = []
+    channel_video_prompt_cards: list[dict] = []
+    channel_asset_requirement_cards: list[dict] = []
+    channel_claim_safety_map: list[dict] = []
+
+    for index, surface in enumerate(delivery_surfaces, start=1):
+        hook = pick_card(safe_hooks, index - 1)
+        script = pick_card(safe_scripts, index - 1)
+        cta = pick_card(safe_ctas, index - 1)
+        caption = pick_card(safe_captions, index - 1)
+        video_prompt = pick_card(safe_video_prompts, index - 1)
+        shot = pick_card(safe_shots, index - 1)
+        selected_copy_cards = [card for card in [hook, script, cta, caption] if card]
+        selected_video_cards = [card for card in [video_prompt, shot] if card]
+        selected_cards = [*selected_copy_cards, *selected_video_cards]
+        refs = refs_from_cards(selected_cards)
+        blocked_reason = ""
+        if not selected_cards:
+            blocked_reason = "missing_claim_safe_output_cards"
+        elif not refs["supporting_quote_ids"]:
+            blocked_reason = "missing_quote_context"
+
+        platform_delivery_cards.append({
+            "platform_delivery_id": f"claim_safe_platform_delivery_{index}",
+            "platform_label": surface["label"],
+            "delivery_surface": surface["surface"],
+            "recommended_output_refs": refs["source_output_refs"],
+            "recommended_hook_refs": as_list(output_ref(hook)),
+            "recommended_script_refs": as_list(output_ref(script)),
+            "recommended_cta_refs": as_list(output_ref(cta)),
+            "recommended_video_prompt_refs": as_list(output_ref(video_prompt)),
+            "format_notes": surface["format_notes"],
+            "claim_safety_status": (
+                "claim_safe_preview_ready" if not blocked_reason
+                else "operator_review_required"
+            ),
+            "readiness_status": (
+                "ready_for_preview_export" if not blocked_reason
+                else "blocked_from_public_delivery"
+            ),
+            "operator_review_required": True,
+            "blocked_reason": blocked_reason,
+            "real_platform_upload_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Generic delivery preview only; not a real platform policy "
+                "judgment, legal advice, compliance conclusion, upload, or launch."
+            ),
+        })
+
+        copy_parts = [
+            first_text(hook, ["hook_text"]),
+            first_text(script, ["script_lines", "script_title"]),
+            first_text(cta, ["cta_text"]),
+            first_text(caption, ["caption_text"]),
+        ]
+        copy_text = "\n".join(part for part in copy_parts if part)
+        copy_refs = refs_from_cards(selected_copy_cards)
+        channel_copy_cards.append({
+            "copy_card_id": f"claim_safe_channel_copy_{index}",
+            "delivery_surface": surface["surface"],
+            "copy_type": "+".join(surface["copy_fields"]),
+            "copy_text": copy_text or (
+                "No claim-safe copy preview is available for this surface."
+            ),
+            **copy_refs,
+            "claim_risk_level": risk_level(selected_copy_cards),
+            "support_status": support_status(selected_copy_cards),
+            "allowed_usage": "internal_channel_copy_preview_only",
+            "restricted_usage": [
+                "operator_review_before_public_use",
+                "preserve_quote_context",
+                "do_not_expand_claim_scope",
+            ],
+            "disallowed_usage": [
+                "real_ad_launch",
+                "unsupported_claim",
+                "do_not_claim_violation",
+                "platform_policy_conclusion",
+            ],
+            "operator_review_required": True,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Copy card combines existing safe outputs only and is not launched."
+            ),
+        })
+
+        video_refs = refs_from_cards(selected_video_cards)
+        channel_video_prompt_cards.append({
+            "video_delivery_id": f"claim_safe_video_delivery_{index}",
+            "delivery_surface": surface["surface"],
+            "prompt_text": first_text(video_prompt, ["prompt_text"]) or (
+                "No claim-safe video prompt preview is available for this surface."
+            ),
+            "visual_direction": first_text(video_prompt, ["visual_direction"]) or (
+                "Preview direction only; avoid implied outcomes or unsupported visuals."
+            ),
+            "shot_refs": as_list(output_ref(shot)),
+            **video_refs,
+            "disallowed_visual_claims": unique(
+                as_list(video_prompt.get("disallowed_visual_claims"))
+                + ["real_provider_call", "media_upload", "unsupported_result_visual"]
+            ),
+            "real_provider_allowed": False,
+            "real_media_upload_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Video prompt is a deterministic preview and cannot trigger media generation."
+            ),
+        })
+
+        channel_asset_requirement_cards.append({
+            "asset_requirement_id": f"claim_safe_asset_requirement_{index}",
+            "delivery_surface": surface["surface"],
+            "platform_label": surface["label"],
+            "required_asset_types": surface["asset_requirements"],
+            "size_preview": (
+                "Use platform-appropriate dimensions during manual review; "
+                "no real platform policy lookup was performed."
+            ),
+            "duration_preview": surface["duration_preview"],
+            "copy_field_preview": surface["copy_fields"],
+            "source_asset_refs": unique(
+                [
+                    asset.get("asset_pack_id")
+                    for asset in list(asset_pack.get("asset_packs") or [])[:6]
+                ] + [
+                    pack.get("platform_pack_id")
+                    for pack in list(multi_platform_pack.get("platform_packs") or [])[:6]
+                ]
+            ),
+            "real_media_read_allowed": False,
+            "real_media_upload_allowed": False,
+            "real_provider_allowed": False,
+            "real_platform_upload_allowed": False,
+            "risk_note": (
+                "Asset requirements are preview metadata only; no files are read, "
+                "generated, uploaded, or downloaded."
+            ),
+        })
+
+        channel_claim_safety_map.append({
+            "claim_safety_map_id": f"claim_safe_delivery_claim_map_{index}",
+            "delivery_surface": surface["surface"],
+            "source_output_refs": refs["source_output_refs"],
+            "source_claim_ids": refs["source_claim_ids"],
+            "supporting_quote_ids": refs["supporting_quote_ids"],
+            "evidence_quality": "derived_from_review_evidence_quality_pack",
+            "claim_risk_level": risk_level(selected_cards),
+            "support_status": support_status(selected_cards),
+            "do_not_claim_refs": unique(
+                ref
+                for row in list(claim_risk_pack.get("do_not_claim_enforcement") or [])
+                for ref in as_list(row.get("do_not_claim_refs") or row.get("claim_id"))
+            ),
+            "blocked_output_refs": unique(
+                card.get("blocked_output_id") for card in blocked_outputs
+            ),
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Map is a deterministic preview and does not read real logs or "
+                "query real platform policy."
+            ),
+        })
+
+    delivery_blocker_cards: list[dict] = []
+    for index, card in enumerate(blocked_outputs[:12], start=1):
+        delivery_blocker_cards.append({
+            "delivery_blocker_id": f"claim_safe_delivery_blocked_output_{index}",
+            "blocker_type": "blocked_output",
+            "delivery_surface": card.get("blocked_surface") or "public_creative_copy",
+            "blocked_ref": card.get("blocked_output_id", ""),
+            "blocked_text": card.get("blocked_text", ""),
+            "blocked_reason": card.get("blocked_reason") or "blocked_output",
+            "source_claim_ids": as_list(card.get("source_claim_ids")),
+            "supporting_quote_ids": [],
+            "operator_review_required": True,
+            "real_platform_upload_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Blocked output cannot enter public delivery copy or video prompts."
+            ),
+        })
+    for index, card in enumerate(
+        list(claim_risk_pack.get("blocked_claim_cards") or [])[:8],
+        start=len(delivery_blocker_cards) + 1,
+    ):
+        delivery_blocker_cards.append({
+            "delivery_blocker_id": f"claim_safe_delivery_unsupported_claim_{index}",
+            "blocker_type": "unsupported_claim",
+            "delivery_surface": "public_creative_delivery",
+            "blocked_ref": card.get("claim_id", ""),
+            "blocked_text": card.get("blocked_claim_text", ""),
+            "blocked_reason": card.get("blocked_reason") or "unsupported_claim",
+            "source_claim_ids": as_list(card.get("claim_id")),
+            "supporting_quote_ids": as_list(card.get("supporting_quote_ids")),
+            "operator_review_required": True,
+            "real_platform_upload_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Unsupported claims require manual rewrite before any public use."
+            ),
+        })
+    for blocker_type in [
+        "provider_disabled",
+        "media_upload_disabled",
+        "policy_check_disabled",
+    ]:
+        delivery_blocker_cards.append({
+            "delivery_blocker_id": f"claim_safe_delivery_{blocker_type}",
+            "blocker_type": blocker_type,
+            "delivery_surface": "all_delivery_surfaces",
+            "blocked_ref": blocker_type,
+            "blocked_text": blocker_type.replace("_", " "),
+            "blocked_reason": blocker_type,
+            "source_claim_ids": [],
+            "supporting_quote_ids": [],
+            "operator_review_required": True,
+            "real_platform_upload_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Real provider, media upload, platform upload, and policy API "
+                "paths remain disabled."
+            ),
+        })
+
+    blocked_count = sum(
+        card["readiness_status"] == "blocked_from_public_delivery"
+        for card in platform_delivery_cards
+    )
+    operator_review_count = sum(
+        bool(card.get("operator_review_required"))
+        for card in platform_delivery_cards
+    )
+    ready_count = sum(
+        card["readiness_status"] == "ready_for_preview_export"
+        for card in platform_delivery_cards
+    )
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "real_provider_called": False,
+        "real_media_upload_performed": False,
+        "real_platform_upload_performed": False,
+        "real_policy_api_called": False,
+    }
+
+    return {
+        "pack_version": "claim_safe_platform_delivery_pack_v1",
+        "platform_delivery_summary": {
+            "mode": (
+                "claim_safe_platform_delivery_preview_"
+                "deterministic_delivery_pack_dry_run_only"
+            ),
+            "source_packs": [
+                "claim_safe_creative_output_pack",
+                "claim_safe_creative_brief_pack",
+                "claim_risk_guard_pack",
+                "review_evidence_quality_pack",
+                "campaign_export_pack",
+                "creative_variant_pack",
+                "creative_asset_pack",
+                "multi_platform_asset_pack",
+            ],
+            "platform_delivery_count": len(platform_delivery_cards),
+            "channel_copy_count": len(channel_copy_cards),
+            "channel_video_prompt_count": len(channel_video_prompt_cards),
+            "asset_requirement_count": len(channel_asset_requirement_cards),
+            "claim_safety_map_count": len(channel_claim_safety_map),
+            "delivery_blocker_count": len(delivery_blocker_cards),
+            "ready_for_preview_export_count": ready_count,
+            "operator_review_required_count": operator_review_count,
+            "blocked_delivery_count": blocked_count,
+            "real_platform_upload_allowed": False,
+            "real_provider_allowed": False,
+            "real_media_upload_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": (
+                "Use as deterministic platform delivery preview only; manually "
+                "review claims, quotes, assets, and platform requirements before "
+                "any separate real-world launch process."
+            ),
+        },
+        "platform_delivery_cards": platform_delivery_cards,
+        "channel_copy_cards": channel_copy_cards,
+        "channel_video_prompt_cards": channel_video_prompt_cards,
+        "channel_asset_requirement_cards": channel_asset_requirement_cards,
+        "channel_claim_safety_map": channel_claim_safety_map,
+        "delivery_blocker_cards": delivery_blocker_cards,
+        "delivery_readiness_checks": {
+            "ready_for_preview_export_surfaces": [
+                card["delivery_surface"]
+                for card in platform_delivery_cards
+                if card["readiness_status"] == "ready_for_preview_export"
+            ],
+            "operator_review_required_surfaces": [
+                card["delivery_surface"]
+                for card in platform_delivery_cards
+                if card.get("operator_review_required")
+            ],
+            "blocked_surfaces": [
+                card["delivery_surface"]
+                for card in platform_delivery_cards
+                if card["readiness_status"] == "blocked_from_public_delivery"
+            ],
+            "claim_safe_creative_output_pack_present": bool(output_pack),
+            "claim_safe_creative_brief_pack_present": bool(brief_pack),
+            "claim_risk_guard_pack_present": bool(claim_risk_pack),
+            "review_evidence_quality_pack_present": bool(evidence_pack),
+            "campaign_export_pack_present": bool(campaign_pack),
+            "creative_variant_pack_present": bool(variant_pack),
+            "creative_asset_pack_present": bool(asset_pack),
+            "multi_platform_asset_pack_present": bool(multi_platform_pack),
+            "json_markdown_preview_only": True,
+            "operator_task_created": False,
+            "file_upload_performed": False,
+            "database_write_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "media_operation_performed": False,
+            "external_scraping_performed": False,
+            "real_policy_api_called": False,
+            "real_execution_performed": False,
+            "real_platform_upload_performed": False,
+        },
+        "export_bundle_manifest": {
+            "manifest_id": "claim_safe_platform_delivery_export_preview",
+            "json_preview_available": True,
+            "markdown_preview_available": True,
+            "json_preview_includes": [
+                "platform_delivery_summary",
+                "platform_delivery_cards",
+                "channel_copy_cards",
+                "channel_video_prompt_cards",
+                "channel_asset_requirement_cards",
+                "channel_claim_safety_map",
+                "delivery_blocker_cards",
+                "delivery_readiness_checks",
+                "operator_handoff_notes",
+            ],
+            "file_upload_allowed": False,
+            "file_upload_performed": False,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_platform_upload_allowed": False,
+            "real_platform_upload_performed": False,
+        },
+        "operator_handoff_notes": [
+            {
+                "handoff_note_id": "claim_safe_platform_delivery_manual_review",
+                "note_type": "manual_review_guidance",
+                "note_text": (
+                    "Review copy, quote context, do-not-claim boundaries, and "
+                    "asset requirements manually before any separate launch workflow."
+                ),
+                "operator_task_created": False,
+                "real_execution_allowed": False,
+            },
+            {
+                "handoff_note_id": "claim_safe_platform_delivery_policy_caution",
+                "note_type": "policy_caution",
+                "note_text": (
+                    "This pack is not legal advice, not a real platform policy "
+                    "API check, and not a compliance conclusion."
+                ),
+                "operator_task_created": False,
+                "real_execution_allowed": False,
+            },
+        ],
+        "audit_preview": {
+            "audit_preview_id": "claim_safe_platform_delivery_preview",
+            "source": "creative_decision_pack.claim_safe_platform_delivery_pack",
+            "source_trace_count": len(output_trace_rows),
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "audit_record_created": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "real_provider_allowed": False,
+            "real_media_upload_allowed": False,
+            "real_platform_upload_allowed": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -39092,6 +39702,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["claim_safe_creative_output_pack"] = (
         _rw_claim_safe_creative_output_pack(creative_decision_pack)
+    )
+    creative_decision_pack["claim_safe_platform_delivery_pack"] = (
+        _rw_claim_safe_platform_delivery_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
