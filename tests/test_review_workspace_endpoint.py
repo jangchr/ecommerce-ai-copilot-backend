@@ -7174,6 +7174,163 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
             with self.subTest(boundary=key):
                 self.assertFalse(boundaries[key])
 
+    def test_claim_risk_guard_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "claim-risk-guard-preview",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "CLAIMRISK001",
+                "title": "Compact Travel Mug",
+                "reviews": [
+                    {
+                        "rating": 2,
+                        "title": "Leaks during commute",
+                        "text": (
+                            "Leaks during commute and the lid seal drips "
+                            "into my bag every morning."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 5,
+                        "title": "Easy to clean",
+                        "text": (
+                            "The cup is easy to clean after coffee and fits "
+                            "my office bag."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 1,
+                        "title": "Competitor seal problem",
+                        "text": (
+                            "Competitor lid also leaks in a work bag, so I "
+                            "would not trust it for travel."
+                        ),
+                        "source_section": "competitor_review",
+                        "metadata": {"source_type": "competitor"},
+                    },
+                ],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "campaign_export_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "review_evidence_quality_pack",
+            "claim_risk_guard_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["claim_risk_guard_pack"]
+        self.assertEqual(pack["pack_version"], "claim_risk_guard_pack_v1")
+        summary = pack["claim_risk_summary"]
+        self.assertIn("claim_risk_preview", summary["mode"])
+        self.assertIn("deterministic_claim_guard", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        self.assertFalse(summary["real_policy_check_allowed"])
+        self.assertFalse(summary["real_execution_allowed"])
+
+        risk_cards = pack["claim_risk_cards"]
+        self.assertTrue(risk_cards)
+        for card in risk_cards:
+            for field in [
+                "claim_id", "claim_text", "support_status",
+                "risk_level", "risk_category",
+            ]:
+                with self.subTest(claim=card["claim_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertIn("claim_source", card)
+            self.assertIn("supporting_quote_ids", card)
+            self.assertIn("evidence_gap_refs", card)
+            self.assertIn("allowed_usage", card)
+            self.assertIn("restricted_usage", card)
+            self.assertIn("disallowed_usage", card)
+            self.assertIn("recommended_rewrite", card)
+            self.assertIn("operator_review_required", card)
+            self.assertFalse(card["real_policy_check_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        self.assertIn("allowed_claim_cards", pack)
+        self.assertIn("restricted_claim_cards", pack)
+        blocked_cards = pack["blocked_claim_cards"]
+        self.assertTrue(blocked_cards)
+        for field in [
+            "blocked_claim_text", "blocked_reason",
+            "recommended_safe_alternative",
+        ]:
+            self.assertIn(field, blocked_cards[0])
+        self.assertIn("missing_evidence_refs", blocked_cards[0])
+        self.assertIn("do_not_claim_refs", blocked_cards[0])
+
+        for key in [
+            "claim_rewrite_suggestions",
+            "evidence_to_claim_trace",
+            "overclaim_pattern_checks",
+            "platform_claim_safety_notes",
+            "do_not_claim_enforcement",
+            "claim_risk_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+        ]:
+            with self.subTest(required_key=key):
+                self.assertIn(key, pack)
+
+        pattern_checks = pack["overclaim_pattern_checks"]
+        for key in [
+            "absolute_wording", "guaranteed_outcome",
+            "medical_like_claim", "unsupported_comparison",
+            "missing_quote",
+        ]:
+            with self.subTest(pattern_check=key):
+                self.assertIn(key, pattern_checks)
+
+        safety_notes = " ".join(pack["platform_claim_safety_notes"]).lower()
+        self.assertIn("not legal advice", safety_notes)
+        self.assertIn("no real policy", safety_notes)
+
+        checks = pack["claim_risk_quality_checks"]
+        self.assertTrue(checks["review_evidence_quality_pack_present"])
+        self.assertTrue(checks["claim_risk_cards_present"])
+        self.assertTrue(checks["overclaim_pattern_checks_present"])
+        self.assertTrue(checks["deterministic_rewrite_only"])
+        self.assertFalse(checks["legal_advice_generated"])
+        self.assertFalse(checks["real_policy_api_called"])
+        self.assertFalse(checks["database_write_performed"])
+        self.assertFalse(checks["provider_called"])
+        self.assertFalse(checks["llm_called"])
+        self.assertFalse(checks["external_scraping_performed"])
+        self.assertFalse(checks["real_execution_performed"])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["database_write_allowed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["audit_record_created"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["real_policy_check_allowed"])
+        self.assertFalse(audit["real_execution_allowed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider", "provider_enabled", "llm", "llm_enabled",
+            "external_scraping", "external_scraping_enabled",
+            "database_persistence", "database_persistence_enabled",
+            "real_execution", "real_execution_enabled",
+            "real_policy_check", "real_policy_check_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):

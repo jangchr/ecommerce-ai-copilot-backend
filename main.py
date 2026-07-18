@@ -37370,6 +37370,471 @@ def _rw_review_evidence_quality_pack(
     }
 
 
+def _rw_claim_risk_guard_pack(creative_decision_pack: dict) -> dict:
+    evidence_pack = dict(
+        creative_decision_pack.get("review_evidence_quality_pack") or {}
+    )
+    review_import_pack = dict(creative_decision_pack.get("review_import_pack") or {})
+    competitor_pack = dict(
+        creative_decision_pack.get("competitor_review_comparison_pack") or {}
+    )
+    campaign_pack = dict(creative_decision_pack.get("campaign_export_pack") or {})
+    quality_rows = list(evidence_pack.get("claim_support_matrix") or [])
+    quote_cards = {
+        _rw_text(card.get("quote_id")): card
+        for card in list(evidence_pack.get("quote_quality_cards") or [])
+        if _rw_text(card.get("quote_id"))
+    }
+
+    def normalized_text(value: object) -> str:
+        return _rw_text(value).lower()
+
+    def token_set(text: str) -> set[str]:
+        return {
+            token.strip(".,!?:;\"'()[]").lower()
+            for token in _rw_text(text).split()
+            if len(token.strip(".,!?:;\"'()[]")) >= 4
+        }
+
+    def collect_do_not_claim(value: object) -> list[str]:
+        collected: list[str] = []
+        if isinstance(value, dict):
+            for key, child in value.items():
+                if key == "do_not_claim":
+                    if isinstance(child, list):
+                        collected.extend(_rw_text(item) for item in child)
+                    else:
+                        collected.append(_rw_text(child))
+                elif key != "claim_risk_guard_pack":
+                    collected.extend(collect_do_not_claim(child))
+        elif isinstance(value, list):
+            for item in value:
+                collected.extend(collect_do_not_claim(item))
+        return [item for item in collected if item]
+
+    do_not_claim_items = list(dict.fromkeys([
+        *collect_do_not_claim(creative_decision_pack),
+        "Do not claim full-market statistics from the visible review sample.",
+        "Do not promise guaranteed product performance or universal outcomes.",
+        "Do not use competitor reviews as proof of own-product performance.",
+        "Do not invent review quotes or buyer evidence.",
+    ]))
+    do_not_claim_terms = [
+        term
+        for item in do_not_claim_items
+        for term in token_set(item)
+        if len(term) >= 6
+    ]
+
+    claim_inputs: list[dict] = []
+    seen_claims: set[str] = set()
+
+    def add_claim(raw_claim: object, source_ref: str, support_row: dict | None = None):
+        claim = _rw_text(raw_claim)
+        key = claim.lower()
+        if not claim or key in seen_claims:
+            return
+        seen_claims.add(key)
+        claim_inputs.append({
+            "claim_text": claim,
+            "claim_source": source_ref,
+            "support_row": dict(support_row or {}),
+        })
+
+    for row in quality_rows:
+        add_claim(row.get("claim_text"), row.get("source_ref") or "review_evidence_quality_pack", row)
+    campaign_brief = dict(campaign_pack.get("campaign_brief") or {})
+    creative_section = dict(campaign_pack.get("creative_section") or {})
+    for key in [
+        "brief_title", "buyer_pain", "buyer_objection", "liked_point",
+        "creative_angle", "recommended_message",
+    ]:
+        add_claim(campaign_brief.get(key), f"campaign_export_pack.campaign_brief.{key}")
+    for key in ["recommended_hook", "scene_1", "scene_2", "scene_3", "cta"]:
+        add_claim(creative_section.get(key), f"campaign_export_pack.creative_section.{key}")
+    for angle in list(creative_decision_pack.get("top_ad_angles") or []):
+        angle_id = _rw_text(angle.get("angle_id")) or "angle"
+        add_claim(angle.get("title"), f"creative_decision_pack.top_ad_angles.{angle_id}.title")
+        add_claim(angle.get("hook"), f"creative_decision_pack.top_ad_angles.{angle_id}.hook")
+        add_claim(angle.get("risk_note"), f"creative_decision_pack.top_ad_angles.{angle_id}.risk_note")
+    for variant in list(
+        creative_decision_pack.get("creative_variant_pack", {}).get("variants") or []
+    ):
+        variant_id = _rw_text(variant.get("variant_id")) or "variant"
+        for key in ["variant_title", "hook", "scene_1", "scene_2", "scene_3", "cta"]:
+            add_claim(variant.get(key), f"creative_variant_pack.variants.{variant_id}.{key}")
+
+    if not claim_inputs:
+        claim_inputs.append({
+            "claim_text": "Missing claim evidence preview",
+            "claim_source": "missing_claim",
+            "support_row": {
+                "support_status": "unsupported_missing_quote",
+                "supporting_quote_ids": [],
+            },
+        })
+
+    pattern_specs = {
+        "absolute_wording": [
+            "always", "never", "everyone", "no one", "100%", "all ",
+            " every ", "forever", "completely", "perfect",
+        ],
+        "guaranteed_outcome": [
+            "guarantee", "guaranteed", "risk-free", "no leaks",
+            "leak-proof", "eliminate", "prevents", "solves",
+        ],
+        "medical_like_claim": [
+            "cure", "treat", "diagnose", "heal", "medical", "doctor",
+            "clinical", "pain relief", "arthritis", "anxiety",
+        ],
+        "unsupported_comparison": [
+            "better than", "beats", "outperforms", "competitor",
+            "market leader", "amazon's choice",
+        ],
+        "best_first_only": ["best", "first", "only", "#1", "number one", "top rated"],
+        "external_policy_needed": [
+            "approved", "certified", "compliant", "safe for children",
+            "fda", "ce certified",
+        ],
+    }
+    pattern_hits = {
+        key: {"detected": False, "matched_claim_ids": [], "matched_terms": []}
+        for key in [*pattern_specs.keys(), "missing_quote"]
+    }
+
+    def matched_terms(claim_text: str, terms: list[str]) -> list[str]:
+        clean = f" {normalized_text(claim_text)} "
+        return [term for term in terms if term in clean]
+
+    def support_for_claim(claim: dict) -> tuple[str, list[str]]:
+        support_row = dict(claim.get("support_row") or {})
+        status = _rw_text(support_row.get("support_status"))
+        quote_ids = [
+            _rw_text(quote_id)
+            for quote_id in list(support_row.get("supporting_quote_ids") or [])
+            if _rw_text(quote_id)
+        ]
+        if status:
+            return status, quote_ids
+        claim_tokens = token_set(claim.get("claim_text", ""))
+        matching_quote_ids = [
+            quote_id
+            for quote_id, quote in quote_cards.items()
+            if quote.get("quality_status") == "strong_quote"
+            and claim_tokens
+            and claim_tokens & token_set(quote.get("quote_text", ""))
+        ]
+        if matching_quote_ids:
+            return "quote_supported", matching_quote_ids
+        if quote_cards:
+            return "weak_or_unmapped_quote_support", []
+        return "unsupported_missing_quote", []
+
+    risk_cards: list[dict] = []
+    for index, claim in enumerate(claim_inputs[:16], start=1):
+        claim_id = f"claim_risk_{index}"
+        claim_text = _rw_text(claim.get("claim_text"))
+        support_status, supporting_quote_ids = support_for_claim(claim)
+        missing_quote = not supporting_quote_ids
+        category_hits = {
+            key: matched_terms(claim_text, terms)
+            for key, terms in pattern_specs.items()
+        }
+        do_not_claim_hit = [
+            item for item in do_not_claim_items
+            if token_set(item) and token_set(item) & token_set(claim_text)
+            and any(term in normalized_text(claim_text) for term in do_not_claim_terms[:80])
+        ][:3]
+        for key, terms in category_hits.items():
+            if terms:
+                pattern_hits[key]["detected"] = True
+                pattern_hits[key]["matched_claim_ids"].append(claim_id)
+                pattern_hits[key]["matched_terms"].extend(terms)
+        if missing_quote:
+            pattern_hits["missing_quote"]["detected"] = True
+            pattern_hits["missing_quote"]["matched_claim_ids"].append(claim_id)
+            pattern_hits["missing_quote"]["matched_terms"].append("missing_supporting_quote")
+
+        hard_block = bool(
+            do_not_claim_hit
+            or category_hits["guaranteed_outcome"]
+            or category_hits["medical_like_claim"]
+            or category_hits["absolute_wording"]
+            or category_hits["best_first_only"]
+            or support_status == "unsupported_missing_quote"
+        )
+        if do_not_claim_hit:
+            risk_category = "do_not_claim_violation"
+        elif category_hits["medical_like_claim"]:
+            risk_category = "medical_like_claim"
+        elif category_hits["unsupported_comparison"]:
+            risk_category = "unsupported_comparison"
+        elif category_hits["guaranteed_outcome"] or category_hits["absolute_wording"] or category_hits["best_first_only"]:
+            risk_category = "overclaim"
+        elif missing_quote:
+            risk_category = "missing_evidence"
+        elif support_status == "quote_supported":
+            risk_category = "supported_claim"
+        elif support_status == "weak_or_unmapped_quote_support":
+            risk_category = "weakly_supported_claim"
+        else:
+            risk_category = "unsupported_claim"
+        risk_level = (
+            "high"
+            if hard_block or category_hits["external_policy_needed"]
+            else "medium"
+            if support_status != "quote_supported"
+            else "low"
+        )
+        recommended_rewrite = (
+            claim_text
+            if risk_level == "low"
+            else "Frame as a buyer concern or internal review note until a supplied quote supports the exact wording."
+        )
+        if risk_category in {"overclaim", "medical_like_claim", "unsupported_comparison", "do_not_claim_violation"}:
+            recommended_rewrite = "Use quote-bounded buyer language and remove guarantees, superlatives, medical, or comparison wording."
+        risk_cards.append({
+            "claim_id": claim_id,
+            "claim_text": claim_text,
+            "claim_source": _rw_text(claim.get("claim_source")) or "unknown",
+            "support_status": support_status,
+            "risk_level": risk_level,
+            "risk_category": risk_category,
+            "supporting_quote_ids": supporting_quote_ids,
+            "evidence_gap_refs": ["missing_quote"] if missing_quote else [],
+            "allowed_usage": (
+                "external_draft_only_with_supplied_quote"
+                if risk_level == "low"
+                else "internal_hypothesis_or_manual_review_only"
+            ),
+            "restricted_usage": [
+                "operator_review_required",
+                "quote_bounded_draft_only",
+            ] if risk_level != "low" else ["preserve_supplied_quote_context"],
+            "disallowed_usage": [
+                "guaranteed_outcome",
+                "absolute_or_superlative_claim",
+                "medical_or_safety_claim",
+                "unsupported_comparison",
+                "unquoted_buyer_evidence",
+            ],
+            "recommended_rewrite": recommended_rewrite,
+            "operator_review_required": risk_level != "low",
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Deterministic preview only; no legal advice, policy lookup, "
+                "provider call, or evidence enrichment was performed."
+            ),
+        })
+
+    for value in pattern_hits.values():
+        value["matched_claim_ids"] = sorted(set(value["matched_claim_ids"]))
+        value["matched_terms"] = sorted(set(value["matched_terms"]))
+
+    allowed_claim_cards = [
+        {
+            "claim_id": card["claim_id"],
+            "safe_claim_text": card["claim_text"],
+            "evidence_basis": "supported_by_supplied_quote_ids",
+            "supporting_quote_ids": card["supporting_quote_ids"],
+            "allowed_channels": ["manual_brief", "human_review_draft"],
+            "usage_note": "Keep wording conservative and quote-bounded.",
+            "risk_note": "Allowed card is evidence-backed but still preview only.",
+        }
+        for card in risk_cards
+        if card["risk_level"] == "low" and card["supporting_quote_ids"]
+    ]
+    restricted_claim_cards = [
+        {
+            "claim_id": card["claim_id"],
+            "claim_text": card["claim_text"],
+            "restriction_reason": card["risk_category"],
+            "allowed_usage": card["allowed_usage"],
+            "operator_review_required": True,
+            "recommended_rewrite": card["recommended_rewrite"],
+            "risk_note": card["risk_note"],
+        }
+        for card in risk_cards
+        if card["risk_level"] == "medium"
+    ]
+    blocked_claim_cards = [
+        {
+            "claim_id": card["claim_id"],
+            "blocked_claim_text": card["claim_text"],
+            "blocked_reason": card["risk_category"],
+            "missing_evidence_refs": card["evidence_gap_refs"],
+            "do_not_claim_refs": do_not_claim_items[:6],
+            "recommended_safe_alternative": card["recommended_rewrite"],
+            "operator_review_required": True,
+            "risk_note": card["risk_note"],
+        }
+        for card in risk_cards
+        if card["risk_level"] == "high"
+    ]
+    if not blocked_claim_cards:
+        blocked_claim_cards.append({
+            "claim_id": "claim_risk_blocked_policy_boundary",
+            "blocked_claim_text": "Guaranteed, absolute, medical, unsupported comparison, or do-not-claim wording",
+            "blocked_reason": "standing_claim_safety_boundary",
+            "missing_evidence_refs": [],
+            "do_not_claim_refs": do_not_claim_items[:6],
+            "recommended_safe_alternative": "Use only specific supplied buyer wording as a conservative draft.",
+            "operator_review_required": True,
+            "risk_note": "Standing boundary card; no real policy check was performed.",
+        })
+
+    claim_rewrite_suggestions = [
+        {
+            "suggestion_id": f"claim_rewrite_{index}",
+            "claim_id": card["claim_id"],
+            "source_claim_text": card["claim_text"],
+            "safe_rewrite": card["recommended_rewrite"],
+            "rewrite_method": "deterministic_rule_based_claim_guard",
+            "llm_used": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for index, card in enumerate(risk_cards, start=1)
+        if card["recommended_rewrite"] != card["claim_text"]
+    ]
+
+    evidence_to_claim_trace = [
+        {
+            "claim_id": card["claim_id"],
+            "claim_text": card["claim_text"],
+            "support_status": card["support_status"],
+            "supporting_quote_ids": card["supporting_quote_ids"],
+            "supporting_quotes": [
+                {
+                    "quote_id": quote_id,
+                    "quote_text": _rw_quote_snippet(
+                        quote_cards.get(quote_id, {}).get("quote_text", ""),
+                        180,
+                    ),
+                    "quote_quality": _rw_text(
+                        quote_cards.get(quote_id, {}).get("quality_status")
+                    ),
+                    "source_id": _rw_text(quote_cards.get(quote_id, {}).get("source_id")),
+                }
+                for quote_id in card["supporting_quote_ids"]
+            ],
+            "source_pack_refs": [
+                "review_evidence_quality_pack",
+                "review_import_pack",
+                "competitor_review_comparison_pack",
+                "campaign_export_pack",
+            ],
+            "real_log_read_performed": False,
+            "database_read_performed": False,
+        }
+        for card in risk_cards
+    ]
+
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "provider_calls_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "llm_api_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "database_write_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "policy_api_called": False,
+        "legal_advice_generated": False,
+        "paid_operation_enabled": False,
+        "approval_creation_enabled": False,
+        "operator_task_creation_enabled": False,
+    }
+
+    return {
+        "pack_version": "claim_risk_guard_pack_v1",
+        "claim_risk_summary": {
+            "mode": "claim_risk_preview_deterministic_claim_guard_dry_run_only",
+            "source_packs": [
+                "review_evidence_quality_pack",
+                "review_import_pack",
+                "competitor_review_comparison_pack",
+                "creative_decision_pack",
+                "campaign_export_pack",
+            ],
+            "claim_count": len(risk_cards),
+            "allowed_claim_count": len(allowed_claim_cards),
+            "restricted_claim_count": len(restricted_claim_cards),
+            "blocked_claim_count": len(blocked_claim_cards),
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "claim_risk_cards": risk_cards,
+        "allowed_claim_cards": allowed_claim_cards,
+        "restricted_claim_cards": restricted_claim_cards,
+        "blocked_claim_cards": blocked_claim_cards,
+        "claim_rewrite_suggestions": claim_rewrite_suggestions,
+        "evidence_to_claim_trace": evidence_to_claim_trace,
+        "overclaim_pattern_checks": pattern_hits,
+        "platform_claim_safety_notes": [
+            "Generic creative safety preview only; this is not legal advice.",
+            "Keep claims quote-bounded and avoid guarantees, medical claims, and unsupported comparisons.",
+            "Restricted or blocked claims require operator review before any external use.",
+            "No real policy API, provider, crawler, LLM, or external lookup was called.",
+        ],
+        "do_not_claim_enforcement": [
+            {
+                "enforcement_id": f"do_not_claim_guard_{index}",
+                "claim_boundary": item,
+                "enforcement_status": "active_preview_boundary",
+                "blocked_claim_refs": [
+                    card["claim_id"]
+                    for card in blocked_claim_cards
+                    if item in card.get("do_not_claim_refs", [])
+                ],
+                "real_policy_check_allowed": False,
+                "real_execution_allowed": False,
+            }
+            for index, item in enumerate(do_not_claim_items[:12], start=1)
+        ],
+        "claim_risk_quality_checks": {
+            "review_evidence_quality_pack_present": bool(evidence_pack),
+            "review_import_pack_present": bool(review_import_pack),
+            "competitor_review_comparison_pack_present": bool(competitor_pack),
+            "campaign_export_pack_present": bool(campaign_pack),
+            "claim_risk_cards_present": bool(risk_cards),
+            "allowed_claim_cards_present": bool(allowed_claim_cards),
+            "restricted_claim_cards_present": True,
+            "blocked_claim_cards_present": bool(blocked_claim_cards),
+            "overclaim_pattern_checks_present": True,
+            "do_not_claim_enforced": bool(do_not_claim_items),
+            "deterministic_rewrite_only": True,
+            "legal_advice_generated": False,
+            "real_policy_api_called": False,
+            "database_write_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "external_scraping_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "claim_risk_guard_preview",
+            "source": "creative_decision_pack.claim_risk_guard_pack",
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "audit_record_created": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -37567,6 +38032,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["review_evidence_quality_pack"] = (
         _rw_review_evidence_quality_pack(creative_decision_pack)
+    )
+    creative_decision_pack["claim_risk_guard_pack"] = (
+        _rw_claim_risk_guard_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
