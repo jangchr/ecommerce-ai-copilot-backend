@@ -14048,6 +14048,208 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_claim_safe_creative_brief_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace claim-safe creative brief bundle",
+            "project_workspace_claim_safe_creative_brief_marker",
+            "PROJECT_WORKSPACE_CLAIM_SAFE_CREATIVE_BRIEF_MARKER",
+            "latestProjectWorkspaceClaimSafeCreativeBriefPack",
+            "claim_safe_creative_brief_pack",
+            "projectWorkspaceClaimSafeCreativeBriefPackFromWorkspace",
+            "projectWorkspaceExportClaimSafeCreativeBriefSnapshot",
+            "projectWorkspaceExportClaimSafeCreativeBriefMarkdown",
+            "renderProjectWorkspaceClaimSafeCreativeBriefSummaryPanel",
+            "renderProjectWorkspaceClaimSafeMessagePillarsPanel",
+            "renderProjectWorkspaceCreativeClaimUsageMapPanel",
+            "renderProjectWorkspaceClaimSafeSurfaceSafetyCardsPanel",
+            "renderProjectWorkspaceClaimSafeRewriteEvidenceQualityAuditSafetyPanel",
+            "copyProjectWorkspaceClaimSafeBriefSummary",
+            "copyProjectWorkspaceApprovedMessagePillars",
+            "copyProjectWorkspaceRestrictedMessagePillars",
+            "copyProjectWorkspaceBlockedMessagePillars",
+            "copyProjectWorkspaceCreativeClaimUsageMap",
+            "copyProjectWorkspaceHookSafetyCards",
+            "copyProjectWorkspaceScriptSafetyCards",
+            "copyProjectWorkspaceCtaSafetyCards",
+            "copyProjectWorkspaceVideoPromptSafetyCards",
+            "copyProjectWorkspaceCreativeBriefRewriteGuidance",
+            "copyProjectWorkspaceEvidenceBackingMap",
+            "copyProjectWorkspaceFullClaimSafeCreativeBriefPack",
+            "claim_safe_creative_brief_pack: projectWorkspaceExportClaimSafeCreativeBriefSnapshot(workspace)",
+            "Claim-Safe Creative Brief",
+            "Claim-Safe Brief Summary",
+            "Approved Message Pillars",
+            "Restricted Message Pillars",
+            "Blocked Message Pillars",
+            "Creative Claim Usage Map",
+            "Hook Safety Cards",
+            "Script Safety Cards",
+            "CTA Safety Cards",
+            "Video Prompt Safety Cards",
+            "Creative Brief Rewrite Guidance",
+            "Evidence Backing Map",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "pack.claim_safe_brief_summary",
+            "pack.approved_message_pillars",
+            "pack.restricted_message_pillars",
+            "pack.blocked_message_pillars",
+            "pack.creative_claim_usage_map",
+            "pack.hook_safety_cards",
+            "pack.script_safety_cards",
+            "pack.cta_safety_cards",
+            "pack.video_prompt_safety_cards",
+            "pack.creative_brief_rewrite_guidance",
+            "pack.evidence_backing_map",
+            "pack.claim_safe_brief_quality_checks",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.approved_pillar_count",
+            "summary.restricted_pillar_count",
+            "summary.blocked_pillar_count",
+            "summary.recommended_operator_action",
+            "summary.real_policy_check_allowed",
+            "summary.real_execution_allowed",
+            "pillar.pillar_id",
+            "pillar.pillar_text",
+            "pillar.blocked_text",
+            "pillar.source_claim_ids",
+            "pillar.support_status",
+            "pillar.supporting_quote_ids",
+            "pillar.allowed_surfaces",
+            "pillar.safe_usage_note",
+            "pillar.restriction_reason",
+            "pillar.required_qualifiers",
+            "pillar.operator_review_required",
+            "pillar.allowed_internal_use",
+            "pillar.disallowed_public_use",
+            "pillar.recommended_safe_rewrite",
+            "pillar.blocked_reason",
+            "pillar.missing_evidence_refs",
+            "pillar.do_not_claim_refs",
+            "pillar.recommended_safe_alternative",
+            "usage.usage_id",
+            "usage.creative_surface",
+            "usage.candidate_copy",
+            "usage.claim_risk_level",
+            "usage.support_status",
+            "usage.real_policy_check_allowed",
+            "usage.real_execution_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        previous = html.index("renderProjectWorkspaceClaimPlatformDoNotClaimQualityAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceClaimSafeCreativeBriefSummaryPanel(workspace)")
+        pillars = html.index("renderProjectWorkspaceClaimSafeMessagePillarsPanel(workspace)")
+        usage = html.index("renderProjectWorkspaceCreativeClaimUsageMapPanel(workspace)")
+        safety_cards = html.index("renderProjectWorkspaceClaimSafeSurfaceSafetyCardsPanel(workspace)")
+        audit = html.index("renderProjectWorkspaceClaimSafeRewriteEvidenceQualityAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, pillars)
+        self.assertLess(pillars, usage)
+        self.assertLess(usage, safety_cards)
+        self.assertLess(safety_cards, audit)
+        self.assertLess(audit, core)
+
+    def test_workspace_claim_safe_creative_brief_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "claimSafeCreativeBriefPackTitle",
+            "claimSafeCreativeBriefSummaryTitle",
+            "claimSafeCreativeBriefApprovedTitle",
+            "claimSafeCreativeBriefRestrictedTitle",
+            "claimSafeCreativeBriefBlockedTitle",
+            "claimSafeCreativeBriefUsageMapTitle",
+            "claimSafeCreativeBriefHookSafetyTitle",
+            "claimSafeCreativeBriefScriptSafetyTitle",
+            "claimSafeCreativeBriefCtaSafetyTitle",
+            "claimSafeCreativeBriefVideoPromptSafetyTitle",
+            "claimSafeCreativeBriefRewriteTitle",
+            "claimSafeCreativeBriefEvidenceTitle",
+            "claimSafeCreativeBriefAuditTitle",
+            "claimSafeCreativeBriefSafetyTitle",
+            "claimSafeCreativeBriefCopySummary",
+            "claimSafeCreativeBriefCopyApproved",
+            "claimSafeCreativeBriefCopyRestricted",
+            "claimSafeCreativeBriefCopyBlocked",
+            "claimSafeCreativeBriefCopyUsageMap",
+            "claimSafeCreativeBriefCopyHookSafety",
+            "claimSafeCreativeBriefCopyScriptSafety",
+            "claimSafeCreativeBriefCopyCtaSafety",
+            "claimSafeCreativeBriefCopyVideoPromptSafety",
+            "claimSafeCreativeBriefCopyRewrite",
+            "claimSafeCreativeBriefCopyEvidence",
+            "claimSafeCreativeBriefCopyFull",
+            "claimSafeCreativeBriefCopied",
+            "claimSafeCreativeBriefCopyFailed",
+            "claimSafeCreativeBriefCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace claim-safe creative brief bundle", script)
+            self.assertIn("project_workspace_claim_safe_creative_brief_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceClaimSafeCreativeBriefSummaryText"):
+            html.index("async function copyProjectWorkspaceClaimSafeCreativeBriefText")
+        ]
+        for key in [
+            "claimSafeCreativeBriefPackTitle",
+            "claimSafeCreativeBriefSummaryTitle",
+            "claimSafeCreativeBriefApprovedTitle",
+            "claimSafeCreativeBriefRestrictedTitle",
+            "claimSafeCreativeBriefBlockedTitle",
+            "claimSafeCreativeBriefUsageMapTitle",
+            "claimSafeCreativeBriefHookSafetyTitle",
+            "claimSafeCreativeBriefScriptSafetyTitle",
+            "claimSafeCreativeBriefCtaSafetyTitle",
+            "claimSafeCreativeBriefVideoPromptSafetyTitle",
+            "claimSafeCreativeBriefRewriteTitle",
+            "claimSafeCreativeBriefEvidenceTitle",
+            "claimSafeCreativeBriefAuditTitle",
+            "claimSafeCreativeBriefSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_CLAIM_SAFE_CREATIVE_BRIEF_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "deterministic creative brief preview",
+            "not real ad launch content",
+            "not legal advice",
+            "not a real policy API check",
+            "not a compliance conclusion",
+            "Blocked pillars cannot enter public creative copy.",
+            "unsupported comparison",
+            "absolute claim",
+            "missing quote",
+            "weak evidence treated as strong evidence",
+            "guaranteed result",
+            "medical-like / safety / performance overclaim",
+            "does not generate real ad launch content",
+            "call an LLM",
+            "call providers",
+            "scrape reviews",
+            "read real logs",
+            "history tables",
+            "write databases",
+            "Provider, LLM, external scraping, database persistence, real execution, and real policy check remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [
