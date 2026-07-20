@@ -8334,6 +8334,316 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
                 self.assertIn(key, boundaries)
                 self.assertFalse(boundaries[key])
 
+    def test_claim_safe_delivery_remediation_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "claim-safe-delivery-remediation-preview",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "CLAIMSAFEREMEDIATE001",
+                "title": "Compact Travel Mug",
+                "reviews": [
+                    {
+                        "rating": 2,
+                        "title": "Leaks during commute",
+                        "text": (
+                            "Leaks during commute and the lid seal drips "
+                            "into my bag every morning."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 5,
+                        "title": "Easy to clean",
+                        "text": (
+                            "The cup is easy to clean after coffee and fits "
+                            "my office bag."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 4,
+                        "title": "Good office fit",
+                        "text": (
+                            "It fits my work bag and is simple to rinse "
+                            "between meetings."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 1,
+                        "title": "Competitor seal problem",
+                        "text": (
+                            "Competitor lid also leaks in a work bag, so I "
+                            "would not trust it for travel."
+                        ),
+                        "source_section": "competitor_review",
+                        "metadata": {"source_type": "competitor"},
+                    },
+                ],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_evidence_quality_pack",
+            "claim_risk_guard_pack",
+            "claim_safe_creative_brief_pack",
+            "claim_safe_creative_output_pack",
+            "claim_safe_platform_delivery_pack",
+            "claim_safe_delivery_qa_pack",
+            "claim_safe_delivery_remediation_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["claim_safe_delivery_remediation_pack"]
+        self.assertEqual(
+            pack["pack_version"], "claim_safe_delivery_remediation_pack_v1"
+        )
+        for required_key in [
+            "delivery_remediation_summary",
+            "remediation_action_cards",
+            "copy_fix_cards",
+            "video_prompt_fix_cards",
+            "claim_fix_cards",
+            "export_blocker_resolution_cards",
+            "operator_review_queue_preview",
+            "remediation_priority_matrix",
+            "remediation_readiness_checks",
+            "remediation_retry_export_plan",
+            "audit_preview",
+            "safety_boundaries",
+        ]:
+            with self.subTest(required_key=required_key):
+                self.assertIn(required_key, pack)
+                self.assertTrue(pack[required_key])
+
+        summary = pack["delivery_remediation_summary"]
+        self.assertIn("claim_safe_delivery_remediation_preview", summary["mode"])
+        self.assertIn("deterministic_fix_plan", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        for source_pack in [
+            "claim_safe_delivery_qa_pack",
+            "claim_safe_platform_delivery_pack",
+            "claim_safe_creative_output_pack",
+            "claim_safe_creative_brief_pack",
+            "claim_risk_guard_pack",
+            "review_evidence_quality_pack",
+            "campaign_export_pack",
+        ]:
+            self.assertIn(source_pack, summary["source_packs"])
+        self.assertFalse(summary["auto_fix_allowed"])
+        self.assertFalse(summary["llm_rewrite_allowed"])
+        self.assertFalse(summary["real_task_creation_allowed"])
+        self.assertFalse(summary["real_provider_allowed"])
+        self.assertFalse(summary["real_media_upload_allowed"])
+        self.assertFalse(summary["real_policy_check_allowed"])
+        self.assertFalse(summary["real_execution_allowed"])
+
+        for card in pack["remediation_action_cards"]:
+            for field in [
+                "remediation_action_id",
+                "delivery_surface",
+                "source_blocker_refs",
+                "issue_type",
+                "issue_severity",
+                "current_status",
+                "recommended_fix_type",
+                "recommended_fix_summary",
+                "required_evidence_refs",
+                "required_operator_review",
+                "blocks_preview_export",
+                "auto_fix_allowed",
+                "real_task_creation_allowed",
+                "real_policy_check_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(action=card["remediation_action_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["auto_fix_allowed"])
+            self.assertFalse(card["real_task_creation_allowed"])
+            self.assertFalse(card["real_policy_check_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        action_issue_types = {
+            card["issue_type"] for card in pack["remediation_action_cards"]
+        }
+        for issue_type in [
+            "unsupported_claim",
+            "missing_quote",
+            "provider_disabled",
+            "media_upload_disabled",
+            "policy_check_disabled",
+            "platform_upload_disabled",
+        ]:
+            with self.subTest(issue_type=issue_type):
+                self.assertIn(issue_type, action_issue_types)
+
+        for card in pack["copy_fix_cards"]:
+            for field in [
+                "copy_fix_id",
+                "delivery_surface",
+                "copy_type",
+                "original_copy",
+                "problematic_claim_refs",
+                "missing_field_refs",
+                "recommended_safe_copy",
+                "required_qualifiers",
+                "disallowed_terms",
+                "supporting_quote_ids",
+                "fix_status",
+                "operator_review_required",
+                "llm_rewrite_allowed",
+                "real_policy_check_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(copy=card["copy_fix_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["llm_rewrite_allowed"])
+            self.assertFalse(card["real_policy_check_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        for card in pack["video_prompt_fix_cards"]:
+            for field in [
+                "video_fix_id",
+                "delivery_surface",
+                "original_prompt",
+                "problematic_visual_claims",
+                "missing_visual_fields",
+                "recommended_safe_prompt",
+                "recommended_shot_adjustments",
+                "disallowed_visual_claims",
+                "provider_readiness_status",
+                "media_requirement_status",
+                "real_provider_allowed",
+                "real_media_upload_allowed",
+                "real_policy_check_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(video=card["video_fix_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["real_provider_allowed"])
+            self.assertFalse(card["real_media_upload_allowed"])
+            self.assertFalse(card["real_policy_check_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        for card in pack["claim_fix_cards"]:
+            for field in [
+                "claim_fix_id",
+                "claim_id",
+                "claim_text",
+                "support_status",
+                "claim_risk_level",
+                "evidence_gap_refs",
+                "do_not_claim_refs",
+                "recommended_safe_rewrite",
+                "required_evidence_action",
+                "allowed_usage_after_fix",
+                "remaining_restrictions",
+                "operator_review_required",
+                "llm_rewrite_allowed",
+                "real_policy_check_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(claim=card["claim_fix_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["llm_rewrite_allowed"])
+            self.assertFalse(card["real_policy_check_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        resolution_statuses = {
+            card["resolution_status"]
+            for card in pack["export_blocker_resolution_cards"]
+        }
+        self.assertIn("resolved_for_preview", resolution_statuses)
+        self.assertIn("needs_operator_review", resolution_statuses)
+        self.assertIn("still_blocked", resolution_statuses)
+        for card in pack["export_blocker_resolution_cards"]:
+            self.assertFalse(card["real_export_triggered"])
+            self.assertFalse(card["real_platform_upload_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        for item in pack["operator_review_queue_preview"]:
+            self.assertFalse(item["operator_task_created"])
+            self.assertFalse(item["real_task_creation_allowed"])
+            self.assertFalse(item["real_execution_allowed"])
+
+        priority = pack["remediation_priority_matrix"]
+        self.assertIn("deterministic_preview_priority", priority["priority_model"])
+        self.assertFalse(priority["real_risk_rating_performed"])
+
+        checks = pack["remediation_readiness_checks"]
+        self.assertTrue(checks["claim_safe_delivery_qa_pack_present"])
+        self.assertTrue(checks["claim_safe_platform_delivery_pack_present"])
+        self.assertTrue(checks["claim_safe_creative_output_pack_present"])
+        self.assertTrue(checks["claim_safe_creative_brief_pack_present"])
+        self.assertTrue(checks["claim_risk_guard_pack_present"])
+        self.assertTrue(checks["review_evidence_quality_pack_present"])
+        self.assertTrue(checks["campaign_export_pack_present"])
+        self.assertTrue(checks["copy_coverage_present"])
+        self.assertTrue(checks["video_prompt_coverage_present"])
+        self.assertTrue(checks["claim_safety_coverage_present"])
+        self.assertTrue(checks["export_readiness_coverage_present"])
+        self.assertTrue(checks["operator_review_coverage_present"])
+        self.assertTrue(checks["safety_boundary_coverage_present"])
+        self.assertFalse(checks["auto_fix_performed"])
+        self.assertFalse(checks["llm_called"])
+        self.assertFalse(checks["provider_called"])
+        self.assertFalse(checks["media_operation_performed"])
+        self.assertFalse(checks["external_scraping_performed"])
+        self.assertFalse(checks["database_write_performed"])
+        self.assertFalse(checks["real_policy_api_called"])
+        self.assertFalse(checks["real_execution_performed"])
+        self.assertFalse(checks["real_platform_upload_performed"])
+        self.assertFalse(checks["operator_task_created"])
+
+        retry_plan = pack["remediation_retry_export_plan"]
+        self.assertEqual(
+            retry_plan["next_check_type"], "preview_export_readiness_check_only"
+        )
+        self.assertFalse(retry_plan["real_export_triggered"])
+        self.assertFalse(retry_plan["file_upload_allowed"])
+        self.assertFalse(retry_plan["database_write_allowed"])
+        self.assertFalse(retry_plan["real_platform_upload_allowed"])
+        self.assertFalse(retry_plan["real_execution_allowed"])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["database_write_allowed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["audit_record_created"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["real_policy_check_allowed"])
+        self.assertFalse(audit["real_execution_allowed"])
+        self.assertFalse(audit["real_provider_allowed"])
+        self.assertFalse(audit["real_media_upload_allowed"])
+        self.assertFalse(audit["real_platform_upload_allowed"])
+        self.assertFalse(audit["operator_task_created"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider", "provider_enabled", "llm", "llm_enabled",
+            "media", "media_enabled", "external_scraping",
+            "external_scraping_enabled", "database_persistence",
+            "database_persistence_enabled", "real_execution",
+            "real_execution_enabled", "real_policy_check",
+            "real_policy_check_enabled", "platform_upload",
+            "platform_upload_enabled", "task_creation",
+            "task_creation_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertIn(key, boundaries)
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
