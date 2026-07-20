@@ -3640,6 +3640,7 @@
         let latestProjectWorkspaceClaimSafeCreativeBriefPack = {};
         let latestProjectWorkspaceClaimSafeCreativeOutputPack = {};
         let latestProjectWorkspaceClaimSafePlatformDeliveryPack = {};
+        let latestProjectWorkspaceClaimSafeDeliveryQaPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -6640,6 +6641,102 @@
             claimSafePlatformDeliveryAuditNote: 'Audit preview is display-only and does not write databases.',
             claimSafePlatformDeliverySafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, and platform upload remain disabled.'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceClaimSafeDeliveryQaMarker: 'Project Workspace claim-safe delivery QA bundle',
+            claimSafeDeliveryQaPackTitle: 'Claim-Safe Delivery QA / Export Readiness',
+            claimSafeDeliveryQaPackHelper: 'Project Workspace claim-safe delivery QA bundle. Inspect deterministic delivery QA preview derived only from existing claim-safe delivery outputs. This is not a real platform review, not a real platform audit, not real publishing, not a real policy check, not legal advice, and not a real platform compliance conclusion.',
+            claimSafeDeliveryQaSummaryTitle: 'Delivery QA Summary',
+            claimSafeDeliveryQaSurfaceCopyTitle: 'Surface Readiness / Copy Completeness',
+            claimSafeDeliveryQaSurfaceTitle: 'Surface Readiness Cards',
+            claimSafeDeliveryQaCopyTitle: 'Copy Completeness Cards',
+            claimSafeDeliveryQaVideoClaimTitle: 'Video Prompt Readiness / Claim Safety Verification',
+            claimSafeDeliveryQaVideoTitle: 'Video Prompt Readiness Cards',
+            claimSafeDeliveryQaVerificationTitle: 'Claim Safety Verification Cards',
+            claimSafeDeliveryQaExportBlockerReviewTitle: 'Export Readiness / Unresolved Blockers / Operator Review',
+            claimSafeDeliveryQaExportTitle: 'Export Readiness Cards',
+            claimSafeDeliveryQaBlockerTitle: 'Unresolved Delivery Blocker Cards',
+            claimSafeDeliveryQaReviewTitle: 'Operator Review Recommendations',
+            claimSafeDeliveryQaScoreQualityAuditSafetyTitle: 'Score Breakdown / Quality Checks / Audit / Safety',
+            claimSafeDeliveryQaScoreTitle: 'Delivery QA Score Breakdown',
+            claimSafeDeliveryQaQualityTitle: 'Delivery QA Quality Checks',
+            claimSafeDeliveryQaAuditTitle: 'Audit Preview',
+            claimSafeDeliveryQaSafetyTitle: 'Safety Boundaries',
+            claimSafeDeliveryQaMode: 'Mode',
+            claimSafeDeliveryQaSurfaceCount: 'Surface readiness count',
+            claimSafeDeliveryQaCopyCount: 'Copy completeness count',
+            claimSafeDeliveryQaVideoCount: 'Video prompt readiness count',
+            claimSafeDeliveryQaVerificationCount: 'Claim safety verification count',
+            claimSafeDeliveryQaExportCount: 'Export readiness count',
+            claimSafeDeliveryQaBlockerCount: 'Unresolved blocker count',
+            claimSafeDeliveryQaRecommendedAction: 'Recommended operator action',
+            claimSafeDeliveryQaRealPlatformUpload: 'Real platform upload allowed',
+            claimSafeDeliveryQaRealProvider: 'Real provider allowed',
+            claimSafeDeliveryQaRealMediaUpload: 'Real media upload allowed',
+            claimSafeDeliveryQaRealPolicyCheck: 'Real policy check allowed',
+            claimSafeDeliveryQaRealExecution: 'Real execution allowed',
+            claimSafeDeliveryQaDisabled: 'disabled',
+            claimSafeDeliveryQaNoData: 'No claim-safe delivery QA pack data is available.',
+            claimSafeDeliveryQaCopyNoData: 'No claim-safe delivery QA content is available to copy.',
+            claimSafeDeliveryQaCopyFailed: 'Unable to copy claim-safe delivery QA content.',
+            claimSafeDeliveryQaCopied: 'Claim-safe delivery QA content copied.',
+            claimSafeDeliveryQaCopySummary: 'Copy delivery QA summary',
+            claimSafeDeliveryQaCopySurfaces: 'Copy surface readiness cards',
+            claimSafeDeliveryQaCopyCopyCompleteness: 'Copy copy completeness cards',
+            claimSafeDeliveryQaCopyVideo: 'Copy video prompt readiness cards',
+            claimSafeDeliveryQaCopyVerification: 'Copy claim safety verification cards',
+            claimSafeDeliveryQaCopyExport: 'Copy export readiness cards',
+            claimSafeDeliveryQaCopyBlockers: 'Copy unresolved delivery blockers',
+            claimSafeDeliveryQaCopyReview: 'Copy operator review recommendations',
+            claimSafeDeliveryQaCopyScore: 'Copy delivery QA score breakdown',
+            claimSafeDeliveryQaCopyFull: 'Copy full claim-safe delivery QA pack',
+            claimSafeDeliveryQaSurfaceQaId: 'Surface QA ID',
+            claimSafeDeliveryQaDeliverySurface: 'Delivery surface',
+            claimSafeDeliveryQaPlatformLabel: 'Platform label',
+            claimSafeDeliveryQaSourceDeliveryRefs: 'Source delivery refs',
+            claimSafeDeliveryQaRequiredCopyFields: 'Required copy fields',
+            claimSafeDeliveryQaPresentCopyFields: 'Present copy fields',
+            claimSafeDeliveryQaMissingCopyFields: 'Missing copy fields',
+            claimSafeDeliveryQaRequiredAssetFields: 'Required asset fields',
+            claimSafeDeliveryQaPresentAssetFields: 'Present asset fields',
+            claimSafeDeliveryQaMissingAssetFields: 'Missing asset fields',
+            claimSafeDeliveryQaClaimSafetyStatus: 'Claim safety status',
+            claimSafeDeliveryQaExportReadinessStatus: 'Export readiness status',
+            claimSafeDeliveryQaCopyQaId: 'Copy QA ID',
+            claimSafeDeliveryQaCopyType: 'Copy type',
+            claimSafeDeliveryQaCopyText: 'Copy text',
+            claimSafeDeliveryQaCompletenessStatus: 'Completeness status',
+            claimSafeDeliveryQaCopyQualityNote: 'Copy quality note',
+            claimSafeDeliveryQaOperatorReview: 'Operator review required',
+            claimSafeDeliveryQaBlockedReason: 'Blocked reason',
+            claimSafeDeliveryQaVideoPromptQaId: 'Video prompt QA ID',
+            claimSafeDeliveryQaPromptText: 'Prompt text',
+            claimSafeDeliveryQaVisualDirection: 'Visual direction',
+            claimSafeDeliveryQaShotRefs: 'Shot refs',
+            claimSafeDeliveryQaSourceVideoPromptRefs: 'Source video prompt refs',
+            claimSafeDeliveryQaSourceClaims: 'Source claim IDs',
+            claimSafeDeliveryQaSupportingQuotes: 'Supporting quote IDs',
+            claimSafeDeliveryQaDisallowedVisualClaims: 'Disallowed visual claims',
+            claimSafeDeliveryQaMediaRequirementStatus: 'Media requirement status',
+            claimSafeDeliveryQaProviderReadinessStatus: 'Provider readiness status',
+            claimSafeDeliveryQaVerificationId: 'Verification ID',
+            claimSafeDeliveryQaCheckedText: 'Checked text',
+            claimSafeDeliveryQaSupportStatus: 'Support status',
+            claimSafeDeliveryQaClaimRiskLevel: 'Claim risk level',
+            claimSafeDeliveryQaDoNotClaimRefs: 'Do not claim refs',
+            claimSafeDeliveryQaEvidenceQualityRefs: 'Evidence quality refs',
+            claimSafeDeliveryQaVerificationStatus: 'Verification status',
+            claimSafeDeliveryQaRecommendedSafeFix: 'Recommended safe fix',
+            claimSafeDeliveryQaBlockerType: 'Blocker type',
+            claimSafeDeliveryQaScoreNote: 'Deterministic QA score and readiness level only; not a real platform pass rate.',
+            claimSafeDeliveryQaPreviewNote: 'Deterministic delivery QA preview only. This is not a real platform review, not a real platform audit, not real publishing, not a real policy check, does not call an LLM, does not call providers, does not upload files, does not upload or download media, does not scrape reviews, does not read real logs or history tables, does not write databases, does not create real operator tasks, and does not execute paid operations.',
+            claimSafeDeliveryQaPolicyNote: 'This is not legal advice, not a real policy API check, not a real platform compliance conclusion, and not a real platform pass rate.',
+            claimSafeDeliveryQaSurfaceCopyNote: 'Surface readiness and copy completeness are deterministic preview checks only; they do not upload files, publish to platforms, or call a real policy API.',
+            claimSafeDeliveryQaVideoClaimNote: 'Video prompt readiness and claim safety verification are preview-only. There is no real provider, no media upload or download, and no real policy API.',
+            claimSafeDeliveryQaExportBlockerNote: 'Export readiness uses preview export statuses only: ready_for_preview_export, needs_operator_review, and blocked. Blockers include unsupported claim, blocked output, missing quote, missing required field, provider disabled, media upload disabled, policy check disabled, and platform upload disabled.',
+            claimSafeDeliveryQaReviewNote: 'Operator review recommendations are manual guidance only and do not create real operator tasks.',
+            claimSafeDeliveryQaAuditNote: 'Audit preview is display-only and does not write databases.',
+            claimSafeDeliveryQaSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, and platform upload remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
             claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
@@ -6829,6 +6926,102 @@
             claimSafePlatformDeliveryHandoffNote: 'Operator handoff notes \u53ea\u662f\u4eba\u5de5\u5ba1\u67e5\u5efa\u8bae\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e operator task\u3002',
             claimSafePlatformDeliveryAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
             claimSafePlatformDeliverySafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check \u548c platform upload \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceClaimSafeDeliveryQaMarker: 'Project Workspace claim-safe delivery QA bundle',
+            claimSafeDeliveryQaPackTitle: 'Claim-Safe Delivery QA / Export Readiness',
+            claimSafeDeliveryQaPackHelper: '\u67e5\u770b\u4ec5\u57fa\u4e8e\u5df2\u6709 claim-safe delivery outputs \u7684\u786e\u5b9a\u6027 delivery QA \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0 review\uff0c\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0 audit\uff0c\u4e0d\u662f\u771f\u5b9e\u53d1\u5e03\uff0c\u4e0d\u662f\u771f\u5b9e policy \u68c0\u67e5\uff0c\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e5f\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\u3002',
+            claimSafeDeliveryQaSummaryTitle: 'Delivery QA \u6458\u8981',
+            claimSafeDeliveryQaSurfaceCopyTitle: 'Surface Readiness / Copy Completeness',
+            claimSafeDeliveryQaSurfaceTitle: 'Surface Readiness Cards',
+            claimSafeDeliveryQaCopyTitle: 'Copy Completeness Cards',
+            claimSafeDeliveryQaVideoClaimTitle: 'Video Prompt Readiness / Claim Safety Verification',
+            claimSafeDeliveryQaVideoTitle: 'Video Prompt Readiness Cards',
+            claimSafeDeliveryQaVerificationTitle: 'Claim Safety Verification Cards',
+            claimSafeDeliveryQaExportBlockerReviewTitle: 'Export Readiness / Unresolved Blockers / Operator Review',
+            claimSafeDeliveryQaExportTitle: 'Export Readiness Cards',
+            claimSafeDeliveryQaBlockerTitle: 'Unresolved Delivery Blocker Cards',
+            claimSafeDeliveryQaReviewTitle: 'Operator Review Recommendations',
+            claimSafeDeliveryQaScoreQualityAuditSafetyTitle: 'Score Breakdown / Quality Checks / Audit / Safety',
+            claimSafeDeliveryQaScoreTitle: 'Delivery QA Score Breakdown',
+            claimSafeDeliveryQaQualityTitle: 'Delivery QA Quality Checks',
+            claimSafeDeliveryQaAuditTitle: 'Audit Preview',
+            claimSafeDeliveryQaSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            claimSafeDeliveryQaMode: '\u6a21\u5f0f',
+            claimSafeDeliveryQaSurfaceCount: 'Surface readiness \u6570\u91cf',
+            claimSafeDeliveryQaCopyCount: 'Copy completeness \u6570\u91cf',
+            claimSafeDeliveryQaVideoCount: 'Video prompt readiness \u6570\u91cf',
+            claimSafeDeliveryQaVerificationCount: 'Claim safety verification \u6570\u91cf',
+            claimSafeDeliveryQaExportCount: 'Export readiness \u6570\u91cf',
+            claimSafeDeliveryQaBlockerCount: 'Unresolved blocker \u6570\u91cf',
+            claimSafeDeliveryQaRecommendedAction: '\u63a8\u8350\u64cd\u4f5c\u5458\u52a8\u4f5c',
+            claimSafeDeliveryQaRealPlatformUpload: '\u5141\u8bb8\u771f\u5b9e platform upload',
+            claimSafeDeliveryQaRealProvider: '\u5141\u8bb8\u771f\u5b9e provider',
+            claimSafeDeliveryQaRealMediaUpload: '\u5141\u8bb8\u771f\u5b9e media upload',
+            claimSafeDeliveryQaRealPolicyCheck: '\u5141\u8bb8\u771f\u5b9e policy \u68c0\u67e5',
+            claimSafeDeliveryQaRealExecution: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            claimSafeDeliveryQaDisabled: '\u5df2\u7981\u7528',
+            claimSafeDeliveryQaNoData: '\u6682\u65e0 claim-safe delivery QA pack \u6570\u636e\u3002',
+            claimSafeDeliveryQaCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 claim-safe delivery QA \u5185\u5bb9\u3002',
+            claimSafeDeliveryQaCopyFailed: '\u65e0\u6cd5\u590d\u5236 claim-safe delivery QA \u5185\u5bb9\u3002',
+            claimSafeDeliveryQaCopied: 'Claim-safe delivery QA \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            claimSafeDeliveryQaCopySummary: '\u590d\u5236 delivery QA \u6458\u8981',
+            claimSafeDeliveryQaCopySurfaces: '\u590d\u5236 surface readiness cards',
+            claimSafeDeliveryQaCopyCopyCompleteness: '\u590d\u5236 copy completeness cards',
+            claimSafeDeliveryQaCopyVideo: '\u590d\u5236 video prompt readiness cards',
+            claimSafeDeliveryQaCopyVerification: '\u590d\u5236 claim safety verification cards',
+            claimSafeDeliveryQaCopyExport: '\u590d\u5236 export readiness cards',
+            claimSafeDeliveryQaCopyBlockers: '\u590d\u5236 unresolved delivery blockers',
+            claimSafeDeliveryQaCopyReview: '\u590d\u5236 operator review recommendations',
+            claimSafeDeliveryQaCopyScore: '\u590d\u5236 delivery QA score breakdown',
+            claimSafeDeliveryQaCopyFull: '\u590d\u5236\u5b8c\u6574 claim-safe delivery QA pack',
+            claimSafeDeliveryQaSurfaceQaId: 'Surface QA ID',
+            claimSafeDeliveryQaDeliverySurface: 'Delivery surface',
+            claimSafeDeliveryQaPlatformLabel: 'Platform label',
+            claimSafeDeliveryQaSourceDeliveryRefs: 'Source delivery refs',
+            claimSafeDeliveryQaRequiredCopyFields: 'Required copy fields',
+            claimSafeDeliveryQaPresentCopyFields: 'Present copy fields',
+            claimSafeDeliveryQaMissingCopyFields: 'Missing copy fields',
+            claimSafeDeliveryQaRequiredAssetFields: 'Required asset fields',
+            claimSafeDeliveryQaPresentAssetFields: 'Present asset fields',
+            claimSafeDeliveryQaMissingAssetFields: 'Missing asset fields',
+            claimSafeDeliveryQaClaimSafetyStatus: 'Claim safety status',
+            claimSafeDeliveryQaExportReadinessStatus: 'Export readiness status',
+            claimSafeDeliveryQaCopyQaId: 'Copy QA ID',
+            claimSafeDeliveryQaCopyType: 'Copy type',
+            claimSafeDeliveryQaCopyText: 'Copy \u6587\u6848',
+            claimSafeDeliveryQaCompletenessStatus: 'Completeness status',
+            claimSafeDeliveryQaCopyQualityNote: 'Copy quality note',
+            claimSafeDeliveryQaOperatorReview: '\u9700\u8981 operator review',
+            claimSafeDeliveryQaBlockedReason: 'Blocked reason',
+            claimSafeDeliveryQaVideoPromptQaId: 'Video prompt QA ID',
+            claimSafeDeliveryQaPromptText: 'Prompt \u6587\u6848',
+            claimSafeDeliveryQaVisualDirection: 'Visual direction',
+            claimSafeDeliveryQaShotRefs: 'Shot refs',
+            claimSafeDeliveryQaSourceVideoPromptRefs: 'Source video prompt refs',
+            claimSafeDeliveryQaSourceClaims: 'Source claim IDs',
+            claimSafeDeliveryQaSupportingQuotes: 'Supporting quote IDs',
+            claimSafeDeliveryQaDisallowedVisualClaims: 'Disallowed visual claims',
+            claimSafeDeliveryQaMediaRequirementStatus: 'Media requirement status',
+            claimSafeDeliveryQaProviderReadinessStatus: 'Provider readiness status',
+            claimSafeDeliveryQaVerificationId: 'Verification ID',
+            claimSafeDeliveryQaCheckedText: 'Checked text',
+            claimSafeDeliveryQaSupportStatus: 'Support \u72b6\u6001',
+            claimSafeDeliveryQaClaimRiskLevel: 'Claim risk level',
+            claimSafeDeliveryQaDoNotClaimRefs: 'Do not claim refs',
+            claimSafeDeliveryQaEvidenceQualityRefs: 'Evidence quality refs',
+            claimSafeDeliveryQaVerificationStatus: 'Verification status',
+            claimSafeDeliveryQaRecommendedSafeFix: 'Recommended safe fix',
+            claimSafeDeliveryQaBlockerType: 'Blocker type',
+            claimSafeDeliveryQaScoreNote: '\u4ec5\u4e3a\u786e\u5b9a\u6027 QA score \u548c readiness level\uff1b\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0 pass rate\u3002',
+            claimSafeDeliveryQaPreviewNote: '\u4ec5\u4e3a\u786e\u5b9a\u6027 delivery QA \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0 review\uff0c\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0 audit\uff0c\u4e0d\u662f\u771f\u5b9e\u53d1\u5e03\uff0c\u4e0d\u662f\u771f\u5b9e policy \u68c0\u67e5\uff0c\u4e0d\u8c03\u7528 LLM\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u4e0a\u4f20\u6216\u4e0b\u8f7d media\uff0c\u4e0d\u8fdb\u884c scraping \u6216 review crawler\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u5386\u53f2\u8868\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e operator task\uff0c\u4e0d\u6267\u884c paid operation\u3002',
+            claimSafeDeliveryQaPolicyNote: '\u8fd9\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u68c0\u67e5\uff0c\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\uff0c\u4e5f\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0 pass rate\u3002',
+            claimSafeDeliveryQaSurfaceCopyNote: 'Surface readiness \u548c copy completeness \u53ea\u662f\u786e\u5b9a\u6027\u9884\u89c8\u68c0\u67e5\uff1b\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u53d1\u5e03\u5230\u5e73\u53f0\uff0c\u4e0d\u8c03\u7528\u771f\u5b9e policy API\u3002',
+            claimSafeDeliveryQaVideoClaimNote: 'Video prompt readiness \u548c claim safety verification \u4ec5\u4e3a\u9884\u89c8\uff1b\u6ca1\u6709\u771f\u5b9e provider\uff0c\u6ca1\u6709 media upload/download\uff0c\u6ca1\u6709\u771f\u5b9e policy API\u3002',
+            claimSafeDeliveryQaExportBlockerNote: 'Export readiness \u53ea\u4f7f\u7528 preview export \u72b6\u6001\uff1aready_for_preview_export\u3001needs_operator_review \u548c blocked\u3002Blocker \u5305\u62ec unsupported claim\u3001blocked output\u3001missing quote\u3001missing required field\u3001provider disabled\u3001media upload disabled\u3001policy check disabled \u548c platform upload disabled\u3002',
+            claimSafeDeliveryQaReviewNote: 'Operator review recommendations \u53ea\u662f\u4eba\u5de5\u5efa\u8bae\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e operator task\u3002',
+            claimSafeDeliveryQaAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
+            claimSafeDeliveryQaSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check \u548c platform upload \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -10323,6 +10516,7 @@
                 latestProjectWorkspaceClaimSafeCreativeBriefPack = latestProjectCreativeDecisionPack.claim_safe_creative_brief_pack || {};
                 latestProjectWorkspaceClaimSafeCreativeOutputPack = latestProjectCreativeDecisionPack.claim_safe_creative_output_pack || {};
                 latestProjectWorkspaceClaimSafePlatformDeliveryPack = latestProjectCreativeDecisionPack.claim_safe_platform_delivery_pack || {};
+                latestProjectWorkspaceClaimSafeDeliveryQaPack = latestProjectCreativeDecisionPack.claim_safe_delivery_qa_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -16199,6 +16393,7 @@
         const PROJECT_WORKSPACE_CLAIM_SAFE_CREATIVE_BRIEF_MARKER = 'Project Workspace claim-safe creative brief bundle';
         const PROJECT_WORKSPACE_CLAIM_SAFE_CREATIVE_OUTPUT_MARKER = 'Project Workspace claim-safe creative output bundle';
         const PROJECT_WORKSPACE_CLAIM_SAFE_PLATFORM_DELIVERY_MARKER = 'Project Workspace claim-safe platform delivery bundle';
+        const PROJECT_WORKSPACE_CLAIM_SAFE_DELIVERY_QA_MARKER = 'Project Workspace claim-safe delivery QA bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -22407,6 +22602,130 @@
         function copyProjectWorkspaceDeliveryReadinessChecks() { return copyProjectWorkspaceClaimSafePlatformDeliveryText('readiness'); }
         function copyProjectWorkspaceOperatorHandoffNotes() { return copyProjectWorkspaceClaimSafePlatformDeliveryText('handoff'); }
         function copyProjectWorkspaceFullClaimSafePlatformDeliveryPack() { return copyProjectWorkspaceClaimSafePlatformDeliveryText('full'); }
+
+        function projectWorkspaceClaimSafeDeliveryQaPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceClaimSafeDeliveryQaPack && Object.keys(latestProjectWorkspaceClaimSafeDeliveryQaPack).length) return latestProjectWorkspaceClaimSafeDeliveryQaPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.claim_safe_delivery_qa_pack || {};
+        }
+
+        function projectWorkspaceClaimSafeDeliveryQaHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspaceClaimSafeDeliveryQaJsonText(value) {
+            if (!projectWorkspaceClaimSafeDeliveryQaHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceClaimSafeDeliveryQaDisabledText(value) {
+            return value === false ? t('claimSafeDeliveryQaDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportClaimSafeDeliveryQaSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceClaimSafeDeliveryQaPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_CLAIM_SAFE_DELIVERY_QA_MARKER,
+                has_claim_safe_delivery_qa_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                delivery_qa_summary: pack.delivery_qa_summary || {},
+                surface_readiness_cards: Array.isArray(pack.surface_readiness_cards) ? pack.surface_readiness_cards : [],
+                copy_completeness_cards: Array.isArray(pack.copy_completeness_cards) ? pack.copy_completeness_cards : [],
+                video_prompt_readiness_cards: Array.isArray(pack.video_prompt_readiness_cards) ? pack.video_prompt_readiness_cards : [],
+                claim_safety_verification_cards: Array.isArray(pack.claim_safety_verification_cards) ? pack.claim_safety_verification_cards : [],
+                export_readiness_cards: Array.isArray(pack.export_readiness_cards) ? pack.export_readiness_cards : [],
+                unresolved_delivery_blocker_cards: Array.isArray(pack.unresolved_delivery_blocker_cards) ? pack.unresolved_delivery_blocker_cards : [],
+                operator_review_recommendations: Array.isArray(pack.operator_review_recommendations) ? pack.operator_review_recommendations : [],
+                delivery_qa_score_breakdown: pack.delivery_qa_score_breakdown || {},
+                delivery_qa_quality_checks: pack.delivery_qa_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceClaimSafeDeliveryQaSummaryText(pack = projectWorkspaceExportClaimSafeDeliveryQaSnapshot()) {
+            if (!pack.has_claim_safe_delivery_qa_pack) return '';
+            const summary = pack.delivery_qa_summary || {};
+            return [
+                t('claimSafeDeliveryQaSummaryTitle'),
+                `${t('claimSafeDeliveryQaMode')}: ${summary.mode || t('none')}`,
+                `${t('claimSafeDeliveryQaSurfaceCount')}: ${summary.surface_readiness_count ?? pack.surface_readiness_cards.length}`,
+                `${t('claimSafeDeliveryQaCopyCount')}: ${summary.copy_completeness_count ?? pack.copy_completeness_cards.length}`,
+                `${t('claimSafeDeliveryQaVideoCount')}: ${summary.video_prompt_readiness_count ?? pack.video_prompt_readiness_cards.length}`,
+                `${t('claimSafeDeliveryQaVerificationCount')}: ${summary.claim_safety_verification_count ?? pack.claim_safety_verification_cards.length}`,
+                `${t('claimSafeDeliveryQaExportCount')}: ${summary.export_readiness_count ?? pack.export_readiness_cards.length}`,
+                `${t('claimSafeDeliveryQaBlockerCount')}: ${summary.unresolved_blocker_count ?? pack.unresolved_delivery_blocker_cards.length}`,
+                `${t('claimSafeDeliveryQaRecommendedAction')}: ${summary.recommended_operator_action || t('claimSafeDeliveryQaPreviewNote')}`,
+                `${t('claimSafeDeliveryQaRealPlatformUpload')}: ${projectWorkspaceClaimSafeDeliveryQaDisabledText(summary.real_platform_upload_allowed)}`,
+                `${t('claimSafeDeliveryQaRealProvider')}: ${projectWorkspaceClaimSafeDeliveryQaDisabledText(summary.real_provider_allowed)}`,
+                `${t('claimSafeDeliveryQaRealMediaUpload')}: ${projectWorkspaceClaimSafeDeliveryQaDisabledText(summary.real_media_upload_allowed)}`,
+                `${t('claimSafeDeliveryQaRealPolicyCheck')}: ${projectWorkspaceClaimSafeDeliveryQaDisabledText(summary.real_policy_check_allowed)}`,
+                `${t('claimSafeDeliveryQaRealExecution')}: ${projectWorkspaceClaimSafeDeliveryQaDisabledText(summary.real_execution_allowed)}`,
+                t('claimSafeDeliveryQaPreviewNote'),
+                t('claimSafeDeliveryQaPolicyNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceClaimSafeDeliveryQaSectionText(titleKey, value) {
+            const body = projectWorkspaceClaimSafeDeliveryQaJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportClaimSafeDeliveryQaMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeDeliveryQaSnapshot(workspace);
+            if (!pack.has_claim_safe_delivery_qa_pack) return '';
+            return [
+                `## ${t('claimSafeDeliveryQaPackTitle')}`,
+                `## ${t('claimSafeDeliveryQaSummaryTitle')}`,
+                projectWorkspaceClaimSafeDeliveryQaSummaryText(pack), '',
+                projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaSurfaceTitle', pack.surface_readiness_cards), '',
+                projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaCopyTitle', pack.copy_completeness_cards), '',
+                projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaVideoTitle', pack.video_prompt_readiness_cards), '',
+                projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaVerificationTitle', pack.claim_safety_verification_cards), '',
+                projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaExportTitle', pack.export_readiness_cards), '',
+                projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaBlockerTitle', pack.unresolved_delivery_blocker_cards), '',
+                projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaReviewTitle', pack.operator_review_recommendations), '',
+                projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaScoreTitle', pack.delivery_qa_score_breakdown), '',
+                projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaQualityTitle', pack.delivery_qa_quality_checks), '',
+                projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaAuditTitle', pack.audit_preview), '',
+                projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaSafetyTitle', pack.safety_boundaries),
+                t('claimSafeDeliveryQaScoreNote'),
+                t('claimSafeDeliveryQaExportBlockerNote'),
+                t('claimSafeDeliveryQaSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceClaimSafeDeliveryQaText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceClaimSafeDeliveryQaStatus');
+            const pack = projectWorkspaceExportClaimSafeDeliveryQaSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceClaimSafeDeliveryQaSummaryText(pack)
+                : kind === 'surfaces' ? projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaSurfaceTitle', pack.surface_readiness_cards)
+                : kind === 'copy' ? projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaCopyTitle', pack.copy_completeness_cards)
+                : kind === 'video' ? projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaVideoTitle', pack.video_prompt_readiness_cards)
+                : kind === 'verification' ? projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaVerificationTitle', pack.claim_safety_verification_cards)
+                : kind === 'export' ? projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaExportTitle', pack.export_readiness_cards)
+                : kind === 'blockers' ? projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaBlockerTitle', pack.unresolved_delivery_blocker_cards)
+                : kind === 'review' ? projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaReviewTitle', pack.operator_review_recommendations)
+                : kind === 'score' ? projectWorkspaceClaimSafeDeliveryQaSectionText('claimSafeDeliveryQaScoreTitle', pack.delivery_qa_score_breakdown)
+                : projectWorkspaceExportClaimSafeDeliveryQaMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('claimSafeDeliveryQaCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('claimSafeDeliveryQaCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('claimSafeDeliveryQaCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('claimSafeDeliveryQaCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceDeliveryQaSummary() { return copyProjectWorkspaceClaimSafeDeliveryQaText('summary'); }
+        function copyProjectWorkspaceSurfaceReadinessCards() { return copyProjectWorkspaceClaimSafeDeliveryQaText('surfaces'); }
+        function copyProjectWorkspaceCopyCompletenessCards() { return copyProjectWorkspaceClaimSafeDeliveryQaText('copy'); }
+        function copyProjectWorkspaceVideoPromptReadinessCards() { return copyProjectWorkspaceClaimSafeDeliveryQaText('video'); }
+        function copyProjectWorkspaceClaimSafetyVerificationCards() { return copyProjectWorkspaceClaimSafeDeliveryQaText('verification'); }
+        function copyProjectWorkspaceExportReadinessCards() { return copyProjectWorkspaceClaimSafeDeliveryQaText('export'); }
+        function copyProjectWorkspaceUnresolvedDeliveryBlockers() { return copyProjectWorkspaceClaimSafeDeliveryQaText('blockers'); }
+        function copyProjectWorkspaceOperatorReviewRecommendations() { return copyProjectWorkspaceClaimSafeDeliveryQaText('review'); }
+        function copyProjectWorkspaceDeliveryQaScoreBreakdown() { return copyProjectWorkspaceClaimSafeDeliveryQaText('score'); }
+        function copyProjectWorkspaceFullClaimSafeDeliveryQaPack() { return copyProjectWorkspaceClaimSafeDeliveryQaText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -26498,6 +26817,40 @@
             const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('claimSafePlatformDeliveryDisabled'):String(value)}`).join(' | ');
             return `<div class="section-block" id="projectWorkspaceClaimSafePlatformReadinessExportAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafePlatformDeliveryReadinessExportAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafePlatformDeliveryExportNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDeliveryReadinessChecks()">${escapeHTML(t('claimSafePlatformDeliveryCopyReadiness'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceOperatorHandoffNotes()">${escapeHTML(t('claimSafePlatformDeliveryCopyHandoff'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimSafePlatformDeliveryReadinessTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafePlatformDeliveryJsonText(pack.delivery_readiness_checks) || t('claimSafePlatformDeliveryNoData'))}</pre></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafePlatformDeliveryExportTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafePlatformDeliveryJsonText(pack.export_bundle_manifest) || t('claimSafePlatformDeliveryNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafePlatformDeliveryExportNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafePlatformDeliveryHandoffTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafePlatformDeliveryJsonText(pack.operator_handoff_notes) || t('claimSafePlatformDeliveryNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafePlatformDeliveryHandoffNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafePlatformDeliveryAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafePlatformDeliveryJsonText(pack.audit_preview) || t('claimSafePlatformDeliveryNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafePlatformDeliveryAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('claimSafePlatformDeliverySafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('claimSafePlatformDeliverySafetyNote'))}</div></div>`;
         }
+
+        function renderProjectWorkspaceClaimSafeDeliveryQaSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeDeliveryQaSnapshot(workspace); if (!pack.has_claim_safe_delivery_qa_pack) return '';
+            const summary = pack.delivery_qa_summary || {};
+            return `<div class="section-block" id="projectWorkspaceClaimSafeDeliveryQaSummaryPanel" data-claim-safe-delivery-qa-marker="${PROJECT_WORKSPACE_CLAIM_SAFE_DELIVERY_QA_MARKER}" data-marker="project_workspace_claim_safe_delivery_qa_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeDeliveryQaPackTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeDeliveryQaPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullClaimSafeDeliveryQaPack()">${escapeHTML(t('claimSafeDeliveryQaCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('claimSafeDeliveryQaMode'), summary.mode || t('none'))}${metricPill(t('claimSafeDeliveryQaSurfaceCount'), String(summary.surface_readiness_count ?? pack.surface_readiness_cards.length))}${metricPill(t('claimSafeDeliveryQaCopyCount'), String(summary.copy_completeness_count ?? pack.copy_completeness_cards.length))}${metricPill(t('claimSafeDeliveryQaVideoCount'), String(summary.video_prompt_readiness_count ?? pack.video_prompt_readiness_cards.length))}${metricPill(t('claimSafeDeliveryQaVerificationCount'), String(summary.claim_safety_verification_count ?? pack.claim_safety_verification_cards.length))}${metricPill(t('claimSafeDeliveryQaExportCount'), String(summary.export_readiness_count ?? pack.export_readiness_cards.length))}${metricPill(t('claimSafeDeliveryQaBlockerCount'), String(summary.unresolved_blocker_count ?? pack.unresolved_delivery_blocker_cards.length))}${metricPill(t('claimSafeDeliveryQaRealPlatformUpload'), projectWorkspaceClaimSafeDeliveryQaDisabledText(summary.real_platform_upload_allowed))}${metricPill(t('claimSafeDeliveryQaRealProvider'), projectWorkspaceClaimSafeDeliveryQaDisabledText(summary.real_provider_allowed))}${metricPill(t('claimSafeDeliveryQaRealMediaUpload'), projectWorkspaceClaimSafeDeliveryQaDisabledText(summary.real_media_upload_allowed))}${metricPill(t('claimSafeDeliveryQaRealPolicyCheck'), projectWorkspaceClaimSafeDeliveryQaDisabledText(summary.real_policy_check_allowed))}${metricPill(t('claimSafeDeliveryQaRealExecution'), projectWorkspaceClaimSafeDeliveryQaDisabledText(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeDeliveryQaSummaryText(pack) || t('claimSafeDeliveryQaNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeDeliveryQaPreviewNote'))}</div><div class="field-helper">${escapeHTML(t('claimSafeDeliveryQaPolicyNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceClaimSafeDeliveryQaStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDeliveryQaSummary()">${escapeHTML(t('claimSafeDeliveryQaCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceClaimSafeDeliveryQaSurfaceCopyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeDeliveryQaSnapshot(workspace); if (!pack.has_claim_safe_delivery_qa_pack) return '';
+            const surfaces = (pack.surface_readiness_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.surface_qa_id || t('claimSafeDeliveryQaSurfaceQaId'))}</strong><div><strong>${escapeHTML(t('claimSafeDeliveryQaDeliverySurface'))}:</strong> ${escapeHTML(card.delivery_surface || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaPlatformLabel'))}:</strong> ${escapeHTML(card.platform_label || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaSourceDeliveryRefs'))}:</strong> ${escapeHTML((card.source_delivery_refs || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaRequiredCopyFields'))}:</strong> ${escapeHTML((card.required_copy_fields || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaPresentCopyFields'))}:</strong> ${escapeHTML((card.present_copy_fields || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaMissingCopyFields'))}:</strong> ${escapeHTML((card.missing_copy_fields || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaRequiredAssetFields'))}:</strong> ${escapeHTML((card.required_asset_fields || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaPresentAssetFields'))}:</strong> ${escapeHTML((card.present_asset_fields || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaMissingAssetFields'))}:</strong> ${escapeHTML((card.missing_asset_fields || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaClaimSafetyStatus'))}:</strong> ${escapeHTML(card.claim_safety_status || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaExportReadinessStatus'))}:</strong> ${escapeHTML(card.export_readiness_status || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeDeliveryQaJsonText({real_platform_upload_allowed:card.real_platform_upload_allowed,real_policy_check_allowed:card.real_policy_check_allowed,real_execution_allowed:card.real_execution_allowed,operator_review_required:card.operator_review_required,blocked_reason:card.blocked_reason}) || t('claimSafeDeliveryQaNoData'))}</pre></div>`).join('');
+            const copies = (pack.copy_completeness_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.copy_qa_id || t('claimSafeDeliveryQaCopyQaId'))}</strong><div><strong>${escapeHTML(t('claimSafeDeliveryQaDeliverySurface'))}:</strong> ${escapeHTML(card.delivery_surface || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaCopyType'))}:</strong> ${escapeHTML(card.copy_type || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaCopyText'))}:</strong> ${escapeHTML(card.copy_text || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaCompletenessStatus'))}:</strong> ${escapeHTML(card.completeness_status || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaCopyQualityNote'))}:</strong> ${escapeHTML(card.copy_quality_note || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaOperatorReview'))}:</strong> ${escapeHTML(String(Boolean(card.operator_review_required)))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaBlockedReason'))}:</strong> ${escapeHTML(card.blocked_reason || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeDeliveryQaJsonText({real_platform_upload_allowed:card.real_platform_upload_allowed,real_policy_check_allowed:card.real_policy_check_allowed,real_execution_allowed:card.real_execution_allowed}) || t('claimSafeDeliveryQaNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceClaimSafeDeliveryQaSurfaceCopyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeDeliveryQaSurfaceCopyTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeDeliveryQaSurfaceCopyNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSurfaceReadinessCards()">${escapeHTML(t('claimSafeDeliveryQaCopySurfaces'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCopyCompletenessCards()">${escapeHTML(t('claimSafeDeliveryQaCopyCopyCompleteness'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeDeliveryQaSurfaceTitle'))}</strong><div class="graph-os-compact-grid">${surfaces || `<div class="empty-state">${escapeHTML(t('claimSafeDeliveryQaNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeDeliveryQaCopyTitle'))}</strong><div class="graph-os-compact-grid">${copies || `<div class="empty-state">${escapeHTML(t('claimSafeDeliveryQaNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceClaimSafeDeliveryQaVideoClaimPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeDeliveryQaSnapshot(workspace); if (!pack.has_claim_safe_delivery_qa_pack) return '';
+            const videos = (pack.video_prompt_readiness_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.video_prompt_qa_id || t('claimSafeDeliveryQaVideoPromptQaId'))}</strong><div><strong>${escapeHTML(t('claimSafeDeliveryQaDeliverySurface'))}:</strong> ${escapeHTML(card.delivery_surface || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaPromptText'))}:</strong> ${escapeHTML(card.prompt_text || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaVisualDirection'))}:</strong> ${escapeHTML(card.visual_direction || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaShotRefs'))}:</strong> ${escapeHTML((card.shot_refs || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaSourceVideoPromptRefs'))}:</strong> ${escapeHTML((card.source_video_prompt_refs || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaSourceClaims'))}:</strong> ${escapeHTML((card.source_claim_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaSupportingQuotes'))}:</strong> ${escapeHTML((card.supporting_quote_ids || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaDisallowedVisualClaims'))}:</strong> ${escapeHTML((card.disallowed_visual_claims || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaMediaRequirementStatus'))}:</strong> ${escapeHTML(card.media_requirement_status || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaProviderReadinessStatus'))}:</strong> ${escapeHTML(card.provider_readiness_status || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeDeliveryQaJsonText({real_provider_allowed:card.real_provider_allowed,real_media_upload_allowed:card.real_media_upload_allowed,real_policy_check_allowed:card.real_policy_check_allowed,real_execution_allowed:card.real_execution_allowed}) || t('claimSafeDeliveryQaNoData'))}</pre></div>`).join('');
+            const verifications = (pack.claim_safety_verification_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.verification_id || t('claimSafeDeliveryQaVerificationId'))}</strong><div><strong>${escapeHTML(t('claimSafeDeliveryQaCheckedText'))}:</strong> ${escapeHTML(card.checked_text || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaSupportStatus'))}:</strong> ${escapeHTML(card.support_status || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaClaimRiskLevel'))}:</strong> ${escapeHTML(card.claim_risk_level || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaDoNotClaimRefs'))}:</strong> ${escapeHTML((card.do_not_claim_refs || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaEvidenceQualityRefs'))}:</strong> ${escapeHTML((card.evidence_quality_refs || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaVerificationStatus'))}:</strong> ${escapeHTML(card.verification_status || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaRecommendedSafeFix'))}:</strong> ${escapeHTML(card.recommended_safe_fix || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeDeliveryQaJsonText({real_policy_check_allowed:card.real_policy_check_allowed,real_execution_allowed:card.real_execution_allowed}) || t('claimSafeDeliveryQaNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceClaimSafeDeliveryQaVideoClaimPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeDeliveryQaVideoClaimTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeDeliveryQaVideoClaimNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceVideoPromptReadinessCards()">${escapeHTML(t('claimSafeDeliveryQaCopyVideo'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceClaimSafetyVerificationCards()">${escapeHTML(t('claimSafeDeliveryQaCopyVerification'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeDeliveryQaVideoTitle'))}</strong><div class="graph-os-compact-grid">${videos || `<div class="empty-state">${escapeHTML(t('claimSafeDeliveryQaNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeDeliveryQaVerificationTitle'))}</strong><div class="graph-os-compact-grid">${verifications || `<div class="empty-state">${escapeHTML(t('claimSafeDeliveryQaNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceClaimSafeDeliveryQaExportBlockerReviewPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeDeliveryQaSnapshot(workspace); if (!pack.has_claim_safe_delivery_qa_pack) return '';
+            const exports = (pack.export_readiness_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.export_qa_id || t('claimSafeDeliveryQaExportTitle'))}</strong><div><strong>${escapeHTML(t('claimSafeDeliveryQaDeliverySurface'))}:</strong> ${escapeHTML(card.delivery_surface || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaExportReadinessStatus'))}:</strong> ${escapeHTML(card.export_readiness_status || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaOperatorReview'))}:</strong> ${escapeHTML(String(Boolean(card.operator_review_required)))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaBlockedReason'))}:</strong> ${escapeHTML(card.blocked_reason || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeDeliveryQaJsonText(card) || t('claimSafeDeliveryQaNoData'))}</pre></div>`).join('');
+            const blockers = (pack.unresolved_delivery_blocker_cards || []).slice(0, 16).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.blocker_id || t('claimSafeDeliveryQaBlockerTitle'))}</strong><div><strong>${escapeHTML(t('claimSafeDeliveryQaBlockerType'))}:</strong> ${escapeHTML(card.blocker_type || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaDeliverySurface'))}:</strong> ${escapeHTML(card.delivery_surface || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaBlockedReason'))}:</strong> ${escapeHTML(card.blocked_reason || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeDeliveryQaOperatorReview'))}:</strong> ${escapeHTML(String(Boolean(card.operator_review_required)))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeDeliveryQaJsonText(card) || t('claimSafeDeliveryQaNoData'))}</pre></div>`).join('');
+            const reviews = (pack.operator_review_recommendations || []).slice(0, 12).map((card) => `<div class="graph-os-card"><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeDeliveryQaJsonText(card) || String(card || t('claimSafeDeliveryQaNoData')))}</pre><div class="field-helper">${escapeHTML(t('claimSafeDeliveryQaReviewNote'))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceClaimSafeDeliveryQaExportBlockerReviewPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeDeliveryQaExportBlockerReviewTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeDeliveryQaExportBlockerNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceExportReadinessCards()">${escapeHTML(t('claimSafeDeliveryQaCopyExport'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceUnresolvedDeliveryBlockers()">${escapeHTML(t('claimSafeDeliveryQaCopyBlockers'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceOperatorReviewRecommendations()">${escapeHTML(t('claimSafeDeliveryQaCopyReview'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeDeliveryQaExportTitle'))}</strong><div class="field-helper">ready_for_preview_export / needs_operator_review / blocked</div><div class="graph-os-compact-grid">${exports || `<div class="empty-state">${escapeHTML(t('claimSafeDeliveryQaNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeDeliveryQaBlockerTitle'))}</strong><div class="field-helper">unsupported claim / blocked output / missing quote / missing required field / provider disabled / media upload disabled / policy check disabled / platform upload disabled</div><div class="graph-os-compact-grid">${blockers || `<div class="empty-state">${escapeHTML(t('claimSafeDeliveryQaNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeDeliveryQaReviewTitle'))}</strong><div class="graph-os-compact-grid">${reviews || `<div class="empty-state">${escapeHTML(t('claimSafeDeliveryQaNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceClaimSafeDeliveryQaScoreQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeDeliveryQaSnapshot(workspace); if (!pack.has_claim_safe_delivery_qa_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('claimSafeDeliveryQaDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceClaimSafeDeliveryQaScoreQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeDeliveryQaScoreQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeDeliveryQaScoreNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDeliveryQaScoreBreakdown()">${escapeHTML(t('claimSafeDeliveryQaCopyScore'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeDeliveryQaScoreTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeDeliveryQaJsonText(pack.delivery_qa_score_breakdown) || t('claimSafeDeliveryQaNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeDeliveryQaScoreNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeDeliveryQaQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeDeliveryQaJsonText(pack.delivery_qa_quality_checks) || t('claimSafeDeliveryQaNoData'))}</pre><div class="field-helper">delivery surface / copy / video prompt / claim safety / export manifest / safety boundary coverage</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeDeliveryQaAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeDeliveryQaJsonText(pack.audit_preview) || t('claimSafeDeliveryQaNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeDeliveryQaAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('claimSafeDeliveryQaSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('claimSafeDeliveryQaSafetyNote'))}</div></div>`;
+        }
         function renderProjectWorkspaceCampaignExportSummaryPanel(workspace = latestProjectWorkspace) {
             const pack = projectWorkspaceExportCampaignPackSnapshot(workspace);
             if (!pack.has_campaign_export_pack) return '';
@@ -27052,6 +27405,8 @@
                 '',
                 projectWorkspaceExportClaimSafePlatformDeliveryMarkdown(workspace),
                 '',
+                projectWorkspaceExportClaimSafeDeliveryQaMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -27173,6 +27528,7 @@
                 claim_safe_creative_brief_pack: projectWorkspaceExportClaimSafeCreativeBriefSnapshot(workspace),
                 claim_safe_creative_output_pack: projectWorkspaceExportClaimSafeCreativeOutputSnapshot(workspace),
                 claim_safe_platform_delivery_pack: projectWorkspaceExportClaimSafePlatformDeliverySnapshot(workspace),
+                claim_safe_delivery_qa_pack: projectWorkspaceExportClaimSafeDeliveryQaSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -39769,6 +40125,11 @@
                     ${renderProjectWorkspaceClaimSafePlatformChannelPanel(workspace)}
                     ${renderProjectWorkspaceClaimSafePlatformAssetClaimBlockerPanel(workspace)}
                     ${renderProjectWorkspaceClaimSafePlatformReadinessExportAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceClaimSafeDeliveryQaSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceClaimSafeDeliveryQaSurfaceCopyPanel(workspace)}
+                    ${renderProjectWorkspaceClaimSafeDeliveryQaVideoClaimPanel(workspace)}
+                    ${renderProjectWorkspaceClaimSafeDeliveryQaExportBlockerReviewPanel(workspace)}
+                    ${renderProjectWorkspaceClaimSafeDeliveryQaScoreQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}

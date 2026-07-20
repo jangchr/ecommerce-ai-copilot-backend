@@ -14688,6 +14688,226 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_claim_safe_delivery_qa_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace claim-safe delivery QA bundle",
+            "project_workspace_claim_safe_delivery_qa_marker",
+            "PROJECT_WORKSPACE_CLAIM_SAFE_DELIVERY_QA_MARKER",
+            "latestProjectWorkspaceClaimSafeDeliveryQaPack",
+            "claim_safe_delivery_qa_pack",
+            "projectWorkspaceClaimSafeDeliveryQaPackFromWorkspace",
+            "projectWorkspaceExportClaimSafeDeliveryQaSnapshot",
+            "projectWorkspaceExportClaimSafeDeliveryQaMarkdown",
+            "renderProjectWorkspaceClaimSafeDeliveryQaSummaryPanel",
+            "renderProjectWorkspaceClaimSafeDeliveryQaSurfaceCopyPanel",
+            "renderProjectWorkspaceClaimSafeDeliveryQaVideoClaimPanel",
+            "renderProjectWorkspaceClaimSafeDeliveryQaExportBlockerReviewPanel",
+            "renderProjectWorkspaceClaimSafeDeliveryQaScoreQualityAuditSafetyPanel",
+            "copyProjectWorkspaceDeliveryQaSummary",
+            "copyProjectWorkspaceSurfaceReadinessCards",
+            "copyProjectWorkspaceCopyCompletenessCards",
+            "copyProjectWorkspaceVideoPromptReadinessCards",
+            "copyProjectWorkspaceClaimSafetyVerificationCards",
+            "copyProjectWorkspaceExportReadinessCards",
+            "copyProjectWorkspaceUnresolvedDeliveryBlockers",
+            "copyProjectWorkspaceOperatorReviewRecommendations",
+            "copyProjectWorkspaceDeliveryQaScoreBreakdown",
+            "copyProjectWorkspaceFullClaimSafeDeliveryQaPack",
+            "claim_safe_delivery_qa_pack: projectWorkspaceExportClaimSafeDeliveryQaSnapshot(workspace)",
+            "Claim-Safe Delivery QA / Export Readiness",
+            "Delivery QA Summary",
+            "Surface Readiness Cards",
+            "Copy Completeness Cards",
+            "Video Prompt Readiness Cards",
+            "Claim Safety Verification Cards",
+            "Export Readiness Cards",
+            "Unresolved Delivery Blocker Cards",
+            "Operator Review Recommendations",
+            "Delivery QA Score Breakdown",
+            "Delivery QA Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "delivery_qa_summary",
+            "surface_readiness_cards",
+            "copy_completeness_cards",
+            "video_prompt_readiness_cards",
+            "claim_safety_verification_cards",
+            "export_readiness_cards",
+            "unresolved_delivery_blocker_cards",
+            "operator_review_recommendations",
+            "delivery_qa_score_breakdown",
+            "delivery_qa_quality_checks",
+            "card.surface_qa_id",
+            "card.delivery_surface",
+            "card.platform_label",
+            "card.source_delivery_refs",
+            "card.required_copy_fields",
+            "card.present_copy_fields",
+            "card.missing_copy_fields",
+            "card.required_asset_fields",
+            "card.present_asset_fields",
+            "card.missing_asset_fields",
+            "card.claim_safety_status",
+            "card.export_readiness_status",
+            "card.copy_qa_id",
+            "card.copy_type",
+            "card.copy_text",
+            "card.completeness_status",
+            "card.copy_quality_note",
+            "card.operator_review_required",
+            "card.blocked_reason",
+            "card.real_platform_upload_allowed",
+            "card.real_policy_check_allowed",
+            "card.real_execution_allowed",
+            "card.video_prompt_qa_id",
+            "card.prompt_text",
+            "card.visual_direction",
+            "card.shot_refs",
+            "card.source_video_prompt_refs",
+            "card.source_claim_ids",
+            "card.supporting_quote_ids",
+            "card.disallowed_visual_claims",
+            "card.media_requirement_status",
+            "card.provider_readiness_status",
+            "card.real_provider_allowed",
+            "card.real_media_upload_allowed",
+            "card.verification_id",
+            "card.checked_text",
+            "card.support_status",
+            "card.claim_risk_level",
+            "card.do_not_claim_refs",
+            "card.evidence_quality_refs",
+            "card.verification_status",
+            "card.recommended_safe_fix",
+            "card.blocker_type",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for blocker in [
+            "ready_for_preview_export",
+            "needs_operator_review",
+            "blocked",
+            "unsupported claim",
+            "blocked output",
+            "missing quote",
+            "missing required field",
+            "provider disabled",
+            "media upload disabled",
+            "policy check disabled",
+            "platform upload disabled",
+        ]:
+            with self.subTest(blocker=blocker):
+                self.assertIn(blocker, html)
+        previous = html.index("renderProjectWorkspaceClaimSafePlatformReadinessExportAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceClaimSafeDeliveryQaSummaryPanel(workspace)")
+        surface = html.index("renderProjectWorkspaceClaimSafeDeliveryQaSurfaceCopyPanel(workspace)")
+        video = html.index("renderProjectWorkspaceClaimSafeDeliveryQaVideoClaimPanel(workspace)")
+        export = html.index("renderProjectWorkspaceClaimSafeDeliveryQaExportBlockerReviewPanel(workspace)")
+        safety = html.index("renderProjectWorkspaceClaimSafeDeliveryQaScoreQualityAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, surface)
+        self.assertLess(surface, video)
+        self.assertLess(video, export)
+        self.assertLess(export, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_claim_safe_delivery_qa_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "claimSafeDeliveryQaPackTitle",
+            "claimSafeDeliveryQaSummaryTitle",
+            "claimSafeDeliveryQaSurfaceTitle",
+            "claimSafeDeliveryQaCopyTitle",
+            "claimSafeDeliveryQaVideoTitle",
+            "claimSafeDeliveryQaVerificationTitle",
+            "claimSafeDeliveryQaExportTitle",
+            "claimSafeDeliveryQaBlockerTitle",
+            "claimSafeDeliveryQaReviewTitle",
+            "claimSafeDeliveryQaScoreTitle",
+            "claimSafeDeliveryQaQualityTitle",
+            "claimSafeDeliveryQaAuditTitle",
+            "claimSafeDeliveryQaSafetyTitle",
+            "claimSafeDeliveryQaCopySummary",
+            "claimSafeDeliveryQaCopySurfaces",
+            "claimSafeDeliveryQaCopyCopyCompleteness",
+            "claimSafeDeliveryQaCopyVideo",
+            "claimSafeDeliveryQaCopyVerification",
+            "claimSafeDeliveryQaCopyExport",
+            "claimSafeDeliveryQaCopyBlockers",
+            "claimSafeDeliveryQaCopyReview",
+            "claimSafeDeliveryQaCopyScore",
+            "claimSafeDeliveryQaCopyFull",
+            "claimSafeDeliveryQaCopied",
+            "claimSafeDeliveryQaCopyFailed",
+            "claimSafeDeliveryQaCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace claim-safe delivery QA bundle", script)
+            self.assertIn("project_workspace_claim_safe_delivery_qa_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceClaimSafeDeliveryQaSummaryText"):
+            html.index("async function copyProjectWorkspaceClaimSafeDeliveryQaText")
+        ]
+        for key in [
+            "claimSafeDeliveryQaPackTitle",
+            "claimSafeDeliveryQaSummaryTitle",
+            "claimSafeDeliveryQaSurfaceTitle",
+            "claimSafeDeliveryQaCopyTitle",
+            "claimSafeDeliveryQaVideoTitle",
+            "claimSafeDeliveryQaVerificationTitle",
+            "claimSafeDeliveryQaExportTitle",
+            "claimSafeDeliveryQaBlockerTitle",
+            "claimSafeDeliveryQaReviewTitle",
+            "claimSafeDeliveryQaScoreTitle",
+            "claimSafeDeliveryQaQualityTitle",
+            "claimSafeDeliveryQaAuditTitle",
+            "claimSafeDeliveryQaSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_CLAIM_SAFE_DELIVERY_QA_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "deterministic delivery QA preview",
+            "not a real platform review",
+            "not a real platform audit",
+            "not real publishing",
+            "not a real policy check",
+            "does not call an LLM",
+            "does not call providers",
+            "does not upload files",
+            "does not upload or download media",
+            "does not scrape reviews",
+            "does not read real logs",
+            "history tables",
+            "does not write databases",
+            "does not create real operator tasks",
+            "not legal advice",
+            "not a real policy API check",
+            "not a real platform compliance conclusion",
+            "not a real platform pass rate",
+            "preview export",
+            "There is no real provider, no media upload or download, and no real policy API.",
+            "Operator review recommendations are manual guidance only and do not create real operator tasks.",
+            "Audit preview is display-only and does not write databases.",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, and platform upload remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [
