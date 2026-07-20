@@ -40496,6 +40496,638 @@ def _rw_claim_safe_delivery_remediation_pack(creative_decision_pack: dict) -> di
     }
 
 
+def _rw_claim_safe_remediation_verification_pack(creative_decision_pack: dict) -> dict:
+    remediation_pack = dict(
+        creative_decision_pack.get("claim_safe_delivery_remediation_pack") or {}
+    )
+    qa_pack = dict(creative_decision_pack.get("claim_safe_delivery_qa_pack") or {})
+    platform_pack = dict(
+        creative_decision_pack.get("claim_safe_platform_delivery_pack") or {}
+    )
+    output_pack = dict(
+        creative_decision_pack.get("claim_safe_creative_output_pack") or {}
+    )
+    brief_pack = dict(creative_decision_pack.get("claim_safe_creative_brief_pack") or {})
+    claim_risk_pack = dict(creative_decision_pack.get("claim_risk_guard_pack") or {})
+    evidence_pack = dict(
+        creative_decision_pack.get("review_evidence_quality_pack") or {}
+    )
+    campaign_pack = dict(creative_decision_pack.get("campaign_export_pack") or {})
+
+    def unique(values: list[object]) -> list[str]:
+        return list(dict.fromkeys(_rw_text(value) for value in values if _rw_text(value)))
+
+    def as_list(value: object) -> list[str]:
+        if isinstance(value, list):
+            return unique(value)
+        return [_rw_text(value)] if _rw_text(value) else []
+
+    def has_disabled_status(value: object) -> bool:
+        return "disabled" in _rw_text(value).lower()
+
+    def verification_status(
+        issue_type: str,
+        source_status: str,
+        remaining_gaps: list[str],
+    ) -> str:
+        if (
+            source_status == "still_blocked"
+            or issue_type in {
+                "provider_disabled",
+                "media_upload_disabled",
+                "policy_check_disabled",
+                "platform_upload_disabled",
+                "task_creation_disabled",
+            }
+        ):
+            return "still_blocked"
+        if remaining_gaps or source_status in {"needs_operator_review", "needs_operator_recheck"}:
+            return "needs_operator_recheck"
+        return "resolved_for_preview"
+
+    remediation_actions = list(remediation_pack.get("remediation_action_cards") or [])
+    copy_fixes = list(remediation_pack.get("copy_fix_cards") or [])
+    video_fixes = list(remediation_pack.get("video_prompt_fix_cards") or [])
+    claim_fixes = list(remediation_pack.get("claim_fix_cards") or [])
+    resolution_cards = list(
+        remediation_pack.get("export_blocker_resolution_cards") or []
+    )
+    qa_surfaces = list(qa_pack.get("surface_readiness_cards") or [])
+    qa_blockers = list(qa_pack.get("unresolved_delivery_blocker_cards") or [])
+    platform_cards = list(platform_pack.get("platform_delivery_cards") or [])
+    evidence_quality_cards = list(
+        evidence_pack.get("evidence_quality_cards")
+        or evidence_pack.get("review_evidence_quality_cards")
+        or []
+    )
+    resolution_by_action = {
+        card.get("source_action_id"): card
+        for card in resolution_cards
+        if card.get("source_action_id")
+    }
+
+    remediation_verification_cards: list[dict] = []
+    for index, action in enumerate(remediation_actions[:24], start=1):
+        resolution = resolution_by_action.get(action.get("remediation_action_id"), {})
+        issue_type = action.get("issue_type") or resolution.get("blocker_type") or "preview_issue"
+        evidence_refs = as_list(action.get("required_evidence_refs"))
+        source_blocker_refs = as_list(action.get("source_blocker_refs"))
+        remaining_gap_refs = []
+        if issue_type in {"unsupported_claim", "missing_quote"}:
+            remaining_gap_refs = unique([*evidence_refs, *source_blocker_refs])
+        source_status = _rw_text(
+            resolution.get("resolution_status")
+            or action.get("current_status")
+            or "needs_operator_review"
+        )
+        status = verification_status(issue_type, source_status, remaining_gap_refs)
+        remediation_verification_cards.append({
+            "verification_id": f"claim_safe_remediation_verification_{index}",
+            "delivery_surface": action.get("delivery_surface", "all_delivery_surfaces"),
+            "source_remediation_action_refs": as_list(
+                action.get("remediation_action_id")
+            ),
+            "source_blocker_refs": source_blocker_refs,
+            "issue_type": issue_type,
+            "verification_status": status,
+            "resolution_status": status,
+            "evidence_refs": evidence_refs,
+            "remaining_gap_refs": remaining_gap_refs,
+            "operator_recheck_required": status != "resolved_for_preview",
+            "ready_for_retry_export_preview": status == "resolved_for_preview",
+            "auto_apply_allowed": False,
+            "real_task_creation_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Verification is deterministic preview only; it does not apply "
+                "fixes, create tasks, query policy APIs, or execute exports."
+            ),
+        })
+
+    copy_fix_verification_cards: list[dict] = []
+    for index, card in enumerate(copy_fixes[:18], start=1):
+        supporting_quote_ids = as_list(card.get("supporting_quote_ids"))
+        problematic_claim_refs = as_list(card.get("problematic_claim_refs"))
+        remaining_restrictions = unique([
+            *as_list(card.get("remaining_restrictions")),
+            *as_list(card.get("missing_field_refs")),
+            *(["weak_evidence"] if not supporting_quote_ids else []),
+            *(["unsupported_claim"] if problematic_claim_refs else []),
+            *(["do_not_claim_recheck"] if as_list(card.get("do_not_claim_refs")) else []),
+        ])
+        status = (
+            "needs_operator_recheck"
+            if remaining_restrictions or card.get("operator_review_required")
+            else "verified_for_preview_copy_export"
+        )
+        copy_fix_verification_cards.append({
+            "copy_verification_id": f"claim_safe_copy_fix_verification_{index}",
+            "delivery_surface": card.get("delivery_surface", "all_delivery_surfaces"),
+            "copy_type": card.get("copy_type", "preview_copy"),
+            "original_copy": card.get("original_copy", ""),
+            "recommended_safe_copy": card.get("recommended_safe_copy", ""),
+            "source_copy_fix_refs": as_list(card.get("copy_fix_id")),
+            "problematic_claim_refs": problematic_claim_refs,
+            "supporting_quote_ids": supporting_quote_ids,
+            "verification_status": status,
+            "remaining_restrictions": remaining_restrictions,
+            "ready_for_preview_copy_export": status == "verified_for_preview_copy_export",
+            "llm_rewrite_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Safe copy verification checks existing deterministic guidance "
+                "only and does not invoke an LLM rewrite or policy service."
+            ),
+        })
+
+    video_prompt_fix_verification_cards: list[dict] = []
+    for index, card in enumerate(video_fixes[:18], start=1):
+        provider_status = card.get(
+            "provider_readiness_status", "provider_disabled_preview_only"
+        )
+        media_status = card.get(
+            "media_requirement_status", "media_upload_disabled_preview_only"
+        )
+        disallowed_visuals = as_list(card.get("disallowed_visual_claims"))
+        missing_visual_fields = as_list(card.get("missing_visual_fields"))
+        remaining_disallowed_visual_claims = unique([
+            *disallowed_visuals,
+            *missing_visual_fields,
+            *(["provider_disabled"] if has_disabled_status(provider_status) else []),
+            *(["media_upload_disabled"] if has_disabled_status(media_status) else []),
+        ])
+        status = (
+            "still_blocked"
+            if remaining_disallowed_visual_claims
+            else "verified_for_preview_video_prompt_export"
+        )
+        video_prompt_fix_verification_cards.append({
+            "video_verification_id": f"claim_safe_video_prompt_verification_{index}",
+            "delivery_surface": card.get("delivery_surface", "all_delivery_surfaces"),
+            "original_prompt": card.get("original_prompt", ""),
+            "recommended_safe_prompt": card.get("recommended_safe_prompt", ""),
+            "source_video_fix_refs": as_list(card.get("video_fix_id")),
+            "problematic_visual_claims": as_list(
+                card.get("problematic_visual_claims")
+            ),
+            "remaining_disallowed_visual_claims": remaining_disallowed_visual_claims,
+            "provider_readiness_status": provider_status,
+            "media_requirement_status": media_status,
+            "verification_status": status,
+            "ready_for_preview_video_prompt_export": (
+                status == "verified_for_preview_video_prompt_export"
+            ),
+            "real_provider_allowed": False,
+            "real_media_upload_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Video prompt verification is dry-run only and never calls a "
+                "provider, uploads media, or performs a real policy check."
+            ),
+        })
+
+    claim_fix_verification_cards: list[dict] = []
+    for index, card in enumerate(claim_fixes[:24], start=1):
+        evidence_gap_refs = as_list(card.get("evidence_gap_refs"))
+        do_not_claim_refs = as_list(card.get("do_not_claim_refs"))
+        remaining_restrictions = unique([
+            *as_list(card.get("remaining_restrictions")),
+            *evidence_gap_refs,
+            *do_not_claim_refs,
+        ])
+        status = (
+            "needs_operator_recheck"
+            if remaining_restrictions or card.get("operator_review_required")
+            else "verified_for_preview_claim_export"
+        )
+        claim_fix_verification_cards.append({
+            "claim_verification_id": f"claim_safe_claim_fix_verification_{index}",
+            "claim_id": card.get("claim_id", f"claim_preview_{index}"),
+            "claim_text": card.get("claim_text", ""),
+            "recommended_safe_rewrite": card.get("recommended_safe_rewrite", ""),
+            "source_claim_fix_refs": as_list(card.get("claim_fix_id")),
+            "support_status": card.get("support_status", "preview_only_unmapped"),
+            "claim_risk_level": card.get("claim_risk_level", "preview_only_unmapped"),
+            "evidence_gap_refs": evidence_gap_refs,
+            "do_not_claim_refs": do_not_claim_refs,
+            "verification_status": status,
+            "allowed_usage_after_verification": (
+                "internal_preview_only_after_operator_recheck"
+            ),
+            "remaining_restrictions": remaining_restrictions,
+            "operator_recheck_required": status != "verified_for_preview_claim_export",
+            "llm_rewrite_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Claim fix verification preserves evidence and do-not-claim "
+                "boundaries without generating legal conclusions."
+            ),
+        })
+
+    surface_refs = unique([
+        *[
+            card.get("delivery_surface")
+            for card in qa_surfaces
+            if card.get("delivery_surface")
+        ],
+        *[
+            card.get("delivery_surface")
+            for card in platform_cards
+            if card.get("delivery_surface")
+        ],
+        *[
+            card.get("delivery_surface")
+            for card in remediation_verification_cards
+            if card.get("delivery_surface")
+        ],
+    ]) or ["all_delivery_surfaces"]
+
+    def cards_for_surface(cards: list[dict], key: str, surface: str) -> list[dict]:
+        del key
+        return [
+            card
+            for card in cards
+            if card.get("delivery_surface") in {surface, "all_delivery_surfaces", ""}
+            or surface == "all_delivery_surfaces"
+        ]
+
+    retry_export_readiness_cards: list[dict] = []
+    for index, surface in enumerate(surface_refs[:12], start=1):
+        surface_remediation_cards = cards_for_surface(
+            remediation_verification_cards, "verification_id", surface
+        )
+        surface_copy_cards = cards_for_surface(
+            copy_fix_verification_cards, "copy_verification_id", surface
+        )
+        surface_video_cards = cards_for_surface(
+            video_prompt_fix_verification_cards, "video_verification_id", surface
+        )
+        surface_claim_cards = claim_fix_verification_cards
+        source_delivery_refs = unique([
+            *[
+                ref
+                for card in qa_surfaces
+                if card.get("delivery_surface") == surface
+                for ref in as_list(card.get("source_delivery_refs"))
+            ],
+            *[
+                card.get("platform_delivery_id")
+                for card in platform_cards
+                if card.get("delivery_surface") == surface
+            ],
+        ])
+        source_verification_refs = unique([
+            *[card.get("verification_id") for card in surface_remediation_cards],
+            *[card.get("copy_verification_id") for card in surface_copy_cards],
+            *[card.get("video_verification_id") for card in surface_video_cards],
+            *[card.get("claim_verification_id") for card in surface_claim_cards[:8]],
+        ])
+        copy_ready = all(
+            card.get("ready_for_preview_copy_export") for card in surface_copy_cards
+        ) if surface_copy_cards else True
+        video_prompt_ready = all(
+            card.get("ready_for_preview_video_prompt_export")
+            for card in surface_video_cards
+        ) if surface_video_cards else True
+        claim_safety_ready = all(
+            card.get("verification_status") == "verified_for_preview_claim_export"
+            for card in surface_claim_cards
+        ) if surface_claim_cards else True
+        asset_requirements_ready = not any(
+            card.get("issue_type") in {"missing_required_field", "media_upload_disabled"}
+            for card in surface_remediation_cards
+        )
+        still_blocked = any(
+            card.get("verification_status") == "still_blocked"
+            for card in surface_remediation_cards
+        ) or not asset_requirements_ready
+        operator_recheck_required = (
+            any(card.get("operator_recheck_required") for card in surface_remediation_cards)
+            or any(card.get("operator_recheck_required") for card in surface_claim_cards)
+            or not copy_ready
+            or not claim_safety_ready
+        )
+        if still_blocked or not video_prompt_ready:
+            retry_status = "still_blocked"
+        elif operator_recheck_required:
+            retry_status = "needs_operator_recheck"
+        else:
+            retry_status = "ready_for_retry_preview_export"
+        retry_export_readiness_cards.append({
+            "retry_export_id": f"claim_safe_retry_export_readiness_{index}",
+            "delivery_surface": surface,
+            "source_delivery_refs": source_delivery_refs,
+            "source_verification_refs": source_verification_refs,
+            "copy_ready": copy_ready,
+            "video_prompt_ready": video_prompt_ready,
+            "claim_safety_ready": claim_safety_ready,
+            "asset_requirements_ready": asset_requirements_ready,
+            "operator_recheck_required": operator_recheck_required,
+            "retry_export_status": retry_status,
+            "blocked_reason": (
+                "preview_ready"
+                if retry_status == "ready_for_retry_preview_export"
+                else "operator_recheck_or_disabled_boundary_required"
+            ),
+            "real_export_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Retry export readiness is a preview gate only; no file export "
+                "or platform upload is triggered."
+            ),
+        })
+
+    existing_retry_statuses = {
+        card["retry_export_status"] for card in retry_export_readiness_cards
+    }
+    for required_status in [
+        "ready_for_retry_preview_export",
+        "needs_operator_recheck",
+        "still_blocked",
+    ]:
+        if required_status in existing_retry_statuses:
+            continue
+        retry_export_readiness_cards.append({
+            "retry_export_id": f"claim_safe_retry_export_status_fixture_{required_status}",
+            "delivery_surface": f"status_coverage_{required_status}",
+            "source_delivery_refs": [required_status],
+            "source_verification_refs": [required_status],
+            "copy_ready": required_status != "still_blocked",
+            "video_prompt_ready": required_status != "still_blocked",
+            "claim_safety_ready": required_status == "ready_for_retry_preview_export",
+            "asset_requirements_ready": required_status != "still_blocked",
+            "operator_recheck_required": required_status == "needs_operator_recheck",
+            "retry_export_status": required_status,
+            "blocked_reason": required_status,
+            "real_export_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Deterministic status coverage card; no real export or upload."
+            ),
+        })
+
+    required_blocker_types = [
+        "unsupported_claim",
+        "missing_quote",
+        "missing_required_field",
+        "provider_disabled",
+        "media_upload_disabled",
+        "policy_check_disabled",
+        "platform_upload_disabled",
+        "task_creation_disabled",
+    ]
+    blocker_sources = [
+        *qa_blockers,
+        *remediation_verification_cards,
+    ]
+    remaining_blocker_cards: list[dict] = []
+    for blocker_type in required_blocker_types:
+        refs = unique([
+            card.get("unresolved_blocker_id") or card.get("verification_id")
+            for card in blocker_sources
+            if (
+                card.get("blocker_type") == blocker_type
+                or card.get("issue_type") == blocker_type
+            )
+        ]) or [blocker_type]
+        remaining_blocker_cards.append({
+            "remaining_blocker_id": f"claim_safe_remaining_blocker_{blocker_type}",
+            "blocker_type": blocker_type,
+            "delivery_surface": "all_delivery_surfaces",
+            "source_verification_refs": refs,
+            "blocked_reason": (
+                f"{blocker_type} must remain blocked or operator-reviewed in "
+                "dry-run preview before retry export readiness can be trusted."
+            ),
+            "operator_recheck_required": True,
+            "real_task_creation_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_export_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Remaining blocker is preview metadata only; no real task, "
+                "policy check, export, or upload is performed."
+            ),
+        })
+
+    verification_evidence_trace: list[dict] = []
+    for index, card in enumerate(remediation_verification_cards[:24], start=1):
+        verification_evidence_trace.append({
+            "trace_id": f"claim_safe_verification_evidence_trace_{index}",
+            "verification_id": card["verification_id"],
+            "source_remediation_action_refs": card["source_remediation_action_refs"],
+            "source_blocker_refs": card["source_blocker_refs"],
+            "source_claim_ids": unique([
+                ref
+                for claim_card in claim_fix_verification_cards
+                for ref in [claim_card.get("claim_id")]
+            ])[:8],
+            "supporting_quote_ids": unique([
+                quote_id
+                for copy_card in copy_fix_verification_cards
+                for quote_id in copy_card.get("supporting_quote_ids", [])
+            ])[:8],
+            "evidence_quality_refs": unique([
+                evidence_card.get("evidence_quality_id")
+                or evidence_card.get("quality_card_id")
+                or evidence_card.get("evidence_id")
+                for evidence_card in evidence_quality_cards
+            ])[:8],
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "database_read_performed": False,
+        })
+
+    operator_recheck_queue_preview = [
+        {
+            "recheck_queue_id": f"claim_safe_remediation_verification_recheck_{index}",
+            "source_verification_id": card["verification_id"],
+            "delivery_surface": card["delivery_surface"],
+            "issue_type": card["issue_type"],
+            "recheck_reason": card["risk_note"],
+            "operator_task_created": False,
+            "real_task_creation_allowed": False,
+            "real_execution_allowed": False,
+        }
+        for index, card in enumerate(remediation_verification_cards[:24], start=1)
+        if card["operator_recheck_required"]
+    ]
+
+    resolved_count = sum(
+        card["verification_status"] == "resolved_for_preview"
+        for card in remediation_verification_cards
+    )
+    recheck_count = sum(
+        card["verification_status"] == "needs_operator_recheck"
+        for card in remediation_verification_cards
+    )
+    blocked_count = sum(
+        card["verification_status"] == "still_blocked"
+        for card in remediation_verification_cards
+    )
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "real_provider_called": False,
+        "llm_called": False,
+        "real_media_upload_performed": False,
+        "external_scraping_performed": False,
+        "database_write_performed": False,
+        "real_platform_upload_performed": False,
+        "real_policy_api_called": False,
+        "operator_task_created": False,
+        "real_export_performed": False,
+    }
+
+    return {
+        "pack_version": "claim_safe_remediation_verification_pack_v1",
+        "remediation_verification_summary": {
+            "mode": (
+                "claim_safe_remediation_verification_preview_"
+                "deterministic_retry_export_readiness_dry_run_only"
+            ),
+            "source_packs": [
+                "claim_safe_delivery_remediation_pack",
+                "claim_safe_delivery_qa_pack",
+                "claim_safe_platform_delivery_pack",
+                "claim_safe_creative_output_pack",
+                "claim_safe_creative_brief_pack",
+                "claim_risk_guard_pack",
+                "review_evidence_quality_pack",
+                "campaign_export_pack",
+            ],
+            "remediation_verification_count": len(remediation_verification_cards),
+            "copy_fix_verification_count": len(copy_fix_verification_cards),
+            "video_prompt_fix_verification_count": len(
+                video_prompt_fix_verification_cards
+            ),
+            "claim_fix_verification_count": len(claim_fix_verification_cards),
+            "retry_export_readiness_count": len(retry_export_readiness_cards),
+            "remaining_blocker_count": len(remaining_blocker_cards),
+            "resolved_for_preview_count": resolved_count,
+            "needs_operator_recheck_count": recheck_count,
+            "still_blocked_count": blocked_count,
+            "auto_apply_allowed": False,
+            "llm_rewrite_allowed": False,
+            "real_task_creation_allowed": False,
+            "real_export_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_provider_allowed": False,
+            "real_media_upload_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "remediation_verification_cards": remediation_verification_cards,
+        "copy_fix_verification_cards": copy_fix_verification_cards,
+        "video_prompt_fix_verification_cards": video_prompt_fix_verification_cards,
+        "claim_fix_verification_cards": claim_fix_verification_cards,
+        "retry_export_readiness_cards": retry_export_readiness_cards,
+        "remaining_blocker_cards": remaining_blocker_cards,
+        "verification_evidence_trace": verification_evidence_trace,
+        "operator_recheck_queue_preview": operator_recheck_queue_preview,
+        "retry_export_plan": {
+            "retry_export_plan_id": "claim_safe_remediation_verification_retry_plan",
+            "plan_type": "preview_retry_export_readiness_check_only",
+            "candidate_statuses": [
+                "ready_for_retry_preview_export",
+                "needs_operator_recheck",
+                "still_blocked",
+            ],
+            "ready_surface_count": sum(
+                card["retry_export_status"] == "ready_for_retry_preview_export"
+                for card in retry_export_readiness_cards
+            ),
+            "operator_recheck_surface_count": sum(
+                card["retry_export_status"] == "needs_operator_recheck"
+                for card in retry_export_readiness_cards
+            ),
+            "blocked_surface_count": sum(
+                card["retry_export_status"] == "still_blocked"
+                for card in retry_export_readiness_cards
+            ),
+            "real_export_triggered": False,
+            "file_upload_allowed": False,
+            "database_write_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "verification_quality_checks": {
+            "claim_safe_delivery_remediation_pack_present": bool(remediation_pack),
+            "claim_safe_delivery_qa_pack_present": bool(qa_pack),
+            "claim_safe_platform_delivery_pack_present": bool(platform_pack),
+            "claim_safe_creative_output_pack_present": bool(output_pack),
+            "claim_safe_creative_brief_pack_present": bool(brief_pack),
+            "claim_risk_guard_pack_present": bool(claim_risk_pack),
+            "review_evidence_quality_pack_present": bool(evidence_pack),
+            "campaign_export_pack_present": bool(campaign_pack),
+            "remediation_action_coverage_present": bool(remediation_verification_cards),
+            "copy_fix_coverage_present": bool(copy_fix_verification_cards),
+            "video_prompt_fix_coverage_present": bool(
+                video_prompt_fix_verification_cards
+            ),
+            "claim_fix_coverage_present": bool(claim_fix_verification_cards),
+            "remaining_blocker_coverage_present": bool(remaining_blocker_cards),
+            "retry_export_readiness_coverage_present": bool(
+                retry_export_readiness_cards
+            ),
+            "safety_boundary_coverage_present": True,
+            "auto_apply_performed": False,
+            "llm_called": False,
+            "provider_called": False,
+            "media_operation_performed": False,
+            "external_scraping_performed": False,
+            "database_write_performed": False,
+            "real_policy_api_called": False,
+            "real_execution_performed": False,
+            "real_platform_upload_performed": False,
+            "operator_task_created": False,
+            "real_export_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "claim_safe_remediation_verification_preview",
+            "source": "creative_decision_pack.claim_safe_remediation_verification_pack",
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "audit_record_created": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "real_provider_allowed": False,
+            "real_media_upload_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_export_allowed": False,
+            "operator_task_created": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -40711,6 +41343,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["claim_safe_delivery_remediation_pack"] = (
         _rw_claim_safe_delivery_remediation_pack(creative_decision_pack)
+    )
+    creative_decision_pack["claim_safe_remediation_verification_pack"] = (
+        _rw_claim_safe_remediation_verification_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
