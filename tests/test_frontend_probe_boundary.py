@@ -14908,6 +14908,231 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_claim_safe_delivery_remediation_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace claim-safe delivery remediation bundle",
+            "project_workspace_claim_safe_delivery_remediation_marker",
+            "PROJECT_WORKSPACE_CLAIM_SAFE_DELIVERY_REMEDIATION_MARKER",
+            "latestProjectWorkspaceClaimSafeDeliveryRemediationPack",
+            "claim_safe_delivery_remediation_pack",
+            "projectWorkspaceClaimSafeDeliveryRemediationPackFromWorkspace",
+            "projectWorkspaceExportClaimSafeDeliveryRemediationSnapshot",
+            "projectWorkspaceExportClaimSafeDeliveryRemediationMarkdown",
+            "renderProjectWorkspaceClaimSafeDeliveryRemediationSummaryPanel",
+            "renderProjectWorkspaceClaimSafeDeliveryRemediationActionPriorityPanel",
+            "renderProjectWorkspaceClaimSafeDeliveryRemediationFixCardsPanel",
+            "renderProjectWorkspaceClaimSafeDeliveryRemediationExportReviewRetryPanel",
+            "renderProjectWorkspaceClaimSafeDeliveryRemediationReadinessAuditSafetyPanel",
+            "copyProjectWorkspaceDeliveryRemediationSummary",
+            "copyProjectWorkspaceRemediationActionCards",
+            "copyProjectWorkspaceCopyFixCards",
+            "copyProjectWorkspaceVideoPromptFixCards",
+            "copyProjectWorkspaceClaimFixCards",
+            "copyProjectWorkspaceExportBlockerResolutionCards",
+            "copyProjectWorkspaceOperatorReviewQueuePreview",
+            "copyProjectWorkspaceRemediationPriorityMatrix",
+            "copyProjectWorkspaceRemediationRetryExportPlan",
+            "copyProjectWorkspaceFullClaimSafeDeliveryRemediationPack",
+            "claim_safe_delivery_remediation_pack: projectWorkspaceExportClaimSafeDeliveryRemediationSnapshot(workspace)",
+            "Claim-Safe Delivery Remediation Plan",
+            "Delivery Remediation Summary",
+            "Remediation Action Cards",
+            "Copy Fix Cards",
+            "Video Prompt Fix Cards",
+            "Claim Fix Cards",
+            "Export Blocker Resolution Cards",
+            "Operator Review Queue Preview",
+            "Remediation Priority Matrix",
+            "Remediation Readiness Checks",
+            "Remediation Retry Export Plan",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "delivery_remediation_summary",
+            "remediation_action_cards",
+            "copy_fix_cards",
+            "video_prompt_fix_cards",
+            "claim_fix_cards",
+            "export_blocker_resolution_cards",
+            "operator_review_queue_preview",
+            "remediation_priority_matrix",
+            "remediation_readiness_checks",
+            "remediation_retry_export_plan",
+            "card.remediation_action_id",
+            "card.delivery_surface",
+            "card.source_blocker_refs",
+            "card.issue_type",
+            "card.issue_severity",
+            "card.current_status",
+            "card.recommended_fix_type",
+            "card.recommended_fix_summary",
+            "card.required_evidence_refs",
+            "card.required_operator_review",
+            "card.blocks_preview_export",
+            "card.auto_fix_allowed",
+            "card.real_task_creation_allowed",
+            "card.real_policy_check_allowed",
+            "card.real_execution_allowed",
+            "card.copy_fix_id",
+            "card.copy_type",
+            "card.original_copy",
+            "card.problematic_claim_refs",
+            "card.missing_field_refs",
+            "card.recommended_safe_copy",
+            "card.required_qualifiers",
+            "card.disallowed_terms",
+            "card.supporting_quote_ids",
+            "card.fix_status",
+            "card.llm_rewrite_allowed",
+            "card.video_fix_id",
+            "card.original_prompt",
+            "card.problematic_visual_claims",
+            "card.missing_visual_fields",
+            "card.recommended_safe_prompt",
+            "card.recommended_shot_adjustments",
+            "card.disallowed_visual_claims",
+            "card.provider_readiness_status",
+            "card.media_requirement_status",
+            "card.real_provider_allowed",
+            "card.real_media_upload_allowed",
+            "card.claim_fix_id",
+            "card.claim_id",
+            "card.claim_text",
+            "card.support_status",
+            "card.claim_risk_level",
+            "card.evidence_gap_refs",
+            "card.do_not_claim_refs",
+            "card.recommended_safe_rewrite",
+            "card.required_evidence_action",
+            "card.allowed_usage_after_fix",
+            "card.remaining_restrictions",
+            "card.resolution_status",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for status in [
+            "resolved_for_preview",
+            "needs_operator_review",
+            "still_blocked",
+            "critical",
+            "high",
+            "medium",
+            "low",
+            "copy / video prompt / claim safety / export readiness / operator review / safety boundary coverage",
+        ]:
+            with self.subTest(status=status):
+                self.assertIn(status, html)
+        previous = html.index("renderProjectWorkspaceClaimSafeDeliveryQaScoreQualityAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceClaimSafeDeliveryRemediationSummaryPanel(workspace)")
+        actions = html.index("renderProjectWorkspaceClaimSafeDeliveryRemediationActionPriorityPanel(workspace)")
+        fixes = html.index("renderProjectWorkspaceClaimSafeDeliveryRemediationFixCardsPanel(workspace)")
+        export = html.index("renderProjectWorkspaceClaimSafeDeliveryRemediationExportReviewRetryPanel(workspace)")
+        safety = html.index("renderProjectWorkspaceClaimSafeDeliveryRemediationReadinessAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, actions)
+        self.assertLess(actions, fixes)
+        self.assertLess(fixes, export)
+        self.assertLess(export, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_claim_safe_delivery_remediation_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "claimSafeDeliveryRemediationPackTitle",
+            "claimSafeDeliveryRemediationSummaryTitle",
+            "claimSafeDeliveryRemediationActionTitle",
+            "claimSafeDeliveryRemediationPriorityTitle",
+            "claimSafeDeliveryRemediationCopyFixTitle",
+            "claimSafeDeliveryRemediationVideoFixTitle",
+            "claimSafeDeliveryRemediationClaimFixTitle",
+            "claimSafeDeliveryRemediationResolutionTitle",
+            "claimSafeDeliveryRemediationReviewQueueTitle",
+            "claimSafeDeliveryRemediationReadinessTitle",
+            "claimSafeDeliveryRemediationRetryTitle",
+            "claimSafeDeliveryRemediationAuditTitle",
+            "claimSafeDeliveryRemediationSafetyTitle",
+            "claimSafeDeliveryRemediationCopySummary",
+            "claimSafeDeliveryRemediationCopyActions",
+            "claimSafeDeliveryRemediationCopyCopyFix",
+            "claimSafeDeliveryRemediationCopyVideoFix",
+            "claimSafeDeliveryRemediationCopyClaimFix",
+            "claimSafeDeliveryRemediationCopyResolution",
+            "claimSafeDeliveryRemediationCopyReviewQueue",
+            "claimSafeDeliveryRemediationCopyPriority",
+            "claimSafeDeliveryRemediationCopyRetry",
+            "claimSafeDeliveryRemediationCopyFull",
+            "claimSafeDeliveryRemediationCopied",
+            "claimSafeDeliveryRemediationCopyFailed",
+            "claimSafeDeliveryRemediationCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace claim-safe delivery remediation bundle", script)
+            self.assertIn("project_workspace_claim_safe_delivery_remediation_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceClaimSafeDeliveryRemediationSummaryText"):
+            html.index("async function copyProjectWorkspaceClaimSafeDeliveryRemediationText")
+        ]
+        for key in [
+            "claimSafeDeliveryRemediationPackTitle",
+            "claimSafeDeliveryRemediationSummaryTitle",
+            "claimSafeDeliveryRemediationActionTitle",
+            "claimSafeDeliveryRemediationCopyFixTitle",
+            "claimSafeDeliveryRemediationVideoFixTitle",
+            "claimSafeDeliveryRemediationClaimFixTitle",
+            "claimSafeDeliveryRemediationResolutionTitle",
+            "claimSafeDeliveryRemediationReviewQueueTitle",
+            "claimSafeDeliveryRemediationPriorityTitle",
+            "claimSafeDeliveryRemediationReadinessTitle",
+            "claimSafeDeliveryRemediationRetryTitle",
+            "claimSafeDeliveryRemediationAuditTitle",
+            "claimSafeDeliveryRemediationSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_CLAIM_SAFE_DELIVERY_REMEDIATION_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "deterministic remediation preview",
+            "does not automatically rewrite copy",
+            "does not call an LLM",
+            "does not create real tasks",
+            "does not create real tasks or operator tasks",
+            "does not publish to platforms",
+            "does not trigger real export",
+            "does not upload files",
+            "does not call providers",
+            "does not upload or download media",
+            "does not scrape reviews",
+            "does not read real logs",
+            "history tables",
+            "does not write databases",
+            "not legal advice",
+            "not a real policy API check",
+            "not a real platform compliance conclusion",
+            "not a real legal, platform, or claim safety risk rating",
+            "not real legal risk ratings",
+            "not real platform risk ratings",
+            "not real compliant ad copy",
+            "preview export readiness check only",
+            "does not create real operator tasks",
+            "Audit preview is display-only and does not write databases.",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, and task creation remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [
