@@ -42664,6 +42664,453 @@ def _rw_workspace_product_navigation_pack(creative_decision_pack: dict) -> dict:
     }
 
 
+def _rw_workspace_scenario_presets_pack(creative_decision_pack: dict) -> dict:
+    source_pack_ids = [
+        "workspace_product_navigation_pack",
+        "campaign_creative_dossier_pack",
+        "final_claim_safe_export_packet_pack",
+        "claim_safe_remediation_verification_pack",
+        "claim_safe_delivery_remediation_pack",
+        "claim_safe_delivery_qa_pack",
+        "claim_safe_platform_delivery_pack",
+        "claim_safe_creative_output_pack",
+        "claim_safe_creative_brief_pack",
+        "claim_risk_guard_pack",
+        "review_evidence_quality_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_real_execution_approval_token_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_capability_permission_matrix_pack",
+    ]
+    packs = {pack_id: dict(creative_decision_pack.get(pack_id) or {}) for pack_id in source_pack_ids}
+
+    def pack_status(pack_id: str) -> str:
+        pack = packs.get(pack_id) or {}
+        if not pack:
+            return "missing"
+        if pack.get("pack_version"):
+            return "present"
+        return "partial"
+
+    scenario_specs = [
+        {
+            "scenario_id": "strong_evidence_ready_preview",
+            "scenario_label": "Strong evidence ready preview",
+            "scenario_group": "evidence_quality",
+            "scenario_purpose": "Demonstrate an evidence-backed claim-safe campaign path when supplied review and quote signals are strong.",
+            "source_pack_refs": [
+                "review_evidence_quality_pack",
+                "claim_risk_guard_pack",
+                "claim_safe_creative_brief_pack",
+                "campaign_creative_dossier_pack",
+            ],
+            "expected_user_question": "Which claim-safe campaign angle is ready to preview from strong supplied evidence?",
+            "expected_workspace_panels": [
+                "Workspace Navigation Summary",
+                "Product Stage Cards",
+                "Campaign Dossier Summary",
+                "Evidence / Claim Safety Overview",
+            ],
+            "expected_status": "preview_ready",
+            "expected_blockers": [],
+            "recommended_operator_action": "Review the evidence and claim trace manually before using copy in any public workflow.",
+            "signal_type": "evidence",
+            "expected_signal": "Strong supplied evidence with quote-backed safe usage.",
+            "input_type": "existing_review_pack_preview",
+        },
+        {
+            "scenario_id": "weak_evidence_needs_review",
+            "scenario_label": "Weak evidence needs review",
+            "scenario_group": "evidence_quality",
+            "scenario_purpose": "Show the preview path when evidence is thin and operator review should stay required.",
+            "source_pack_refs": [
+                "review_evidence_quality_pack",
+                "claim_risk_guard_pack",
+                "workspace_product_navigation_pack",
+            ],
+            "expected_user_question": "Which claims need lower strength or more supplied reviews before preview export?",
+            "expected_workspace_panels": [
+                "Workspace Navigation Summary",
+                "Product Stage Cards",
+                "Product Readiness Scorecard",
+            ],
+            "expected_status": "needs_operator_review",
+            "expected_blockers": ["weak_evidence", "missing_quote"],
+            "recommended_operator_action": "Collect more supplied review evidence or lower claim strength in the preview.",
+            "signal_type": "evidence",
+            "expected_signal": "Weak evidence and missing quote gaps are visible.",
+            "input_type": "existing_evidence_gap_preview",
+        },
+        {
+            "scenario_id": "unsupported_claim_blocked",
+            "scenario_label": "Unsupported claim blocked",
+            "scenario_group": "claim_safety",
+            "scenario_purpose": "Demonstrate a blocked unsupported claim without legal advice or a real policy API call.",
+            "source_pack_refs": [
+                "claim_risk_guard_pack",
+                "claim_safe_creative_brief_pack",
+                "campaign_creative_dossier_pack",
+            ],
+            "expected_user_question": "Which unsupported claim should stay out of the creative preview?",
+            "expected_workspace_panels": [
+                "Claim Risk Guard",
+                "Claim-Safe Brief",
+                "Blocked Content Dossier Appendix",
+            ],
+            "expected_status": "blocked",
+            "expected_blockers": ["unsupported_claim", "do_not_claim"],
+            "recommended_operator_action": "Keep the claim blocked and use the safer deterministic rewrite preview only.",
+            "signal_type": "claim",
+            "expected_signal": "Unsupported claim is classified as blocked with do-not-claim references.",
+            "input_type": "existing_claim_risk_preview",
+        },
+        {
+            "scenario_id": "video_prompt_visual_claim_risk",
+            "scenario_label": "Video prompt visual claim risk",
+            "scenario_group": "creative_output",
+            "scenario_purpose": "Surface disallowed or risky visual claims in a video prompt preview.",
+            "source_pack_refs": [
+                "claim_safe_creative_output_pack",
+                "claim_safe_delivery_qa_pack",
+                "claim_safe_remediation_verification_pack",
+            ],
+            "expected_user_question": "Which video prompt visual claims need a safer preview before provider handoff?",
+            "expected_workspace_panels": [
+                "Copy / Video Prompt / Claim Fix Verification",
+                "Final Video Prompt Bundle",
+                "Delivery QA",
+            ],
+            "expected_status": "needs_operator_review",
+            "expected_blockers": ["visual_claim_risk", "provider_disabled"],
+            "recommended_operator_action": "Use the safe prompt preview and keep provider execution disabled.",
+            "signal_type": "QA",
+            "expected_signal": "Video prompt visual claim risk is visible and provider readiness remains disabled.",
+            "input_type": "existing_video_prompt_preview",
+        },
+        {
+            "scenario_id": "delivery_blocked_by_missing_quote",
+            "scenario_label": "Delivery blocked by missing quote",
+            "scenario_group": "delivery_preview",
+            "scenario_purpose": "Show delivery readiness blocked when required evidence or quote support is missing.",
+            "source_pack_refs": [
+                "claim_safe_platform_delivery_pack",
+                "claim_safe_delivery_qa_pack",
+                "claim_safe_delivery_remediation_pack",
+            ],
+            "expected_user_question": "Why is this delivery surface blocked before preview export?",
+            "expected_workspace_panels": [
+                "Retry Export Readiness Cards",
+                "Remaining Blocker Cards",
+                "Delivery QA / Export Readiness",
+            ],
+            "expected_status": "blocked",
+            "expected_blockers": ["missing_quote", "delivery_blocker"],
+            "recommended_operator_action": "Resolve quote support in the preview remediation plan before retry readiness.",
+            "signal_type": "delivery",
+            "expected_signal": "Delivery blocker explains missing quote support and retry export is not real export.",
+            "input_type": "existing_delivery_readiness_preview",
+        },
+        {
+            "scenario_id": "provider_safety_blocked",
+            "scenario_label": "Provider safety blocked",
+            "scenario_group": "provider_safety",
+            "scenario_purpose": "Demonstrate that provider, network, secret, and real execution gates block real calls.",
+            "source_pack_refs": [
+                "workspace_provider_invocation_audit_packet_pack",
+                "workspace_real_execution_approval_token_pack",
+                "workspace_network_external_call_block_guard_pack",
+                "workspace_secret_environment_gate_pack",
+                "workspace_capability_permission_matrix_pack",
+            ],
+            "expected_user_question": "Why are provider calls and real execution blocked for this demo?",
+            "expected_workspace_panels": [
+                "Provider Safety Controls",
+                "Real Execution Blockers",
+                "Safety Boundaries",
+            ],
+            "expected_status": "blocked_by_safety_gate",
+            "expected_blockers": ["provider_disabled", "network_external_call_blocked", "secret_gate_disabled"],
+            "recommended_operator_action": "Keep this as a dry-run preview and do not approve real execution.",
+            "signal_type": "provider safety",
+            "expected_signal": "Provider invocation remains blocked by capability, secret, network, and approval gates.",
+            "input_type": "existing_provider_safety_preview",
+        },
+        {
+            "scenario_id": "final_export_ready_preview_only",
+            "scenario_label": "Final export ready preview only",
+            "scenario_group": "final_export",
+            "scenario_purpose": "Show final export packet readiness while keeping file write, export, upload, and publish disabled.",
+            "source_pack_refs": [
+                "final_claim_safe_export_packet_pack",
+                "campaign_creative_dossier_pack",
+                "workspace_product_navigation_pack",
+            ],
+            "expected_user_question": "Which final packet is ready for preview export but not real export?",
+            "expected_workspace_panels": [
+                "Final Claim-Safe Export Packet",
+                "Final Export Packet Cards",
+                "Export File Manifest Preview",
+            ],
+            "expected_status": "ready_preview_only",
+            "expected_blockers": ["real_export_disabled", "file_write_disabled", "platform_upload_disabled"],
+            "recommended_operator_action": "Copy or inspect the preview packet only; do not write files or upload to a platform.",
+            "signal_type": "delivery",
+            "expected_signal": "Final export readiness is preview-only with real export and file write disabled.",
+            "input_type": "existing_final_export_preview",
+        },
+        {
+            "scenario_id": "operator_handoff_required",
+            "scenario_label": "Operator handoff required",
+            "scenario_group": "operator_handoff",
+            "scenario_purpose": "Demonstrate the manual operator handoff flow without creating a real task.",
+            "source_pack_refs": [
+                "campaign_creative_dossier_pack",
+                "workspace_product_navigation_pack",
+                "workspace_provider_invocation_audit_packet_pack",
+            ],
+            "expected_user_question": "What should the operator review before any real-world handoff?",
+            "expected_workspace_panels": [
+                "Campaign Creative Dossier / Operator Handoff",
+                "Operator Handoff Checklist",
+                "Workspace Product Navigation / Dossier Index",
+            ],
+            "expected_status": "manual_handoff_required",
+            "expected_blockers": ["task_creation_disabled", "operator_review_required"],
+            "recommended_operator_action": "Follow the walkthrough manually; no real operator task is created.",
+            "signal_type": "operator handoff",
+            "expected_signal": "Operator handoff remains a manual preview and task creation stays disabled.",
+            "input_type": "existing_operator_handoff_preview",
+        },
+    ]
+
+    demo_scenario_cards = []
+    scenario_input_preview_cards = []
+    scenario_expected_signal_cards = []
+    scenario_pack_coverage_map = []
+    scenario_operator_walkthrough_cards = []
+    for index, spec in enumerate(scenario_specs, start=1):
+        missing_pack_refs = [
+            pack_id for pack_id in spec["source_pack_refs"] if pack_status(pack_id) == "missing"
+        ]
+        expected_status = (
+            "blocked_missing_source_pack" if missing_pack_refs else spec["expected_status"]
+        )
+        demo_scenario_cards.append({
+            "scenario_id": spec["scenario_id"],
+            "scenario_label": spec["scenario_label"],
+            "scenario_group": spec["scenario_group"],
+            "scenario_purpose": spec["scenario_purpose"],
+            "source_pack_refs": spec["source_pack_refs"],
+            "expected_user_question": spec["expected_user_question"],
+            "expected_workspace_panels": spec["expected_workspace_panels"],
+            "expected_status": expected_status,
+            "expected_blockers": list(dict.fromkeys(spec["expected_blockers"] + missing_pack_refs)),
+            "recommended_operator_action": spec["recommended_operator_action"],
+            "demo_run_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Scenario card is a deterministic preview only and does not create a real demo run.",
+        })
+        scenario_input_preview_cards.append({
+            "input_preview_id": f"input_preview_{spec['scenario_id']}",
+            "scenario_id": spec["scenario_id"],
+            "input_type": spec["input_type"],
+            "input_label": spec["scenario_label"],
+            "input_summary": (
+                "Uses only already-derived workspace pack metadata and supplied preview "
+                "signals; it does not generate real reviews or use real customer data."
+            ),
+            "source_pack_refs": spec["source_pack_refs"],
+            "uses_real_external_data": False,
+            "uses_real_customer_data": False,
+            "real_scraping_allowed": False,
+            "llm_generation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Input preview is derived from existing packs only; no external data is fetched.",
+        })
+        scenario_expected_signal_cards.append({
+            "signal_id": f"expected_signal_{spec['scenario_id']}",
+            "scenario_id": spec["scenario_id"],
+            "signal_type": spec["signal_type"],
+            "expected_signal": spec["expected_signal"],
+            "source_stage_refs": [spec["scenario_group"]],
+            "source_pack_refs": spec["source_pack_refs"],
+            "expected_workspace_status": expected_status,
+            "expected_operator_action": spec["recommended_operator_action"],
+            "risk_note": "Expected signal is deterministic preview metadata, not legal advice or a real policy decision.",
+        })
+        scenario_pack_coverage_map.append({
+            "coverage_id": f"coverage_{spec['scenario_id']}",
+            "scenario_id": spec["scenario_id"],
+            "covered_pack_refs": spec["source_pack_refs"],
+            "covered_stage_refs": [spec["scenario_group"]],
+            "coverage_status": "covered" if not missing_pack_refs else "missing_source_pack",
+            "missing_pack_refs": missing_pack_refs,
+            "expected_panel_refs": spec["expected_workspace_panels"],
+            "copy_export_preview_supported": True,
+            "real_export_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Coverage map supports preview copy/export metadata only and does not write files.",
+        })
+        scenario_operator_walkthrough_cards.append({
+            "walkthrough_id": f"walkthrough_{index}_{spec['scenario_id']}",
+            "scenario_id": spec["scenario_id"],
+            "walkthrough_steps": [
+                "Open the Project Workspace preview.",
+                f"Locate the panels: {', '.join(spec['expected_workspace_panels'])}.",
+                "Confirm expected blockers and disabled safety boundaries.",
+                "Copy preview data only if manual review still agrees.",
+            ],
+            "recommended_operator_action": spec["recommended_operator_action"],
+            "creates_real_operator_task": False,
+            "real_task_creation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Walkthrough is manual demo guidance only and does not create a real task.",
+        })
+
+    disabled_capabilities = {
+        "real_llm": False,
+        "provider": False,
+        "media": False,
+        "external_scraping": False,
+        "database_persistence": False,
+        "real_execution": False,
+        "real_policy_check": False,
+        "platform_upload": False,
+        "task_creation": False,
+        "real_export": False,
+        "file_write": False,
+    }
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+    }
+    scenario_regression_assertion_cards = [
+        {
+            "assertion_id": f"pack_exists_{pack_id}",
+            "assertion_type": "pack_exists",
+            "source_pack_refs": [pack_id],
+            "expected_value": "present",
+            "observed_value": pack_status(pack_id),
+            "assertion_status": "pass" if pack_status(pack_id) != "missing" else "needs_review",
+            "real_execution_allowed": False,
+            "risk_note": "Pack existence assertion is deterministic and read-only.",
+        }
+        for pack_id in source_pack_ids
+    ] + [
+        {
+            "assertion_id": f"disabled_boundary_{capability}",
+            "assertion_type": "disabled_boundary_remains_false",
+            "source_pack_refs": source_pack_ids,
+            "expected_value": False,
+            "observed_value": value,
+            "assertion_status": "pass" if value is False else "fail",
+            "real_execution_allowed": False,
+            "risk_note": "Disabled boundary assertion proves the scenario preset does not enable real capabilities.",
+        }
+        for capability, value in disabled_capabilities.items()
+    ]
+
+    scenario_ids = [spec["scenario_id"] for spec in scenario_specs]
+    return {
+        "pack_version": "workspace_scenario_presets_pack_v1",
+        "scenario_preset_summary": {
+            "mode": "scenario_presets_preview_deterministic_demo_runs_dry_run_only",
+            "source_packs": source_pack_ids,
+            "scenario_count": len(demo_scenario_cards),
+            "input_preview_count": len(scenario_input_preview_cards),
+            "expected_signal_count": len(scenario_expected_signal_cards),
+            "pack_coverage_count": len(scenario_pack_coverage_map),
+            "operator_walkthrough_count": len(scenario_operator_walkthrough_cards),
+            "regression_assertion_count": len(scenario_regression_assertion_cards),
+            "scenario_ids": scenario_ids,
+            "demo_run_created": False,
+            "demo_run_allowed": False,
+            "real_task_creation_allowed": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_provider_allowed": False,
+            "real_media_upload_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": "Use these deterministic scenario presets for demo preview only; do not create real demo runs, write files, export, upload, call providers, call LLMs, scrape, or persist.",
+        },
+        "demo_scenario_cards": demo_scenario_cards,
+        "scenario_input_preview_cards": scenario_input_preview_cards,
+        "scenario_expected_signal_cards": scenario_expected_signal_cards,
+        "scenario_pack_coverage_map": scenario_pack_coverage_map,
+        "scenario_operator_walkthrough_cards": scenario_operator_walkthrough_cards,
+        "scenario_regression_assertion_cards": scenario_regression_assertion_cards,
+        "scenario_disabled_capability_checks": disabled_capabilities,
+        "scenario_quality_checks": {
+            "strong_evidence_covered": "strong_evidence_ready_preview" in scenario_ids,
+            "weak_evidence_covered": "weak_evidence_needs_review" in scenario_ids,
+            "blocked_claim_covered": "unsupported_claim_blocked" in scenario_ids,
+            "video_prompt_risk_covered": "video_prompt_visual_claim_risk" in scenario_ids,
+            "delivery_blocker_covered": "delivery_blocked_by_missing_quote" in scenario_ids,
+            "provider_safety_covered": "provider_safety_blocked" in scenario_ids,
+            "final_export_covered": "final_export_ready_preview_only" in scenario_ids,
+            "operator_handoff_covered": "operator_handoff_required" in scenario_ids,
+            "input_previews_do_not_use_real_external_data": all(
+                not card["uses_real_external_data"] for card in scenario_input_preview_cards
+            ),
+            "input_previews_do_not_use_real_customer_data": all(
+                not card["uses_real_customer_data"] for card in scenario_input_preview_cards
+            ),
+            "operator_walkthroughs_do_not_create_tasks": all(
+                not card["creates_real_operator_task"] for card in scenario_operator_walkthrough_cards
+            ),
+            "coverage_maps_do_not_allow_real_export": all(
+                not card["real_export_allowed"] for card in scenario_pack_coverage_map
+            ),
+            "disabled_capability_boundaries_covered": all(value is False for value in disabled_capabilities.values()),
+            "real_execution_performed": False,
+            "database_write_performed": False,
+            "file_write_performed": False,
+            "real_export_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "real_scraping_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "workspace_scenario_presets_preview",
+            "source": "creative_decision_pack.workspace_scenario_presets_pack",
+            "audit_record_created": False,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "operator_task_created": False,
+            "demo_run_created": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -42891,6 +43338,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_product_navigation_pack"] = (
         _rw_workspace_product_navigation_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_scenario_presets_pack"] = (
+        _rw_workspace_scenario_presets_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(

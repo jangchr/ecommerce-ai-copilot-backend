@@ -10023,6 +10023,336 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
                 self.assertIn(key, boundaries)
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_scenario_presets_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-scenario-presets-preview",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "SCENARIOPRESET001",
+                "title": "Compact Travel Mug",
+                "reviews": [
+                    {
+                        "rating": 2,
+                        "title": "Leaks during commute",
+                        "text": (
+                            "Leaks during commute and the lid seal drips "
+                            "into my bag every morning."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 5,
+                        "title": "Easy to clean",
+                        "text": (
+                            "The cup is easy to clean after coffee and fits "
+                            "my office bag."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 1,
+                        "title": "Competitor seal problem",
+                        "text": (
+                            "Competitor lid also leaks in a work bag, so I "
+                            "would not trust it for travel."
+                        ),
+                        "source_section": "competitor_review",
+                        "metadata": {"source_type": "competitor"},
+                    },
+                ],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_evidence_quality_pack",
+            "claim_risk_guard_pack",
+            "claim_safe_creative_brief_pack",
+            "claim_safe_creative_output_pack",
+            "claim_safe_platform_delivery_pack",
+            "claim_safe_delivery_qa_pack",
+            "claim_safe_delivery_remediation_pack",
+            "claim_safe_remediation_verification_pack",
+            "final_claim_safe_export_packet_pack",
+            "campaign_creative_dossier_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "workspace_real_execution_approval_token_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_product_navigation_pack",
+            "workspace_scenario_presets_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_scenario_presets_pack"]
+        self.assertEqual(pack["pack_version"], "workspace_scenario_presets_pack_v1")
+        for required_key in [
+            "scenario_preset_summary",
+            "demo_scenario_cards",
+            "scenario_input_preview_cards",
+            "scenario_expected_signal_cards",
+            "scenario_pack_coverage_map",
+            "scenario_operator_walkthrough_cards",
+            "scenario_regression_assertion_cards",
+            "scenario_disabled_capability_checks",
+            "scenario_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+        ]:
+            with self.subTest(required_key=required_key):
+                self.assertIn(required_key, pack)
+                self.assertTrue(pack[required_key])
+
+        summary = pack["scenario_preset_summary"]
+        self.assertIn("scenario_presets_preview", summary["mode"])
+        self.assertIn("deterministic_demo_runs", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        for source_pack in [
+            "workspace_product_navigation_pack",
+            "campaign_creative_dossier_pack",
+            "final_claim_safe_export_packet_pack",
+            "claim_safe_remediation_verification_pack",
+            "claim_safe_delivery_remediation_pack",
+            "claim_safe_delivery_qa_pack",
+            "claim_safe_platform_delivery_pack",
+            "claim_safe_creative_output_pack",
+            "claim_safe_creative_brief_pack",
+            "claim_risk_guard_pack",
+            "review_evidence_quality_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "workspace_real_execution_approval_token_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_capability_permission_matrix_pack",
+        ]:
+            self.assertIn(source_pack, summary["source_packs"])
+        for disabled_key in [
+            "demo_run_allowed",
+            "real_task_creation_allowed",
+            "real_file_write_allowed",
+            "real_export_allowed",
+            "real_platform_upload_allowed",
+            "real_provider_allowed",
+            "real_media_upload_allowed",
+            "real_policy_check_allowed",
+            "real_execution_allowed",
+        ]:
+            self.assertFalse(summary[disabled_key])
+
+        scenario_ids = {card["scenario_id"] for card in pack["demo_scenario_cards"]}
+        for scenario_id in [
+            "strong_evidence_ready_preview",
+            "weak_evidence_needs_review",
+            "unsupported_claim_blocked",
+            "video_prompt_visual_claim_risk",
+            "delivery_blocked_by_missing_quote",
+            "provider_safety_blocked",
+            "final_export_ready_preview_only",
+            "operator_handoff_required",
+        ]:
+            with self.subTest(scenario_id=scenario_id):
+                self.assertIn(scenario_id, scenario_ids)
+        for card in pack["demo_scenario_cards"]:
+            for field in [
+                "scenario_id",
+                "scenario_label",
+                "scenario_group",
+                "scenario_purpose",
+                "source_pack_refs",
+                "expected_user_question",
+                "expected_workspace_panels",
+                "expected_status",
+                "expected_blockers",
+                "recommended_operator_action",
+                "demo_run_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(scenario=card["scenario_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["demo_run_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        input_scenario_ids = {
+            card["scenario_id"] for card in pack["scenario_input_preview_cards"]
+        }
+        self.assertTrue(scenario_ids <= input_scenario_ids)
+        for card in pack["scenario_input_preview_cards"]:
+            for field in [
+                "input_preview_id",
+                "scenario_id",
+                "input_type",
+                "input_summary",
+                "source_pack_refs",
+                "uses_real_external_data",
+                "uses_real_customer_data",
+                "real_scraping_allowed",
+                "llm_generation_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(input=card["input_preview_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["uses_real_external_data"])
+            self.assertFalse(card["uses_real_customer_data"])
+            self.assertFalse(card["real_scraping_allowed"])
+            self.assertFalse(card["llm_generation_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        signal_types = {
+            card["signal_type"] for card in pack["scenario_expected_signal_cards"]
+        }
+        for signal_type in ["evidence", "claim", "delivery", "QA", "provider safety"]:
+            with self.subTest(signal_type=signal_type):
+                self.assertIn(signal_type, signal_types)
+        for card in pack["scenario_expected_signal_cards"]:
+            for field in [
+                "signal_id",
+                "scenario_id",
+                "signal_type",
+                "expected_signal",
+                "source_stage_refs",
+                "source_pack_refs",
+                "expected_workspace_status",
+                "expected_operator_action",
+                "risk_note",
+            ]:
+                with self.subTest(signal=card["signal_id"], field=field):
+                    self.assertIn(field, card)
+
+        coverage_text = " ".join(
+            " ".join(card["covered_pack_refs"])
+            for card in pack["scenario_pack_coverage_map"]
+        )
+        for source_pack in [
+            "workspace_product_navigation_pack",
+            "campaign_creative_dossier_pack",
+            "final_claim_safe_export_packet_pack",
+            "claim_risk_guard_pack",
+            "review_evidence_quality_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+        ]:
+            with self.subTest(coverage_pack=source_pack):
+                self.assertIn(source_pack, coverage_text)
+        for card in pack["scenario_pack_coverage_map"]:
+            for field in [
+                "coverage_id",
+                "scenario_id",
+                "covered_pack_refs",
+                "covered_stage_refs",
+                "coverage_status",
+                "missing_pack_refs",
+                "expected_panel_refs",
+                "copy_export_preview_supported",
+                "real_export_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(coverage=card["coverage_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["real_export_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        walkthrough_scenario_ids = {
+            card["scenario_id"] for card in pack["scenario_operator_walkthrough_cards"]
+        }
+        self.assertTrue(scenario_ids <= walkthrough_scenario_ids)
+        for card in pack["scenario_operator_walkthrough_cards"]:
+            self.assertFalse(card["creates_real_operator_task"])
+            self.assertFalse(card["real_task_creation_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        regression_text = " ".join(
+            card["assertion_id"] for card in pack["scenario_regression_assertion_cards"]
+        )
+        self.assertIn("pack_exists_workspace_product_navigation_pack", regression_text)
+        self.assertIn("disabled_boundary_real_execution", regression_text)
+        self.assertIn("disabled_boundary_file_write", regression_text)
+        for card in pack["scenario_regression_assertion_cards"]:
+            self.assertFalse(card["real_execution_allowed"])
+
+        disabled = pack["scenario_disabled_capability_checks"]
+        for key in [
+            "real_llm",
+            "provider",
+            "media",
+            "external_scraping",
+            "database_persistence",
+            "real_execution",
+            "real_policy_check",
+            "platform_upload",
+            "task_creation",
+            "real_export",
+            "file_write",
+        ]:
+            with self.subTest(disabled_check=key):
+                self.assertIn(key, disabled)
+                self.assertFalse(disabled[key])
+
+        checks = pack["scenario_quality_checks"]
+        for key in [
+            "strong_evidence_covered",
+            "weak_evidence_covered",
+            "blocked_claim_covered",
+            "video_prompt_risk_covered",
+            "delivery_blocker_covered",
+            "provider_safety_covered",
+            "final_export_covered",
+            "operator_handoff_covered",
+            "input_previews_do_not_use_real_external_data",
+            "input_previews_do_not_use_real_customer_data",
+            "operator_walkthroughs_do_not_create_tasks",
+            "coverage_maps_do_not_allow_real_export",
+            "disabled_capability_boundaries_covered",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "real_execution_performed",
+            "database_write_performed",
+            "file_write_performed",
+            "real_export_performed",
+            "provider_called",
+            "llm_called",
+            "real_scraping_performed",
+        ]:
+            self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["audit_record_created"])
+        self.assertFalse(audit["database_write_allowed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["operator_task_created"])
+        self.assertFalse(audit["demo_run_created"])
+        self.assertFalse(audit["real_file_write_allowed"])
+        self.assertFalse(audit["real_export_allowed"])
+        self.assertFalse(audit["real_execution_allowed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider", "provider_enabled", "llm", "llm_enabled",
+            "media", "media_enabled", "external_scraping",
+            "external_scraping_enabled", "database_persistence",
+            "database_persistence_enabled", "real_execution",
+            "real_execution_enabled", "real_policy_check",
+            "real_policy_check_enabled", "platform_upload",
+            "platform_upload_enabled", "task_creation",
+            "task_creation_enabled", "real_export", "real_export_enabled",
+            "file_write", "file_write_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertIn(key, boundaries)
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
