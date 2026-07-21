@@ -41128,6 +41128,577 @@ def _rw_claim_safe_remediation_verification_pack(creative_decision_pack: dict) -
     }
 
 
+def _rw_final_claim_safe_export_packet_pack(creative_decision_pack: dict) -> dict:
+    verification_pack = dict(
+        creative_decision_pack.get("claim_safe_remediation_verification_pack") or {}
+    )
+    remediation_pack = dict(
+        creative_decision_pack.get("claim_safe_delivery_remediation_pack") or {}
+    )
+    qa_pack = dict(creative_decision_pack.get("claim_safe_delivery_qa_pack") or {})
+    platform_pack = dict(
+        creative_decision_pack.get("claim_safe_platform_delivery_pack") or {}
+    )
+    output_pack = dict(
+        creative_decision_pack.get("claim_safe_creative_output_pack") or {}
+    )
+    brief_pack = dict(creative_decision_pack.get("claim_safe_creative_brief_pack") or {})
+    claim_risk_pack = dict(creative_decision_pack.get("claim_risk_guard_pack") or {})
+    evidence_pack = dict(
+        creative_decision_pack.get("review_evidence_quality_pack") or {}
+    )
+    campaign_pack = dict(creative_decision_pack.get("campaign_export_pack") or {})
+
+    def unique(values: list[object]) -> list[str]:
+        return list(dict.fromkeys(_rw_text(value) for value in values if _rw_text(value)))
+
+    def as_list(value: object) -> list[str]:
+        if isinstance(value, list):
+            return unique(value)
+        return [_rw_text(value)] if _rw_text(value) else []
+
+    retry_cards = list(verification_pack.get("retry_export_readiness_cards") or [])
+    copy_verification_cards = list(
+        verification_pack.get("copy_fix_verification_cards") or []
+    )
+    video_verification_cards = list(
+        verification_pack.get("video_prompt_fix_verification_cards") or []
+    )
+    claim_verification_cards = list(
+        verification_pack.get("claim_fix_verification_cards") or []
+    )
+    remediation_verification_cards = list(
+        verification_pack.get("remediation_verification_cards") or []
+    )
+    remaining_blockers = list(verification_pack.get("remaining_blocker_cards") or [])
+    verification_trace = list(verification_pack.get("verification_evidence_trace") or [])
+    qa_surface_cards = list(qa_pack.get("surface_readiness_cards") or [])
+    qa_copy_cards = list(qa_pack.get("copy_completeness_cards") or [])
+    qa_video_cards = list(qa_pack.get("video_prompt_readiness_cards") or [])
+    platform_cards = list(platform_pack.get("platform_delivery_cards") or [])
+    platform_asset_cards = list(platform_pack.get("asset_requirement_cards") or [])
+    output_blocked_cards = list(output_pack.get("blocked_output_cards") or [])
+    blocked_claim_cards = list(claim_risk_pack.get("blocked_claim_cards") or [])
+    restricted_claim_cards = list(claim_risk_pack.get("restricted_claim_cards") or [])
+
+    def surface_matches(card: dict, surface: str) -> bool:
+        return card.get("delivery_surface") in {surface, "all_delivery_surfaces", ""}
+
+    def packet_status(card: dict) -> str:
+        status = card.get("retry_export_status", "")
+        if status == "ready_for_retry_preview_export":
+            return "ready_for_preview_export"
+        if status == "needs_operator_recheck":
+            return "needs_operator_review"
+        return "blocked"
+
+    final_export_packet_cards: list[dict] = []
+    for index, card in enumerate(retry_cards[:18], start=1):
+        surface = card.get("delivery_surface", "all_delivery_surfaces")
+        status = packet_status(card)
+        surface_copy_refs = unique([
+            item.get("copy_verification_id")
+            for item in copy_verification_cards
+            if surface_matches(item, surface)
+        ])
+        surface_video_refs = unique([
+            item.get("video_verification_id")
+            for item in video_verification_cards
+            if surface_matches(item, surface)
+        ])
+        surface_claim_refs = unique([
+            item.get("claim_verification_id")
+            for item in claim_verification_cards
+        ])[:10]
+        excluded_refs = unique([
+            *as_list(card.get("source_verification_refs")),
+            *[
+                blocker.get("remaining_blocker_id")
+                for blocker in remaining_blockers
+                if surface_matches(blocker, surface)
+                or blocker.get("delivery_surface") == "all_delivery_surfaces"
+            ],
+        ])
+        final_export_packet_cards.append({
+            "export_packet_id": f"final_claim_safe_export_packet_{index}",
+            "delivery_surface": surface,
+            "platform_label": (
+                next(
+                    (
+                        item.get("platform_label")
+                        for item in platform_cards
+                        if item.get("delivery_surface") == surface
+                    ),
+                    "",
+                )
+                or "preview_platform_not_real_upload"
+            ),
+            "packet_status": status,
+            "source_retry_export_refs": as_list(card.get("retry_export_id")),
+            "included_copy_refs": surface_copy_refs,
+            "included_video_prompt_refs": surface_video_refs,
+            "included_asset_requirement_refs": unique([
+                *as_list(card.get("source_delivery_refs")),
+                *[
+                    item.get("surface_qa_id")
+                    for item in qa_surface_cards
+                    if item.get("delivery_surface") == surface
+                ],
+            ]),
+            "included_claim_trace_refs": surface_claim_refs,
+            "excluded_blocker_refs": excluded_refs,
+            "ready_for_preview_export": status == "ready_for_preview_export",
+            "operator_review_required": (
+                status != "ready_for_preview_export"
+                or bool(card.get("operator_recheck_required"))
+            ),
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": (
+                "Manually review excluded blockers, do-not-claim refs, quotes, "
+                "copy, video prompts, and asset handoff before any real delivery."
+            ),
+            "risk_note": (
+                "Final export packet is preview metadata only; it does not "
+                "write files, export files, upload to platforms, or execute."
+            ),
+        })
+
+    final_channel_copy_bundle: list[dict] = []
+    for index, card in enumerate(copy_verification_cards[:18], start=1):
+        final_channel_copy_bundle.append({
+            "final_copy_id": f"final_claim_safe_copy_{index}",
+            "delivery_surface": card.get("delivery_surface", "all_delivery_surfaces"),
+            "copy_type": card.get("copy_type", "preview_copy"),
+            "copy_text": card.get("recommended_safe_copy") or card.get("original_copy", ""),
+            "source_copy_refs": as_list(card.get("copy_verification_id")),
+            "source_claim_ids": as_list(card.get("problematic_claim_refs")),
+            "supporting_quote_ids": as_list(card.get("supporting_quote_ids")),
+            "claim_risk_level": (
+                "restricted"
+                if as_list(card.get("problematic_claim_refs"))
+                or as_list(card.get("remaining_restrictions"))
+                else "preview_only_unmapped"
+            ),
+            "support_status": (
+                "quote_supported_preview"
+                if as_list(card.get("supporting_quote_ids"))
+                else "missing_quote_preview"
+            ),
+            "usage_status": (
+                "internal_preview_only"
+                if card.get("ready_for_preview_copy_export")
+                else "operator_review_required_before_public_delivery"
+            ),
+            "operator_review_required": not bool(card.get("ready_for_preview_copy_export")),
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Copy is final packet preview content only and is not real "
+                "ad copy, legal advice, or platform-approved delivery."
+            ),
+        })
+
+    final_video_prompt_bundle: list[dict] = []
+    for index, card in enumerate(video_verification_cards[:18], start=1):
+        matching_qa = next(
+            (
+                item for item in qa_video_cards
+                if item.get("delivery_surface") == card.get("delivery_surface")
+            ),
+            {},
+        )
+        final_video_prompt_bundle.append({
+            "final_video_prompt_id": f"final_claim_safe_video_prompt_{index}",
+            "delivery_surface": card.get("delivery_surface", "all_delivery_surfaces"),
+            "prompt_text": card.get("recommended_safe_prompt") or card.get("original_prompt", ""),
+            "visual_direction": matching_qa.get("visual_direction", ""),
+            "shot_refs": as_list(matching_qa.get("shot_refs")),
+            "source_video_prompt_refs": as_list(card.get("video_verification_id")),
+            "source_claim_ids": as_list(matching_qa.get("source_claim_ids")),
+            "supporting_quote_ids": as_list(matching_qa.get("supporting_quote_ids")),
+            "disallowed_visual_claims": as_list(
+                card.get("remaining_disallowed_visual_claims")
+            ),
+            "usage_status": (
+                "internal_preview_only"
+                if card.get("ready_for_preview_video_prompt_export")
+                else "blocked_from_real_generation"
+            ),
+            "real_provider_allowed": False,
+            "real_media_upload_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Video prompt is a provider-neutral preview only and does not "
+                "generate video, call providers, or upload/download media."
+            ),
+        })
+
+    final_asset_handoff_bundle: list[dict] = []
+    asset_sources = qa_surface_cards or platform_asset_cards or platform_cards
+    for index, card in enumerate(asset_sources[:18], start=1):
+        required_fields = unique([
+            *as_list(card.get("required_asset_fields")),
+            *as_list(card.get("required_fields")),
+            *as_list(card.get("asset_required_fields")),
+        ])
+        present_fields = unique([
+            *as_list(card.get("present_asset_fields")),
+            *as_list(card.get("present_fields")),
+        ])
+        missing_fields = unique([
+            *as_list(card.get("missing_asset_fields")),
+            *as_list(card.get("missing_fields")),
+        ])
+        final_asset_handoff_bundle.append({
+            "asset_handoff_id": f"final_claim_safe_asset_handoff_{index}",
+            "delivery_surface": card.get("delivery_surface", "all_delivery_surfaces"),
+            "asset_type": card.get("asset_type", "preview_delivery_asset_requirement"),
+            "asset_requirement_summary": (
+                "Preview asset handoff requirements only; no file is created, "
+                "uploaded, downloaded, or persisted."
+            ),
+            "required_fields": required_fields,
+            "present_fields": present_fields,
+            "missing_fields": missing_fields,
+            "source_asset_requirement_refs": unique([
+                card.get("surface_qa_id"),
+                card.get("asset_requirement_id"),
+                card.get("platform_delivery_id"),
+                card.get("delivery_surface"),
+            ]),
+            "handoff_status": (
+                "ready_for_preview_handoff" if not missing_fields
+                else "missing_required_field"
+            ),
+            "real_media_upload_allowed": False,
+            "real_file_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Asset handoff is descriptive only and blocks media transfer, "
+                "file writes, downloads, uploads, and real execution."
+            ),
+        })
+
+    final_claim_trace_bundle: list[dict] = []
+    for index, trace in enumerate((verification_trace or claim_verification_cards)[:24], start=1):
+        claim_ids = as_list(trace.get("source_claim_ids")) or as_list(trace.get("claim_id"))
+        matching_claims = [
+            item for item in claim_verification_cards
+            if item.get("claim_id") in claim_ids or not claim_ids
+        ][:6]
+        final_claim_trace_bundle.append({
+            "trace_id": f"final_claim_safe_claim_trace_{index}",
+            "delivery_surface": trace.get("delivery_surface", "all_delivery_surfaces"),
+            "output_ref": (
+                trace.get("verification_id")
+                or trace.get("claim_verification_id")
+                or trace.get("trace_id")
+                or f"final_output_preview_{index}"
+            ),
+            "source_claim_ids": claim_ids or unique([
+                item.get("claim_id") for item in matching_claims
+            ]),
+            "supporting_quote_ids": as_list(trace.get("supporting_quote_ids")),
+            "evidence_quality_refs": as_list(trace.get("evidence_quality_refs")),
+            "claim_risk_refs": unique([
+                *as_list(trace.get("claim_risk_refs")),
+                *[item.get("claim_verification_id") for item in matching_claims],
+            ]),
+            "do_not_claim_refs": unique([
+                ref
+                for item in matching_claims
+                for ref in as_list(item.get("do_not_claim_refs"))
+            ]),
+            "trace_status": (
+                "operator_review_required"
+                if any(item.get("operator_recheck_required") for item in matching_claims)
+                else "preview_trace_ready"
+            ),
+            "risk_note": (
+                "Trace maps final preview output to claim, quote, evidence "
+                "quality, claim risk, and do-not-claim refs only."
+            ),
+        })
+
+    blocked_appendix_sources = [
+        *remaining_blockers,
+        *output_blocked_cards,
+        *blocked_claim_cards,
+        *restricted_claim_cards,
+    ]
+    required_appendix_types = [
+        "blocked_content",
+        "remaining_blockers",
+        "do_not_claim",
+        "unsupported_claim",
+        "missing_quote",
+        "policy_check_disabled",
+        "platform_upload_disabled",
+    ]
+    final_blocked_content_appendix: list[dict] = []
+    for index, appendix_type in enumerate(required_appendix_types, start=1):
+        source_refs = unique([
+            item.get("remaining_blocker_id")
+            or item.get("blocked_output_id")
+            or item.get("blocked_claim_id")
+            or item.get("restricted_claim_id")
+            or item.get("claim_id")
+            for item in blocked_appendix_sources
+            if appendix_type in {
+                item.get("blocker_type"),
+                item.get("blocked_reason"),
+                item.get("issue_type"),
+            }
+            or appendix_type in {"blocked_content", "remaining_blockers", "do_not_claim"}
+        ]) or [appendix_type]
+        final_blocked_content_appendix.append({
+            "appendix_id": f"final_claim_safe_blocked_appendix_{index}",
+            "appendix_type": appendix_type,
+            "source_refs": source_refs,
+            "delivery_surface": "all_delivery_surfaces",
+            "public_delivery_allowed": False,
+            "blocked_reason": (
+                f"{appendix_type} stays in the final blocked appendix and "
+                "must not enter public delivery without manual review."
+            ),
+            "operator_review_required": True,
+            "real_policy_check_allowed": False,
+            "real_export_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Blocked appendix preserves exclusions for preview review only; "
+                "it is not exported, uploaded, or published."
+            ),
+        })
+
+    final_operator_handoff_checklist = [
+        {
+            "checklist_id": "final_claim_safe_operator_review_copy",
+            "check_type": "copy_review",
+            "check_summary": "Review final copy against supporting quotes and do-not-claim refs.",
+            "source_refs": unique([
+                item.get("final_copy_id") for item in final_channel_copy_bundle
+            ]),
+            "check_status": "manual_review_required",
+            "operator_task_created": False,
+            "real_task_creation_allowed": False,
+            "real_execution_allowed": False,
+        },
+        {
+            "checklist_id": "final_claim_safe_operator_review_video_asset",
+            "check_type": "video_and_asset_review",
+            "check_summary": (
+                "Review video prompt and asset handoff requirements without "
+                "calling providers, uploading media, or writing files."
+            ),
+            "source_refs": unique([
+                *[item.get("final_video_prompt_id") for item in final_video_prompt_bundle],
+                *[item.get("asset_handoff_id") for item in final_asset_handoff_bundle],
+            ]),
+            "check_status": "manual_review_required",
+            "operator_task_created": False,
+            "real_task_creation_allowed": False,
+            "real_execution_allowed": False,
+        },
+        {
+            "checklist_id": "final_claim_safe_operator_review_blockers",
+            "check_type": "blocked_appendix_review",
+            "check_summary": (
+                "Confirm blocked content, remaining blockers, unsupported "
+                "claims, missing quotes, and disabled policy/upload boundaries."
+            ),
+            "source_refs": unique([
+                item.get("appendix_id") for item in final_blocked_content_appendix
+            ]),
+            "check_status": "manual_review_required",
+            "operator_task_created": False,
+            "real_task_creation_allowed": False,
+            "real_execution_allowed": False,
+        },
+    ]
+
+    ready_count = sum(
+        card["packet_status"] == "ready_for_preview_export"
+        for card in final_export_packet_cards
+    )
+    review_count = sum(
+        card["packet_status"] == "needs_operator_review"
+        for card in final_export_packet_cards
+    )
+    blocked_count = sum(
+        card["packet_status"] == "blocked"
+        for card in final_export_packet_cards
+    )
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "real_provider_called": False,
+        "llm_called": False,
+        "real_media_upload_performed": False,
+        "external_scraping_performed": False,
+        "database_write_performed": False,
+        "real_platform_upload_performed": False,
+        "real_policy_api_called": False,
+        "operator_task_created": False,
+        "real_export_performed": False,
+        "file_write_performed": False,
+    }
+
+    return {
+        "pack_version": "final_claim_safe_export_packet_pack_v1",
+        "final_export_summary": {
+            "mode": (
+                "final_claim_safe_export_packet_preview_"
+                "deterministic_export_packet_dry_run_only"
+            ),
+            "source_packs": [
+                "claim_safe_remediation_verification_pack",
+                "claim_safe_delivery_remediation_pack",
+                "claim_safe_delivery_qa_pack",
+                "claim_safe_platform_delivery_pack",
+                "claim_safe_creative_output_pack",
+                "claim_safe_creative_brief_pack",
+                "claim_risk_guard_pack",
+                "review_evidence_quality_pack",
+                "campaign_export_pack",
+            ],
+            "final_export_packet_count": len(final_export_packet_cards),
+            "final_channel_copy_count": len(final_channel_copy_bundle),
+            "final_video_prompt_count": len(final_video_prompt_bundle),
+            "final_asset_handoff_count": len(final_asset_handoff_bundle),
+            "final_claim_trace_count": len(final_claim_trace_bundle),
+            "final_blocked_appendix_count": len(final_blocked_content_appendix),
+            "ready_for_preview_export_count": ready_count,
+            "needs_operator_review_count": review_count,
+            "blocked_count": blocked_count,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_provider_allowed": False,
+            "real_media_upload_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": (
+                "Treat this as the final dry-run packet only; manually review "
+                "copy, prompts, asset handoff, claim trace, and blocked appendix "
+                "before any out-of-system delivery."
+            ),
+        },
+        "final_export_packet_cards": final_export_packet_cards,
+        "final_channel_copy_bundle": final_channel_copy_bundle,
+        "final_video_prompt_bundle": final_video_prompt_bundle,
+        "final_asset_handoff_bundle": final_asset_handoff_bundle,
+        "final_claim_trace_bundle": final_claim_trace_bundle,
+        "final_blocked_content_appendix": final_blocked_content_appendix,
+        "final_operator_handoff_checklist": final_operator_handoff_checklist,
+        "export_file_manifest_preview": {
+            "manifest_id": "final_claim_safe_export_file_manifest_preview",
+            "manifest_type": "json_markdown_preview_shape_only",
+            "json_export_preview_includes": [
+                "final_export_summary",
+                "final_export_packet_cards",
+                "final_channel_copy_bundle",
+                "final_video_prompt_bundle",
+                "final_asset_handoff_bundle",
+                "final_claim_trace_bundle",
+                "final_blocked_content_appendix",
+                "final_operator_handoff_checklist",
+            ],
+            "markdown_export_preview_sections": [
+                "Final Claim-Safe Export Packet",
+                "Final Export Summary",
+                "Final Export Packet Cards",
+                "Final Channel Copy Bundle",
+                "Final Video Prompt Bundle",
+                "Final Asset Handoff Bundle",
+                "Final Claim Trace Bundle",
+                "Final Blocked Content Appendix",
+                "Final Operator Handoff Checklist",
+                "Audit Preview",
+                "Safety Boundaries",
+            ],
+            "real_file_created": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "file_upload_allowed": False,
+            "database_write_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "final_export_quality_checks": {
+            "claim_safe_remediation_verification_pack_present": bool(verification_pack),
+            "claim_safe_delivery_remediation_pack_present": bool(remediation_pack),
+            "claim_safe_delivery_qa_pack_present": bool(qa_pack),
+            "claim_safe_platform_delivery_pack_present": bool(platform_pack),
+            "claim_safe_creative_output_pack_present": bool(output_pack),
+            "claim_safe_creative_brief_pack_present": bool(brief_pack),
+            "claim_risk_guard_pack_present": bool(claim_risk_pack),
+            "review_evidence_quality_pack_present": bool(evidence_pack),
+            "campaign_export_pack_present": bool(campaign_pack),
+            "copy_coverage_present": bool(final_channel_copy_bundle),
+            "video_prompt_coverage_present": bool(final_video_prompt_bundle),
+            "asset_handoff_coverage_present": bool(final_asset_handoff_bundle),
+            "claim_trace_coverage_present": bool(final_claim_trace_bundle),
+            "blocked_appendix_coverage_present": bool(final_blocked_content_appendix),
+            "operator_handoff_coverage_present": bool(final_operator_handoff_checklist),
+            "safety_boundary_coverage_present": True,
+            "llm_called": False,
+            "provider_called": False,
+            "media_operation_performed": False,
+            "external_scraping_performed": False,
+            "database_write_performed": False,
+            "real_policy_api_called": False,
+            "real_execution_performed": False,
+            "real_platform_upload_performed": False,
+            "operator_task_created": False,
+            "real_export_performed": False,
+            "file_write_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "final_claim_safe_export_packet_preview",
+            "source": "creative_decision_pack.final_claim_safe_export_packet_pack",
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "audit_record_created": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "real_provider_allowed": False,
+            "real_media_upload_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_export_allowed": False,
+            "real_file_write_allowed": False,
+            "operator_task_created": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -41346,6 +41917,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["claim_safe_remediation_verification_pack"] = (
         _rw_claim_safe_remediation_verification_pack(creative_decision_pack)
+    )
+    creative_decision_pack["final_claim_safe_export_packet_pack"] = (
+        _rw_final_claim_safe_export_packet_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(

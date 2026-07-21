@@ -8998,6 +8998,338 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
                 self.assertIn(key, boundaries)
                 self.assertFalse(boundaries[key])
 
+    def test_final_claim_safe_export_packet_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "final-claim-safe-export-packet-preview",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "FINALCLAIMSAFE001",
+                "title": "Compact Travel Mug",
+                "reviews": [
+                    {
+                        "rating": 2,
+                        "title": "Leaks during commute",
+                        "text": (
+                            "Leaks during commute and the lid seal drips "
+                            "into my bag every morning."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 5,
+                        "title": "Easy to clean",
+                        "text": (
+                            "The cup is easy to clean after coffee and fits "
+                            "my office bag."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 4,
+                        "title": "Good office fit",
+                        "text": (
+                            "It fits my work bag and is simple to rinse "
+                            "between meetings."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 1,
+                        "title": "Competitor seal problem",
+                        "text": (
+                            "Competitor lid also leaks in a work bag, so I "
+                            "would not trust it for travel."
+                        ),
+                        "source_section": "competitor_review",
+                        "metadata": {"source_type": "competitor"},
+                    },
+                ],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_evidence_quality_pack",
+            "claim_risk_guard_pack",
+            "claim_safe_creative_brief_pack",
+            "claim_safe_creative_output_pack",
+            "claim_safe_platform_delivery_pack",
+            "claim_safe_delivery_qa_pack",
+            "claim_safe_delivery_remediation_pack",
+            "claim_safe_remediation_verification_pack",
+            "final_claim_safe_export_packet_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["final_claim_safe_export_packet_pack"]
+        self.assertEqual(
+            pack["pack_version"], "final_claim_safe_export_packet_pack_v1"
+        )
+        for required_key in [
+            "final_export_summary",
+            "final_export_packet_cards",
+            "final_channel_copy_bundle",
+            "final_video_prompt_bundle",
+            "final_asset_handoff_bundle",
+            "final_claim_trace_bundle",
+            "final_blocked_content_appendix",
+            "final_operator_handoff_checklist",
+            "export_file_manifest_preview",
+            "final_export_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+        ]:
+            with self.subTest(required_key=required_key):
+                self.assertIn(required_key, pack)
+                self.assertTrue(pack[required_key])
+
+        summary = pack["final_export_summary"]
+        self.assertIn("final_claim_safe_export_packet_preview", summary["mode"])
+        self.assertIn("deterministic_export_packet", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        for source_pack in [
+            "claim_safe_remediation_verification_pack",
+            "claim_safe_delivery_remediation_pack",
+            "claim_safe_delivery_qa_pack",
+            "claim_safe_platform_delivery_pack",
+            "claim_safe_creative_output_pack",
+            "claim_safe_creative_brief_pack",
+            "claim_risk_guard_pack",
+            "review_evidence_quality_pack",
+            "campaign_export_pack",
+        ]:
+            self.assertIn(source_pack, summary["source_packs"])
+        for disabled_key in [
+            "real_file_write_allowed",
+            "real_export_allowed",
+            "real_platform_upload_allowed",
+            "real_provider_allowed",
+            "real_media_upload_allowed",
+            "real_policy_check_allowed",
+            "real_execution_allowed",
+        ]:
+            self.assertFalse(summary[disabled_key])
+
+        packet_statuses = {
+            card["packet_status"] for card in pack["final_export_packet_cards"]
+        }
+        self.assertIn("ready_for_preview_export", packet_statuses)
+        self.assertIn("needs_operator_review", packet_statuses)
+        self.assertIn("blocked", packet_statuses)
+        for card in pack["final_export_packet_cards"]:
+            for field in [
+                "export_packet_id",
+                "delivery_surface",
+                "platform_label",
+                "packet_status",
+                "source_retry_export_refs",
+                "included_copy_refs",
+                "included_video_prompt_refs",
+                "included_asset_requirement_refs",
+                "included_claim_trace_refs",
+                "excluded_blocker_refs",
+                "ready_for_preview_export",
+                "operator_review_required",
+                "real_file_write_allowed",
+                "real_export_allowed",
+                "real_platform_upload_allowed",
+                "real_execution_allowed",
+                "recommended_operator_action",
+                "risk_note",
+            ]:
+                with self.subTest(packet=card["export_packet_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["real_file_write_allowed"])
+            self.assertFalse(card["real_export_allowed"])
+            self.assertFalse(card["real_platform_upload_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        for item in pack["final_channel_copy_bundle"]:
+            for field in [
+                "final_copy_id",
+                "delivery_surface",
+                "copy_type",
+                "copy_text",
+                "source_copy_refs",
+                "source_claim_ids",
+                "supporting_quote_ids",
+                "claim_risk_level",
+                "support_status",
+                "usage_status",
+                "operator_review_required",
+                "real_policy_check_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(copy=item["final_copy_id"], field=field):
+                    self.assertIn(field, item)
+            self.assertFalse(item["real_policy_check_allowed"])
+            self.assertFalse(item["real_execution_allowed"])
+
+        for item in pack["final_video_prompt_bundle"]:
+            for field in [
+                "final_video_prompt_id",
+                "delivery_surface",
+                "prompt_text",
+                "visual_direction",
+                "shot_refs",
+                "source_video_prompt_refs",
+                "source_claim_ids",
+                "supporting_quote_ids",
+                "disallowed_visual_claims",
+                "usage_status",
+                "real_provider_allowed",
+                "real_media_upload_allowed",
+                "real_policy_check_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(video=item["final_video_prompt_id"], field=field):
+                    self.assertIn(field, item)
+            self.assertFalse(item["real_provider_allowed"])
+            self.assertFalse(item["real_media_upload_allowed"])
+            self.assertFalse(item["real_policy_check_allowed"])
+            self.assertFalse(item["real_execution_allowed"])
+
+        for item in pack["final_asset_handoff_bundle"]:
+            for field in [
+                "asset_handoff_id",
+                "delivery_surface",
+                "asset_type",
+                "asset_requirement_summary",
+                "required_fields",
+                "present_fields",
+                "missing_fields",
+                "source_asset_requirement_refs",
+                "handoff_status",
+                "real_media_upload_allowed",
+                "real_file_write_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(asset=item["asset_handoff_id"], field=field):
+                    self.assertIn(field, item)
+            self.assertFalse(item["real_media_upload_allowed"])
+            self.assertFalse(item["real_file_write_allowed"])
+            self.assertFalse(item["real_execution_allowed"])
+
+        for trace in pack["final_claim_trace_bundle"]:
+            for field in [
+                "trace_id",
+                "delivery_surface",
+                "output_ref",
+                "source_claim_ids",
+                "supporting_quote_ids",
+                "evidence_quality_refs",
+                "claim_risk_refs",
+                "do_not_claim_refs",
+                "trace_status",
+                "risk_note",
+            ]:
+                with self.subTest(trace=trace["trace_id"], field=field):
+                    self.assertIn(field, trace)
+
+        appendix_types = {
+            item["appendix_type"] for item in pack["final_blocked_content_appendix"]
+        }
+        for appendix_type in [
+            "blocked_content",
+            "remaining_blockers",
+            "do_not_claim",
+            "unsupported_claim",
+            "missing_quote",
+            "platform_upload_disabled",
+            "policy_check_disabled",
+        ]:
+            with self.subTest(appendix_type=appendix_type):
+                self.assertIn(appendix_type, appendix_types)
+        for item in pack["final_blocked_content_appendix"]:
+            self.assertFalse(item["public_delivery_allowed"])
+            self.assertFalse(item["real_policy_check_allowed"])
+            self.assertFalse(item["real_export_allowed"])
+            self.assertFalse(item["real_execution_allowed"])
+
+        for item in pack["final_operator_handoff_checklist"]:
+            self.assertFalse(item["operator_task_created"])
+            self.assertFalse(item["real_task_creation_allowed"])
+            self.assertFalse(item["real_execution_allowed"])
+
+        manifest = pack["export_file_manifest_preview"]
+        self.assertEqual(manifest["manifest_type"], "json_markdown_preview_shape_only")
+        self.assertFalse(manifest["real_file_created"])
+        self.assertFalse(manifest["real_file_write_allowed"])
+        self.assertFalse(manifest["real_export_allowed"])
+        self.assertFalse(manifest["file_upload_allowed"])
+        self.assertFalse(manifest["database_write_allowed"])
+        self.assertFalse(manifest["real_platform_upload_allowed"])
+        self.assertFalse(manifest["real_execution_allowed"])
+
+        checks = pack["final_export_quality_checks"]
+        self.assertTrue(checks["claim_safe_remediation_verification_pack_present"])
+        self.assertTrue(checks["claim_safe_delivery_remediation_pack_present"])
+        self.assertTrue(checks["claim_safe_delivery_qa_pack_present"])
+        self.assertTrue(checks["claim_safe_platform_delivery_pack_present"])
+        self.assertTrue(checks["claim_safe_creative_output_pack_present"])
+        self.assertTrue(checks["claim_safe_creative_brief_pack_present"])
+        self.assertTrue(checks["claim_risk_guard_pack_present"])
+        self.assertTrue(checks["review_evidence_quality_pack_present"])
+        self.assertTrue(checks["campaign_export_pack_present"])
+        self.assertTrue(checks["copy_coverage_present"])
+        self.assertTrue(checks["video_prompt_coverage_present"])
+        self.assertTrue(checks["asset_handoff_coverage_present"])
+        self.assertTrue(checks["claim_trace_coverage_present"])
+        self.assertTrue(checks["blocked_appendix_coverage_present"])
+        self.assertTrue(checks["operator_handoff_coverage_present"])
+        self.assertTrue(checks["safety_boundary_coverage_present"])
+        self.assertFalse(checks["llm_called"])
+        self.assertFalse(checks["provider_called"])
+        self.assertFalse(checks["media_operation_performed"])
+        self.assertFalse(checks["external_scraping_performed"])
+        self.assertFalse(checks["database_write_performed"])
+        self.assertFalse(checks["real_policy_api_called"])
+        self.assertFalse(checks["real_execution_performed"])
+        self.assertFalse(checks["real_platform_upload_performed"])
+        self.assertFalse(checks["operator_task_created"])
+        self.assertFalse(checks["real_export_performed"])
+        self.assertFalse(checks["file_write_performed"])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["database_write_allowed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["audit_record_created"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["real_policy_check_allowed"])
+        self.assertFalse(audit["real_execution_allowed"])
+        self.assertFalse(audit["real_provider_allowed"])
+        self.assertFalse(audit["real_media_upload_allowed"])
+        self.assertFalse(audit["real_platform_upload_allowed"])
+        self.assertFalse(audit["real_export_allowed"])
+        self.assertFalse(audit["real_file_write_allowed"])
+        self.assertFalse(audit["operator_task_created"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider", "provider_enabled", "llm", "llm_enabled",
+            "media", "media_enabled", "external_scraping",
+            "external_scraping_enabled", "database_persistence",
+            "database_persistence_enabled", "real_execution",
+            "real_execution_enabled", "real_policy_check",
+            "real_policy_check_enabled", "platform_upload",
+            "platform_upload_enabled", "task_creation",
+            "task_creation_enabled", "real_export", "real_export_enabled",
+            "file_write", "file_write_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertIn(key, boundaries)
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
