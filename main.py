@@ -42260,6 +42260,410 @@ def _rw_campaign_creative_dossier_pack(creative_decision_pack: dict) -> dict:
     }
 
 
+def _rw_workspace_product_navigation_pack(creative_decision_pack: dict) -> dict:
+    def unique(values: list[object]) -> list[str]:
+        return list(dict.fromkeys(_rw_text(value) for value in values if _rw_text(value)))
+
+    source_pack_ids = [
+        "campaign_creative_dossier_pack",
+        "final_claim_safe_export_packet_pack",
+        "claim_safe_remediation_verification_pack",
+        "claim_safe_delivery_remediation_pack",
+        "claim_safe_delivery_qa_pack",
+        "claim_safe_platform_delivery_pack",
+        "claim_safe_creative_output_pack",
+        "claim_safe_creative_brief_pack",
+        "claim_risk_guard_pack",
+        "review_evidence_quality_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_real_execution_approval_token_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_capability_permission_matrix_pack",
+    ]
+    packs = {pack_id: dict(creative_decision_pack.get(pack_id) or {}) for pack_id in source_pack_ids}
+
+    stage_specs = [
+        ("evidence_quality", "Evidence Quality", "claim_safe_campaign", ["review_evidence_quality_pack"], "Is there enough supplied review evidence and quote quality to support claims?", True, True),
+        ("claim_risk_guard", "Claim Risk Guard", "claim_safe_campaign", ["claim_risk_guard_pack"], "Which claims are allowed, restricted, or blocked?", True, True),
+        ("claim_safe_brief", "Claim-Safe Brief", "claim_safe_campaign", ["claim_safe_creative_brief_pack"], "Which proof-backed message pillars are safe for the campaign brief?", True, True),
+        ("claim_safe_output", "Claim-Safe Output", "claim_safe_campaign", ["claim_safe_creative_output_pack"], "Which hooks, scripts, CTAs, captions, prompts, and shot lists are safe previews?", True, True),
+        ("platform_delivery", "Platform Delivery", "delivery_preview", ["claim_safe_platform_delivery_pack"], "Which delivery surfaces are ready for preview and which are blocked?", True, True),
+        ("delivery_qa", "Delivery QA", "delivery_preview", ["claim_safe_delivery_qa_pack"], "Are copy, prompt, claim, and asset requirements complete for preview export?", True, True),
+        ("remediation_plan", "Remediation Plan", "delivery_preview", ["claim_safe_delivery_remediation_pack"], "What deterministic fix plan remains before retry export readiness?", True, True),
+        ("remediation_verification", "Remediation Verification", "delivery_preview", ["claim_safe_remediation_verification_pack"], "Which remediation fixes are resolved, need recheck, or remain blocked?", True, True),
+        ("final_export_packet", "Final Export Packet", "final_handoff", ["final_claim_safe_export_packet_pack"], "Which final export packets are ready, review-only, or blocked?", True, True),
+        ("campaign_dossier", "Campaign Dossier", "final_handoff", ["campaign_creative_dossier_pack"], "What manual operator dossier summarizes the campaign state?", True, True),
+        ("provider_safety_controls", "Provider Safety Controls", "safety_controls", ["workspace_provider_invocation_audit_packet_pack", "workspace_secret_environment_gate_pack", "workspace_capability_permission_matrix_pack"], "Which provider, secret, and capability boundaries keep real calls disabled?", False, False),
+        ("real_execution_blockers", "Real Execution Blockers", "safety_controls", ["workspace_real_execution_approval_token_pack", "workspace_network_external_call_block_guard_pack"], "Why is real execution still blocked and which approvals are preview-only?", False, False),
+    ]
+
+    def pack_status(pack_id: str) -> str:
+        pack = packs.get(pack_id) or {}
+        if not pack:
+            return "missing"
+        if pack.get("pack_version"):
+            return "present"
+        return "partial"
+
+    product_stage_cards = []
+    for stage_id, label, group, refs, question, has_copy, has_export in stage_specs:
+        statuses = [pack_status(ref) for ref in refs]
+        missing = [ref for ref, status in zip(refs, statuses) if status == "missing"]
+        readiness = "ready_for_preview" if not missing else "blocked_missing_pack"
+        product_stage_cards.append({
+            "stage_id": stage_id,
+            "stage_label": label,
+            "stage_group": group,
+            "source_pack_refs": refs,
+            "primary_user_question": question,
+            "workspace_status": "present" if not missing else "partial",
+            "readiness_status": readiness,
+            "has_copy_actions": has_copy,
+            "has_export_preview": has_export,
+            "blocked_by": missing,
+            "recommended_operator_action": (
+                "Review this preview stage in Project Workspace; do not run real execution."
+                if not missing
+                else "Review missing upstream pack before relying on this preview stage."
+            ),
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Navigation card is deterministic preview metadata only and does not "
+                "create tasks, write files, export, upload, call providers, or execute."
+            ),
+        })
+
+    expected_panels = {
+        "campaign_creative_dossier_pack": 5,
+        "final_claim_safe_export_packet_pack": 5,
+        "claim_safe_remediation_verification_pack": 5,
+        "claim_safe_delivery_remediation_pack": 5,
+        "claim_safe_delivery_qa_pack": 5,
+        "claim_safe_platform_delivery_pack": 5,
+        "claim_safe_creative_output_pack": 5,
+        "claim_safe_creative_brief_pack": 5,
+        "claim_risk_guard_pack": 5,
+        "review_evidence_quality_pack": 5,
+        "workspace_provider_invocation_audit_packet_pack": 5,
+        "workspace_real_execution_approval_token_pack": 5,
+        "workspace_network_external_call_block_guard_pack": 5,
+        "workspace_secret_environment_gate_pack": 5,
+        "workspace_capability_permission_matrix_pack": 5,
+    }
+    stage_by_pack = {
+        pack_id: stage_id
+        for stage_id, _label, _group, refs, _question, _copy, _export in stage_specs
+        for pack_id in refs
+    }
+    dependency_map = {
+        "campaign_creative_dossier_pack": [
+            "final_claim_safe_export_packet_pack",
+            "claim_safe_remediation_verification_pack",
+            "claim_safe_delivery_remediation_pack",
+            "claim_safe_delivery_qa_pack",
+            "claim_safe_platform_delivery_pack",
+            "claim_safe_creative_output_pack",
+            "claim_safe_creative_brief_pack",
+            "claim_risk_guard_pack",
+            "review_evidence_quality_pack",
+        ],
+        "final_claim_safe_export_packet_pack": [
+            "claim_safe_remediation_verification_pack",
+            "claim_safe_delivery_remediation_pack",
+        ],
+        "claim_safe_remediation_verification_pack": ["claim_safe_delivery_remediation_pack"],
+        "claim_safe_delivery_remediation_pack": ["claim_safe_delivery_qa_pack"],
+        "claim_safe_delivery_qa_pack": ["claim_safe_platform_delivery_pack"],
+        "claim_safe_platform_delivery_pack": ["claim_safe_creative_output_pack"],
+        "claim_safe_creative_output_pack": ["claim_safe_creative_brief_pack"],
+        "claim_safe_creative_brief_pack": ["claim_risk_guard_pack", "review_evidence_quality_pack"],
+        "claim_risk_guard_pack": ["review_evidence_quality_pack"],
+        "workspace_provider_invocation_audit_packet_pack": [
+            "workspace_real_execution_approval_token_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+        ],
+        "workspace_real_execution_approval_token_pack": [
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+        ],
+        "workspace_network_external_call_block_guard_pack": ["workspace_secret_environment_gate_pack"],
+        "workspace_secret_environment_gate_pack": ["workspace_capability_permission_matrix_pack"],
+    }
+    pack_availability_cards = []
+    for pack_id in source_pack_ids:
+        deps = dependency_map.get(pack_id, [])
+        pack_availability_cards.append({
+            "pack_id": pack_id,
+            "pack_label": pack_id.replace("_", " ").title(),
+            "pack_path": f"creative_decision_pack.{pack_id}",
+            "pack_status": pack_status(pack_id),
+            "stage_id": stage_by_pack.get(pack_id, "supporting_pack"),
+            "expected_panel_count": expected_panels.get(pack_id, 0),
+            "copy_export_supported": pack_id.startswith("claim_") or pack_id in {
+                "campaign_creative_dossier_pack",
+                "final_claim_safe_export_packet_pack",
+                "review_evidence_quality_pack",
+            },
+            "depends_on": deps,
+            "missing_dependencies": [dep for dep in deps if pack_status(dep) == "missing"],
+            "real_execution_allowed": False,
+            "risk_note": "Pack availability is an index preview only and does not execute or persist state.",
+        })
+
+    operator_next_action_cards = [
+        {
+            "action_id": "review_campaign_dossier",
+            "action_label": "Review campaign dossier and blocked appendix",
+            "action_type": "manual_review",
+            "source_stage_refs": ["campaign_dossier", "final_export_packet"],
+            "source_pack_refs": ["campaign_creative_dossier_pack", "final_claim_safe_export_packet_pack"],
+            "why_it_matters": "Keeps final copy, prompt, claim trace, and blocked content review together before any external handoff.",
+            "recommended_operator_action": "Inspect dossier preview and keep public delivery blocked until manual review is complete.",
+            "action_status": "preview_ready",
+            "creates_real_task": False,
+            "real_execution_allowed": False,
+            "risk_note": "This action is guidance only and does not create a real task.",
+        },
+        {
+            "action_id": "review_provider_execution_boundaries",
+            "action_label": "Review provider safety and execution blockers",
+            "action_type": "safety_boundary_review",
+            "source_stage_refs": ["provider_safety_controls", "real_execution_blockers"],
+            "source_pack_refs": [
+                "workspace_provider_invocation_audit_packet_pack",
+                "workspace_real_execution_approval_token_pack",
+                "workspace_network_external_call_block_guard_pack",
+                "workspace_secret_environment_gate_pack",
+            ],
+            "why_it_matters": "Confirms real LLM, provider, scraping, upload, export, database, and execution paths remain disabled.",
+            "recommended_operator_action": "Use preview controls for visibility only; do not approve or run real execution.",
+            "action_status": "blocked_by_dry_run",
+            "creates_real_task": False,
+            "real_execution_allowed": False,
+            "risk_note": "No approval, provider call, or execution token is created.",
+        },
+    ]
+
+    copy_export_surface_map = [
+        {
+            "surface_id": "campaign_dossier_copy_export",
+            "surface_label": "Campaign dossier copy/export preview",
+            "source_pack_ref": "campaign_creative_dossier_pack",
+            "copy_targets": ["summary", "stage_cards", "dossier_traceability_map", "full_pack"],
+            "export_targets": ["json_preview", "markdown_preview"],
+            "json_export_preview_supported": True,
+            "markdown_export_preview_supported": True,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "risk_note": "Copy/export surface describes preview text only and does not write files.",
+        },
+        {
+            "surface_id": "final_export_copy_export",
+            "surface_label": "Final export packet copy/export preview",
+            "source_pack_ref": "final_claim_safe_export_packet_pack",
+            "copy_targets": ["summary", "final_export_overview_cards", "blocked_appendix"],
+            "export_targets": ["json_preview", "markdown_preview"],
+            "json_export_preview_supported": True,
+            "markdown_export_preview_supported": True,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "risk_note": "Final export preview does not trigger real export or platform upload.",
+        },
+        {
+            "surface_id": "provider_safety_copy_export",
+            "surface_label": "Provider safety control copy/export preview",
+            "source_pack_ref": "workspace_provider_invocation_audit_packet_pack",
+            "copy_targets": ["audit_packet", "execution_blockers", "safety_boundaries"],
+            "export_targets": ["json_preview"],
+            "json_export_preview_supported": True,
+            "markdown_export_preview_supported": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "risk_note": "Provider safety surface is read-only preview metadata.",
+        },
+    ]
+
+    workspace_panel_registry_preview = [
+        {
+            "panel_id": f"workspace_panel_{card['stage_id']}",
+            "stage_id": card["stage_id"],
+            "panel_label": card["stage_label"],
+            "source_pack_refs": card["source_pack_refs"],
+            "expected_frontend_panel": True,
+            "frontend_change_performed": False,
+            "real_execution_allowed": False,
+        }
+        for card in product_stage_cards
+    ]
+
+    workflow_trace_map = [
+        {
+            "trace_id": "claim_safe_campaign_trace",
+            "trace_chain": [
+                "evidence",
+                "claim",
+                "creative",
+                "delivery",
+                "QA",
+                "remediation",
+                "verification",
+                "final export",
+                "dossier",
+            ],
+            "source_pack_refs": [
+                "review_evidence_quality_pack",
+                "claim_risk_guard_pack",
+                "claim_safe_creative_brief_pack",
+                "claim_safe_creative_output_pack",
+                "claim_safe_platform_delivery_pack",
+                "claim_safe_delivery_qa_pack",
+                "claim_safe_delivery_remediation_pack",
+                "claim_safe_remediation_verification_pack",
+                "final_claim_safe_export_packet_pack",
+                "campaign_creative_dossier_pack",
+            ],
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+        },
+        {
+            "trace_id": "provider_safety_real_execution_blocker_trace",
+            "trace_chain": [
+                "capability permission",
+                "secret environment gate",
+                "network external call block guard",
+                "real execution approval token",
+                "provider invocation audit packet",
+            ],
+            "source_pack_refs": [
+                "workspace_capability_permission_matrix_pack",
+                "workspace_secret_environment_gate_pack",
+                "workspace_network_external_call_block_guard_pack",
+                "workspace_real_execution_approval_token_pack",
+                "workspace_provider_invocation_audit_packet_pack",
+            ],
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+        },
+    ]
+
+    ready_stages = sum(1 for card in product_stage_cards if not card["blocked_by"])
+    total_stages = len(product_stage_cards)
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+    }
+    limitations = [
+        ("no real LLM", "LLM calls remain disabled."),
+        ("no real provider", "Provider calls remain disabled."),
+        ("no media upload/download", "Media upload and download remain disabled."),
+        ("no real export", "Real export and file writes remain disabled."),
+        ("no platform upload", "Platform upload and publish remain disabled."),
+        ("no policy API", "Real policy APIs are not queried."),
+        ("no DB persistence", "Database persistence is not performed."),
+        ("no real task creation", "Operator task creation is preview-only."),
+    ]
+
+    return {
+        "pack_version": "workspace_product_navigation_pack_v1",
+        "workspace_navigation_summary": {
+            "mode": "workspace_product_navigation_preview_deterministic_workspace_index_dry_run_only",
+            "source_packs": source_pack_ids,
+            "stage_count": total_stages,
+            "ready_stage_count": ready_stages,
+            "pack_present_count": sum(1 for card in pack_availability_cards if card["pack_status"] == "present"),
+            "real_task_creation_allowed": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_provider_allowed": False,
+            "real_media_upload_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": "Use this navigation index as preview-only workspace status guidance; do not execute, export, upload, call providers, or create tasks.",
+        },
+        "product_stage_cards": product_stage_cards,
+        "pack_availability_cards": pack_availability_cards,
+        "operator_next_action_cards": operator_next_action_cards,
+        "copy_export_surface_map": copy_export_surface_map,
+        "workspace_panel_registry_preview": workspace_panel_registry_preview,
+        "workflow_trace_map": workflow_trace_map,
+        "product_readiness_scorecard": {
+            "scorecard_id": "workspace_product_navigation_readiness_scorecard",
+            "readiness_score": round((ready_stages / total_stages) * 100, 2) if total_stages else 0,
+            "readiness_status": "deterministic_preview_ready" if ready_stages == total_stages else "preview_missing_stage",
+            "stage_count": total_stages,
+            "ready_stage_count": ready_stages,
+            "does_not_represent_real_platform_pass_rate": True,
+            "does_not_represent_real_compliance_conclusion": True,
+            "real_execution_allowed": False,
+            "risk_note": "Readiness score is deterministic preview only and is not a platform pass rate or compliance conclusion.",
+        },
+        "known_limitations_cards": [
+            {
+                "limitation_id": f"workspace_navigation_limitation_{index}",
+                "limitation_label": label,
+                "limitation_detail": detail,
+                "capability_enabled": False,
+                "real_execution_allowed": False,
+            }
+            for index, (label, detail) in enumerate(limitations, start=1)
+        ],
+        "navigation_quality_checks": {
+            "pack_availability_covered": bool(pack_availability_cards),
+            "stage_map_covered": bool(product_stage_cards),
+            "copy_export_map_covered": bool(copy_export_surface_map),
+            "trace_map_covered": bool(workflow_trace_map),
+            "disabled_capability_boundary_covered": True,
+            "provider_safety_controls_present": bool(packs["workspace_provider_invocation_audit_packet_pack"]),
+            "real_execution_blockers_present": bool(packs["workspace_real_execution_approval_token_pack"]),
+            "operator_actions_do_not_create_tasks": all(not card["creates_real_task"] for card in operator_next_action_cards),
+            "copy_export_does_not_write_files": all(not card["real_file_write_allowed"] for card in copy_export_surface_map),
+            "real_execution_performed": False,
+            "database_write_performed": False,
+            "file_write_performed": False,
+            "real_export_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "workspace_product_navigation_preview",
+            "source": "creative_decision_pack.workspace_product_navigation_pack",
+            "audit_record_created": False,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "operator_task_created": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -42484,6 +42888,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["campaign_creative_dossier_pack"] = (
         _rw_campaign_creative_dossier_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_product_navigation_pack"] = (
+        _rw_workspace_product_navigation_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
