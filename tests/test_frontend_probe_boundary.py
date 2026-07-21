@@ -15133,6 +15133,231 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_claim_safe_remediation_verification_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace claim-safe remediation verification bundle",
+            "project_workspace_claim_safe_remediation_verification_marker",
+            "PROJECT_WORKSPACE_CLAIM_SAFE_REMEDIATION_VERIFICATION_MARKER",
+            "latestProjectWorkspaceClaimSafeRemediationVerificationPack",
+            "claim_safe_remediation_verification_pack",
+            "projectWorkspaceClaimSafeRemediationVerificationPackFromWorkspace",
+            "projectWorkspaceExportClaimSafeRemediationVerificationSnapshot",
+            "projectWorkspaceExportClaimSafeRemediationVerificationMarkdown",
+            "renderProjectWorkspaceClaimSafeRemediationVerificationSummaryPanel",
+            "renderProjectWorkspaceClaimSafeRemediationVerificationCardsTracePanel",
+            "renderProjectWorkspaceClaimSafeRemediationVerificationFixPanel",
+            "renderProjectWorkspaceClaimSafeRemediationVerificationRetryBlockerQueuePanel",
+            "renderProjectWorkspaceClaimSafeRemediationVerificationPlanQualityAuditSafetyPanel",
+            "copyProjectWorkspaceRemediationVerificationSummary",
+            "copyProjectWorkspaceRemediationVerificationCards",
+            "copyProjectWorkspaceCopyFixVerificationCards",
+            "copyProjectWorkspaceVideoPromptFixVerificationCards",
+            "copyProjectWorkspaceClaimFixVerificationCards",
+            "copyProjectWorkspaceRetryExportReadinessCards",
+            "copyProjectWorkspaceRemainingBlockerCards",
+            "copyProjectWorkspaceVerificationEvidenceTrace",
+            "copyProjectWorkspaceRetryExportPlan",
+            "copyProjectWorkspaceFullClaimSafeRemediationVerificationPack",
+            "claim_safe_remediation_verification_pack: projectWorkspaceExportClaimSafeRemediationVerificationSnapshot(workspace)",
+            "Claim-Safe Remediation Verification / Retry Export Readiness",
+            "Remediation Verification Summary",
+            "Remediation Verification Cards",
+            "Copy Fix Verification Cards",
+            "Video Prompt Fix Verification Cards",
+            "Claim Fix Verification Cards",
+            "Retry Export Readiness Cards",
+            "Remaining Blocker Cards",
+            "Verification Evidence Trace",
+            "Operator Recheck Queue Preview",
+            "Retry Export Plan",
+            "Verification Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "remediation_verification_summary",
+            "remediation_verification_cards",
+            "copy_fix_verification_cards",
+            "video_prompt_fix_verification_cards",
+            "claim_fix_verification_cards",
+            "retry_export_readiness_cards",
+            "remaining_blocker_cards",
+            "verification_evidence_trace",
+            "operator_recheck_queue_preview",
+            "retry_export_plan",
+            "verification_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+            "card.verification_id",
+            "card.delivery_surface",
+            "card.source_remediation_action_refs",
+            "card.source_blocker_refs",
+            "card.issue_type",
+            "card.verification_status",
+            "card.resolution_status",
+            "card.evidence_refs",
+            "card.remaining_gap_refs",
+            "card.operator_recheck_required",
+            "card.ready_for_retry_export_preview",
+            "card.auto_apply_allowed",
+            "card.real_task_creation_allowed",
+            "card.real_policy_check_allowed",
+            "card.real_execution_allowed",
+            "card.copy_verification_id",
+            "card.copy_type",
+            "card.original_copy",
+            "card.recommended_safe_copy",
+            "card.problematic_claim_refs",
+            "card.supporting_quote_ids",
+            "card.remaining_restrictions",
+            "card.ready_for_preview_copy_export",
+            "card.llm_rewrite_allowed",
+            "card.video_verification_id",
+            "card.original_prompt",
+            "card.recommended_safe_prompt",
+            "card.problematic_visual_claims",
+            "card.remaining_disallowed_visual_claims",
+            "card.provider_readiness_status",
+            "card.media_requirement_status",
+            "card.ready_for_preview_video_prompt_export",
+            "card.real_provider_allowed",
+            "card.real_media_upload_allowed",
+            "card.claim_verification_id",
+            "card.claim_id",
+            "card.claim_text",
+            "card.recommended_safe_rewrite",
+            "card.support_status",
+            "card.claim_risk_level",
+            "card.evidence_gap_refs",
+            "card.do_not_claim_refs",
+            "card.allowed_usage_after_verification",
+            "card.retry_export_id",
+            "card.copy_ready",
+            "card.video_prompt_ready",
+            "card.claim_safety_ready",
+            "card.asset_requirements_ready",
+            "card.retry_export_status",
+            "card.blocked_reason",
+            "card.real_export_allowed",
+            "card.real_platform_upload_allowed",
+            "card.blocker_type",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for status in [
+            "resolved_for_preview",
+            "needs_operator_recheck",
+            "still_blocked",
+            "ready_for_retry_preview_export",
+            "unsupported claim / missing quote / missing required field / provider disabled / media upload disabled / policy check disabled / platform upload disabled / task creation disabled",
+            "remediation action / copy fix / video prompt fix / claim fix / remaining blocker / retry export readiness / safety boundary coverage",
+            "verification -> remediation action -> blocker -> claim / quote / evidence quality",
+        ]:
+            with self.subTest(status=status):
+                self.assertIn(status, html)
+        previous = html.index("renderProjectWorkspaceClaimSafeDeliveryRemediationReadinessAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceClaimSafeRemediationVerificationSummaryPanel(workspace)")
+        cards = html.index("renderProjectWorkspaceClaimSafeRemediationVerificationCardsTracePanel(workspace)")
+        fixes = html.index("renderProjectWorkspaceClaimSafeRemediationVerificationFixPanel(workspace)")
+        retry = html.index("renderProjectWorkspaceClaimSafeRemediationVerificationRetryBlockerQueuePanel(workspace)")
+        safety = html.index("renderProjectWorkspaceClaimSafeRemediationVerificationPlanQualityAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, cards)
+        self.assertLess(cards, fixes)
+        self.assertLess(fixes, retry)
+        self.assertLess(retry, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_claim_safe_remediation_verification_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "claimSafeRemediationVerificationPackTitle",
+            "claimSafeRemediationVerificationSummaryTitle",
+            "claimSafeRemediationVerificationCardsTitle",
+            "claimSafeRemediationVerificationCopyFixTitle",
+            "claimSafeRemediationVerificationVideoFixTitle",
+            "claimSafeRemediationVerificationClaimFixTitle",
+            "claimSafeRemediationVerificationRetryCardsTitle",
+            "claimSafeRemediationVerificationBlockerTitle",
+            "claimSafeRemediationVerificationTraceTitle",
+            "claimSafeRemediationVerificationRecheckQueueTitle",
+            "claimSafeRemediationVerificationRetryPlanTitle",
+            "claimSafeRemediationVerificationQualityTitle",
+            "claimSafeRemediationVerificationAuditTitle",
+            "claimSafeRemediationVerificationSafetyTitle",
+            "claimSafeRemediationVerificationCopySummary",
+            "claimSafeRemediationVerificationCopyCards",
+            "claimSafeRemediationVerificationCopyCopyFix",
+            "claimSafeRemediationVerificationCopyVideoFix",
+            "claimSafeRemediationVerificationCopyClaimFix",
+            "claimSafeRemediationVerificationCopyRetryCards",
+            "claimSafeRemediationVerificationCopyBlockers",
+            "claimSafeRemediationVerificationCopyTrace",
+            "claimSafeRemediationVerificationCopyPlan",
+            "claimSafeRemediationVerificationCopyFull",
+            "claimSafeRemediationVerificationCopied",
+            "claimSafeRemediationVerificationCopyFailed",
+            "claimSafeRemediationVerificationCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace claim-safe remediation verification bundle", script)
+            self.assertIn("project_workspace_claim_safe_remediation_verification_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceClaimSafeRemediationVerificationSummaryText"):
+            html.index("async function copyProjectWorkspaceClaimSafeRemediationVerificationText")
+        ]
+        for key in [
+            "claimSafeRemediationVerificationPackTitle",
+            "claimSafeRemediationVerificationSummaryTitle",
+            "claimSafeRemediationVerificationCardsTitle",
+            "claimSafeRemediationVerificationCopyFixTitle",
+            "claimSafeRemediationVerificationVideoFixTitle",
+            "claimSafeRemediationVerificationClaimFixTitle",
+            "claimSafeRemediationVerificationRetryCardsTitle",
+            "claimSafeRemediationVerificationBlockerTitle",
+            "claimSafeRemediationVerificationTraceTitle",
+            "claimSafeRemediationVerificationRecheckQueueTitle",
+            "claimSafeRemediationVerificationRetryPlanTitle",
+            "claimSafeRemediationVerificationQualityTitle",
+            "claimSafeRemediationVerificationAuditTitle",
+            "claimSafeRemediationVerificationSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_CLAIM_SAFE_REMEDIATION_VERIFICATION_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic verification preview",
+            "does not auto-apply fixes",
+            "call an LLM",
+            "create real tasks",
+            "trigger real export",
+            "upload files",
+            "publish to platforms",
+            "call providers",
+            "write databases",
+            "not legal advice",
+            "not a real policy API check",
+            "not a real platform compliance conclusion",
+            "not a real platform pass rate",
+            "Evidence trace links verification to remediation action, blocker, claim, quote, and evidence quality preview refs only",
+            "does not read real logs",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, and real export remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [

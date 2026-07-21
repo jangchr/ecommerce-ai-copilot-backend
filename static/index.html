@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -3642,6 +3642,7 @@
         let latestProjectWorkspaceClaimSafePlatformDeliveryPack = {};
         let latestProjectWorkspaceClaimSafeDeliveryQaPack = {};
         let latestProjectWorkspaceClaimSafeDeliveryRemediationPack = {};
+        let latestProjectWorkspaceClaimSafeRemediationVerificationPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -6842,6 +6843,79 @@
             claimSafeDeliveryRemediationAuditNote: 'Audit preview is display-only and does not write databases.',
             claimSafeDeliveryRemediationSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, and task creation remain disabled.'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceClaimSafeRemediationVerificationMarker: 'Project Workspace claim-safe remediation verification bundle',
+            claimSafeRemediationVerificationPackTitle: 'Claim-Safe Remediation Verification / Retry Export Readiness',
+            claimSafeRemediationVerificationPackHelper: 'Project Workspace claim-safe remediation verification bundle. Deterministic verification preview from existing claim-safe packs only. This is not legal advice, not a real policy API check, not a real platform compliance conclusion, and not a real platform pass rate. It does not auto-apply fixes, call an LLM, create real tasks, export files, upload files, call providers, write databases, or publish to platforms.',
+            claimSafeRemediationVerificationSummaryTitle: 'Remediation Verification Summary',
+            claimSafeRemediationVerificationCardsTraceTitle: 'Remediation Verification Cards / Evidence Trace',
+            claimSafeRemediationVerificationCardsTitle: 'Remediation Verification Cards',
+            claimSafeRemediationVerificationTraceTitle: 'Verification Evidence Trace',
+            claimSafeRemediationVerificationFixTitle: 'Copy / Video Prompt / Claim Fix Verification',
+            claimSafeRemediationVerificationCopyFixTitle: 'Copy Fix Verification Cards',
+            claimSafeRemediationVerificationVideoFixTitle: 'Video Prompt Fix Verification Cards',
+            claimSafeRemediationVerificationClaimFixTitle: 'Claim Fix Verification Cards',
+            claimSafeRemediationVerificationRetryBlockerQueueTitle: 'Retry Export Readiness / Remaining Blockers / Recheck Queue',
+            claimSafeRemediationVerificationRetryCardsTitle: 'Retry Export Readiness Cards',
+            claimSafeRemediationVerificationBlockerTitle: 'Remaining Blocker Cards',
+            claimSafeRemediationVerificationRecheckQueueTitle: 'Operator Recheck Queue Preview',
+            claimSafeRemediationVerificationPlanQualityAuditSafetyTitle: 'Retry Export Plan / Quality Checks / Audit / Safety',
+            claimSafeRemediationVerificationRetryPlanTitle: 'Retry Export Plan',
+            claimSafeRemediationVerificationQualityTitle: 'Verification Quality Checks',
+            claimSafeRemediationVerificationAuditTitle: 'Audit Preview',
+            claimSafeRemediationVerificationSafetyTitle: 'Safety Boundaries',
+            claimSafeRemediationVerificationMode: 'Mode',
+            claimSafeRemediationVerificationCount: 'Remediation verification count',
+            claimSafeRemediationVerificationCopyCount: 'Copy fix verification count',
+            claimSafeRemediationVerificationVideoCount: 'Video prompt fix verification count',
+            claimSafeRemediationVerificationClaimCount: 'Claim fix verification count',
+            claimSafeRemediationVerificationRetryCount: 'Retry export readiness count',
+            claimSafeRemediationVerificationBlockerCount: 'Remaining blocker count',
+            claimSafeRemediationVerificationRecommendedAction: 'Recommended operator action',
+            claimSafeRemediationVerificationAutoApply: 'Auto apply allowed',
+            claimSafeRemediationVerificationLlmRewrite: 'LLM rewrite allowed',
+            claimSafeRemediationVerificationTaskCreation: 'Real task creation allowed',
+            claimSafeRemediationVerificationRealExport: 'Real export allowed',
+            claimSafeRemediationVerificationRealPlatformUpload: 'Real platform upload allowed',
+            claimSafeRemediationVerificationRealProvider: 'Real provider allowed',
+            claimSafeRemediationVerificationRealMediaUpload: 'Real media upload allowed',
+            claimSafeRemediationVerificationRealPolicyCheck: 'Real policy check allowed',
+            claimSafeRemediationVerificationRealExecution: 'Real execution allowed',
+            claimSafeRemediationVerificationDisabled: 'disabled',
+            claimSafeRemediationVerificationNoData: 'No claim-safe remediation verification pack data is available.',
+            claimSafeRemediationVerificationCopyNoData: 'No claim-safe remediation verification content is available to copy.',
+            claimSafeRemediationVerificationCopyFailed: 'Unable to copy claim-safe remediation verification content.',
+            claimSafeRemediationVerificationCopied: 'Claim-safe remediation verification content copied.',
+            claimSafeRemediationVerificationCopySummary: 'Copy remediation verification summary',
+            claimSafeRemediationVerificationCopyCards: 'Copy remediation verification cards',
+            claimSafeRemediationVerificationCopyCopyFix: 'Copy copy fix verification cards',
+            claimSafeRemediationVerificationCopyVideoFix: 'Copy video prompt fix verification cards',
+            claimSafeRemediationVerificationCopyClaimFix: 'Copy claim fix verification cards',
+            claimSafeRemediationVerificationCopyRetryCards: 'Copy retry export readiness cards',
+            claimSafeRemediationVerificationCopyBlockers: 'Copy remaining blocker cards',
+            claimSafeRemediationVerificationCopyTrace: 'Copy verification evidence trace',
+            claimSafeRemediationVerificationCopyPlan: 'Copy retry export plan',
+            claimSafeRemediationVerificationCopyFull: 'Copy full claim-safe remediation verification pack',
+            claimSafeRemediationVerificationVerificationId: 'Verification ID',
+            claimSafeRemediationVerificationDeliverySurface: 'Delivery surface',
+            claimSafeRemediationVerificationSourceActionRefs: 'Source remediation action refs',
+            claimSafeRemediationVerificationSourceBlockerRefs: 'Source blocker refs',
+            claimSafeRemediationVerificationIssueType: 'Issue type',
+            claimSafeRemediationVerificationStatus: 'Verification status',
+            claimSafeRemediationVerificationResolutionStatus: 'Resolution status',
+            claimSafeRemediationVerificationEvidenceRefs: 'Evidence refs',
+            claimSafeRemediationVerificationRemainingGapRefs: 'Remaining gap refs',
+            claimSafeRemediationVerificationOperatorRecheck: 'Operator recheck required',
+            claimSafeRemediationVerificationRetryReady: 'Ready for retry export preview',
+            claimSafeRemediationVerificationFixNote: 'Copy, video prompt, and claim fix verification are preview rechecks only. They do not call an LLM, call providers, upload or download media, or create compliant ad copy.',
+            claimSafeRemediationVerificationTraceNote: 'Evidence trace links verification to remediation action, blocker, claim, quote, and evidence quality preview refs only; it does not read real logs.',
+            claimSafeRemediationVerificationBlockerNote: 'Remaining blockers include unsupported claim, missing quote, missing required field, provider disabled, media upload disabled, policy check disabled, platform upload disabled, and task creation disabled.',
+            claimSafeRemediationVerificationPlanNote: 'Retry export plan describes only the next preview export readiness check; it does not trigger real export, upload files, write databases, or publish to platforms.',
+            claimSafeRemediationVerificationPreviewNote: 'Deterministic verification preview only. It does not auto-apply fixes, call an LLM, create real tasks or operator tasks, trigger real export, upload files, publish to platforms, call providers, upload or download media, scrape reviews, read real logs or history tables, write databases, or execute paid operations.',
+            claimSafeRemediationVerificationPolicyNote: 'This is not legal advice, not a real policy API check, not a real platform compliance conclusion, not a real claim safety rating, and not a real platform pass rate.',
+            claimSafeRemediationVerificationAuditNote: 'Audit preview is display-only and does not write databases.',
+            claimSafeRemediationVerificationSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, and real export remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
             claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
@@ -7231,6 +7305,79 @@
             claimSafeDeliveryRemediationReviewNote: 'Operator review queue \u53ea\u662f preview manual guidance\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e operator task\u3002',
             claimSafeDeliveryRemediationAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
             claimSafeDeliveryRemediationSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload \u548c task creation \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceClaimSafeRemediationVerificationMarker: 'Project Workspace claim-safe remediation verification bundle',
+            claimSafeRemediationVerificationPackTitle: 'Claim-Safe Remediation Verification / Retry Export Readiness',
+            claimSafeRemediationVerificationPackHelper: '\u67e5\u770b\u4ec5\u57fa\u4e8e\u5df2\u6709 claim-safe packs \u7684\u786e\u5b9a\u6027 verification \u548c retry export readiness \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u68c0\u67e5\uff0c\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\uff0c\u4e5f\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0 pass rate\u3002\u4e0d\u81ea\u52a8\u5e94\u7528\u4fee\u590d\uff0c\u4e0d\u8c03\u7528 LLM\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e\u4efb\u52a1\uff0c\u4e0d\u771f\u5b9e\u5bfc\u51fa\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u53d1\u5e03\u5230\u5e73\u53f0\u3002',
+            claimSafeRemediationVerificationSummaryTitle: 'Remediation Verification \u6458\u8981',
+            claimSafeRemediationVerificationCardsTraceTitle: 'Remediation Verification Cards / Evidence Trace',
+            claimSafeRemediationVerificationCardsTitle: 'Remediation Verification Cards',
+            claimSafeRemediationVerificationTraceTitle: 'Verification Evidence Trace',
+            claimSafeRemediationVerificationFixTitle: 'Copy / Video Prompt / Claim Fix Verification',
+            claimSafeRemediationVerificationCopyFixTitle: 'Copy Fix Verification Cards',
+            claimSafeRemediationVerificationVideoFixTitle: 'Video Prompt Fix Verification Cards',
+            claimSafeRemediationVerificationClaimFixTitle: 'Claim Fix Verification Cards',
+            claimSafeRemediationVerificationRetryBlockerQueueTitle: 'Retry Export Readiness / Remaining Blockers / Recheck Queue',
+            claimSafeRemediationVerificationRetryCardsTitle: 'Retry Export Readiness Cards',
+            claimSafeRemediationVerificationBlockerTitle: 'Remaining Blocker Cards',
+            claimSafeRemediationVerificationRecheckQueueTitle: 'Operator Recheck Queue Preview',
+            claimSafeRemediationVerificationPlanQualityAuditSafetyTitle: 'Retry Export Plan / Quality Checks / Audit / Safety',
+            claimSafeRemediationVerificationRetryPlanTitle: 'Retry Export Plan',
+            claimSafeRemediationVerificationQualityTitle: 'Verification Quality Checks',
+            claimSafeRemediationVerificationAuditTitle: 'Audit Preview',
+            claimSafeRemediationVerificationSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            claimSafeRemediationVerificationMode: '\u6a21\u5f0f',
+            claimSafeRemediationVerificationCount: 'Remediation verification \u6570\u91cf',
+            claimSafeRemediationVerificationCopyCount: 'Copy fix verification \u6570\u91cf',
+            claimSafeRemediationVerificationVideoCount: 'Video prompt fix verification \u6570\u91cf',
+            claimSafeRemediationVerificationClaimCount: 'Claim fix verification \u6570\u91cf',
+            claimSafeRemediationVerificationRetryCount: 'Retry export readiness \u6570\u91cf',
+            claimSafeRemediationVerificationBlockerCount: 'Remaining blocker \u6570\u91cf',
+            claimSafeRemediationVerificationRecommendedAction: '\u63a8\u8350 operator action',
+            claimSafeRemediationVerificationAutoApply: '\u5141\u8bb8\u81ea\u52a8\u5e94\u7528',
+            claimSafeRemediationVerificationLlmRewrite: '\u5141\u8bb8 LLM rewrite',
+            claimSafeRemediationVerificationTaskCreation: '\u5141\u8bb8\u521b\u5efa\u771f\u5b9e\u4efb\u52a1',
+            claimSafeRemediationVerificationRealExport: '\u5141\u8bb8\u771f\u5b9e export',
+            claimSafeRemediationVerificationRealPlatformUpload: '\u5141\u8bb8\u771f\u5b9e platform upload',
+            claimSafeRemediationVerificationRealProvider: '\u5141\u8bb8\u771f\u5b9e provider',
+            claimSafeRemediationVerificationRealMediaUpload: '\u5141\u8bb8\u771f\u5b9e media upload',
+            claimSafeRemediationVerificationRealPolicyCheck: '\u5141\u8bb8\u771f\u5b9e policy \u68c0\u67e5',
+            claimSafeRemediationVerificationRealExecution: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            claimSafeRemediationVerificationDisabled: '\u5df2\u7981\u7528',
+            claimSafeRemediationVerificationNoData: '\u6682\u65e0 claim-safe remediation verification pack \u6570\u636e\u3002',
+            claimSafeRemediationVerificationCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 claim-safe remediation verification \u5185\u5bb9\u3002',
+            claimSafeRemediationVerificationCopyFailed: '\u65e0\u6cd5\u590d\u5236 claim-safe remediation verification \u5185\u5bb9\u3002',
+            claimSafeRemediationVerificationCopied: 'Claim-safe remediation verification \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            claimSafeRemediationVerificationCopySummary: '\u590d\u5236 remediation verification \u6458\u8981',
+            claimSafeRemediationVerificationCopyCards: '\u590d\u5236 remediation verification cards',
+            claimSafeRemediationVerificationCopyCopyFix: '\u590d\u5236 copy fix verification cards',
+            claimSafeRemediationVerificationCopyVideoFix: '\u590d\u5236 video prompt fix verification cards',
+            claimSafeRemediationVerificationCopyClaimFix: '\u590d\u5236 claim fix verification cards',
+            claimSafeRemediationVerificationCopyRetryCards: '\u590d\u5236 retry export readiness cards',
+            claimSafeRemediationVerificationCopyBlockers: '\u590d\u5236 remaining blocker cards',
+            claimSafeRemediationVerificationCopyTrace: '\u590d\u5236 verification evidence trace',
+            claimSafeRemediationVerificationCopyPlan: '\u590d\u5236 retry export plan',
+            claimSafeRemediationVerificationCopyFull: '\u590d\u5236\u5b8c\u6574 claim-safe remediation verification pack',
+            claimSafeRemediationVerificationVerificationId: 'Verification ID',
+            claimSafeRemediationVerificationDeliverySurface: 'Delivery surface',
+            claimSafeRemediationVerificationSourceActionRefs: 'Source remediation action refs',
+            claimSafeRemediationVerificationSourceBlockerRefs: 'Source blocker refs',
+            claimSafeRemediationVerificationIssueType: 'Issue type',
+            claimSafeRemediationVerificationStatus: 'Verification status',
+            claimSafeRemediationVerificationResolutionStatus: 'Resolution status',
+            claimSafeRemediationVerificationEvidenceRefs: 'Evidence refs',
+            claimSafeRemediationVerificationRemainingGapRefs: 'Remaining gap refs',
+            claimSafeRemediationVerificationOperatorRecheck: '\u9700\u8981 operator recheck',
+            claimSafeRemediationVerificationRetryReady: 'Ready for retry export preview',
+            claimSafeRemediationVerificationFixNote: 'Copy\u3001video prompt \u548c claim fix verification \u53ea\u662f preview recheck\uff1b\u4e0d\u8c03\u7528 LLM\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u4e0a\u4f20\u6216\u4e0b\u8f7d media\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e\u5408\u89c4\u5e7f\u544a\u6587\u6848\u3002',
+            claimSafeRemediationVerificationTraceNote: 'Evidence trace \u53ea\u628a verification \u4e0e remediation action\u3001blocker\u3001claim\u3001quote \u548c evidence quality preview refs \u4e32\u8d77\u6765\uff1b\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u3002',
+            claimSafeRemediationVerificationBlockerNote: 'Remaining blockers \u5305\u62ec unsupported claim\u3001missing quote\u3001missing required field\u3001provider disabled\u3001media upload disabled\u3001policy check disabled\u3001platform upload disabled \u548c task creation disabled\u3002',
+            claimSafeRemediationVerificationPlanNote: 'Retry export plan \u53ea\u63cf\u8ff0\u4e0b\u4e00\u6b21 preview export readiness \u68c0\u67e5\uff1b\u4e0d\u89e6\u53d1\u771f\u5b9e export\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u53d1\u5e03\u5230\u5e73\u53f0\u3002',
+            claimSafeRemediationVerificationPreviewNote: '\u4ec5\u4e3a\u786e\u5b9a\u6027 verification preview\u3002\u4e0d\u81ea\u52a8\u5e94\u7528\u4fee\u590d\uff0c\u4e0d\u8c03\u7528 LLM\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e\u4efb\u52a1\u6216 operator task\uff0c\u4e0d\u89e6\u53d1\u771f\u5b9e export\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u53d1\u5e03\u5230\u5e73\u53f0\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u4e0a\u4f20\u6216\u4e0b\u8f7d media\uff0c\u4e0d\u8fdb\u884c scraping \u6216 review crawler\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u5386\u53f2\u8868\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u6267\u884c paid operation\u3002',
+            claimSafeRemediationVerificationPolicyNote: '\u8fd9\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u68c0\u67e5\uff0c\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\uff0c\u4e0d\u662f\u771f\u5b9e claim safety \u8bc4\u7ea7\uff0c\u4e5f\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0 pass rate\u3002',
+            claimSafeRemediationVerificationAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
+            claimSafeRemediationVerificationSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation \u548c real export \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -10727,6 +10874,7 @@
                 latestProjectWorkspaceClaimSafePlatformDeliveryPack = latestProjectCreativeDecisionPack.claim_safe_platform_delivery_pack || {};
                 latestProjectWorkspaceClaimSafeDeliveryQaPack = latestProjectCreativeDecisionPack.claim_safe_delivery_qa_pack || {};
                 latestProjectWorkspaceClaimSafeDeliveryRemediationPack = latestProjectCreativeDecisionPack.claim_safe_delivery_remediation_pack || {};
+                latestProjectWorkspaceClaimSafeRemediationVerificationPack = latestProjectCreativeDecisionPack.claim_safe_remediation_verification_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -16605,6 +16753,7 @@
         const PROJECT_WORKSPACE_CLAIM_SAFE_PLATFORM_DELIVERY_MARKER = 'Project Workspace claim-safe platform delivery bundle';
         const PROJECT_WORKSPACE_CLAIM_SAFE_DELIVERY_QA_MARKER = 'Project Workspace claim-safe delivery QA bundle';
         const PROJECT_WORKSPACE_CLAIM_SAFE_DELIVERY_REMEDIATION_MARKER = 'Project Workspace claim-safe delivery remediation bundle';
+        const PROJECT_WORKSPACE_CLAIM_SAFE_REMEDIATION_VERIFICATION_MARKER = 'Project Workspace claim-safe remediation verification bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -23064,6 +23213,138 @@
         function copyProjectWorkspaceRemediationPriorityMatrix() { return copyProjectWorkspaceClaimSafeDeliveryRemediationText('priority'); }
         function copyProjectWorkspaceRemediationRetryExportPlan() { return copyProjectWorkspaceClaimSafeDeliveryRemediationText('retry'); }
         function copyProjectWorkspaceFullClaimSafeDeliveryRemediationPack() { return copyProjectWorkspaceClaimSafeDeliveryRemediationText('full'); }
+
+        function projectWorkspaceClaimSafeRemediationVerificationPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceClaimSafeRemediationVerificationPack && Object.keys(latestProjectWorkspaceClaimSafeRemediationVerificationPack).length) return latestProjectWorkspaceClaimSafeRemediationVerificationPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.claim_safe_remediation_verification_pack || {};
+        }
+
+        function projectWorkspaceClaimSafeRemediationVerificationHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspaceClaimSafeRemediationVerificationJsonText(value) {
+            if (!projectWorkspaceClaimSafeRemediationVerificationHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceClaimSafeRemediationVerificationDisabledText(value) {
+            return value === false ? t('claimSafeRemediationVerificationDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportClaimSafeRemediationVerificationSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceClaimSafeRemediationVerificationPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_CLAIM_SAFE_REMEDIATION_VERIFICATION_MARKER,
+                has_claim_safe_remediation_verification_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                remediation_verification_summary: pack.remediation_verification_summary || {},
+                remediation_verification_cards: Array.isArray(pack.remediation_verification_cards) ? pack.remediation_verification_cards : [],
+                copy_fix_verification_cards: Array.isArray(pack.copy_fix_verification_cards) ? pack.copy_fix_verification_cards : [],
+                video_prompt_fix_verification_cards: Array.isArray(pack.video_prompt_fix_verification_cards) ? pack.video_prompt_fix_verification_cards : [],
+                claim_fix_verification_cards: Array.isArray(pack.claim_fix_verification_cards) ? pack.claim_fix_verification_cards : [],
+                retry_export_readiness_cards: Array.isArray(pack.retry_export_readiness_cards) ? pack.retry_export_readiness_cards : [],
+                remaining_blocker_cards: Array.isArray(pack.remaining_blocker_cards) ? pack.remaining_blocker_cards : [],
+                verification_evidence_trace: Array.isArray(pack.verification_evidence_trace) ? pack.verification_evidence_trace : [],
+                operator_recheck_queue_preview: Array.isArray(pack.operator_recheck_queue_preview) ? pack.operator_recheck_queue_preview : [],
+                retry_export_plan: pack.retry_export_plan || {},
+                verification_quality_checks: pack.verification_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceClaimSafeRemediationVerificationSummaryText(pack = projectWorkspaceExportClaimSafeRemediationVerificationSnapshot()) {
+            if (!pack.has_claim_safe_remediation_verification_pack) return '';
+            const summary = pack.remediation_verification_summary || {};
+            return [
+                t('claimSafeRemediationVerificationSummaryTitle'),
+                `${t('claimSafeRemediationVerificationMode')}: ${summary.mode || t('none')}`,
+                `${t('claimSafeRemediationVerificationCount')}: ${summary.remediation_verification_count ?? pack.remediation_verification_cards.length}`,
+                `${t('claimSafeRemediationVerificationCopyCount')}: ${summary.copy_fix_verification_count ?? pack.copy_fix_verification_cards.length}`,
+                `${t('claimSafeRemediationVerificationVideoCount')}: ${summary.video_prompt_fix_verification_count ?? pack.video_prompt_fix_verification_cards.length}`,
+                `${t('claimSafeRemediationVerificationClaimCount')}: ${summary.claim_fix_verification_count ?? pack.claim_fix_verification_cards.length}`,
+                `${t('claimSafeRemediationVerificationRetryCount')}: ${summary.retry_export_readiness_count ?? pack.retry_export_readiness_cards.length}`,
+                `${t('claimSafeRemediationVerificationBlockerCount')}: ${summary.remaining_blocker_count ?? pack.remaining_blocker_cards.length}`,
+                `${t('claimSafeRemediationVerificationRecommendedAction')}: ${summary.recommended_operator_action || t('claimSafeRemediationVerificationPreviewNote')}`,
+                `${t('claimSafeRemediationVerificationAutoApply')}: ${projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.auto_apply_allowed)}`,
+                `${t('claimSafeRemediationVerificationLlmRewrite')}: ${projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.llm_rewrite_allowed)}`,
+                `${t('claimSafeRemediationVerificationTaskCreation')}: ${projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.real_task_creation_allowed)}`,
+                `${t('claimSafeRemediationVerificationRealExport')}: ${projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.real_export_allowed)}`,
+                `${t('claimSafeRemediationVerificationRealPlatformUpload')}: ${projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.real_platform_upload_allowed)}`,
+                `${t('claimSafeRemediationVerificationRealProvider')}: ${projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.real_provider_allowed)}`,
+                `${t('claimSafeRemediationVerificationRealMediaUpload')}: ${projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.real_media_upload_allowed)}`,
+                `${t('claimSafeRemediationVerificationRealPolicyCheck')}: ${projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.real_policy_check_allowed)}`,
+                `${t('claimSafeRemediationVerificationRealExecution')}: ${projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.real_execution_allowed)}`,
+                t('claimSafeRemediationVerificationPreviewNote'),
+                t('claimSafeRemediationVerificationPolicyNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceClaimSafeRemediationVerificationSectionText(titleKey, value) {
+            const body = projectWorkspaceClaimSafeRemediationVerificationJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportClaimSafeRemediationVerificationMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeRemediationVerificationSnapshot(workspace);
+            if (!pack.has_claim_safe_remediation_verification_pack) return '';
+            return [
+                `## ${t('claimSafeRemediationVerificationPackTitle')}`,
+                `## ${t('claimSafeRemediationVerificationSummaryTitle')}`,
+                projectWorkspaceClaimSafeRemediationVerificationSummaryText(pack), '',
+                projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationCardsTitle', pack.remediation_verification_cards), '',
+                projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationCopyFixTitle', pack.copy_fix_verification_cards), '',
+                projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationVideoFixTitle', pack.video_prompt_fix_verification_cards), '',
+                projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationClaimFixTitle', pack.claim_fix_verification_cards), '',
+                projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationRetryCardsTitle', pack.retry_export_readiness_cards), '',
+                projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationBlockerTitle', pack.remaining_blocker_cards), '',
+                projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationTraceTitle', pack.verification_evidence_trace), '',
+                projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationRecheckQueueTitle', pack.operator_recheck_queue_preview), '',
+                projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationRetryPlanTitle', pack.retry_export_plan), '',
+                projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationQualityTitle', pack.verification_quality_checks), '',
+                projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationAuditTitle', pack.audit_preview), '',
+                projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationSafetyTitle', pack.safety_boundaries),
+                t('claimSafeRemediationVerificationTraceNote'),
+                t('claimSafeRemediationVerificationFixNote'),
+                t('claimSafeRemediationVerificationBlockerNote'),
+                t('claimSafeRemediationVerificationPlanNote'),
+                t('claimSafeRemediationVerificationSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceClaimSafeRemediationVerificationText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceClaimSafeRemediationVerificationStatus');
+            const pack = projectWorkspaceExportClaimSafeRemediationVerificationSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceClaimSafeRemediationVerificationSummaryText(pack)
+                : kind === 'cards' ? projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationCardsTitle', pack.remediation_verification_cards)
+                : kind === 'copyFix' ? projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationCopyFixTitle', pack.copy_fix_verification_cards)
+                : kind === 'videoFix' ? projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationVideoFixTitle', pack.video_prompt_fix_verification_cards)
+                : kind === 'claimFix' ? projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationClaimFixTitle', pack.claim_fix_verification_cards)
+                : kind === 'retryCards' ? projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationRetryCardsTitle', pack.retry_export_readiness_cards)
+                : kind === 'blockers' ? projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationBlockerTitle', pack.remaining_blocker_cards)
+                : kind === 'trace' ? projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationTraceTitle', pack.verification_evidence_trace)
+                : kind === 'plan' ? projectWorkspaceClaimSafeRemediationVerificationSectionText('claimSafeRemediationVerificationRetryPlanTitle', pack.retry_export_plan)
+                : projectWorkspaceExportClaimSafeRemediationVerificationMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('claimSafeRemediationVerificationCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('claimSafeRemediationVerificationCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('claimSafeRemediationVerificationCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('claimSafeRemediationVerificationCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceRemediationVerificationSummary() { return copyProjectWorkspaceClaimSafeRemediationVerificationText('summary'); }
+        function copyProjectWorkspaceRemediationVerificationCards() { return copyProjectWorkspaceClaimSafeRemediationVerificationText('cards'); }
+        function copyProjectWorkspaceCopyFixVerificationCards() { return copyProjectWorkspaceClaimSafeRemediationVerificationText('copyFix'); }
+        function copyProjectWorkspaceVideoPromptFixVerificationCards() { return copyProjectWorkspaceClaimSafeRemediationVerificationText('videoFix'); }
+        function copyProjectWorkspaceClaimFixVerificationCards() { return copyProjectWorkspaceClaimSafeRemediationVerificationText('claimFix'); }
+        function copyProjectWorkspaceRetryExportReadinessCards() { return copyProjectWorkspaceClaimSafeRemediationVerificationText('retryCards'); }
+        function copyProjectWorkspaceRemainingBlockerCards() { return copyProjectWorkspaceClaimSafeRemediationVerificationText('blockers'); }
+        function copyProjectWorkspaceVerificationEvidenceTrace() { return copyProjectWorkspaceClaimSafeRemediationVerificationText('trace'); }
+        function copyProjectWorkspaceRetryExportPlan() { return copyProjectWorkspaceClaimSafeRemediationVerificationText('plan'); }
+        function copyProjectWorkspaceFullClaimSafeRemediationVerificationPack() { return copyProjectWorkspaceClaimSafeRemediationVerificationText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -27336,6 +27617,41 @@
             `;
         }
 
+        function renderProjectWorkspaceClaimSafeRemediationVerificationSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeRemediationVerificationSnapshot(workspace); if (!pack.has_claim_safe_remediation_verification_pack) return '';
+            const summary = pack.remediation_verification_summary || {};
+            return `<div class="section-block" id="projectWorkspaceClaimSafeRemediationVerificationSummaryPanel" data-claim-safe-remediation-verification-marker="${PROJECT_WORKSPACE_CLAIM_SAFE_REMEDIATION_VERIFICATION_MARKER}" data-marker="project_workspace_claim_safe_remediation_verification_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeRemediationVerificationPackTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullClaimSafeRemediationVerificationPack()">${escapeHTML(t('claimSafeRemediationVerificationCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('claimSafeRemediationVerificationMode'), summary.mode || t('none'))}${metricPill(t('claimSafeRemediationVerificationCount'), String(summary.remediation_verification_count ?? pack.remediation_verification_cards.length))}${metricPill(t('claimSafeRemediationVerificationCopyCount'), String(summary.copy_fix_verification_count ?? pack.copy_fix_verification_cards.length))}${metricPill(t('claimSafeRemediationVerificationVideoCount'), String(summary.video_prompt_fix_verification_count ?? pack.video_prompt_fix_verification_cards.length))}${metricPill(t('claimSafeRemediationVerificationClaimCount'), String(summary.claim_fix_verification_count ?? pack.claim_fix_verification_cards.length))}${metricPill(t('claimSafeRemediationVerificationRetryCount'), String(summary.retry_export_readiness_count ?? pack.retry_export_readiness_cards.length))}${metricPill(t('claimSafeRemediationVerificationBlockerCount'), String(summary.remaining_blocker_count ?? pack.remaining_blocker_cards.length))}${metricPill(t('claimSafeRemediationVerificationAutoApply'), projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.auto_apply_allowed))}${metricPill(t('claimSafeRemediationVerificationLlmRewrite'), projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.llm_rewrite_allowed))}${metricPill(t('claimSafeRemediationVerificationTaskCreation'), projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.real_task_creation_allowed))}${metricPill(t('claimSafeRemediationVerificationRealExport'), projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.real_export_allowed))}${metricPill(t('claimSafeRemediationVerificationRealPlatformUpload'), projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.real_platform_upload_allowed))}${metricPill(t('claimSafeRemediationVerificationRealPolicyCheck'), projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.real_policy_check_allowed))}${metricPill(t('claimSafeRemediationVerificationRealExecution'), projectWorkspaceClaimSafeRemediationVerificationDisabledText(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeRemediationVerificationSummaryText(pack) || t('claimSafeRemediationVerificationNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationPreviewNote'))}</div><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationPolicyNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceClaimSafeRemediationVerificationStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRemediationVerificationSummary()">${escapeHTML(t('claimSafeRemediationVerificationCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceClaimSafeRemediationVerificationCardsTracePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeRemediationVerificationSnapshot(workspace); if (!pack.has_claim_safe_remediation_verification_pack) return '';
+            const cards = (pack.remediation_verification_cards || []).slice(0, 18).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.verification_id || t('claimSafeRemediationVerificationVerificationId'))}</strong><div><strong>${escapeHTML(t('claimSafeRemediationVerificationDeliverySurface'))}:</strong> ${escapeHTML(card.delivery_surface || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeRemediationVerificationSourceActionRefs'))}:</strong> ${escapeHTML((card.source_remediation_action_refs || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeRemediationVerificationSourceBlockerRefs'))}:</strong> ${escapeHTML((card.source_blocker_refs || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeRemediationVerificationIssueType'))}:</strong> ${escapeHTML(card.issue_type || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeRemediationVerificationStatus'))}:</strong> ${escapeHTML(card.verification_status || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeRemediationVerificationResolutionStatus'))}:</strong> ${escapeHTML(card.resolution_status || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeRemediationVerificationEvidenceRefs'))}:</strong> ${escapeHTML((card.evidence_refs || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeRemediationVerificationRemainingGapRefs'))}:</strong> ${escapeHTML((card.remaining_gap_refs || []).join(', ') || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeRemediationVerificationOperatorRecheck'))}:</strong> ${escapeHTML(String(Boolean(card.operator_recheck_required)))}</div><div><strong>${escapeHTML(t('claimSafeRemediationVerificationRetryReady'))}:</strong> ${escapeHTML(String(Boolean(card.ready_for_retry_export_preview)))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeRemediationVerificationJsonText({auto_apply_allowed:card.auto_apply_allowed,real_task_creation_allowed:card.real_task_creation_allowed,real_policy_check_allowed:card.real_policy_check_allowed,real_execution_allowed:card.real_execution_allowed,risk_note:card.risk_note}) || t('claimSafeRemediationVerificationNoData'))}</pre></div>`).join('');
+            const trace = (pack.verification_evidence_trace || []).slice(0, 18).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.trace_id || t('claimSafeRemediationVerificationTraceTitle'))}</strong><div>verification -> remediation action -> blocker -> claim / quote / evidence quality</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeRemediationVerificationJsonText(card) || t('claimSafeRemediationVerificationNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationTraceNote'))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceClaimSafeRemediationVerificationCardsTracePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeRemediationVerificationCardsTraceTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationTraceNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRemediationVerificationCards()">${escapeHTML(t('claimSafeRemediationVerificationCopyCards'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceVerificationEvidenceTrace()">${escapeHTML(t('claimSafeRemediationVerificationCopyTrace'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeRemediationVerificationCardsTitle'))}</strong><div class="field-helper">resolved_for_preview / needs_operator_recheck / still_blocked</div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('claimSafeRemediationVerificationNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeRemediationVerificationTraceTitle'))}</strong><div class="graph-os-compact-grid">${trace || `<div class="empty-state">${escapeHTML(t('claimSafeRemediationVerificationNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceClaimSafeRemediationVerificationFixPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeRemediationVerificationSnapshot(workspace); if (!pack.has_claim_safe_remediation_verification_pack) return '';
+            const copyCards = (pack.copy_fix_verification_cards || []).slice(0, 10).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.copy_verification_id || 'copy_verification_id')}</strong><div><strong>${escapeHTML(t('claimSafeRemediationVerificationDeliverySurface'))}:</strong> ${escapeHTML(card.delivery_surface || t('none'))}</div><div><strong>${escapeHTML(t('claimSafeRemediationVerificationStatus'))}:</strong> ${escapeHTML(card.verification_status || t('none'))}</div><div><strong>copy_type:</strong> ${escapeHTML(card.copy_type || t('none'))}</div><div><strong>original_copy:</strong> ${escapeHTML(card.original_copy || t('none'))}</div><div><strong>recommended_safe_copy:</strong> ${escapeHTML(card.recommended_safe_copy || t('none'))}</div><div><strong>problematic_claim_refs:</strong> ${escapeHTML((card.problematic_claim_refs || []).join(', ') || t('none'))}</div><div><strong>supporting_quote_ids:</strong> ${escapeHTML((card.supporting_quote_ids || []).join(', ') || t('none'))}</div><div><strong>remaining_restrictions:</strong> ${escapeHTML((card.remaining_restrictions || []).join(', ') || t('none'))}</div><div><strong>ready_for_preview_copy_export:</strong> ${escapeHTML(String(Boolean(card.ready_for_preview_copy_export)))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeRemediationVerificationJsonText({llm_rewrite_allowed:card.llm_rewrite_allowed,real_policy_check_allowed:card.real_policy_check_allowed,real_execution_allowed:card.real_execution_allowed,risk_note:card.risk_note}) || t('claimSafeRemediationVerificationNoData'))}</pre></div>`).join('');
+            const videoCards = (pack.video_prompt_fix_verification_cards || []).slice(0, 10).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.video_verification_id || 'video_verification_id')}</strong><div><strong>${escapeHTML(t('claimSafeRemediationVerificationDeliverySurface'))}:</strong> ${escapeHTML(card.delivery_surface || t('none'))}</div><div><strong>original_prompt:</strong> ${escapeHTML(card.original_prompt || t('none'))}</div><div><strong>recommended_safe_prompt:</strong> ${escapeHTML(card.recommended_safe_prompt || t('none'))}</div><div><strong>problematic_visual_claims:</strong> ${escapeHTML((card.problematic_visual_claims || []).join(', ') || t('none'))}</div><div><strong>remaining_disallowed_visual_claims:</strong> ${escapeHTML((card.remaining_disallowed_visual_claims || []).join(', ') || t('none'))}</div><div><strong>provider_readiness_status:</strong> ${escapeHTML(card.provider_readiness_status || t('none'))}</div><div><strong>media_requirement_status:</strong> ${escapeHTML(card.media_requirement_status || t('none'))}</div><div><strong>ready_for_preview_video_prompt_export:</strong> ${escapeHTML(String(Boolean(card.ready_for_preview_video_prompt_export)))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeRemediationVerificationJsonText({real_provider_allowed:card.real_provider_allowed,real_media_upload_allowed:card.real_media_upload_allowed,real_policy_check_allowed:card.real_policy_check_allowed,real_execution_allowed:card.real_execution_allowed,risk_note:card.risk_note}) || t('claimSafeRemediationVerificationNoData'))}</pre></div>`).join('');
+            const claimCards = (pack.claim_fix_verification_cards || []).slice(0, 10).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.claim_verification_id || 'claim_verification_id')}</strong><div><strong>claim_id:</strong> ${escapeHTML(card.claim_id || t('none'))}</div><div><strong>claim_text:</strong> ${escapeHTML(card.claim_text || t('none'))}</div><div><strong>recommended_safe_rewrite:</strong> ${escapeHTML(card.recommended_safe_rewrite || t('none'))}</div><div><strong>support_status:</strong> ${escapeHTML(card.support_status || t('none'))}</div><div><strong>claim_risk_level:</strong> ${escapeHTML(card.claim_risk_level || t('none'))}</div><div><strong>evidence_gap_refs:</strong> ${escapeHTML((card.evidence_gap_refs || []).join(', ') || t('none'))}</div><div><strong>do_not_claim_refs:</strong> ${escapeHTML((card.do_not_claim_refs || []).join(', ') || t('none'))}</div><div><strong>allowed_usage_after_verification:</strong> ${escapeHTML(card.allowed_usage_after_verification || t('none'))}</div><div><strong>operator_recheck_required:</strong> ${escapeHTML(String(Boolean(card.operator_recheck_required)))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeRemediationVerificationJsonText({llm_rewrite_allowed:card.llm_rewrite_allowed,real_policy_check_allowed:card.real_policy_check_allowed,real_execution_allowed:card.real_execution_allowed,remaining_restrictions:card.remaining_restrictions,risk_note:card.risk_note}) || t('claimSafeRemediationVerificationNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceClaimSafeRemediationVerificationFixPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeRemediationVerificationFixTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationFixNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCopyFixVerificationCards()">${escapeHTML(t('claimSafeRemediationVerificationCopyCopyFix'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceVideoPromptFixVerificationCards()">${escapeHTML(t('claimSafeRemediationVerificationCopyVideoFix'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceClaimFixVerificationCards()">${escapeHTML(t('claimSafeRemediationVerificationCopyClaimFix'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeRemediationVerificationCopyFixTitle'))}</strong><div class="graph-os-compact-grid">${copyCards || `<div class="empty-state">${escapeHTML(t('claimSafeRemediationVerificationNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeRemediationVerificationVideoFixTitle'))}</strong><div class="graph-os-compact-grid">${videoCards || `<div class="empty-state">${escapeHTML(t('claimSafeRemediationVerificationNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeRemediationVerificationClaimFixTitle'))}</strong><div class="graph-os-compact-grid">${claimCards || `<div class="empty-state">${escapeHTML(t('claimSafeRemediationVerificationNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceClaimSafeRemediationVerificationRetryBlockerQueuePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeRemediationVerificationSnapshot(workspace); if (!pack.has_claim_safe_remediation_verification_pack) return '';
+            const retries = (pack.retry_export_readiness_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.retry_export_id || 'retry_export_id')}</strong><div><strong>delivery_surface:</strong> ${escapeHTML(card.delivery_surface || t('none'))}</div><div><strong>copy_ready:</strong> ${escapeHTML(String(Boolean(card.copy_ready)))}</div><div><strong>video_prompt_ready:</strong> ${escapeHTML(String(Boolean(card.video_prompt_ready)))}</div><div><strong>claim_safety_ready:</strong> ${escapeHTML(String(Boolean(card.claim_safety_ready)))}</div><div><strong>asset_requirements_ready:</strong> ${escapeHTML(String(Boolean(card.asset_requirements_ready)))}</div><div><strong>operator_recheck_required:</strong> ${escapeHTML(String(Boolean(card.operator_recheck_required)))}</div><div><strong>retry_export_status:</strong> ${escapeHTML(card.retry_export_status || t('none'))}</div><div><strong>blocked_reason:</strong> ${escapeHTML(card.blocked_reason || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeRemediationVerificationJsonText({real_export_allowed:card.real_export_allowed,real_platform_upload_allowed:card.real_platform_upload_allowed,real_execution_allowed:card.real_execution_allowed,risk_note:card.risk_note}) || t('claimSafeRemediationVerificationNoData'))}</pre></div>`).join('');
+            const blockers = (pack.remaining_blocker_cards || []).slice(0, 16).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.remaining_blocker_id || t('claimSafeRemediationVerificationBlockerTitle'))}</strong><div><strong>blocker_type:</strong> ${escapeHTML(card.blocker_type || t('none'))}</div><div><strong>delivery_surface:</strong> ${escapeHTML(card.delivery_surface || t('none'))}</div><div><strong>blocked_reason:</strong> ${escapeHTML(card.blocked_reason || t('none'))}</div><div><strong>operator_recheck_required:</strong> ${escapeHTML(String(Boolean(card.operator_recheck_required)))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeRemediationVerificationJsonText(card) || t('claimSafeRemediationVerificationNoData'))}</pre></div>`).join('');
+            const queue = (pack.operator_recheck_queue_preview || []).slice(0, 12).map((card) => `<div class="graph-os-card"><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeRemediationVerificationJsonText(card) || t('claimSafeRemediationVerificationNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationPreviewNote'))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceClaimSafeRemediationVerificationRetryBlockerQueuePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeRemediationVerificationRetryBlockerQueueTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationBlockerNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRetryExportReadinessCards()">${escapeHTML(t('claimSafeRemediationVerificationCopyRetryCards'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRemainingBlockerCards()">${escapeHTML(t('claimSafeRemediationVerificationCopyBlockers'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeRemediationVerificationRetryCardsTitle'))}</strong><div class="field-helper">ready_for_retry_preview_export / needs_operator_recheck / still_blocked</div><div class="graph-os-compact-grid">${retries || `<div class="empty-state">${escapeHTML(t('claimSafeRemediationVerificationNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeRemediationVerificationBlockerTitle'))}</strong><div class="field-helper">unsupported claim / missing quote / missing required field / provider disabled / media upload disabled / policy check disabled / platform upload disabled / task creation disabled</div><div class="graph-os-compact-grid">${blockers || `<div class="empty-state">${escapeHTML(t('claimSafeRemediationVerificationNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeRemediationVerificationRecheckQueueTitle'))}</strong><div class="graph-os-compact-grid">${queue || `<div class="empty-state">${escapeHTML(t('claimSafeRemediationVerificationNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceClaimSafeRemediationVerificationPlanQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportClaimSafeRemediationVerificationSnapshot(workspace); if (!pack.has_claim_safe_remediation_verification_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('claimSafeRemediationVerificationDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceClaimSafeRemediationVerificationPlanQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeRemediationVerificationPlanQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationPlanNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRetryExportPlan()">${escapeHTML(t('claimSafeRemediationVerificationCopyPlan'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeRemediationVerificationRetryPlanTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeRemediationVerificationJsonText(pack.retry_export_plan) || t('claimSafeRemediationVerificationNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationPlanNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeRemediationVerificationQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeRemediationVerificationJsonText(pack.verification_quality_checks) || t('claimSafeRemediationVerificationNoData'))}</pre><div class="field-helper">remediation action / copy fix / video prompt fix / claim fix / remaining blocker / retry export readiness / safety boundary coverage</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeRemediationVerificationAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeRemediationVerificationJsonText(pack.audit_preview) || t('claimSafeRemediationVerificationNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('claimSafeRemediationVerificationSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -27780,6 +28096,8 @@
                 '',
                 projectWorkspaceExportClaimSafeDeliveryRemediationMarkdown(workspace),
                 '',
+                projectWorkspaceExportClaimSafeRemediationVerificationMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -27903,6 +28221,7 @@
                 claim_safe_platform_delivery_pack: projectWorkspaceExportClaimSafePlatformDeliverySnapshot(workspace),
                 claim_safe_delivery_qa_pack: projectWorkspaceExportClaimSafeDeliveryQaSnapshot(workspace),
                 claim_safe_delivery_remediation_pack: projectWorkspaceExportClaimSafeDeliveryRemediationSnapshot(workspace),
+                claim_safe_remediation_verification_pack: projectWorkspaceExportClaimSafeRemediationVerificationSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -40509,6 +40828,11 @@
                     ${renderProjectWorkspaceClaimSafeDeliveryRemediationFixCardsPanel(workspace)}
                     ${renderProjectWorkspaceClaimSafeDeliveryRemediationExportReviewRetryPanel(workspace)}
                     ${renderProjectWorkspaceClaimSafeDeliveryRemediationReadinessAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceClaimSafeRemediationVerificationSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceClaimSafeRemediationVerificationCardsTracePanel(workspace)}
+                    ${renderProjectWorkspaceClaimSafeRemediationVerificationFixPanel(workspace)}
+                    ${renderProjectWorkspaceClaimSafeRemediationVerificationRetryBlockerQueuePanel(workspace)}
+                    ${renderProjectWorkspaceClaimSafeRemediationVerificationPlanQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
