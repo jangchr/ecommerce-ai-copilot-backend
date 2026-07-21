@@ -3644,6 +3644,7 @@
         let latestProjectWorkspaceClaimSafeDeliveryRemediationPack = {};
         let latestProjectWorkspaceClaimSafeRemediationVerificationPack = {};
         let latestProjectWorkspaceFinalClaimSafeExportPacketPack = {};
+        let latestProjectWorkspaceCampaignCreativeDossierPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -6976,6 +6977,70 @@
             finalClaimSafeExportQualityNote: 'copy / video prompt / asset handoff / claim trace / blocked appendix / operator handoff / safety boundary coverage',
             finalClaimSafeExportSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, and file write remain disabled.'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceCampaignCreativeDossierMarker: 'Project Workspace campaign creative dossier bundle',
+            campaignCreativeDossierPackTitle: 'Campaign Creative Dossier / Operator Handoff',
+            campaignCreativeDossierPackHelper: 'Project Workspace campaign creative dossier bundle. Deterministic campaign dossier preview from existing review, quote, claim, creative, delivery, QA, remediation, verification, and final export packs only. This is not legal advice, not a real policy API check, not a real platform compliance conclusion, and not a real platform pass rate.',
+            campaignCreativeDossierSummaryTitle: 'Campaign Dossier Summary',
+            campaignCreativeDossierEvidenceClaimTitle: 'Evidence / Claim Safety Overview',
+            campaignCreativeDossierEvidenceTitle: 'Campaign Evidence Overview Cards',
+            campaignCreativeDossierClaimTitle: 'Claim Safety Overview Cards',
+            campaignCreativeDossierCreativeDeliveryTitle: 'Creative Output / Platform Delivery Overview',
+            campaignCreativeDossierCreativeTitle: 'Creative Output Overview Cards',
+            campaignCreativeDossierDeliveryTitle: 'Platform Delivery Overview Cards',
+            campaignCreativeDossierFinalBlockedHandoffTitle: 'Final Export Overview / Blocked Appendix / Operator Handoff',
+            campaignCreativeDossierFinalTitle: 'Final Export Overview Cards',
+            campaignCreativeDossierBlockedTitle: 'Blocked Content Dossier Appendix',
+            campaignCreativeDossierOperatorTitle: 'Operator Handoff Checklist',
+            campaignCreativeDossierTraceManifestQualityAuditSafetyTitle: 'Dossier Traceability / Manifest / Quality / Audit / Safety',
+            campaignCreativeDossierTraceTitle: 'Dossier Traceability Map',
+            campaignCreativeDossierQualityTitle: 'Dossier Quality Checks',
+            campaignCreativeDossierManifestTitle: 'Handoff Manifest Preview',
+            campaignCreativeDossierAuditTitle: 'Audit Preview',
+            campaignCreativeDossierSafetyTitle: 'Safety Boundaries',
+            campaignCreativeDossierMode: 'Mode',
+            campaignCreativeDossierEvidenceCount: 'Evidence overview count',
+            campaignCreativeDossierClaimCount: 'Claim safety overview count',
+            campaignCreativeDossierCreativeCount: 'Creative output overview count',
+            campaignCreativeDossierDeliveryCount: 'Platform delivery overview count',
+            campaignCreativeDossierFinalCount: 'Final export overview count',
+            campaignCreativeDossierBlockedCount: 'Blocked appendix count',
+            campaignCreativeDossierOperatorCount: 'Operator handoff checklist count',
+            campaignCreativeDossierRecommendedAction: 'Recommended operator action',
+            campaignCreativeDossierTaskCreation: 'Real task creation allowed',
+            campaignCreativeDossierFileWrite: 'Real file write allowed',
+            campaignCreativeDossierRealExport: 'Real export allowed',
+            campaignCreativeDossierPlatformUpload: 'Real platform upload allowed',
+            campaignCreativeDossierProvider: 'Real provider allowed',
+            campaignCreativeDossierMediaUpload: 'Real media upload allowed',
+            campaignCreativeDossierPolicyCheck: 'Real policy check allowed',
+            campaignCreativeDossierExecution: 'Real execution allowed',
+            campaignCreativeDossierDisabled: 'disabled',
+            campaignCreativeDossierNoData: 'No campaign creative dossier data is available.',
+            campaignCreativeDossierCopyNoData: 'No campaign creative dossier content is available to copy.',
+            campaignCreativeDossierCopyFailed: 'Unable to copy campaign creative dossier content.',
+            campaignCreativeDossierCopied: 'Campaign creative dossier content copied.',
+            campaignCreativeDossierCopySummary: 'Copy campaign dossier summary',
+            campaignCreativeDossierCopyEvidence: 'Copy evidence overview cards',
+            campaignCreativeDossierCopyClaim: 'Copy claim safety overview cards',
+            campaignCreativeDossierCopyCreative: 'Copy creative output overview cards',
+            campaignCreativeDossierCopyDelivery: 'Copy platform delivery overview cards',
+            campaignCreativeDossierCopyFinal: 'Copy final export overview cards',
+            campaignCreativeDossierCopyBlocked: 'Copy blocked content dossier appendix',
+            campaignCreativeDossierCopyOperator: 'Copy operator handoff checklist',
+            campaignCreativeDossierCopyTrace: 'Copy dossier traceability map',
+            campaignCreativeDossierCopyFull: 'Copy full campaign creative dossier pack',
+            campaignCreativeDossierPreviewNote: 'Deterministic campaign dossier preview only. It does not create real handoff tasks, does not write files, does not trigger real export, does not upload files, does not publish to platforms, does not call providers, does not call an LLM, does not write databases, and does not execute paid operations.',
+            campaignCreativeDossierEvidenceNote: 'Evidence and claim safety overview use only existing review, quote, and claim pack data. They do not scrape new reviews, do not crawl sources, do not query real policy APIs, and do not invent buyer evidence.',
+            campaignCreativeDossierCreativeDeliveryNote: 'Creative output and delivery overview are preview-only. They are not real ad delivery, do not call providers, do not upload media, do not query policy APIs, and do not publish to platforms.',
+            campaignCreativeDossierHandoffNote: 'Operator handoff is a manual checklist preview only. It does not create real operator tasks, approvals, exports, file writes, uploads, provider calls, database writes, or platform publishing.',
+            campaignCreativeDossierTraceNote: 'Traceability map links evidence -> claim -> creative output -> delivery -> QA/remediation/verification -> final export using existing pack refs only and does not read real logs or history tables.',
+            campaignCreativeDossierQualityNote: 'evidence / claim safety / creative output / platform delivery / QA-remediation-verification / final export / blocked appendix / operator handoff / safety boundary coverage',
+            campaignCreativeDossierManifestNote: 'Handoff manifest preview describes dossier, JSON, and Markdown preview shape only. It does not create files, write databases, upload files, export, or publish.',
+            campaignCreativeDossierAuditNote: 'Audit preview is display-only and does not write databases.',
+            campaignCreativeDossierPolicyNote: 'This is not legal advice, not a real policy API check, not a real platform compliance conclusion, not a real claim safety rating, and not a real platform pass rate.',
+            campaignCreativeDossierSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, and file write remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
             claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
@@ -7497,6 +7562,70 @@
             finalClaimSafeExportAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
             finalClaimSafeExportQualityNote: 'copy / video prompt / asset handoff / claim trace / blocked appendix / operator handoff / safety boundary coverage',
             finalClaimSafeExportSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export \u548c file write \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceCampaignCreativeDossierMarker: 'Project Workspace campaign creative dossier bundle',
+            campaignCreativeDossierPackTitle: 'Campaign Creative Dossier / Operator Handoff',
+            campaignCreativeDossierPackHelper: '\u67e5\u770b Project Workspace campaign creative dossier bundle\u3002\u8fd9\u53ea\u57fa\u4e8e\u5df2\u6709 review\u3001quote\u3001claim\u3001creative\u3001delivery\u3001QA\u3001remediation\u3001verification \u548c final export packs \u7684 deterministic campaign dossier preview\u3002\u8fd9\u4e0d\u662f legal advice\uff0c\u4e0d\u662f\u771f\u5b9e policy API\uff0c\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\uff0c\u4e5f\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\u3002',
+            campaignCreativeDossierSummaryTitle: 'Campaign Dossier Summary',
+            campaignCreativeDossierEvidenceClaimTitle: 'Evidence / Claim Safety Overview',
+            campaignCreativeDossierEvidenceTitle: 'Campaign Evidence Overview Cards',
+            campaignCreativeDossierClaimTitle: 'Claim Safety Overview Cards',
+            campaignCreativeDossierCreativeDeliveryTitle: 'Creative Output / Platform Delivery Overview',
+            campaignCreativeDossierCreativeTitle: 'Creative Output Overview Cards',
+            campaignCreativeDossierDeliveryTitle: 'Platform Delivery Overview Cards',
+            campaignCreativeDossierFinalBlockedHandoffTitle: 'Final Export Overview / Blocked Appendix / Operator Handoff',
+            campaignCreativeDossierFinalTitle: 'Final Export Overview Cards',
+            campaignCreativeDossierBlockedTitle: 'Blocked Content Dossier Appendix',
+            campaignCreativeDossierOperatorTitle: 'Operator Handoff Checklist',
+            campaignCreativeDossierTraceManifestQualityAuditSafetyTitle: 'Dossier Traceability / Manifest / Quality / Audit / Safety',
+            campaignCreativeDossierTraceTitle: 'Dossier Traceability Map',
+            campaignCreativeDossierQualityTitle: 'Dossier Quality Checks',
+            campaignCreativeDossierManifestTitle: 'Handoff Manifest Preview',
+            campaignCreativeDossierAuditTitle: 'Audit Preview',
+            campaignCreativeDossierSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            campaignCreativeDossierMode: '\u6a21\u5f0f',
+            campaignCreativeDossierEvidenceCount: 'Evidence overview \u6570\u91cf',
+            campaignCreativeDossierClaimCount: 'Claim safety overview \u6570\u91cf',
+            campaignCreativeDossierCreativeCount: 'Creative output overview \u6570\u91cf',
+            campaignCreativeDossierDeliveryCount: 'Platform delivery overview \u6570\u91cf',
+            campaignCreativeDossierFinalCount: 'Final export overview \u6570\u91cf',
+            campaignCreativeDossierBlockedCount: 'Blocked appendix \u6570\u91cf',
+            campaignCreativeDossierOperatorCount: 'Operator handoff checklist \u6570\u91cf',
+            campaignCreativeDossierRecommendedAction: '\u63a8\u8350 operator action',
+            campaignCreativeDossierTaskCreation: '\u5141\u8bb8\u771f\u5b9e task creation',
+            campaignCreativeDossierFileWrite: '\u5141\u8bb8\u771f\u5b9e file write',
+            campaignCreativeDossierRealExport: '\u5141\u8bb8\u771f\u5b9e export',
+            campaignCreativeDossierPlatformUpload: '\u5141\u8bb8\u771f\u5b9e platform upload',
+            campaignCreativeDossierProvider: '\u5141\u8bb8\u771f\u5b9e provider',
+            campaignCreativeDossierMediaUpload: '\u5141\u8bb8\u771f\u5b9e media upload',
+            campaignCreativeDossierPolicyCheck: '\u5141\u8bb8\u771f\u5b9e policy check',
+            campaignCreativeDossierExecution: '\u5141\u8bb8\u771f\u5b9e execution',
+            campaignCreativeDossierDisabled: '\u5df2\u7981\u7528',
+            campaignCreativeDossierNoData: '\u6682\u65e0 campaign creative dossier \u6570\u636e\u3002',
+            campaignCreativeDossierCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 campaign creative dossier \u5185\u5bb9\u3002',
+            campaignCreativeDossierCopyFailed: '\u65e0\u6cd5\u590d\u5236 campaign creative dossier \u5185\u5bb9\u3002',
+            campaignCreativeDossierCopied: 'Campaign creative dossier \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            campaignCreativeDossierCopySummary: '\u590d\u5236 campaign dossier summary',
+            campaignCreativeDossierCopyEvidence: '\u590d\u5236 evidence overview cards',
+            campaignCreativeDossierCopyClaim: '\u590d\u5236 claim safety overview cards',
+            campaignCreativeDossierCopyCreative: '\u590d\u5236 creative output overview cards',
+            campaignCreativeDossierCopyDelivery: '\u590d\u5236 platform delivery overview cards',
+            campaignCreativeDossierCopyFinal: '\u590d\u5236 final export overview cards',
+            campaignCreativeDossierCopyBlocked: '\u590d\u5236 blocked content dossier appendix',
+            campaignCreativeDossierCopyOperator: '\u590d\u5236 operator handoff checklist',
+            campaignCreativeDossierCopyTrace: '\u590d\u5236 dossier traceability map',
+            campaignCreativeDossierCopyFull: '\u590d\u5236\u5b8c\u6574 campaign creative dossier pack',
+            campaignCreativeDossierPreviewNote: '\u4ec5\u4e3a deterministic campaign dossier preview\u3002\u4e0d\u521b\u5efa\u771f\u5b9e handoff task\uff0c\u4e0d\u5199\u6587\u4ef6\uff0c\u4e0d\u89e6\u53d1\u771f\u5b9e export\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u53d1\u5e03\u5230\u5e73\u53f0\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u8c03\u7528 LLM\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u6267\u884c paid operation\u3002',
+            campaignCreativeDossierEvidenceNote: 'Evidence \u548c claim safety overview \u53ea\u4f7f\u7528\u5df2\u6709 review\u3001quote \u548c claim pack \u6570\u636e\u3002\u4e0d\u6293\u53d6\u65b0\u8bc4\u8bba\uff0c\u4e0d\u8fdb\u884c crawler\uff0c\u4e0d\u67e5\u8be2\u771f\u5b9e policy API\uff0c\u4e0d\u7f16\u9020\u4e70\u5bb6\u8bc1\u636e\u3002',
+            campaignCreativeDossierCreativeDeliveryNote: 'Creative output \u548c delivery overview \u90fd\u53ea\u662f preview\u3002\u4e0d\u662f\u771f\u5b9e\u6295\u653e\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u4e0a\u4f20 media\uff0c\u4e0d\u67e5\u8be2 policy API\uff0c\u4e0d\u53d1\u5e03\u5230\u5e73\u53f0\u3002',
+            campaignCreativeDossierHandoffNote: 'Operator handoff \u53ea\u662f manual checklist preview\u3002\u4e0d\u521b\u5efa\u771f\u5b9e operator task \u6216 approval\uff0c\u4e0d\u771f\u5b9e export\uff0c\u4e0d\u5199\u6587\u4ef6\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u53d1\u5e03\u5230\u5e73\u53f0\u3002',
+            campaignCreativeDossierTraceNote: 'Traceability map \u4ec5\u7528\u5df2\u6709 pack refs \u8fde\u63a5 evidence -> claim -> creative output -> delivery -> QA/remediation/verification -> final export\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u5386\u53f2\u8868\u3002',
+            campaignCreativeDossierQualityNote: 'evidence / claim safety / creative output / platform delivery / QA-remediation-verification / final export / blocked appendix / operator handoff / safety boundary coverage',
+            campaignCreativeDossierManifestNote: 'Handoff manifest preview \u53ea\u63cf\u8ff0 dossier\u3001JSON \u548c Markdown preview \u5f62\u72b6\u3002\u4e0d\u521b\u5efa\u6587\u4ef6\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u5bfc\u51fa\uff0c\u4e0d\u53d1\u5e03\u3002',
+            campaignCreativeDossierAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
+            campaignCreativeDossierPolicyNote: '\u8fd9\u4e0d\u662f legal advice\uff0c\u4e0d\u662f\u771f\u5b9e policy API\uff0c\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\uff0c\u4e0d\u662f\u771f\u5b9e claim safety \u8bc4\u7ea7\uff0c\u4e5f\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\u3002',
+            campaignCreativeDossierSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export \u548c file write \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -10995,6 +11124,7 @@
                 latestProjectWorkspaceClaimSafeDeliveryRemediationPack = latestProjectCreativeDecisionPack.claim_safe_delivery_remediation_pack || {};
                 latestProjectWorkspaceClaimSafeRemediationVerificationPack = latestProjectCreativeDecisionPack.claim_safe_remediation_verification_pack || {};
                 latestProjectWorkspaceFinalClaimSafeExportPacketPack = latestProjectCreativeDecisionPack.final_claim_safe_export_packet_pack || {};
+                latestProjectWorkspaceCampaignCreativeDossierPack = latestProjectCreativeDecisionPack.campaign_creative_dossier_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -16875,6 +17005,7 @@
         const PROJECT_WORKSPACE_CLAIM_SAFE_DELIVERY_REMEDIATION_MARKER = 'Project Workspace claim-safe delivery remediation bundle';
         const PROJECT_WORKSPACE_CLAIM_SAFE_REMEDIATION_VERIFICATION_MARKER = 'Project Workspace claim-safe remediation verification bundle';
         const PROJECT_WORKSPACE_FINAL_CLAIM_SAFE_EXPORT_PACKET_MARKER = 'Project Workspace final claim-safe export packet bundle';
+        const PROJECT_WORKSPACE_CAMPAIGN_CREATIVE_DOSSIER_MARKER = 'Project Workspace campaign creative dossier bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -23594,6 +23725,138 @@
         function copyProjectWorkspaceFinalOperatorHandoffChecklist() { return copyProjectWorkspaceFinalClaimSafeExportPacketText('operatorHandoff'); }
         function copyProjectWorkspaceExportFileManifestPreview() { return copyProjectWorkspaceFinalClaimSafeExportPacketText('manifest'); }
         function copyProjectWorkspaceFullFinalClaimSafeExportPacket() { return copyProjectWorkspaceFinalClaimSafeExportPacketText('full'); }
+
+        function projectWorkspaceCampaignCreativeDossierPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceCampaignCreativeDossierPack && Object.keys(latestProjectWorkspaceCampaignCreativeDossierPack).length) return latestProjectWorkspaceCampaignCreativeDossierPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.campaign_creative_dossier_pack || {};
+        }
+
+        function projectWorkspaceCampaignCreativeDossierHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspaceCampaignCreativeDossierJsonText(value) {
+            if (!projectWorkspaceCampaignCreativeDossierHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceCampaignCreativeDossierDisabledText(value) {
+            return value === false ? t('campaignCreativeDossierDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportCampaignCreativeDossierSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceCampaignCreativeDossierPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_CAMPAIGN_CREATIVE_DOSSIER_MARKER,
+                has_campaign_creative_dossier_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                campaign_dossier_summary: pack.campaign_dossier_summary || {},
+                campaign_evidence_overview_cards: Array.isArray(pack.campaign_evidence_overview_cards) ? pack.campaign_evidence_overview_cards : [],
+                claim_safety_overview_cards: Array.isArray(pack.claim_safety_overview_cards) ? pack.claim_safety_overview_cards : [],
+                creative_output_overview_cards: Array.isArray(pack.creative_output_overview_cards) ? pack.creative_output_overview_cards : [],
+                platform_delivery_overview_cards: Array.isArray(pack.platform_delivery_overview_cards) ? pack.platform_delivery_overview_cards : [],
+                final_export_overview_cards: Array.isArray(pack.final_export_overview_cards) ? pack.final_export_overview_cards : [],
+                blocked_content_dossier_appendix: Array.isArray(pack.blocked_content_dossier_appendix) ? pack.blocked_content_dossier_appendix : [],
+                operator_handoff_checklist: Array.isArray(pack.operator_handoff_checklist) ? pack.operator_handoff_checklist : [],
+                dossier_traceability_map: Array.isArray(pack.dossier_traceability_map) ? pack.dossier_traceability_map : [],
+                dossier_quality_checks: pack.dossier_quality_checks || {},
+                handoff_manifest_preview: pack.handoff_manifest_preview || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceCampaignCreativeDossierSummaryText(pack = projectWorkspaceExportCampaignCreativeDossierSnapshot()) {
+            if (!pack.has_campaign_creative_dossier_pack) return '';
+            const summary = pack.campaign_dossier_summary || {};
+            return [
+                t('campaignCreativeDossierSummaryTitle'),
+                `${t('campaignCreativeDossierMode')}: ${summary.mode || t('none')}`,
+                `${t('campaignCreativeDossierEvidenceCount')}: ${summary.evidence_overview_count ?? pack.campaign_evidence_overview_cards.length}`,
+                `${t('campaignCreativeDossierClaimCount')}: ${summary.claim_safety_overview_count ?? pack.claim_safety_overview_cards.length}`,
+                `${t('campaignCreativeDossierCreativeCount')}: ${summary.creative_output_overview_count ?? pack.creative_output_overview_cards.length}`,
+                `${t('campaignCreativeDossierDeliveryCount')}: ${summary.platform_delivery_overview_count ?? pack.platform_delivery_overview_cards.length}`,
+                `${t('campaignCreativeDossierFinalCount')}: ${summary.final_export_overview_count ?? pack.final_export_overview_cards.length}`,
+                `${t('campaignCreativeDossierBlockedCount')}: ${summary.blocked_appendix_count ?? pack.blocked_content_dossier_appendix.length}`,
+                `${t('campaignCreativeDossierOperatorCount')}: ${summary.operator_handoff_count ?? pack.operator_handoff_checklist.length}`,
+                `${t('campaignCreativeDossierRecommendedAction')}: ${summary.recommended_operator_action || t('campaignCreativeDossierPreviewNote')}`,
+                `${t('campaignCreativeDossierTaskCreation')}: ${projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_task_creation_allowed)}`,
+                `${t('campaignCreativeDossierFileWrite')}: ${projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_file_write_allowed)}`,
+                `${t('campaignCreativeDossierRealExport')}: ${projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_export_allowed)}`,
+                `${t('campaignCreativeDossierPlatformUpload')}: ${projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_platform_upload_allowed)}`,
+                `${t('campaignCreativeDossierProvider')}: ${projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_provider_allowed)}`,
+                `${t('campaignCreativeDossierMediaUpload')}: ${projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_media_upload_allowed)}`,
+                `${t('campaignCreativeDossierPolicyCheck')}: ${projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_policy_check_allowed)}`,
+                `${t('campaignCreativeDossierExecution')}: ${projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_execution_allowed)}`,
+                t('campaignCreativeDossierPreviewNote'),
+                t('campaignCreativeDossierPolicyNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceCampaignCreativeDossierSectionText(titleKey, value) {
+            const body = projectWorkspaceCampaignCreativeDossierJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportCampaignCreativeDossierMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCampaignCreativeDossierSnapshot(workspace);
+            if (!pack.has_campaign_creative_dossier_pack) return '';
+            return [
+                `## ${t('campaignCreativeDossierPackTitle')}`,
+                `## ${t('campaignCreativeDossierSummaryTitle')}`,
+                projectWorkspaceCampaignCreativeDossierSummaryText(pack), '',
+                projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierEvidenceTitle', pack.campaign_evidence_overview_cards), '',
+                projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierClaimTitle', pack.claim_safety_overview_cards), '',
+                projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierCreativeTitle', pack.creative_output_overview_cards), '',
+                projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierDeliveryTitle', pack.platform_delivery_overview_cards), '',
+                projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierFinalTitle', pack.final_export_overview_cards), '',
+                projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierBlockedTitle', pack.blocked_content_dossier_appendix), '',
+                projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierOperatorTitle', pack.operator_handoff_checklist), '',
+                projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierTraceTitle', pack.dossier_traceability_map), '',
+                projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierQualityTitle', pack.dossier_quality_checks), '',
+                projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierManifestTitle', pack.handoff_manifest_preview), '',
+                projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierAuditTitle', pack.audit_preview), '',
+                projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierSafetyTitle', pack.safety_boundaries),
+                t('campaignCreativeDossierEvidenceNote'),
+                t('campaignCreativeDossierCreativeDeliveryNote'),
+                t('campaignCreativeDossierHandoffNote'),
+                t('campaignCreativeDossierTraceNote'),
+                t('campaignCreativeDossierSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceCampaignCreativeDossierText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceCampaignCreativeDossierStatus');
+            const pack = projectWorkspaceExportCampaignCreativeDossierSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceCampaignCreativeDossierSummaryText(pack)
+                : kind === 'evidence' ? projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierEvidenceTitle', pack.campaign_evidence_overview_cards)
+                : kind === 'claim' ? projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierClaimTitle', pack.claim_safety_overview_cards)
+                : kind === 'creative' ? projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierCreativeTitle', pack.creative_output_overview_cards)
+                : kind === 'delivery' ? projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierDeliveryTitle', pack.platform_delivery_overview_cards)
+                : kind === 'final' ? projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierFinalTitle', pack.final_export_overview_cards)
+                : kind === 'blocked' ? projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierBlockedTitle', pack.blocked_content_dossier_appendix)
+                : kind === 'operator' ? projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierOperatorTitle', pack.operator_handoff_checklist)
+                : kind === 'trace' ? projectWorkspaceCampaignCreativeDossierSectionText('campaignCreativeDossierTraceTitle', pack.dossier_traceability_map)
+                : projectWorkspaceExportCampaignCreativeDossierMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('campaignCreativeDossierCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('campaignCreativeDossierCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('campaignCreativeDossierCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('campaignCreativeDossierCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceCampaignDossierSummary() { return copyProjectWorkspaceCampaignCreativeDossierText('summary'); }
+        function copyProjectWorkspaceCampaignEvidenceOverviewCards() { return copyProjectWorkspaceCampaignCreativeDossierText('evidence'); }
+        function copyProjectWorkspaceClaimSafetyOverviewCards() { return copyProjectWorkspaceCampaignCreativeDossierText('claim'); }
+        function copyProjectWorkspaceCreativeOutputOverviewCards() { return copyProjectWorkspaceCampaignCreativeDossierText('creative'); }
+        function copyProjectWorkspacePlatformDeliveryOverviewCards() { return copyProjectWorkspaceCampaignCreativeDossierText('delivery'); }
+        function copyProjectWorkspaceFinalExportOverviewCards() { return copyProjectWorkspaceCampaignCreativeDossierText('final'); }
+        function copyProjectWorkspaceBlockedContentDossierAppendix() { return copyProjectWorkspaceCampaignCreativeDossierText('blocked'); }
+        function copyProjectWorkspaceOperatorHandoffChecklist() { return copyProjectWorkspaceCampaignCreativeDossierText('operator'); }
+        function copyProjectWorkspaceDossierTraceabilityMap() { return copyProjectWorkspaceCampaignCreativeDossierText('trace'); }
+        function copyProjectWorkspaceFullCampaignCreativeDossierPack() { return copyProjectWorkspaceCampaignCreativeDossierText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -27935,6 +28198,40 @@
             return `<div class="section-block" id="projectWorkspaceFinalOperatorManifestQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('finalClaimSafeExportOperatorManifestQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('finalClaimSafeExportManifestNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFinalOperatorHandoffChecklist()">${escapeHTML(t('finalClaimSafeExportCopyOperatorHandoff'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceExportFileManifestPreview()">${escapeHTML(t('finalClaimSafeExportCopyManifest'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('finalClaimSafeExportOperatorHandoffTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalClaimSafeExportPacketJsonText(handoff) || t('finalClaimSafeExportNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalClaimSafeExportOperatorNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalClaimSafeExportManifestTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalClaimSafeExportPacketJsonText(pack.export_file_manifest_preview) || t('finalClaimSafeExportNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalClaimSafeExportManifestNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalClaimSafeExportQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalClaimSafeExportPacketJsonText(pack.final_export_quality_checks) || t('finalClaimSafeExportNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalClaimSafeExportQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalClaimSafeExportAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalClaimSafeExportPacketJsonText(pack.audit_preview) || t('finalClaimSafeExportNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalClaimSafeExportAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('finalClaimSafeExportSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('finalClaimSafeExportSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceCampaignCreativeDossierSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCampaignCreativeDossierSnapshot(workspace); if (!pack.has_campaign_creative_dossier_pack) return '';
+            const summary = pack.campaign_dossier_summary || {};
+            return `<div class="section-block" id="projectWorkspaceCampaignCreativeDossierSummaryPanel" data-campaign-creative-dossier-marker="${PROJECT_WORKSPACE_CAMPAIGN_CREATIVE_DOSSIER_MARKER}" data-marker="project_workspace_campaign_creative_dossier_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('campaignCreativeDossierPackTitle'))}</div><div class="field-helper">${escapeHTML(t('campaignCreativeDossierPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullCampaignCreativeDossierPack()">${escapeHTML(t('campaignCreativeDossierCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('campaignCreativeDossierMode'), summary.mode || t('none'))}${metricPill(t('campaignCreativeDossierEvidenceCount'), String(summary.evidence_overview_count ?? pack.campaign_evidence_overview_cards.length))}${metricPill(t('campaignCreativeDossierClaimCount'), String(summary.claim_safety_overview_count ?? pack.claim_safety_overview_cards.length))}${metricPill(t('campaignCreativeDossierCreativeCount'), String(summary.creative_output_overview_count ?? pack.creative_output_overview_cards.length))}${metricPill(t('campaignCreativeDossierDeliveryCount'), String(summary.platform_delivery_overview_count ?? pack.platform_delivery_overview_cards.length))}${metricPill(t('campaignCreativeDossierFinalCount'), String(summary.final_export_overview_count ?? pack.final_export_overview_cards.length))}${metricPill(t('campaignCreativeDossierBlockedCount'), String(summary.blocked_appendix_count ?? pack.blocked_content_dossier_appendix.length))}${metricPill(t('campaignCreativeDossierOperatorCount'), String(summary.operator_handoff_count ?? pack.operator_handoff_checklist.length))}${metricPill(t('campaignCreativeDossierTaskCreation'), projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_task_creation_allowed))}${metricPill(t('campaignCreativeDossierFileWrite'), projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_file_write_allowed))}${metricPill(t('campaignCreativeDossierRealExport'), projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_export_allowed))}${metricPill(t('campaignCreativeDossierPlatformUpload'), projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_platform_upload_allowed))}${metricPill(t('campaignCreativeDossierProvider'), projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_provider_allowed))}${metricPill(t('campaignCreativeDossierMediaUpload'), projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_media_upload_allowed))}${metricPill(t('campaignCreativeDossierPolicyCheck'), projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_policy_check_allowed))}${metricPill(t('campaignCreativeDossierExecution'), projectWorkspaceCampaignCreativeDossierDisabledText(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierSummaryText(pack) || t('campaignCreativeDossierNoData'))}</pre><div class="field-helper">${escapeHTML(t('campaignCreativeDossierPreviewNote'))}</div><div class="field-helper">${escapeHTML(t('campaignCreativeDossierPolicyNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceCampaignCreativeDossierStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCampaignDossierSummary()">${escapeHTML(t('campaignCreativeDossierCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceCampaignCreativeDossierEvidenceClaimPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCampaignCreativeDossierSnapshot(workspace); if (!pack.has_campaign_creative_dossier_pack) return '';
+            const evidence = (pack.campaign_evidence_overview_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.evidence_overview_id || 'evidence_overview_id')}</strong><div><strong>source_label:</strong> ${escapeHTML(card.source_label || t('none'))}</div><div><strong>source_type:</strong> ${escapeHTML(card.source_type || t('none'))}</div><div><strong>review_count:</strong> ${escapeHTML(String(card.review_count ?? 0))}</div><div><strong>usable_review_count:</strong> ${escapeHTML(String(card.usable_review_count ?? 0))}</div><div><strong>quote_count:</strong> ${escapeHTML(String(card.quote_count ?? 0))}</div><div><strong>sample_strength:</strong> ${escapeHTML(card.sample_strength || t('none'))}</div><div><strong>evidence_quality_status:</strong> ${escapeHTML(card.evidence_quality_status || t('none'))}</div><div><strong>key_quote_refs:</strong> ${escapeHTML((card.key_quote_refs || []).join(', ') || t('none'))}</div><div><strong>evidence_gap_refs:</strong> ${escapeHTML((card.evidence_gap_refs || []).join(', ') || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierJsonText({operator_note:card.operator_note,real_scraping_allowed:card.real_scraping_allowed,real_execution_allowed:card.real_execution_allowed,risk_note:card.risk_note}) || t('campaignCreativeDossierNoData'))}</pre></div>`).join('');
+            const claims = (pack.claim_safety_overview_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.claim_overview_id || 'claim_overview_id')}</strong><div><strong>claim_id:</strong> ${escapeHTML(card.claim_id || t('none'))}</div><div><strong>claim_text:</strong> ${escapeHTML(card.claim_text || t('none'))}</div><div><strong>support_status:</strong> ${escapeHTML(card.support_status || t('none'))}</div><div><strong>claim_risk_level:</strong> ${escapeHTML(card.claim_risk_level || t('none'))}</div><div><strong>claim_risk_category:</strong> ${escapeHTML(card.claim_risk_category || t('none'))}</div><div><strong>supporting_quote_ids:</strong> ${escapeHTML((card.supporting_quote_ids || []).join(', ') || t('none'))}</div><div><strong>do_not_claim_refs:</strong> ${escapeHTML((card.do_not_claim_refs || []).join(', ') || t('none'))}</div><div><strong>allowed_usage:</strong> ${escapeHTML(card.allowed_usage || t('none'))}</div><div><strong>restricted_usage:</strong> ${escapeHTML((card.restricted_usage || []).join(', ') || t('none'))}</div><div><strong>disallowed_usage:</strong> ${escapeHTML((card.disallowed_usage || []).join(', ') || t('none'))}</div><div><strong>operator_review_required:</strong> ${escapeHTML(String(Boolean(card.operator_review_required)))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierJsonText({real_policy_check_allowed:card.real_policy_check_allowed,real_execution_allowed:card.real_execution_allowed,risk_note:card.risk_note}) || t('campaignCreativeDossierNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceCampaignCreativeDossierEvidenceClaimPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('campaignCreativeDossierEvidenceClaimTitle'))}</div><div class="field-helper">${escapeHTML(t('campaignCreativeDossierEvidenceNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCampaignEvidenceOverviewCards()">${escapeHTML(t('campaignCreativeDossierCopyEvidence'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceClaimSafetyOverviewCards()">${escapeHTML(t('campaignCreativeDossierCopyClaim'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('campaignCreativeDossierEvidenceTitle'))}</strong><div class="graph-os-compact-grid">${evidence || `<div class="empty-state">${escapeHTML(t('campaignCreativeDossierNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('campaignCreativeDossierClaimTitle'))}</strong><div class="graph-os-compact-grid">${claims || `<div class="empty-state">${escapeHTML(t('campaignCreativeDossierNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceCampaignCreativeDossierCreativeDeliveryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCampaignCreativeDossierSnapshot(workspace); if (!pack.has_campaign_creative_dossier_pack) return '';
+            const creative = (pack.creative_output_overview_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.creative_output_id || 'creative_output_id')}</strong><div><strong>creative_surface:</strong> ${escapeHTML(card.creative_surface || t('none'))}</div><div><strong>candidate_copy:</strong> ${escapeHTML(card.candidate_copy || t('none'))}</div><div><strong>source_claim_ids:</strong> ${escapeHTML((card.source_claim_ids || []).join(', ') || t('none'))}</div><div><strong>supporting_quote_ids:</strong> ${escapeHTML((card.supporting_quote_ids || []).join(', ') || t('none'))}</div><div><strong>claim_risk_level:</strong> ${escapeHTML(card.claim_risk_level || t('none'))}</div><div><strong>support_status:</strong> ${escapeHTML(card.support_status || t('none'))}</div><div><strong>usage_status:</strong> ${escapeHTML(card.usage_status || t('none'))}</div><div><strong>safe_usage_note:</strong> ${escapeHTML(card.safe_usage_note || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierJsonText({operator_review_required:card.operator_review_required,real_provider_allowed:card.real_provider_allowed,real_execution_allowed:card.real_execution_allowed,risk_note:card.risk_note}) || t('campaignCreativeDossierNoData'))}</pre></div>`).join('');
+            const delivery = (pack.platform_delivery_overview_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.delivery_overview_id || 'delivery_overview_id')}</strong><div><strong>delivery_surface:</strong> ${escapeHTML(card.delivery_surface || t('none'))}</div><div><strong>platform_label:</strong> ${escapeHTML(card.platform_label || t('none'))}</div><div><strong>claim_safety_status:</strong> ${escapeHTML(card.claim_safety_status || t('none'))}</div><div><strong>readiness_status:</strong> ${escapeHTML(card.readiness_status || t('none'))}</div><div><strong>recommended_output_refs:</strong> ${escapeHTML((card.recommended_output_refs || []).join(', ') || t('none'))}</div><div><strong>delivery_blocker_refs:</strong> ${escapeHTML((card.delivery_blocker_refs || []).join(', ') || t('none'))}</div><div><strong>operator_review_required:</strong> ${escapeHTML(String(Boolean(card.operator_review_required)))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierJsonText({real_platform_upload_allowed:card.real_platform_upload_allowed,real_policy_check_allowed:card.real_policy_check_allowed,real_execution_allowed:card.real_execution_allowed,risk_note:card.risk_note}) || t('campaignCreativeDossierNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceCampaignCreativeDossierCreativeDeliveryPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('campaignCreativeDossierCreativeDeliveryTitle'))}</div><div class="field-helper">${escapeHTML(t('campaignCreativeDossierCreativeDeliveryNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCreativeOutputOverviewCards()">${escapeHTML(t('campaignCreativeDossierCopyCreative'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePlatformDeliveryOverviewCards()">${escapeHTML(t('campaignCreativeDossierCopyDelivery'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('campaignCreativeDossierCreativeTitle'))}</strong><div class="graph-os-compact-grid">${creative || `<div class="empty-state">${escapeHTML(t('campaignCreativeDossierNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('campaignCreativeDossierDeliveryTitle'))}</strong><div class="graph-os-compact-grid">${delivery || `<div class="empty-state">${escapeHTML(t('campaignCreativeDossierNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceCampaignCreativeDossierFinalBlockedHandoffPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCampaignCreativeDossierSnapshot(workspace); if (!pack.has_campaign_creative_dossier_pack) return '';
+            const finalCards = (pack.final_export_overview_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.final_export_overview_id || 'final_export_overview_id')}</strong><div><strong>export_packet_id:</strong> ${escapeHTML(card.export_packet_id || t('none'))}</div><div><strong>delivery_surface:</strong> ${escapeHTML(card.delivery_surface || t('none'))}</div><div><strong>platform_label:</strong> ${escapeHTML(card.platform_label || t('none'))}</div><div><strong>packet_status:</strong> ${escapeHTML(card.packet_status || t('none'))}</div><div><strong>ready_for_preview_export:</strong> ${escapeHTML(String(Boolean(card.ready_for_preview_export)))}</div><div><strong>included_copy_refs:</strong> ${escapeHTML((card.included_copy_refs || []).join(', ') || t('none'))}</div><div><strong>included_video_prompt_refs:</strong> ${escapeHTML((card.included_video_prompt_refs || []).join(', ') || t('none'))}</div><div><strong>included_claim_trace_refs:</strong> ${escapeHTML((card.included_claim_trace_refs || []).join(', ') || t('none'))}</div><div><strong>excluded_blocker_refs:</strong> ${escapeHTML((card.excluded_blocker_refs || []).join(', ') || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierJsonText({operator_review_required:card.operator_review_required,real_file_write_allowed:card.real_file_write_allowed,real_export_allowed:card.real_export_allowed,real_execution_allowed:card.real_execution_allowed,risk_note:card.risk_note}) || t('campaignCreativeDossierNoData'))}</pre></div>`).join('');
+            const blocked = (pack.blocked_content_dossier_appendix || []).slice(0, 12).map((item) => `<div class="graph-os-card"><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierJsonText(item) || t('campaignCreativeDossierNoData'))}</pre><div class="field-helper">unsupported claim / missing quote / do_not_claim / blocked output / remaining blocker / policy check disabled / platform upload disabled / file write disabled</div></div>`).join('');
+            const handoff = (pack.operator_handoff_checklist || []).slice(0, 12).map((item) => `<div class="graph-os-card"><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierJsonText(item) || t('campaignCreativeDossierNoData'))}</pre><div class="field-helper">${escapeHTML(t('campaignCreativeDossierHandoffNote'))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceCampaignCreativeDossierFinalBlockedHandoffPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('campaignCreativeDossierFinalBlockedHandoffTitle'))}</div><div class="field-helper">${escapeHTML(t('campaignCreativeDossierHandoffNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFinalExportOverviewCards()">${escapeHTML(t('campaignCreativeDossierCopyFinal'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceBlockedContentDossierAppendix()">${escapeHTML(t('campaignCreativeDossierCopyBlocked'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceOperatorHandoffChecklist()">${escapeHTML(t('campaignCreativeDossierCopyOperator'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('campaignCreativeDossierFinalTitle'))}</strong><div class="graph-os-compact-grid">${finalCards || `<div class="empty-state">${escapeHTML(t('campaignCreativeDossierNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('campaignCreativeDossierBlockedTitle'))}</strong><div class="graph-os-compact-grid">${blocked || `<div class="empty-state">${escapeHTML(t('campaignCreativeDossierNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('campaignCreativeDossierOperatorTitle'))}</strong><div class="graph-os-compact-grid">${handoff || `<div class="empty-state">${escapeHTML(t('campaignCreativeDossierNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceCampaignCreativeDossierTraceManifestQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportCampaignCreativeDossierSnapshot(workspace); if (!pack.has_campaign_creative_dossier_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('campaignCreativeDossierDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceCampaignCreativeDossierTraceManifestQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('campaignCreativeDossierTraceManifestQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('campaignCreativeDossierTraceNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDossierTraceabilityMap()">${escapeHTML(t('campaignCreativeDossierCopyTrace'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('campaignCreativeDossierTraceTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierJsonText(pack.dossier_traceability_map) || t('campaignCreativeDossierNoData'))}</pre><div class="field-helper">evidence -> claim -> creative output -> delivery -> QA/remediation/verification -> final export</div></div><div class="graph-os-card"><strong>${escapeHTML(t('campaignCreativeDossierQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierJsonText(pack.dossier_quality_checks) || t('campaignCreativeDossierNoData'))}</pre><div class="field-helper">${escapeHTML(t('campaignCreativeDossierQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('campaignCreativeDossierManifestTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierJsonText(pack.handoff_manifest_preview) || t('campaignCreativeDossierNoData'))}</pre><div class="field-helper">${escapeHTML(t('campaignCreativeDossierManifestNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('campaignCreativeDossierAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierJsonText(pack.audit_preview) || t('campaignCreativeDossierNoData'))}</pre><div class="field-helper">${escapeHTML(t('campaignCreativeDossierAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('campaignCreativeDossierSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('campaignCreativeDossierSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -28383,6 +28680,8 @@
                 '',
                 projectWorkspaceExportFinalClaimSafeExportPacketMarkdown(workspace),
                 '',
+                projectWorkspaceExportCampaignCreativeDossierMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -28508,6 +28807,7 @@
                 claim_safe_delivery_remediation_pack: projectWorkspaceExportClaimSafeDeliveryRemediationSnapshot(workspace),
                 claim_safe_remediation_verification_pack: projectWorkspaceExportClaimSafeRemediationVerificationSnapshot(workspace),
                 final_claim_safe_export_packet_pack: projectWorkspaceExportFinalClaimSafeExportPacketSnapshot(workspace),
+                campaign_creative_dossier_pack: projectWorkspaceExportCampaignCreativeDossierSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -41124,6 +41424,11 @@
                     ${renderProjectWorkspaceFinalChannelCopyVideoPromptPanel(workspace)}
                     ${renderProjectWorkspaceFinalAssetClaimTraceBlockedPanel(workspace)}
                     ${renderProjectWorkspaceFinalOperatorManifestQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceCampaignCreativeDossierSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceCampaignCreativeDossierEvidenceClaimPanel(workspace)}
+                    ${renderProjectWorkspaceCampaignCreativeDossierCreativeDeliveryPanel(workspace)}
+                    ${renderProjectWorkspaceCampaignCreativeDossierFinalBlockedHandoffPanel(workspace)}
+                    ${renderProjectWorkspaceCampaignCreativeDossierTraceManifestQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}

@@ -15574,6 +15574,226 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_campaign_creative_dossier_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace campaign creative dossier bundle",
+            "project_workspace_campaign_creative_dossier_marker",
+            "PROJECT_WORKSPACE_CAMPAIGN_CREATIVE_DOSSIER_MARKER",
+            "latestProjectWorkspaceCampaignCreativeDossierPack",
+            "campaign_creative_dossier_pack",
+            "projectWorkspaceCampaignCreativeDossierPackFromWorkspace",
+            "projectWorkspaceExportCampaignCreativeDossierSnapshot",
+            "projectWorkspaceExportCampaignCreativeDossierMarkdown",
+            "renderProjectWorkspaceCampaignCreativeDossierSummaryPanel",
+            "renderProjectWorkspaceCampaignCreativeDossierEvidenceClaimPanel",
+            "renderProjectWorkspaceCampaignCreativeDossierCreativeDeliveryPanel",
+            "renderProjectWorkspaceCampaignCreativeDossierFinalBlockedHandoffPanel",
+            "renderProjectWorkspaceCampaignCreativeDossierTraceManifestQualityAuditSafetyPanel",
+            "copyProjectWorkspaceCampaignDossierSummary",
+            "copyProjectWorkspaceCampaignEvidenceOverviewCards",
+            "copyProjectWorkspaceClaimSafetyOverviewCards",
+            "copyProjectWorkspaceCreativeOutputOverviewCards",
+            "copyProjectWorkspacePlatformDeliveryOverviewCards",
+            "copyProjectWorkspaceFinalExportOverviewCards",
+            "copyProjectWorkspaceBlockedContentDossierAppendix",
+            "copyProjectWorkspaceOperatorHandoffChecklist",
+            "copyProjectWorkspaceDossierTraceabilityMap",
+            "copyProjectWorkspaceFullCampaignCreativeDossierPack",
+            "campaign_creative_dossier_pack: projectWorkspaceExportCampaignCreativeDossierSnapshot(workspace)",
+            "Campaign Creative Dossier / Operator Handoff",
+            "Campaign Dossier Summary",
+            "Campaign Evidence Overview Cards",
+            "Claim Safety Overview Cards",
+            "Creative Output Overview Cards",
+            "Platform Delivery Overview Cards",
+            "Final Export Overview Cards",
+            "Blocked Content Dossier Appendix",
+            "Operator Handoff Checklist",
+            "Dossier Traceability Map",
+            "Dossier Quality Checks",
+            "Handoff Manifest Preview",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "campaign_dossier_summary",
+            "campaign_evidence_overview_cards",
+            "claim_safety_overview_cards",
+            "creative_output_overview_cards",
+            "platform_delivery_overview_cards",
+            "final_export_overview_cards",
+            "blocked_content_dossier_appendix",
+            "operator_handoff_checklist",
+            "dossier_traceability_map",
+            "dossier_quality_checks",
+            "handoff_manifest_preview",
+            "audit_preview",
+            "safety_boundaries",
+            "card.evidence_overview_id",
+            "card.source_label",
+            "card.source_type",
+            "card.review_count",
+            "card.usable_review_count",
+            "card.quote_count",
+            "card.sample_strength",
+            "card.evidence_quality_status",
+            "card.key_quote_refs",
+            "card.evidence_gap_refs",
+            "card.real_scraping_allowed",
+            "card.claim_overview_id",
+            "card.claim_id",
+            "card.claim_text",
+            "card.support_status",
+            "card.claim_risk_level",
+            "card.claim_risk_category",
+            "card.supporting_quote_ids",
+            "card.do_not_claim_refs",
+            "card.allowed_usage",
+            "card.restricted_usage",
+            "card.disallowed_usage",
+            "card.real_policy_check_allowed",
+            "card.creative_output_id",
+            "card.creative_surface",
+            "card.candidate_copy",
+            "card.source_claim_ids",
+            "card.usage_status",
+            "card.safe_usage_note",
+            "card.real_provider_allowed",
+            "card.delivery_overview_id",
+            "card.delivery_surface",
+            "card.platform_label",
+            "card.claim_safety_status",
+            "card.readiness_status",
+            "card.recommended_output_refs",
+            "card.delivery_blocker_refs",
+            "card.real_platform_upload_allowed",
+            "card.final_export_overview_id",
+            "card.export_packet_id",
+            "card.packet_status",
+            "card.ready_for_preview_export",
+            "card.included_copy_refs",
+            "card.included_video_prompt_refs",
+            "card.included_claim_trace_refs",
+            "card.excluded_blocker_refs",
+            "card.real_file_write_allowed",
+            "card.real_export_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for status in [
+            "unsupported claim / missing quote / do_not_claim / blocked output / remaining blocker / policy check disabled / platform upload disabled / file write disabled",
+            "evidence -> claim -> creative output -> delivery -> QA/remediation/verification -> final export",
+            "evidence / claim safety / creative output / platform delivery / QA-remediation-verification / final export / blocked appendix / operator handoff / safety boundary coverage",
+        ]:
+            with self.subTest(status=status):
+                self.assertIn(status, html)
+        previous = html.index("renderProjectWorkspaceFinalOperatorManifestQualityAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceCampaignCreativeDossierSummaryPanel(workspace)")
+        evidence = html.index("renderProjectWorkspaceCampaignCreativeDossierEvidenceClaimPanel(workspace)")
+        creative = html.index("renderProjectWorkspaceCampaignCreativeDossierCreativeDeliveryPanel(workspace)")
+        final = html.index("renderProjectWorkspaceCampaignCreativeDossierFinalBlockedHandoffPanel(workspace)")
+        safety = html.index("renderProjectWorkspaceCampaignCreativeDossierTraceManifestQualityAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, evidence)
+        self.assertLess(evidence, creative)
+        self.assertLess(creative, final)
+        self.assertLess(final, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_campaign_creative_dossier_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "campaignCreativeDossierPackTitle",
+            "campaignCreativeDossierSummaryTitle",
+            "campaignCreativeDossierEvidenceTitle",
+            "campaignCreativeDossierClaimTitle",
+            "campaignCreativeDossierCreativeTitle",
+            "campaignCreativeDossierDeliveryTitle",
+            "campaignCreativeDossierFinalTitle",
+            "campaignCreativeDossierBlockedTitle",
+            "campaignCreativeDossierOperatorTitle",
+            "campaignCreativeDossierTraceTitle",
+            "campaignCreativeDossierQualityTitle",
+            "campaignCreativeDossierManifestTitle",
+            "campaignCreativeDossierAuditTitle",
+            "campaignCreativeDossierSafetyTitle",
+            "campaignCreativeDossierCopySummary",
+            "campaignCreativeDossierCopyEvidence",
+            "campaignCreativeDossierCopyClaim",
+            "campaignCreativeDossierCopyCreative",
+            "campaignCreativeDossierCopyDelivery",
+            "campaignCreativeDossierCopyFinal",
+            "campaignCreativeDossierCopyBlocked",
+            "campaignCreativeDossierCopyOperator",
+            "campaignCreativeDossierCopyTrace",
+            "campaignCreativeDossierCopyFull",
+            "campaignCreativeDossierCopied",
+            "campaignCreativeDossierCopyFailed",
+            "campaignCreativeDossierCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace campaign creative dossier bundle", script)
+            self.assertIn("project_workspace_campaign_creative_dossier_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceCampaignCreativeDossierSummaryText"):
+            html.index("async function copyProjectWorkspaceCampaignCreativeDossierText")
+        ]
+        for key in [
+            "campaignCreativeDossierPackTitle",
+            "campaignCreativeDossierSummaryTitle",
+            "campaignCreativeDossierEvidenceTitle",
+            "campaignCreativeDossierClaimTitle",
+            "campaignCreativeDossierCreativeTitle",
+            "campaignCreativeDossierDeliveryTitle",
+            "campaignCreativeDossierFinalTitle",
+            "campaignCreativeDossierBlockedTitle",
+            "campaignCreativeDossierOperatorTitle",
+            "campaignCreativeDossierTraceTitle",
+            "campaignCreativeDossierQualityTitle",
+            "campaignCreativeDossierManifestTitle",
+            "campaignCreativeDossierAuditTitle",
+            "campaignCreativeDossierSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_CAMPAIGN_CREATIVE_DOSSIER_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic campaign dossier preview",
+            "does not create real handoff tasks",
+            "does not write files",
+            "does not trigger real export",
+            "does not upload files",
+            "does not publish to platforms",
+            "does not call providers",
+            "does not call an LLM",
+            "does not write databases",
+            "not legal advice",
+            "not a real policy API check",
+            "not a real platform compliance conclusion",
+            "not a real platform pass rate",
+            "do not scrape new reviews",
+            "do not query real policy APIs",
+            "Operator handoff is a manual checklist preview only",
+            "does not create real operator tasks",
+            "Handoff manifest preview describes dossier, JSON, and Markdown preview shape only",
+            "does not read real logs or history tables",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, and file write remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [
