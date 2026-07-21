@@ -41699,6 +41699,567 @@ def _rw_final_claim_safe_export_packet_pack(creative_decision_pack: dict) -> dic
     }
 
 
+def _rw_campaign_creative_dossier_pack(creative_decision_pack: dict) -> dict:
+    final_pack = dict(
+        creative_decision_pack.get("final_claim_safe_export_packet_pack") or {}
+    )
+    verification_pack = dict(
+        creative_decision_pack.get("claim_safe_remediation_verification_pack") or {}
+    )
+    remediation_pack = dict(
+        creative_decision_pack.get("claim_safe_delivery_remediation_pack") or {}
+    )
+    qa_pack = dict(creative_decision_pack.get("claim_safe_delivery_qa_pack") or {})
+    platform_pack = dict(
+        creative_decision_pack.get("claim_safe_platform_delivery_pack") or {}
+    )
+    output_pack = dict(
+        creative_decision_pack.get("claim_safe_creative_output_pack") or {}
+    )
+    brief_pack = dict(creative_decision_pack.get("claim_safe_creative_brief_pack") or {})
+    claim_risk_pack = dict(creative_decision_pack.get("claim_risk_guard_pack") or {})
+    evidence_pack = dict(
+        creative_decision_pack.get("review_evidence_quality_pack") or {}
+    )
+    campaign_pack = dict(creative_decision_pack.get("campaign_export_pack") or {})
+    review_import_pack = dict(creative_decision_pack.get("review_import_pack") or {})
+    competitor_pack = dict(
+        creative_decision_pack.get("competitor_review_comparison_pack") or {}
+    )
+
+    def unique(values: list[object]) -> list[str]:
+        return list(dict.fromkeys(_rw_text(value) for value in values if _rw_text(value)))
+
+    def as_list(value: object) -> list[str]:
+        if isinstance(value, list):
+            return unique(value)
+        return [_rw_text(value)] if _rw_text(value) else []
+
+    source_cards = list(evidence_pack.get("source_evidence_cards") or [])
+    if not source_cards:
+        source_cards = list(evidence_pack.get("source_cards") or [])
+    if not source_cards:
+        source_counts = dict(
+            review_import_pack.get("import_summary", {}).get("source_type_counts")
+            or {}
+        )
+        source_cards = [
+            {
+                "source_id": f"source_{index}",
+                "source_label": _rw_import_source_label(source_type),
+                "source_type": source_type,
+                "review_count": count,
+                "usable_review_count": count,
+                "quote_count": count,
+                "sample_strength": "weak" if count else "missing",
+                "quality_status": "ready_as_directional_evidence" if count else "missing_review_source",
+            }
+            for index, (source_type, count) in enumerate(source_counts.items(), start=1)
+        ]
+    if not source_cards:
+        source_cards = [{
+            "source_id": "source_missing_review_import",
+            "source_label": "Missing review import",
+            "source_type": "missing_review_import",
+            "review_count": 0,
+            "usable_review_count": 0,
+            "quote_count": 0,
+            "sample_strength": "missing",
+            "quality_status": "missing_review_source",
+        }]
+
+    quote_cards = list(evidence_pack.get("quote_quality_cards") or [])
+    claim_support = list(evidence_pack.get("claim_support_matrix") or [])
+    campaign_evidence_overview_cards = []
+    for index, card in enumerate(source_cards[:10], start=1):
+        source_id = card.get("source_id") or f"source_{index}"
+        key_quote_refs = unique([
+            quote.get("quote_id")
+            for quote in quote_cards
+            if quote.get("source_id") == source_id
+        ])[:8]
+        if not key_quote_refs:
+            key_quote_refs = unique([quote.get("quote_id") for quote in quote_cards[:4]])
+        campaign_evidence_overview_cards.append({
+            "evidence_overview_id": f"campaign_dossier_evidence_{index}",
+            "source_label": card.get("source_label", ""),
+            "source_type": card.get("source_type", ""),
+            "review_count": int(card.get("review_count") or 0),
+            "usable_review_count": int(card.get("usable_review_count") or 0),
+            "quote_count": int(card.get("quote_count") or len(key_quote_refs)),
+            "sample_strength": card.get("sample_strength", "missing"),
+            "evidence_quality_status": (
+                card.get("evidence_quality_status")
+                or card.get("quality_status")
+                or "preview_only_unmapped"
+            ),
+            "key_quote_refs": key_quote_refs,
+            "evidence_gap_refs": unique([
+                *as_list(card.get("evidence_gap_refs")),
+                *[
+                    row.get("claim_id") or row.get("claim_ref")
+                    for row in claim_support
+                    if row.get("support_status") in {
+                        "unsupported_missing_quote",
+                        "weak_or_unmapped_quote_support",
+                    }
+                ],
+            ])[:10],
+            "operator_note": (
+                card.get("recommended_operator_action")
+                or "Use only supplied evidence as directional dossier preview."
+            ),
+            "real_scraping_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Evidence overview is derived from existing review/evidence packs "
+                "only and does not scrape, crawl, validate, or invent quotes."
+            ),
+        })
+
+    claim_cards = (
+        list(claim_risk_pack.get("claim_risk_cards") or [])
+        or list(claim_risk_pack.get("allowed_claim_cards") or [])
+        + list(claim_risk_pack.get("restricted_claim_cards") or [])
+        + list(claim_risk_pack.get("blocked_claim_cards") or [])
+    )
+    if not claim_cards:
+        claim_cards = list(verification_pack.get("claim_fix_verification_cards") or [])
+    if not claim_cards:
+        claim_cards = [{
+            "claim_id": "missing_claim_preview",
+            "claim_text": "Missing claim evidence preview",
+            "support_status": "unsupported_missing_quote",
+            "claim_risk_level": "blocked",
+            "claim_risk_category": "missing_quote",
+        }]
+    claim_safety_overview_cards = []
+    for index, card in enumerate(claim_cards[:18], start=1):
+        status = card.get("support_status", "preview_only_unmapped")
+        risk = card.get("claim_risk_level", "restricted")
+        claim_safety_overview_cards.append({
+            "claim_overview_id": f"campaign_dossier_claim_{index}",
+            "claim_id": card.get("claim_id") or card.get("claim_verification_id") or f"claim_{index}",
+            "claim_text": card.get("claim_text") or card.get("recommended_safe_rewrite") or "",
+            "support_status": status,
+            "claim_risk_level": risk,
+            "claim_risk_category": card.get("claim_risk_category") or card.get("risk_category") or "claim_safety_preview",
+            "supporting_quote_ids": as_list(card.get("supporting_quote_ids")),
+            "do_not_claim_refs": as_list(card.get("do_not_claim_refs")),
+            "allowed_usage": card.get("allowed_usage") or card.get("allowed_usage_after_verification") or "preview_only_with_quote_context",
+            "restricted_usage": as_list(card.get("restricted_usage")) or ["operator_review_before_public_delivery"],
+            "disallowed_usage": as_list(card.get("disallowed_usage")) or ["unsupported_claim", "missing_quote", "do_not_claim"],
+            "operator_review_required": bool(
+                card.get("operator_review_required")
+                or risk in {"high", "blocked"}
+                or "unsupported" in status
+            ),
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Claim safety overview is a deterministic preview, not legal "
+                "advice, not a real policy API check, and not a compliance result."
+            ),
+        })
+
+    creative_sources = [
+        ("hook", list(output_pack.get("safe_hook_cards") or []), "hook_id", "hook_text"),
+        ("script", list(output_pack.get("safe_script_cards") or []), "script_id", "script_text"),
+        ("CTA", list(output_pack.get("safe_cta_cards") or []), "cta_id", "cta_text"),
+        ("caption", list(output_pack.get("safe_caption_cards") or []), "caption_id", "caption_text"),
+        ("video_prompt", list(output_pack.get("safe_video_prompt_cards") or []), "video_prompt_id", "prompt_text"),
+        ("shot_list", list(output_pack.get("safe_shot_list_cards") or []), "shot_list_id", "shot_list_text"),
+    ]
+    creative_output_overview_cards = []
+    for surface, cards, id_key, text_key in creative_sources:
+        for card in cards[:6]:
+            creative_output_overview_cards.append({
+                "creative_output_id": (
+                    card.get(id_key)
+                    or card.get("output_id")
+                    or f"campaign_dossier_creative_{len(creative_output_overview_cards) + 1}"
+                ),
+                "creative_surface": surface,
+                "candidate_copy": (
+                    card.get(text_key)
+                    or card.get("copy_text")
+                    or " ".join(as_list(card.get("script_lines")))
+                ),
+                "source_claim_ids": as_list(card.get("source_claim_ids")),
+                "supporting_quote_ids": as_list(card.get("supporting_quote_ids")),
+                "claim_risk_level": card.get("claim_risk_level", "preview_only_unmapped"),
+                "support_status": card.get("support_status", "preview_only_unmapped"),
+                "usage_status": card.get("usage_status") or card.get("allowed_usage") or "internal_preview_only",
+                "safe_usage_note": (
+                    card.get("safe_usage_note")
+                    or "Deterministic creative dossier preview; not real ad delivery."
+                ),
+                "operator_review_required": bool(card.get("operator_review_required")),
+                "real_provider_allowed": False,
+                "real_execution_allowed": False,
+                "risk_note": (
+                    "Creative output overview is derived from existing claim-safe "
+                    "creative output only and does not call LLMs or providers."
+                ),
+            })
+    if not creative_output_overview_cards:
+        creative_output_overview_cards.append({
+            "creative_output_id": "campaign_dossier_creative_missing_1",
+            "creative_surface": "missing_claim_safe_output",
+            "candidate_copy": "",
+            "source_claim_ids": [],
+            "supporting_quote_ids": [],
+            "claim_risk_level": "blocked",
+            "support_status": "unsupported_missing_quote",
+            "usage_status": "operator_review_required",
+            "safe_usage_note": "No claim-safe creative output is available.",
+            "operator_review_required": True,
+            "real_provider_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Do not generate or invent real copy.",
+        })
+
+    platform_cards = list(platform_pack.get("platform_delivery_cards") or [])
+    qa_surface_cards = list(qa_pack.get("surface_readiness_cards") or [])
+    platform_delivery_overview_cards = []
+    for index, card in enumerate((qa_surface_cards or platform_cards)[:12], start=1):
+        surface = card.get("delivery_surface") or f"delivery_surface_{index}"
+        matching_platform = next(
+            (
+                row for row in platform_cards
+                if row.get("delivery_surface") == surface
+            ),
+            {},
+        )
+        platform_delivery_overview_cards.append({
+            "delivery_overview_id": f"campaign_dossier_delivery_{index}",
+            "delivery_surface": surface,
+            "platform_label": card.get("platform_label") or matching_platform.get("platform_label") or "preview_platform",
+            "claim_safety_status": card.get("claim_safety_status") or matching_platform.get("claim_safety_status") or "preview_only_unmapped",
+            "readiness_status": card.get("export_readiness_status") or matching_platform.get("readiness_status") or "needs_operator_review",
+            "recommended_output_refs": unique([
+                *as_list(matching_platform.get("recommended_output_refs")),
+                *as_list(card.get("source_delivery_refs")),
+            ]),
+            "delivery_blocker_refs": unique([
+                *as_list(card.get("blocked_reason")),
+                *as_list(matching_platform.get("delivery_blocker_refs")),
+            ]),
+            "operator_review_required": True,
+            "real_platform_upload_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Delivery overview is preview readiness only and is not a "
+                "platform upload, policy result, or compliance conclusion."
+            ),
+        })
+
+    final_cards = list(final_pack.get("final_export_packet_cards") or [])
+    final_export_overview_cards = []
+    for index, card in enumerate(final_cards[:12], start=1):
+        final_export_overview_cards.append({
+            "final_export_overview_id": f"campaign_dossier_final_export_{index}",
+            "export_packet_id": card.get("export_packet_id") or f"export_packet_{index}",
+            "delivery_surface": card.get("delivery_surface", "all_delivery_surfaces"),
+            "platform_label": card.get("platform_label", "preview_platform"),
+            "packet_status": card.get("packet_status", "blocked"),
+            "ready_for_preview_export": bool(card.get("ready_for_preview_export")),
+            "included_copy_refs": as_list(card.get("included_copy_refs")),
+            "included_video_prompt_refs": as_list(card.get("included_video_prompt_refs")),
+            "included_claim_trace_refs": as_list(card.get("included_claim_trace_refs")),
+            "excluded_blocker_refs": as_list(card.get("excluded_blocker_refs")),
+            "operator_review_required": bool(card.get("operator_review_required", True)),
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Final export overview is preview packet metadata only; it "
+                "does not write files, export, upload, publish, or execute."
+            ),
+        })
+    if not final_export_overview_cards:
+        final_export_overview_cards.append({
+            "final_export_overview_id": "campaign_dossier_final_export_missing_1",
+            "export_packet_id": "missing_final_export_packet",
+            "delivery_surface": "all_delivery_surfaces",
+            "platform_label": "preview_platform",
+            "packet_status": "blocked",
+            "ready_for_preview_export": False,
+            "included_copy_refs": [],
+            "included_video_prompt_refs": [],
+            "included_claim_trace_refs": [],
+            "excluded_blocker_refs": ["missing_final_claim_safe_export_packet"],
+            "operator_review_required": True,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Final export packet is missing; real export remains blocked.",
+        })
+
+    appendix_seed = [
+        *list(final_pack.get("final_blocked_content_appendix") or []),
+        *list(verification_pack.get("remaining_blocker_cards") or []),
+        *list(output_pack.get("blocked_output_cards") or []),
+        *list(claim_risk_pack.get("blocked_claim_cards") or []),
+        *list(claim_risk_pack.get("restricted_claim_cards") or []),
+    ]
+    appendix_types = [
+        "unsupported claim",
+        "missing quote",
+        "do_not_claim",
+        "blocked output",
+        "remaining blocker",
+        "policy check disabled",
+        "platform upload disabled",
+        "file write disabled",
+    ]
+    blocked_content_dossier_appendix = []
+    for index, appendix_type in enumerate(appendix_types, start=1):
+        blocked_content_dossier_appendix.append({
+            "appendix_id": f"campaign_dossier_blocked_{index}",
+            "appendix_type": appendix_type,
+            "source_refs": unique([
+                item.get("appendix_id")
+                or item.get("remaining_blocker_id")
+                or item.get("blocked_output_id")
+                or item.get("claim_id")
+                or item.get("blocked_claim_id")
+                for item in appendix_seed
+            ])[:12] or [appendix_type.replace(" ", "_")],
+            "public_delivery_allowed": False,
+            "operator_review_required": True,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": (
+                "Blocked dossier appendix preserves exclusions for manual "
+                "review and cannot enter public delivery or real export."
+            ),
+        })
+
+    operator_handoff_checklist = [
+        {
+            "checklist_id": "campaign_dossier_operator_evidence_claim_review",
+            "check_type": "evidence_claim_review",
+            "check_summary": "Review evidence overview, claim support, do-not-claim refs, and missing quote gaps.",
+            "source_refs": unique([
+                *[card.get("evidence_overview_id") for card in campaign_evidence_overview_cards],
+                *[card.get("claim_overview_id") for card in claim_safety_overview_cards],
+            ]),
+            "operator_task_created": False,
+            "real_task_creation_allowed": False,
+            "real_execution_allowed": False,
+        },
+        {
+            "checklist_id": "campaign_dossier_operator_creative_delivery_review",
+            "check_type": "creative_delivery_review",
+            "check_summary": "Review creative output, platform delivery readiness, QA, remediation, verification, and final export preview.",
+            "source_refs": unique([
+                *[card.get("creative_output_id") for card in creative_output_overview_cards],
+                *[card.get("delivery_overview_id") for card in platform_delivery_overview_cards],
+                *[card.get("final_export_overview_id") for card in final_export_overview_cards],
+            ]),
+            "operator_task_created": False,
+            "real_task_creation_allowed": False,
+            "real_execution_allowed": False,
+        },
+        {
+            "checklist_id": "campaign_dossier_operator_blocked_boundary_review",
+            "check_type": "blocked_appendix_and_safety_boundary_review",
+            "check_summary": "Confirm blocked appendix and disabled provider, policy, upload, export, file write, and task boundaries.",
+            "source_refs": unique([
+                item.get("appendix_id") for item in blocked_content_dossier_appendix
+            ]),
+            "operator_task_created": False,
+            "real_task_creation_allowed": False,
+            "real_execution_allowed": False,
+        },
+    ]
+
+    dossier_traceability_map = [
+        {
+            "trace_id": "campaign_dossier_trace_full_chain",
+            "trace_chain": [
+                "evidence",
+                "claim",
+                "creative output",
+                "delivery",
+                "QA/remediation/verification",
+                "final export",
+            ],
+            "evidence_refs": unique([
+                card.get("evidence_overview_id") for card in campaign_evidence_overview_cards
+            ]),
+            "claim_refs": unique([
+                card.get("claim_overview_id") for card in claim_safety_overview_cards
+            ]),
+            "creative_output_refs": unique([
+                card.get("creative_output_id") for card in creative_output_overview_cards
+            ]),
+            "delivery_refs": unique([
+                card.get("delivery_overview_id") for card in platform_delivery_overview_cards
+            ]),
+            "qa_remediation_verification_refs": [
+                "claim_safe_delivery_qa_pack",
+                "claim_safe_delivery_remediation_pack",
+                "claim_safe_remediation_verification_pack",
+            ],
+            "final_export_refs": unique([
+                card.get("final_export_overview_id") for card in final_export_overview_cards
+            ]),
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "risk_note": (
+                "Traceability map uses existing in-memory pack refs only and "
+                "does not read real logs or history tables."
+            ),
+        }
+    ]
+
+    source_packs = [
+        "final_claim_safe_export_packet_pack",
+        "claim_safe_remediation_verification_pack",
+        "claim_safe_delivery_remediation_pack",
+        "claim_safe_delivery_qa_pack",
+        "claim_safe_platform_delivery_pack",
+        "claim_safe_creative_output_pack",
+        "claim_safe_creative_brief_pack",
+        "claim_risk_guard_pack",
+        "review_evidence_quality_pack",
+        "campaign_export_pack",
+        "review_import_pack",
+        "competitor_review_comparison_pack",
+    ]
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+    }
+
+    return {
+        "pack_version": "campaign_creative_dossier_pack_v1",
+        "campaign_dossier_summary": {
+            "mode": (
+                "campaign_creative_dossier_preview_"
+                "deterministic_operator_handoff_dry_run_only"
+            ),
+            "source_packs": source_packs,
+            "evidence_overview_count": len(campaign_evidence_overview_cards),
+            "claim_safety_overview_count": len(claim_safety_overview_cards),
+            "creative_output_overview_count": len(creative_output_overview_cards),
+            "platform_delivery_overview_count": len(platform_delivery_overview_cards),
+            "final_export_overview_count": len(final_export_overview_cards),
+            "blocked_appendix_count": len(blocked_content_dossier_appendix),
+            "operator_handoff_count": len(operator_handoff_checklist),
+            "real_task_creation_allowed": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_provider_allowed": False,
+            "real_media_upload_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": (
+                "Use this deterministic dossier as manual handoff preview only; "
+                "do not create tasks, write files, export, upload, publish, call "
+                "providers, call LLMs, or write databases."
+            ),
+        },
+        "campaign_evidence_overview_cards": campaign_evidence_overview_cards,
+        "claim_safety_overview_cards": claim_safety_overview_cards,
+        "creative_output_overview_cards": creative_output_overview_cards,
+        "platform_delivery_overview_cards": platform_delivery_overview_cards,
+        "final_export_overview_cards": final_export_overview_cards,
+        "blocked_content_dossier_appendix": blocked_content_dossier_appendix,
+        "operator_handoff_checklist": operator_handoff_checklist,
+        "dossier_traceability_map": dossier_traceability_map,
+        "dossier_quality_checks": {
+            "source_packs_present": {
+                key: bool(creative_decision_pack.get(key)) for key in source_packs
+            },
+            "evidence_coverage_present": bool(campaign_evidence_overview_cards),
+            "claim_safety_coverage_present": bool(claim_safety_overview_cards),
+            "creative_output_coverage_present": bool(creative_output_overview_cards),
+            "platform_delivery_coverage_present": bool(platform_delivery_overview_cards),
+            "qa_remediation_verification_coverage_present": bool(qa_pack and remediation_pack and verification_pack),
+            "final_export_coverage_present": bool(final_export_overview_cards),
+            "blocked_appendix_coverage_present": bool(blocked_content_dossier_appendix),
+            "operator_handoff_coverage_present": bool(operator_handoff_checklist),
+            "safety_boundary_coverage_present": True,
+            "real_scraping_performed": False,
+            "llm_called": False,
+            "provider_called": False,
+            "media_operation_performed": False,
+            "database_write_performed": False,
+            "real_policy_api_called": False,
+            "operator_task_created": False,
+            "real_export_performed": False,
+            "file_write_performed": False,
+            "real_execution_performed": False,
+        },
+        "handoff_manifest_preview": {
+            "manifest_id": "campaign_creative_dossier_handoff_manifest_preview",
+            "manifest_type": "dossier_json_markdown_preview_shape_only",
+            "preview_sections": [
+                "campaign_dossier_summary",
+                "campaign_evidence_overview_cards",
+                "claim_safety_overview_cards",
+                "creative_output_overview_cards",
+                "platform_delivery_overview_cards",
+                "final_export_overview_cards",
+                "blocked_content_dossier_appendix",
+                "operator_handoff_checklist",
+                "dossier_traceability_map",
+                "dossier_quality_checks",
+                "audit_preview",
+                "safety_boundaries",
+            ],
+            "real_file_created": False,
+            "real_file_write_allowed": False,
+            "file_upload_allowed": False,
+            "database_write_allowed": False,
+            "real_export_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "campaign_creative_dossier_preview",
+            "source": "creative_decision_pack.campaign_creative_dossier_pack",
+            "audit_record_created": False,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "operator_task_created": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -41920,6 +42481,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["final_claim_safe_export_packet_pack"] = (
         _rw_final_claim_safe_export_packet_pack(creative_decision_pack)
+    )
+    creative_decision_pack["campaign_creative_dossier_pack"] = (
+        _rw_campaign_creative_dossier_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
