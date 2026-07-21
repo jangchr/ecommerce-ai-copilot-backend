@@ -186,6 +186,7 @@ Add-Check "project_workspace_claim_safe_delivery_remediation_marker" ($page.Cont
 Add-Check "project_workspace_claim_safe_remediation_verification_marker" ($page.Content -match "Project Workspace claim-safe remediation verification bundle")
 Add-Check "project_workspace_final_claim_safe_export_packet_marker" ($page.Content -match "Project Workspace final claim-safe export packet bundle")
 Add-Check "project_workspace_campaign_creative_dossier_marker" ($page.Content -match "Project Workspace campaign creative dossier bundle")
+Add-Check "project_workspace_product_navigation_marker" ($page.Content -match "Project Workspace product navigation bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")

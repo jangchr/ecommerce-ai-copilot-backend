@@ -3645,6 +3645,7 @@
         let latestProjectWorkspaceClaimSafeRemediationVerificationPack = {};
         let latestProjectWorkspaceFinalClaimSafeExportPacketPack = {};
         let latestProjectWorkspaceCampaignCreativeDossierPack = {};
+        let latestProjectWorkspaceProductNavigationPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7041,6 +7042,62 @@
             campaignCreativeDossierPolicyNote: 'This is not legal advice, not a real policy API check, not a real platform compliance conclusion, not a real claim safety rating, and not a real platform pass rate.',
             campaignCreativeDossierSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, and file write remain disabled.'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceProductNavigationMarker: 'Project Workspace product navigation bundle',
+            productNavigationPackTitle: 'Workspace Product Navigation / Dossier Index',
+            productNavigationPackHelper: 'Project Workspace product navigation bundle. Deterministic workspace index preview from existing product packs only. This is not legal advice, not a real policy API check, not a real platform compliance conclusion, and not a real platform pass rate.',
+            productNavigationSummaryTitle: 'Workspace Navigation Summary',
+            productNavigationStagePackTitle: 'Product Stage Cards / Pack Availability',
+            productNavigationStageTitle: 'Product Stage Cards',
+            productNavigationPackAvailabilityTitle: 'Pack Availability Cards',
+            productNavigationActionCopyExportTitle: 'Operator Next Actions / Copy Export Surface Map',
+            productNavigationActionTitle: 'Operator Next Action Cards',
+            productNavigationCopyExportTitle: 'Copy Export Surface Map',
+            productNavigationPanelTraceTitle: 'Workspace Panel Registry / Workflow Trace Map',
+            productNavigationPanelRegistryTitle: 'Workspace Panel Registry Preview',
+            productNavigationTraceTitle: 'Workflow Trace Map',
+            productNavigationReadinessLimitQualityAuditSafetyTitle: 'Product Readiness / Known Limitations / Quality / Audit / Safety',
+            productNavigationScorecardTitle: 'Product Readiness Scorecard',
+            productNavigationLimitationsTitle: 'Known Limitations Cards',
+            productNavigationQualityTitle: 'Navigation Quality Checks',
+            productNavigationAuditTitle: 'Audit Preview',
+            productNavigationSafetyTitle: 'Safety Boundaries',
+            productNavigationMode: 'Mode',
+            productNavigationStageCount: 'Product stage count',
+            productNavigationPackCount: 'Pack availability count',
+            productNavigationActionCount: 'Operator next action count',
+            productNavigationSurfaceCount: 'Copy/export surface count',
+            productNavigationPanelCount: 'Panel registry count',
+            productNavigationRecommendedAction: 'Recommended operator action',
+            productNavigationExecution: 'Real execution allowed',
+            productNavigationFileWrite: 'Real file write allowed',
+            productNavigationRealExport: 'Real export allowed',
+            productNavigationTaskCreation: 'Real task creation allowed',
+            productNavigationDisabled: 'disabled',
+            productNavigationNoData: 'No workspace product navigation data is available.',
+            productNavigationCopyNoData: 'No workspace product navigation content is available to copy.',
+            productNavigationCopyFailed: 'Unable to copy workspace product navigation content.',
+            productNavigationCopied: 'Workspace product navigation content copied.',
+            productNavigationCopySummary: 'Copy workspace navigation summary',
+            productNavigationCopyStages: 'Copy product stage cards',
+            productNavigationCopyPacks: 'Copy pack availability cards',
+            productNavigationCopyActions: 'Copy operator next action cards',
+            productNavigationCopySurface: 'Copy copy/export surface map',
+            productNavigationCopyPanelRegistry: 'Copy workspace panel registry preview',
+            productNavigationCopyTrace: 'Copy workflow trace map',
+            productNavigationCopyScorecard: 'Copy product readiness scorecard',
+            productNavigationCopyLimitations: 'Copy known limitations cards',
+            productNavigationCopyFull: 'Copy full workspace product navigation pack',
+            productNavigationPreviewNote: 'Deterministic workspace index preview only. It does not execute real actions, does not create real tasks, does not write files, does not trigger real export, does not upload files, does not publish to platforms, does not call providers, does not call an LLM, and does not write databases.',
+            productNavigationStageNote: 'Stage and pack availability coverage includes evidence_quality, claim_risk_guard, claim_safe_brief, claim_safe_output, platform_delivery, delivery_qa, remediation_plan, remediation_verification, final_export_packet, campaign_dossier, provider_safety_controls, and real_execution_blockers.',
+            productNavigationActionNote: 'Next actions are manual guidance only. They do not create real tasks. Copy/export surfaces are preview-only and do not write files, do not export, do not upload, and do not execute real operations.',
+            productNavigationTraceNote: 'Workflow trace links evidence -> claim -> creative -> delivery -> QA -> remediation -> verification -> final export -> dossier and also shows provider safety / real execution blocker chains. This is registry preview only and does not connect to a real registry and does not change a real permission system.',
+            productNavigationReadinessNote: 'Product readiness scorecard is deterministic product readiness preview only. It is not legal advice, not a real policy API result, not a real platform compliance conclusion, and not a real platform pass rate.',
+            productNavigationLimitationsNote: 'Known limitations: no real LLM, no real provider, no media upload/download, no real export, no platform upload, no policy API, no DB persistence, and no real task creation.',
+            productNavigationQualityNote: 'pack availability / stage map / copy-export map / trace map / disabled capability boundary coverage',
+            productNavigationAuditNote: 'Audit preview is display-only and does not write databases.',
+            productNavigationSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, and file write remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
             claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
@@ -7626,6 +7683,62 @@
             campaignCreativeDossierAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
             campaignCreativeDossierPolicyNote: '\u8fd9\u4e0d\u662f legal advice\uff0c\u4e0d\u662f\u771f\u5b9e policy API\uff0c\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\uff0c\u4e0d\u662f\u771f\u5b9e claim safety \u8bc4\u7ea7\uff0c\u4e5f\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\u3002',
             campaignCreativeDossierSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export \u548c file write \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceProductNavigationMarker: 'Project Workspace product navigation bundle',
+            productNavigationPackTitle: 'Workspace Product Navigation / Dossier Index',
+            productNavigationPackHelper: '\u67e5\u770b Project Workspace product navigation bundle\u3002\u8fd9\u53ea\u662f\u57fa\u4e8e\u5df2\u6709 product packs \u7684 deterministic workspace index preview\u3002\u8fd9\u4e0d\u662f legal advice\uff0c\u4e0d\u662f\u771f\u5b9e policy API\uff0c\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\uff0c\u4e5f\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\u3002',
+            productNavigationSummaryTitle: 'Workspace Navigation Summary',
+            productNavigationStagePackTitle: 'Product Stage Cards / Pack Availability',
+            productNavigationStageTitle: 'Product Stage Cards',
+            productNavigationPackAvailabilityTitle: 'Pack Availability Cards',
+            productNavigationActionCopyExportTitle: 'Operator Next Actions / Copy Export Surface Map',
+            productNavigationActionTitle: 'Operator Next Action Cards',
+            productNavigationCopyExportTitle: 'Copy Export Surface Map',
+            productNavigationPanelTraceTitle: 'Workspace Panel Registry / Workflow Trace Map',
+            productNavigationPanelRegistryTitle: 'Workspace Panel Registry Preview',
+            productNavigationTraceTitle: 'Workflow Trace Map',
+            productNavigationReadinessLimitQualityAuditSafetyTitle: 'Product Readiness / Known Limitations / Quality / Audit / Safety',
+            productNavigationScorecardTitle: 'Product Readiness Scorecard',
+            productNavigationLimitationsTitle: 'Known Limitations Cards',
+            productNavigationQualityTitle: 'Navigation Quality Checks',
+            productNavigationAuditTitle: 'Audit Preview',
+            productNavigationSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            productNavigationMode: '\u6a21\u5f0f',
+            productNavigationStageCount: 'Product stage \u6570\u91cf',
+            productNavigationPackCount: 'Pack availability \u6570\u91cf',
+            productNavigationActionCount: 'Operator next action \u6570\u91cf',
+            productNavigationSurfaceCount: 'Copy/export surface \u6570\u91cf',
+            productNavigationPanelCount: 'Panel registry \u6570\u91cf',
+            productNavigationRecommendedAction: '\u63a8\u8350 operator action',
+            productNavigationExecution: '\u5141\u8bb8\u771f\u5b9e execution',
+            productNavigationFileWrite: '\u5141\u8bb8\u771f\u5b9e file write',
+            productNavigationRealExport: '\u5141\u8bb8\u771f\u5b9e export',
+            productNavigationTaskCreation: '\u5141\u8bb8\u771f\u5b9e task creation',
+            productNavigationDisabled: '\u5df2\u7981\u7528',
+            productNavigationNoData: '\u6682\u65e0 workspace product navigation \u6570\u636e\u3002',
+            productNavigationCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 workspace product navigation \u5185\u5bb9\u3002',
+            productNavigationCopyFailed: '\u65e0\u6cd5\u590d\u5236 workspace product navigation \u5185\u5bb9\u3002',
+            productNavigationCopied: 'Workspace product navigation \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            productNavigationCopySummary: '\u590d\u5236 workspace navigation summary',
+            productNavigationCopyStages: '\u590d\u5236 product stage cards',
+            productNavigationCopyPacks: '\u590d\u5236 pack availability cards',
+            productNavigationCopyActions: '\u590d\u5236 operator next action cards',
+            productNavigationCopySurface: '\u590d\u5236 copy/export surface map',
+            productNavigationCopyPanelRegistry: '\u590d\u5236 workspace panel registry preview',
+            productNavigationCopyTrace: '\u590d\u5236 workflow trace map',
+            productNavigationCopyScorecard: '\u590d\u5236 product readiness scorecard',
+            productNavigationCopyLimitations: '\u590d\u5236 known limitations cards',
+            productNavigationCopyFull: '\u590d\u5236\u5b8c\u6574 workspace product navigation pack',
+            productNavigationPreviewNote: '\u4ec5\u4e3a deterministic workspace index preview\u3002\u4e0d\u6267\u884c\u771f\u5b9e\u52a8\u4f5c\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e task\uff0c\u4e0d\u5199\u6587\u4ef6\uff0c\u4e0d\u89e6\u53d1\u771f\u5b9e export\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u53d1\u5e03\u5230\u5e73\u53f0\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u8c03\u7528 LLM\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
+            productNavigationStageNote: 'Stage \u548c pack availability \u8986\u76d6 evidence_quality\u3001claim_risk_guard\u3001claim_safe_brief\u3001claim_safe_output\u3001platform_delivery\u3001delivery_qa\u3001remediation_plan\u3001remediation_verification\u3001final_export_packet\u3001campaign_dossier\u3001provider_safety_controls \u548c real_execution_blockers\u3002',
+            productNavigationActionNote: 'Next actions \u53ea\u662f\u4eba\u5de5\u5efa\u8bae\u3002\u4e0d\u521b\u5efa\u771f\u5b9e task\u3002Copy/export surfaces \u53ea\u662f preview\uff0c\u4e0d\u5199\u6587\u4ef6\uff0c\u4e0d\u771f\u5b9e export\uff0c\u4e0d\u4e0a\u4f20\uff0c\u4e0d\u6267\u884c\u771f\u5b9e\u64cd\u4f5c\u3002',
+            productNavigationTraceNote: 'Workflow trace \u8fde\u63a5 evidence -> claim -> creative -> delivery -> QA -> remediation -> verification -> final export -> dossier\uff0c\u540c\u65f6\u663e\u793a provider safety / real execution blocker \u94fe\u8def\u3002\u8fd9\u53ea\u662f registry preview\uff0c\u4e0d\u63a5\u771f\u5b9e registry\uff0c\u4e0d\u6539\u53d8\u771f\u5b9e\u6743\u9650\u7cfb\u7edf\u3002',
+            productNavigationReadinessNote: 'Product readiness scorecard \u53ea\u662f deterministic product readiness preview\u3002\u8fd9\u4e0d\u662f legal advice\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u7ed3\u679c\uff0c\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\uff0c\u4e5f\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\u3002',
+            productNavigationLimitationsNote: 'Known limitations\uff1ano real LLM\u3001no real provider\u3001no media upload/download\u3001no real export\u3001no platform upload\u3001no policy API\u3001no DB persistence\u3001no real task creation\u3002',
+            productNavigationQualityNote: 'pack availability / stage map / copy-export map / trace map / disabled capability boundary coverage',
+            productNavigationAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
+            productNavigationSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export \u548c file write \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -11125,6 +11238,7 @@
                 latestProjectWorkspaceClaimSafeRemediationVerificationPack = latestProjectCreativeDecisionPack.claim_safe_remediation_verification_pack || {};
                 latestProjectWorkspaceFinalClaimSafeExportPacketPack = latestProjectCreativeDecisionPack.final_claim_safe_export_packet_pack || {};
                 latestProjectWorkspaceCampaignCreativeDossierPack = latestProjectCreativeDecisionPack.campaign_creative_dossier_pack || {};
+                latestProjectWorkspaceProductNavigationPack = latestProjectCreativeDecisionPack.workspace_product_navigation_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -17006,6 +17120,7 @@
         const PROJECT_WORKSPACE_CLAIM_SAFE_REMEDIATION_VERIFICATION_MARKER = 'Project Workspace claim-safe remediation verification bundle';
         const PROJECT_WORKSPACE_FINAL_CLAIM_SAFE_EXPORT_PACKET_MARKER = 'Project Workspace final claim-safe export packet bundle';
         const PROJECT_WORKSPACE_CAMPAIGN_CREATIVE_DOSSIER_MARKER = 'Project Workspace campaign creative dossier bundle';
+        const PROJECT_WORKSPACE_PRODUCT_NAVIGATION_MARKER = 'Project Workspace product navigation bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -23857,6 +23972,130 @@
         function copyProjectWorkspaceOperatorHandoffChecklist() { return copyProjectWorkspaceCampaignCreativeDossierText('operator'); }
         function copyProjectWorkspaceDossierTraceabilityMap() { return copyProjectWorkspaceCampaignCreativeDossierText('trace'); }
         function copyProjectWorkspaceFullCampaignCreativeDossierPack() { return copyProjectWorkspaceCampaignCreativeDossierText('full'); }
+
+        function projectWorkspaceProductNavigationPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceProductNavigationPack && Object.keys(latestProjectWorkspaceProductNavigationPack).length) return latestProjectWorkspaceProductNavigationPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_product_navigation_pack || {};
+        }
+
+        function projectWorkspaceProductNavigationHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspaceProductNavigationJsonText(value) {
+            if (!projectWorkspaceProductNavigationHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceProductNavigationDisabledText(value) {
+            return value === false ? t('productNavigationDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportProductNavigationSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceProductNavigationPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PRODUCT_NAVIGATION_MARKER,
+                has_workspace_product_navigation_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                workspace_navigation_summary: pack.workspace_navigation_summary || {},
+                product_stage_cards: Array.isArray(pack.product_stage_cards) ? pack.product_stage_cards : [],
+                pack_availability_cards: Array.isArray(pack.pack_availability_cards) ? pack.pack_availability_cards : [],
+                operator_next_action_cards: Array.isArray(pack.operator_next_action_cards) ? pack.operator_next_action_cards : [],
+                copy_export_surface_map: Array.isArray(pack.copy_export_surface_map) ? pack.copy_export_surface_map : [],
+                workspace_panel_registry_preview: Array.isArray(pack.workspace_panel_registry_preview) ? pack.workspace_panel_registry_preview : [],
+                workflow_trace_map: pack.workflow_trace_map || {},
+                product_readiness_scorecard: pack.product_readiness_scorecard || {},
+                known_limitations_cards: Array.isArray(pack.known_limitations_cards) ? pack.known_limitations_cards : [],
+                navigation_quality_checks: pack.navigation_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceProductNavigationSummaryText(pack = projectWorkspaceExportProductNavigationSnapshot()) {
+            if (!pack.has_workspace_product_navigation_pack) return '';
+            const summary = pack.workspace_navigation_summary || {};
+            return [
+                t('productNavigationSummaryTitle'),
+                `${t('productNavigationMode')}: ${summary.mode || t('none')}`,
+                `${t('productNavigationStageCount')}: ${summary.product_stage_count ?? pack.product_stage_cards.length}`,
+                `${t('productNavigationPackCount')}: ${summary.pack_availability_count ?? pack.pack_availability_cards.length}`,
+                `${t('productNavigationActionCount')}: ${summary.operator_next_action_count ?? pack.operator_next_action_cards.length}`,
+                `${t('productNavigationSurfaceCount')}: ${summary.copy_export_surface_count ?? pack.copy_export_surface_map.length}`,
+                `${t('productNavigationPanelCount')}: ${summary.panel_registry_count ?? pack.workspace_panel_registry_preview.length}`,
+                `${t('productNavigationRecommendedAction')}: ${summary.recommended_operator_action || t('productNavigationPreviewNote')}`,
+                `${t('productNavigationExecution')}: ${projectWorkspaceProductNavigationDisabledText(summary.real_execution_allowed)}`,
+                `${t('productNavigationFileWrite')}: ${projectWorkspaceProductNavigationDisabledText(summary.real_file_write_allowed)}`,
+                `${t('productNavigationRealExport')}: ${projectWorkspaceProductNavigationDisabledText(summary.real_export_allowed)}`,
+                `${t('productNavigationTaskCreation')}: ${projectWorkspaceProductNavigationDisabledText(summary.real_task_creation_allowed)}`,
+                t('productNavigationPreviewNote'),
+                t('productNavigationReadinessNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceProductNavigationSectionText(titleKey, value) {
+            const body = projectWorkspaceProductNavigationJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportProductNavigationMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProductNavigationSnapshot(workspace);
+            if (!pack.has_workspace_product_navigation_pack) return '';
+            return [
+                `## ${t('productNavigationPackTitle')}`,
+                `## ${t('productNavigationSummaryTitle')}`,
+                projectWorkspaceProductNavigationSummaryText(pack), '',
+                projectWorkspaceProductNavigationSectionText('productNavigationStageTitle', pack.product_stage_cards), '',
+                projectWorkspaceProductNavigationSectionText('productNavigationPackAvailabilityTitle', pack.pack_availability_cards), '',
+                projectWorkspaceProductNavigationSectionText('productNavigationActionTitle', pack.operator_next_action_cards), '',
+                projectWorkspaceProductNavigationSectionText('productNavigationCopyExportTitle', pack.copy_export_surface_map), '',
+                projectWorkspaceProductNavigationSectionText('productNavigationPanelRegistryTitle', pack.workspace_panel_registry_preview), '',
+                projectWorkspaceProductNavigationSectionText('productNavigationTraceTitle', pack.workflow_trace_map), '',
+                projectWorkspaceProductNavigationSectionText('productNavigationScorecardTitle', pack.product_readiness_scorecard), '',
+                projectWorkspaceProductNavigationSectionText('productNavigationLimitationsTitle', pack.known_limitations_cards), '',
+                projectWorkspaceProductNavigationSectionText('productNavigationQualityTitle', pack.navigation_quality_checks), '',
+                projectWorkspaceProductNavigationSectionText('productNavigationAuditTitle', pack.audit_preview), '',
+                projectWorkspaceProductNavigationSectionText('productNavigationSafetyTitle', pack.safety_boundaries),
+                t('productNavigationStageNote'),
+                t('productNavigationActionNote'),
+                t('productNavigationTraceNote'),
+                t('productNavigationReadinessNote'),
+                t('productNavigationSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceProductNavigationText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceProductNavigationStatus');
+            const pack = projectWorkspaceExportProductNavigationSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceProductNavigationSummaryText(pack)
+                : kind === 'stages' ? projectWorkspaceProductNavigationSectionText('productNavigationStageTitle', pack.product_stage_cards)
+                : kind === 'packs' ? projectWorkspaceProductNavigationSectionText('productNavigationPackAvailabilityTitle', pack.pack_availability_cards)
+                : kind === 'actions' ? projectWorkspaceProductNavigationSectionText('productNavigationActionTitle', pack.operator_next_action_cards)
+                : kind === 'surface' ? projectWorkspaceProductNavigationSectionText('productNavigationCopyExportTitle', pack.copy_export_surface_map)
+                : kind === 'panelRegistry' ? projectWorkspaceProductNavigationSectionText('productNavigationPanelRegistryTitle', pack.workspace_panel_registry_preview)
+                : kind === 'trace' ? projectWorkspaceProductNavigationSectionText('productNavigationTraceTitle', pack.workflow_trace_map)
+                : kind === 'scorecard' ? projectWorkspaceProductNavigationSectionText('productNavigationScorecardTitle', pack.product_readiness_scorecard)
+                : kind === 'limitations' ? projectWorkspaceProductNavigationSectionText('productNavigationLimitationsTitle', pack.known_limitations_cards)
+                : projectWorkspaceExportProductNavigationMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('productNavigationCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('productNavigationCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('productNavigationCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('productNavigationCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceNavigationSummary() { return copyProjectWorkspaceProductNavigationText('summary'); }
+        function copyProjectWorkspaceProductStageCards() { return copyProjectWorkspaceProductNavigationText('stages'); }
+        function copyProjectWorkspacePackAvailabilityCards() { return copyProjectWorkspaceProductNavigationText('packs'); }
+        function copyProjectWorkspaceOperatorNextActionCards() { return copyProjectWorkspaceProductNavigationText('actions'); }
+        function copyProjectWorkspaceCopyExportSurfaceMap() { return copyProjectWorkspaceProductNavigationText('surface'); }
+        function copyProjectWorkspacePanelRegistryPreview() { return copyProjectWorkspaceProductNavigationText('panelRegistry'); }
+        function copyProjectWorkspaceWorkflowTraceMap() { return copyProjectWorkspaceProductNavigationText('trace'); }
+        function copyProjectWorkspaceProductReadinessScorecard() { return copyProjectWorkspaceProductNavigationText('scorecard'); }
+        function copyProjectWorkspaceKnownLimitationsCards() { return copyProjectWorkspaceProductNavigationText('limitations'); }
+        function copyProjectWorkspaceFullProductNavigationPack() { return copyProjectWorkspaceProductNavigationText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -28232,6 +28471,37 @@
             return `<div class="section-block" id="projectWorkspaceCampaignCreativeDossierTraceManifestQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('campaignCreativeDossierTraceManifestQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('campaignCreativeDossierTraceNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDossierTraceabilityMap()">${escapeHTML(t('campaignCreativeDossierCopyTrace'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('campaignCreativeDossierTraceTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierJsonText(pack.dossier_traceability_map) || t('campaignCreativeDossierNoData'))}</pre><div class="field-helper">evidence -> claim -> creative output -> delivery -> QA/remediation/verification -> final export</div></div><div class="graph-os-card"><strong>${escapeHTML(t('campaignCreativeDossierQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierJsonText(pack.dossier_quality_checks) || t('campaignCreativeDossierNoData'))}</pre><div class="field-helper">${escapeHTML(t('campaignCreativeDossierQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('campaignCreativeDossierManifestTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierJsonText(pack.handoff_manifest_preview) || t('campaignCreativeDossierNoData'))}</pre><div class="field-helper">${escapeHTML(t('campaignCreativeDossierManifestNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('campaignCreativeDossierAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceCampaignCreativeDossierJsonText(pack.audit_preview) || t('campaignCreativeDossierNoData'))}</pre><div class="field-helper">${escapeHTML(t('campaignCreativeDossierAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('campaignCreativeDossierSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('campaignCreativeDossierSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceProductNavigationSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProductNavigationSnapshot(workspace); if (!pack.has_workspace_product_navigation_pack) return '';
+            const summary = pack.workspace_navigation_summary || {};
+            return `<div class="section-block" id="projectWorkspaceProductNavigationSummaryPanel" data-product-navigation-marker="${PROJECT_WORKSPACE_PRODUCT_NAVIGATION_MARKER}" data-marker="project_workspace_product_navigation_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('productNavigationPackTitle'))}</div><div class="field-helper">${escapeHTML(t('productNavigationPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullProductNavigationPack()">${escapeHTML(t('productNavigationCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('productNavigationMode'), summary.mode || t('none'))}${metricPill(t('productNavigationStageCount'), String(summary.product_stage_count ?? pack.product_stage_cards.length))}${metricPill(t('productNavigationPackCount'), String(summary.pack_availability_count ?? pack.pack_availability_cards.length))}${metricPill(t('productNavigationActionCount'), String(summary.operator_next_action_count ?? pack.operator_next_action_cards.length))}${metricPill(t('productNavigationSurfaceCount'), String(summary.copy_export_surface_count ?? pack.copy_export_surface_map.length))}${metricPill(t('productNavigationPanelCount'), String(summary.panel_registry_count ?? pack.workspace_panel_registry_preview.length))}${metricPill(t('productNavigationExecution'), projectWorkspaceProductNavigationDisabledText(summary.real_execution_allowed))}${metricPill(t('productNavigationFileWrite'), projectWorkspaceProductNavigationDisabledText(summary.real_file_write_allowed))}${metricPill(t('productNavigationRealExport'), projectWorkspaceProductNavigationDisabledText(summary.real_export_allowed))}${metricPill(t('productNavigationTaskCreation'), projectWorkspaceProductNavigationDisabledText(summary.real_task_creation_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProductNavigationSummaryText(pack) || t('productNavigationNoData'))}</pre><div class="field-helper">${escapeHTML(t('productNavigationPreviewNote'))}</div><div class="field-helper">${escapeHTML(t('productNavigationReadinessNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceProductNavigationStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceNavigationSummary()">${escapeHTML(t('productNavigationCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceProductNavigationStagePackPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProductNavigationSnapshot(workspace); if (!pack.has_workspace_product_navigation_pack) return '';
+            const stages = (pack.product_stage_cards || []).slice(0, 16).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.stage_id || 'stage_id')}</strong><div><strong>stage_label:</strong> ${escapeHTML(card.stage_label || t('none'))}</div><div><strong>stage_group:</strong> ${escapeHTML(card.stage_group || t('none'))}</div><div><strong>source_pack_refs:</strong> ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div><strong>primary_user_question:</strong> ${escapeHTML(card.primary_user_question || t('none'))}</div><div><strong>workspace_status:</strong> ${escapeHTML(card.workspace_status || t('none'))}</div><div><strong>readiness_status:</strong> ${escapeHTML(card.readiness_status || t('none'))}</div><div><strong>has_copy_actions:</strong> ${escapeHTML(String(Boolean(card.has_copy_actions)))}</div><div><strong>has_export_preview:</strong> ${escapeHTML(String(Boolean(card.has_export_preview)))}</div><div><strong>blocked_by:</strong> ${escapeHTML((card.blocked_by || []).join(', ') || t('none'))}</div><div><strong>recommended_operator_action:</strong> ${escapeHTML(card.recommended_operator_action || t('none'))}</div><div><strong>real_execution_allowed:</strong> ${escapeHTML(projectWorkspaceProductNavigationDisabledText(card.real_execution_allowed))}</div><div><strong>risk_note:</strong> ${escapeHTML(card.risk_note || t('productNavigationReadinessNote'))}</div></div>`).join('');
+            const packs = (pack.pack_availability_cards || []).slice(0, 16).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.pack_id || 'pack_id')}</strong><div><strong>pack_label:</strong> ${escapeHTML(card.pack_label || t('none'))}</div><div><strong>pack_path:</strong> ${escapeHTML(card.pack_path || t('none'))}</div><div><strong>pack_status:</strong> ${escapeHTML(card.pack_status || t('none'))}</div><div><strong>stage_id:</strong> ${escapeHTML(card.stage_id || t('none'))}</div><div><strong>expected_panel_count:</strong> ${escapeHTML(String(card.expected_panel_count ?? 0))}</div><div><strong>copy_export_supported:</strong> ${escapeHTML(String(Boolean(card.copy_export_supported)))}</div><div><strong>depends_on:</strong> ${escapeHTML((card.depends_on || []).join(', ') || t('none'))}</div><div><strong>missing_dependencies:</strong> ${escapeHTML((card.missing_dependencies || []).join(', ') || t('none'))}</div><div><strong>real_execution_allowed:</strong> ${escapeHTML(projectWorkspaceProductNavigationDisabledText(card.real_execution_allowed))}</div><div><strong>risk_note:</strong> ${escapeHTML(card.risk_note || t('productNavigationReadinessNote'))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceProductNavigationStagePackPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('productNavigationStagePackTitle'))}</div><div class="field-helper">${escapeHTML(t('productNavigationStageNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProductStageCards()">${escapeHTML(t('productNavigationCopyStages'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePackAvailabilityCards()">${escapeHTML(t('productNavigationCopyPacks'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('productNavigationStageTitle'))}</strong><div class="graph-os-compact-grid">${stages || `<div class="empty-state">${escapeHTML(t('productNavigationNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('productNavigationPackAvailabilityTitle'))}</strong><div class="graph-os-compact-grid">${packs || `<div class="empty-state">${escapeHTML(t('productNavigationNoData'))}</div>`}</div></div></div><div class="field-helper">evidence_quality / claim_risk_guard / claim_safe_brief / claim_safe_output / platform_delivery / delivery_qa / remediation_plan / remediation_verification / final_export_packet / campaign_dossier / provider_safety_controls / real_execution_blockers</div></div>`;
+        }
+
+        function renderProjectWorkspaceProductNavigationActionCopyExportPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProductNavigationSnapshot(workspace); if (!pack.has_workspace_product_navigation_pack) return '';
+            const actions = (pack.operator_next_action_cards || []).slice(0, 16).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.action_id || 'action_id')}</strong><div><strong>action_label:</strong> ${escapeHTML(card.action_label || t('none'))}</div><div><strong>action_type:</strong> ${escapeHTML(card.action_type || t('none'))}</div><div><strong>source_stage_refs:</strong> ${escapeHTML((card.source_stage_refs || []).join(', ') || t('none'))}</div><div><strong>source_pack_refs:</strong> ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div><strong>why_it_matters:</strong> ${escapeHTML(card.why_it_matters || t('none'))}</div><div><strong>recommended_operator_action:</strong> ${escapeHTML(card.recommended_operator_action || t('none'))}</div><div><strong>action_status:</strong> ${escapeHTML(card.action_status || t('none'))}</div><div><strong>creates_real_task:</strong> ${escapeHTML(String(Boolean(card.creates_real_task)))}</div><div><strong>real_execution_allowed:</strong> ${escapeHTML(projectWorkspaceProductNavigationDisabledText(card.real_execution_allowed))}</div><div><strong>risk_note:</strong> ${escapeHTML(card.risk_note || t('productNavigationActionNote'))}</div></div>`).join('');
+            const surfaces = (pack.copy_export_surface_map || []).slice(0, 16).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.surface_id || 'surface_id')}</strong><div><strong>surface_label:</strong> ${escapeHTML(card.surface_label || t('none'))}</div><div><strong>source_pack_ref:</strong> ${escapeHTML(card.source_pack_ref || t('none'))}</div><div><strong>copy_targets:</strong> ${escapeHTML((card.copy_targets || []).join(', ') || t('none'))}</div><div><strong>export_targets:</strong> ${escapeHTML((card.export_targets || []).join(', ') || t('none'))}</div><div><strong>json_export_preview_supported:</strong> ${escapeHTML(String(Boolean(card.json_export_preview_supported)))}</div><div><strong>markdown_export_preview_supported:</strong> ${escapeHTML(String(Boolean(card.markdown_export_preview_supported)))}</div><div><strong>real_file_write_allowed:</strong> ${escapeHTML(projectWorkspaceProductNavigationDisabledText(card.real_file_write_allowed))}</div><div><strong>real_export_allowed:</strong> ${escapeHTML(projectWorkspaceProductNavigationDisabledText(card.real_export_allowed))}</div><div><strong>real_execution_allowed:</strong> ${escapeHTML(projectWorkspaceProductNavigationDisabledText(card.real_execution_allowed))}</div><div><strong>risk_note:</strong> ${escapeHTML(card.risk_note || t('productNavigationActionNote'))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceProductNavigationActionCopyExportPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('productNavigationActionCopyExportTitle'))}</div><div class="field-helper">${escapeHTML(t('productNavigationActionNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceOperatorNextActionCards()">${escapeHTML(t('productNavigationCopyActions'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCopyExportSurfaceMap()">${escapeHTML(t('productNavigationCopySurface'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('productNavigationActionTitle'))}</strong><div class="graph-os-compact-grid">${actions || `<div class="empty-state">${escapeHTML(t('productNavigationNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('productNavigationCopyExportTitle'))}</strong><div class="graph-os-compact-grid">${surfaces || `<div class="empty-state">${escapeHTML(t('productNavigationNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceProductNavigationPanelTracePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProductNavigationSnapshot(workspace); if (!pack.has_workspace_product_navigation_pack) return '';
+            return `<div class="section-block" id="projectWorkspaceProductNavigationPanelTracePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('productNavigationPanelTraceTitle'))}</div><div class="field-helper">${escapeHTML(t('productNavigationTraceNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePanelRegistryPreview()">${escapeHTML(t('productNavigationCopyPanelRegistry'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceWorkflowTraceMap()">${escapeHTML(t('productNavigationCopyTrace'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('productNavigationPanelRegistryTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProductNavigationJsonText(pack.workspace_panel_registry_preview) || t('productNavigationNoData'))}</pre><div class="field-helper">frontend product blocks render preview only; no real registry mutation</div></div><div class="graph-os-card"><strong>${escapeHTML(t('productNavigationTraceTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProductNavigationJsonText(pack.workflow_trace_map) || t('productNavigationNoData'))}</pre><div class="field-helper">evidence -> claim -> creative -> delivery -> QA -> remediation -> verification -> final export -> dossier / provider safety / real execution blocker</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceProductNavigationReadinessLimitQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportProductNavigationSnapshot(workspace); if (!pack.has_workspace_product_navigation_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('productNavigationDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceProductNavigationReadinessLimitQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('productNavigationReadinessLimitQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('productNavigationReadinessNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProductReadinessScorecard()">${escapeHTML(t('productNavigationCopyScorecard'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceKnownLimitationsCards()">${escapeHTML(t('productNavigationCopyLimitations'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('productNavigationScorecardTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProductNavigationJsonText(pack.product_readiness_scorecard) || t('productNavigationNoData'))}</pre><div class="field-helper">${escapeHTML(t('productNavigationReadinessNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('productNavigationLimitationsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProductNavigationJsonText(pack.known_limitations_cards) || t('productNavigationNoData'))}</pre><div class="field-helper">${escapeHTML(t('productNavigationLimitationsNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('productNavigationQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProductNavigationJsonText(pack.navigation_quality_checks) || t('productNavigationNoData'))}</pre><div class="field-helper">${escapeHTML(t('productNavigationQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('productNavigationAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProductNavigationJsonText(pack.audit_preview) || t('productNavigationNoData'))}</pre><div class="field-helper">${escapeHTML(t('productNavigationAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('productNavigationSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('productNavigationSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -28682,6 +28952,8 @@
                 '',
                 projectWorkspaceExportCampaignCreativeDossierMarkdown(workspace),
                 '',
+                projectWorkspaceExportProductNavigationMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -28808,6 +29080,7 @@
                 claim_safe_remediation_verification_pack: projectWorkspaceExportClaimSafeRemediationVerificationSnapshot(workspace),
                 final_claim_safe_export_packet_pack: projectWorkspaceExportFinalClaimSafeExportPacketSnapshot(workspace),
                 campaign_creative_dossier_pack: projectWorkspaceExportCampaignCreativeDossierSnapshot(workspace),
+                workspace_product_navigation_pack: projectWorkspaceExportProductNavigationSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -41429,6 +41702,11 @@
                     ${renderProjectWorkspaceCampaignCreativeDossierCreativeDeliveryPanel(workspace)}
                     ${renderProjectWorkspaceCampaignCreativeDossierFinalBlockedHandoffPanel(workspace)}
                     ${renderProjectWorkspaceCampaignCreativeDossierTraceManifestQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceProductNavigationSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceProductNavigationStagePackPanel(workspace)}
+                    ${renderProjectWorkspaceProductNavigationActionCopyExportPanel(workspace)}
+                    ${renderProjectWorkspaceProductNavigationPanelTracePanel(workspace)}
+                    ${renderProjectWorkspaceProductNavigationReadinessLimitQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}

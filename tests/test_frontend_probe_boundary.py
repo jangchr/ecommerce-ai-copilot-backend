@@ -15794,6 +15794,214 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_product_navigation_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace product navigation bundle",
+            "project_workspace_product_navigation_marker",
+            "PROJECT_WORKSPACE_PRODUCT_NAVIGATION_MARKER",
+            "latestProjectWorkspaceProductNavigationPack",
+            "workspace_product_navigation_pack",
+            "projectWorkspaceProductNavigationPackFromWorkspace",
+            "projectWorkspaceExportProductNavigationSnapshot",
+            "projectWorkspaceExportProductNavigationMarkdown",
+            "renderProjectWorkspaceProductNavigationSummaryPanel",
+            "renderProjectWorkspaceProductNavigationStagePackPanel",
+            "renderProjectWorkspaceProductNavigationActionCopyExportPanel",
+            "renderProjectWorkspaceProductNavigationPanelTracePanel",
+            "renderProjectWorkspaceProductNavigationReadinessLimitQualityAuditSafetyPanel",
+            "copyProjectWorkspaceNavigationSummary",
+            "copyProjectWorkspaceProductStageCards",
+            "copyProjectWorkspacePackAvailabilityCards",
+            "copyProjectWorkspaceOperatorNextActionCards",
+            "copyProjectWorkspaceCopyExportSurfaceMap",
+            "copyProjectWorkspacePanelRegistryPreview",
+            "copyProjectWorkspaceWorkflowTraceMap",
+            "copyProjectWorkspaceProductReadinessScorecard",
+            "copyProjectWorkspaceKnownLimitationsCards",
+            "copyProjectWorkspaceFullProductNavigationPack",
+            "workspace_product_navigation_pack: projectWorkspaceExportProductNavigationSnapshot(workspace)",
+            "Workspace Product Navigation / Dossier Index",
+            "Workspace Navigation Summary",
+            "Product Stage Cards",
+            "Pack Availability Cards",
+            "Operator Next Action Cards",
+            "Copy Export Surface Map",
+            "Workspace Panel Registry Preview",
+            "Workflow Trace Map",
+            "Product Readiness Scorecard",
+            "Known Limitations Cards",
+            "Navigation Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "workspace_navigation_summary",
+            "product_stage_cards",
+            "pack_availability_cards",
+            "operator_next_action_cards",
+            "copy_export_surface_map",
+            "workspace_panel_registry_preview",
+            "workflow_trace_map",
+            "product_readiness_scorecard",
+            "known_limitations_cards",
+            "navigation_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+            "card.stage_id",
+            "card.stage_label",
+            "card.stage_group",
+            "card.source_pack_refs",
+            "card.primary_user_question",
+            "card.workspace_status",
+            "card.readiness_status",
+            "card.has_copy_actions",
+            "card.has_export_preview",
+            "card.blocked_by",
+            "card.recommended_operator_action",
+            "card.real_execution_allowed",
+            "card.risk_note",
+            "card.pack_id",
+            "card.pack_label",
+            "card.pack_path",
+            "card.pack_status",
+            "card.expected_panel_count",
+            "card.copy_export_supported",
+            "card.depends_on",
+            "card.missing_dependencies",
+            "card.action_id",
+            "card.action_label",
+            "card.action_type",
+            "card.source_stage_refs",
+            "card.why_it_matters",
+            "card.action_status",
+            "card.creates_real_task",
+            "card.surface_id",
+            "card.surface_label",
+            "card.source_pack_ref",
+            "card.copy_targets",
+            "card.export_targets",
+            "card.json_export_preview_supported",
+            "card.markdown_export_preview_supported",
+            "card.real_file_write_allowed",
+            "card.real_export_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for status in [
+            "evidence_quality / claim_risk_guard / claim_safe_brief / claim_safe_output / platform_delivery / delivery_qa / remediation_plan / remediation_verification / final_export_packet / campaign_dossier / provider_safety_controls / real_execution_blockers",
+            "evidence -> claim -> creative -> delivery -> QA -> remediation -> verification -> final export -> dossier",
+            "provider safety / real execution blocker",
+            "pack availability / stage map / copy-export map / trace map / disabled capability boundary coverage",
+            "no real LLM, no real provider, no media upload/download, no real export, no platform upload, no policy API, no DB persistence, and no real task creation",
+        ]:
+            with self.subTest(status=status):
+                self.assertIn(status, html)
+        previous = html.index("renderProjectWorkspaceCampaignCreativeDossierTraceManifestQualityAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceProductNavigationSummaryPanel(workspace)")
+        stage = html.index("renderProjectWorkspaceProductNavigationStagePackPanel(workspace)")
+        action = html.index("renderProjectWorkspaceProductNavigationActionCopyExportPanel(workspace)")
+        trace = html.index("renderProjectWorkspaceProductNavigationPanelTracePanel(workspace)")
+        safety = html.index("renderProjectWorkspaceProductNavigationReadinessLimitQualityAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, stage)
+        self.assertLess(stage, action)
+        self.assertLess(action, trace)
+        self.assertLess(trace, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_product_navigation_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "productNavigationPackTitle",
+            "productNavigationSummaryTitle",
+            "productNavigationStageTitle",
+            "productNavigationPackAvailabilityTitle",
+            "productNavigationActionTitle",
+            "productNavigationCopyExportTitle",
+            "productNavigationPanelRegistryTitle",
+            "productNavigationTraceTitle",
+            "productNavigationScorecardTitle",
+            "productNavigationLimitationsTitle",
+            "productNavigationQualityTitle",
+            "productNavigationAuditTitle",
+            "productNavigationSafetyTitle",
+            "productNavigationCopySummary",
+            "productNavigationCopyStages",
+            "productNavigationCopyPacks",
+            "productNavigationCopyActions",
+            "productNavigationCopySurface",
+            "productNavigationCopyPanelRegistry",
+            "productNavigationCopyTrace",
+            "productNavigationCopyScorecard",
+            "productNavigationCopyLimitations",
+            "productNavigationCopyFull",
+            "productNavigationCopied",
+            "productNavigationCopyFailed",
+            "productNavigationCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace product navigation bundle", script)
+            self.assertIn("project_workspace_product_navigation_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceProductNavigationSummaryText"):
+            html.index("async function copyProjectWorkspaceProductNavigationText")
+        ]
+        for key in [
+            "productNavigationPackTitle",
+            "productNavigationSummaryTitle",
+            "productNavigationStageTitle",
+            "productNavigationPackAvailabilityTitle",
+            "productNavigationActionTitle",
+            "productNavigationCopyExportTitle",
+            "productNavigationPanelRegistryTitle",
+            "productNavigationTraceTitle",
+            "productNavigationScorecardTitle",
+            "productNavigationLimitationsTitle",
+            "productNavigationQualityTitle",
+            "productNavigationAuditTitle",
+            "productNavigationSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PRODUCT_NAVIGATION_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic workspace index preview",
+            "does not execute real actions",
+            "does not create real tasks",
+            "does not write files",
+            "does not trigger real export",
+            "does not upload files",
+            "does not publish to platforms",
+            "does not call providers",
+            "does not call an LLM",
+            "does not write databases",
+            "not legal advice",
+            "not a real policy API check",
+            "not a real platform compliance conclusion",
+            "not a real platform pass rate",
+            "Next actions are manual guidance only",
+            "do not create real tasks",
+            "do not write files, do not export",
+            "does not connect to a real registry",
+            "does not change a real permission system",
+            "Audit preview is display-only and does not write databases.",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, and file write remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [
