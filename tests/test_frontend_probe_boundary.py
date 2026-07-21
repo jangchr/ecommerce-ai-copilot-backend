@@ -15358,6 +15358,222 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_final_claim_safe_export_packet_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace final claim-safe export packet bundle",
+            "project_workspace_final_claim_safe_export_packet_marker",
+            "PROJECT_WORKSPACE_FINAL_CLAIM_SAFE_EXPORT_PACKET_MARKER",
+            "latestProjectWorkspaceFinalClaimSafeExportPacketPack",
+            "final_claim_safe_export_packet_pack",
+            "projectWorkspaceFinalClaimSafeExportPacketPackFromWorkspace",
+            "projectWorkspaceExportFinalClaimSafeExportPacketSnapshot",
+            "projectWorkspaceExportFinalClaimSafeExportPacketMarkdown",
+            "renderProjectWorkspaceFinalClaimSafeExportSummaryPanel",
+            "renderProjectWorkspaceFinalExportPacketCardsPanel",
+            "renderProjectWorkspaceFinalChannelCopyVideoPromptPanel",
+            "renderProjectWorkspaceFinalAssetClaimTraceBlockedPanel",
+            "renderProjectWorkspaceFinalOperatorManifestQualityAuditSafetyPanel",
+            "copyProjectWorkspaceFinalClaimSafeExportSummary",
+            "copyProjectWorkspaceFinalExportPacketCards",
+            "copyProjectWorkspaceFinalChannelCopyBundle",
+            "copyProjectWorkspaceFinalVideoPromptBundle",
+            "copyProjectWorkspaceFinalAssetHandoffBundle",
+            "copyProjectWorkspaceFinalClaimTraceBundle",
+            "copyProjectWorkspaceFinalBlockedContentAppendix",
+            "copyProjectWorkspaceFinalOperatorHandoffChecklist",
+            "copyProjectWorkspaceExportFileManifestPreview",
+            "copyProjectWorkspaceFullFinalClaimSafeExportPacket",
+            "final_claim_safe_export_packet_pack: projectWorkspaceExportFinalClaimSafeExportPacketSnapshot(workspace)",
+            "Final Claim-Safe Export Packet",
+            "Final Export Summary",
+            "Final Export Packet Cards",
+            "Final Channel Copy Bundle",
+            "Final Video Prompt Bundle",
+            "Final Asset Handoff Bundle",
+            "Final Claim Trace Bundle",
+            "Final Blocked Content Appendix",
+            "Final Operator Handoff Checklist",
+            "Export File Manifest Preview",
+            "Final Export Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "final_export_summary",
+            "final_export_packet_cards",
+            "final_channel_copy_bundle",
+            "final_video_prompt_bundle",
+            "final_asset_handoff_bundle",
+            "final_claim_trace_bundle",
+            "final_blocked_content_appendix",
+            "final_operator_handoff_checklist",
+            "export_file_manifest_preview",
+            "final_export_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+            "card.export_packet_id",
+            "card.delivery_surface",
+            "card.platform_label",
+            "card.packet_status",
+            "card.source_retry_export_refs",
+            "card.included_copy_refs",
+            "card.included_video_prompt_refs",
+            "card.included_asset_requirement_refs",
+            "card.included_claim_trace_refs",
+            "card.excluded_blocker_refs",
+            "card.ready_for_preview_export",
+            "card.operator_review_required",
+            "card.real_file_write_allowed",
+            "card.real_export_allowed",
+            "card.real_platform_upload_allowed",
+            "card.real_execution_allowed",
+            "card.recommended_operator_action",
+            "card.risk_note",
+            "item.final_copy_id",
+            "item.copy_type",
+            "item.copy_text",
+            "item.source_copy_refs",
+            "item.source_claim_ids",
+            "item.supporting_quote_ids",
+            "item.claim_risk_level",
+            "item.support_status",
+            "item.usage_status",
+            "item.final_video_prompt_id",
+            "item.prompt_text",
+            "item.visual_direction",
+            "item.shot_refs",
+            "item.source_video_prompt_refs",
+            "item.disallowed_visual_claims",
+            "item.real_provider_allowed",
+            "item.real_media_upload_allowed",
+            "item.real_policy_check_allowed",
+            "item.real_execution_allowed",
+            "item.asset_handoff_id",
+            "item.asset_type",
+            "item.asset_requirement_summary",
+            "item.required_fields",
+            "item.present_fields",
+            "item.missing_fields",
+            "item.handoff_status",
+            "item.real_file_write_allowed",
+            "item.trace_id",
+            "item.output_ref",
+            "item.evidence_quality_refs",
+            "item.claim_risk_refs",
+            "item.do_not_claim_refs",
+            "item.trace_status",
+            "item.operator_task_created",
+            "item.real_task_creation_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for status in [
+            "ready_for_preview_export",
+            "needs_operator_review",
+            "blocked",
+            "blocked content / remaining blockers / unsupported claim / missing quote / policy check disabled / platform upload disabled",
+            "copy / video prompt / asset handoff / claim trace / blocked appendix / operator handoff / safety boundary coverage",
+        ]:
+            with self.subTest(status=status):
+                self.assertIn(status, html)
+        previous = html.index("renderProjectWorkspaceClaimSafeRemediationVerificationPlanQualityAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceFinalClaimSafeExportSummaryPanel(workspace)")
+        cards = html.index("renderProjectWorkspaceFinalExportPacketCardsPanel(workspace)")
+        copy_video = html.index("renderProjectWorkspaceFinalChannelCopyVideoPromptPanel(workspace)")
+        asset_trace = html.index("renderProjectWorkspaceFinalAssetClaimTraceBlockedPanel(workspace)")
+        operator = html.index("renderProjectWorkspaceFinalOperatorManifestQualityAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, cards)
+        self.assertLess(cards, copy_video)
+        self.assertLess(copy_video, asset_trace)
+        self.assertLess(asset_trace, operator)
+        self.assertLess(operator, core)
+
+    def test_workspace_final_claim_safe_export_packet_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "finalClaimSafeExportPacketPackTitle",
+            "finalClaimSafeExportSummaryTitle",
+            "finalClaimSafeExportPacketCardsTitle",
+            "finalClaimSafeExportChannelCopyTitle",
+            "finalClaimSafeExportVideoPromptTitle",
+            "finalClaimSafeExportAssetHandoffTitle",
+            "finalClaimSafeExportClaimTraceTitle",
+            "finalClaimSafeExportBlockedAppendixTitle",
+            "finalClaimSafeExportOperatorHandoffTitle",
+            "finalClaimSafeExportManifestTitle",
+            "finalClaimSafeExportQualityTitle",
+            "finalClaimSafeExportAuditTitle",
+            "finalClaimSafeExportSafetyTitle",
+            "finalClaimSafeExportCopySummary",
+            "finalClaimSafeExportCopyPacketCards",
+            "finalClaimSafeExportCopyChannelCopy",
+            "finalClaimSafeExportCopyVideoPrompt",
+            "finalClaimSafeExportCopyAssetHandoff",
+            "finalClaimSafeExportCopyClaimTrace",
+            "finalClaimSafeExportCopyBlockedAppendix",
+            "finalClaimSafeExportCopyOperatorHandoff",
+            "finalClaimSafeExportCopyManifest",
+            "finalClaimSafeExportCopyFull",
+            "finalClaimSafeExportCopied",
+            "finalClaimSafeExportCopyFailed",
+            "finalClaimSafeExportCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace final claim-safe export packet bundle", script)
+            self.assertIn("project_workspace_final_claim_safe_export_packet_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceFinalClaimSafeExportPacketSummaryText"):
+            html.index("async function copyProjectWorkspaceFinalClaimSafeExportPacketText")
+        ]
+        for key in [
+            "finalClaimSafeExportPacketPackTitle",
+            "finalClaimSafeExportSummaryTitle",
+            "finalClaimSafeExportPacketCardsTitle",
+            "finalClaimSafeExportChannelCopyTitle",
+            "finalClaimSafeExportVideoPromptTitle",
+            "finalClaimSafeExportAssetHandoffTitle",
+            "finalClaimSafeExportClaimTraceTitle",
+            "finalClaimSafeExportBlockedAppendixTitle",
+            "finalClaimSafeExportOperatorHandoffTitle",
+            "finalClaimSafeExportManifestTitle",
+            "finalClaimSafeExportQualityTitle",
+            "finalClaimSafeExportAuditTitle",
+            "finalClaimSafeExportSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_FINAL_CLAIM_SAFE_EXPORT_PACKET_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic final export packet preview",
+            "does not write real files",
+            "does not trigger real export",
+            "does not upload files",
+            "does not publish to platforms",
+            "does not call providers",
+            "does not write databases",
+            "not legal advice",
+            "not a real policy API check",
+            "not a real platform compliance conclusion",
+            "not a real platform pass rate",
+            "blocked appendix cannot enter public delivery or real export",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, and file write remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [

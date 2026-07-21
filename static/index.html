@@ -3643,6 +3643,7 @@
         let latestProjectWorkspaceClaimSafeDeliveryQaPack = {};
         let latestProjectWorkspaceClaimSafeDeliveryRemediationPack = {};
         let latestProjectWorkspaceClaimSafeRemediationVerificationPack = {};
+        let latestProjectWorkspaceFinalClaimSafeExportPacketPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -6916,6 +6917,65 @@
             claimSafeRemediationVerificationAuditNote: 'Audit preview is display-only and does not write databases.',
             claimSafeRemediationVerificationSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, and real export remain disabled.'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceFinalClaimSafeExportPacketMarker: 'Project Workspace final claim-safe export packet bundle',
+            finalClaimSafeExportPacketPackTitle: 'Final Claim-Safe Export Packet',
+            finalClaimSafeExportPacketPackHelper: 'Project Workspace final claim-safe export packet bundle. Deterministic final export packet preview from existing claim-safe packs only. This is not legal advice, not a real policy API check, not a real platform compliance conclusion, and not a real platform pass rate. It does not write real files, trigger real export, upload files, publish to platforms, call providers, write databases, or run real execution.',
+            finalClaimSafeExportSummaryTitle: 'Final Export Summary',
+            finalClaimSafeExportPacketCardsTitle: 'Final Export Packet Cards',
+            finalClaimSafeExportCopyVideoTitle: 'Final Channel Copy / Video Prompt Bundle',
+            finalClaimSafeExportChannelCopyTitle: 'Final Channel Copy Bundle',
+            finalClaimSafeExportVideoPromptTitle: 'Final Video Prompt Bundle',
+            finalClaimSafeExportAssetTraceBlockedTitle: 'Final Asset Handoff / Claim Trace / Blocked Appendix',
+            finalClaimSafeExportAssetHandoffTitle: 'Final Asset Handoff Bundle',
+            finalClaimSafeExportClaimTraceTitle: 'Final Claim Trace Bundle',
+            finalClaimSafeExportBlockedAppendixTitle: 'Final Blocked Content Appendix',
+            finalClaimSafeExportOperatorManifestQualityAuditSafetyTitle: 'Operator Handoff / Export Manifest / Quality / Audit / Safety',
+            finalClaimSafeExportOperatorHandoffTitle: 'Final Operator Handoff Checklist',
+            finalClaimSafeExportManifestTitle: 'Export File Manifest Preview',
+            finalClaimSafeExportQualityTitle: 'Final Export Quality Checks',
+            finalClaimSafeExportAuditTitle: 'Audit Preview',
+            finalClaimSafeExportSafetyTitle: 'Safety Boundaries',
+            finalClaimSafeExportMode: 'Mode',
+            finalClaimSafeExportPacketCount: 'Final export packet count',
+            finalClaimSafeExportCopyCount: 'Final channel copy count',
+            finalClaimSafeExportVideoCount: 'Final video prompt count',
+            finalClaimSafeExportAssetCount: 'Final asset handoff count',
+            finalClaimSafeExportTraceCount: 'Final claim trace count',
+            finalClaimSafeExportBlockedCount: 'Blocked content count',
+            finalClaimSafeExportRecommendedAction: 'Recommended operator action',
+            finalClaimSafeExportFileWrite: 'Real file write allowed',
+            finalClaimSafeExportRealExport: 'Real export allowed',
+            finalClaimSafeExportPlatformUpload: 'Real platform upload allowed',
+            finalClaimSafeExportProvider: 'Real provider allowed',
+            finalClaimSafeExportMediaUpload: 'Real media upload allowed',
+            finalClaimSafeExportPolicyCheck: 'Real policy check allowed',
+            finalClaimSafeExportExecution: 'Real execution allowed',
+            finalClaimSafeExportDisabled: 'disabled',
+            finalClaimSafeExportNoData: 'No final claim-safe export packet data is available.',
+            finalClaimSafeExportCopyNoData: 'No final claim-safe export packet content is available to copy.',
+            finalClaimSafeExportCopyFailed: 'Unable to copy final claim-safe export packet content.',
+            finalClaimSafeExportCopied: 'Final claim-safe export packet content copied.',
+            finalClaimSafeExportCopySummary: 'Copy final export summary',
+            finalClaimSafeExportCopyPacketCards: 'Copy final export packet cards',
+            finalClaimSafeExportCopyChannelCopy: 'Copy final channel copy bundle',
+            finalClaimSafeExportCopyVideoPrompt: 'Copy final video prompt bundle',
+            finalClaimSafeExportCopyAssetHandoff: 'Copy final asset handoff bundle',
+            finalClaimSafeExportCopyClaimTrace: 'Copy final claim trace bundle',
+            finalClaimSafeExportCopyBlockedAppendix: 'Copy final blocked content appendix',
+            finalClaimSafeExportCopyOperatorHandoff: 'Copy final operator handoff checklist',
+            finalClaimSafeExportCopyManifest: 'Copy export file manifest preview',
+            finalClaimSafeExportCopyFull: 'Copy full final claim-safe export packet',
+            finalClaimSafeExportPreviewNote: 'Deterministic final export packet preview only. It does not write real files, does not trigger real export, does not upload files, does not publish to platforms, does not call providers, does not upload or download media, does not call an LLM, does not scrape reviews, does not read real logs or history tables, does not write databases, and does not execute paid operations.',
+            finalClaimSafeExportPolicyNote: 'This is not legal advice, not a real policy API check, not a real platform compliance conclusion, not a real claim safety rating, and not a real platform pass rate.',
+            finalClaimSafeExportCopyVideoNote: 'Final channel copy is claim-safe preview copy, not real ad copy. Final video prompts are preview prompts only and do not trigger real video generation, providers, media upload, policy checks, or execution.',
+            finalClaimSafeExportBlockedNote: 'blocked appendix cannot enter public delivery or real export. Remaining blockers include blocked content, unsupported claim, missing quote, policy check disabled, platform upload disabled, provider disabled, media upload disabled, task creation disabled, and missing required fields.',
+            finalClaimSafeExportManifestNote: 'Export file manifest preview describes JSON and Markdown preview file shape only. It does not create files, write databases, upload files, publish to platforms, or trigger real export.',
+            finalClaimSafeExportOperatorNote: 'Operator handoff is a manual preview checklist only. It does not create real operator tasks or approvals.',
+            finalClaimSafeExportAuditNote: 'Audit preview is display-only and does not write databases.',
+            finalClaimSafeExportQualityNote: 'copy / video prompt / asset handoff / claim trace / blocked appendix / operator handoff / safety boundary coverage',
+            finalClaimSafeExportSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, and file write remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
             claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
@@ -7378,6 +7438,65 @@
             claimSafeRemediationVerificationPolicyNote: '\u8fd9\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u68c0\u67e5\uff0c\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\uff0c\u4e0d\u662f\u771f\u5b9e claim safety \u8bc4\u7ea7\uff0c\u4e5f\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0 pass rate\u3002',
             claimSafeRemediationVerificationAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
             claimSafeRemediationVerificationSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation \u548c real export \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceFinalClaimSafeExportPacketMarker: 'Project Workspace final claim-safe export packet bundle',
+            finalClaimSafeExportPacketPackTitle: 'Final Claim-Safe Export Packet',
+            finalClaimSafeExportPacketPackHelper: '\u67e5\u770b Project Workspace final claim-safe export packet bundle\u3002\u8fd9\u53ea\u57fa\u4e8e\u5df2\u6709 claim-safe packs \u751f\u6210 deterministic final export packet preview\u3002\u8fd9\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u68c0\u67e5\uff0c\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\uff0c\u4e5f\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0 pass rate\u3002\u4e0d\u5199\u771f\u5b9e\u6587\u4ef6\uff0c\u4e0d\u89e6\u53d1\u771f\u5b9e export\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u53d1\u5e03\u5230\u5e73\u53f0\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u771f\u5b9e\u6267\u884c\u3002',
+            finalClaimSafeExportSummaryTitle: 'Final Export \u6458\u8981',
+            finalClaimSafeExportPacketCardsTitle: 'Final Export Packet Cards',
+            finalClaimSafeExportCopyVideoTitle: 'Final Channel Copy / Video Prompt Bundle',
+            finalClaimSafeExportChannelCopyTitle: 'Final Channel Copy Bundle',
+            finalClaimSafeExportVideoPromptTitle: 'Final Video Prompt Bundle',
+            finalClaimSafeExportAssetTraceBlockedTitle: 'Final Asset Handoff / Claim Trace / Blocked Appendix',
+            finalClaimSafeExportAssetHandoffTitle: 'Final Asset Handoff Bundle',
+            finalClaimSafeExportClaimTraceTitle: 'Final Claim Trace Bundle',
+            finalClaimSafeExportBlockedAppendixTitle: 'Final Blocked Content Appendix',
+            finalClaimSafeExportOperatorManifestQualityAuditSafetyTitle: 'Operator Handoff / Export Manifest / Quality / Audit / Safety',
+            finalClaimSafeExportOperatorHandoffTitle: 'Final Operator Handoff Checklist',
+            finalClaimSafeExportManifestTitle: 'Export File Manifest Preview',
+            finalClaimSafeExportQualityTitle: 'Final Export Quality Checks',
+            finalClaimSafeExportAuditTitle: 'Audit Preview',
+            finalClaimSafeExportSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            finalClaimSafeExportMode: '\u6a21\u5f0f',
+            finalClaimSafeExportPacketCount: 'Final export packet \u6570\u91cf',
+            finalClaimSafeExportCopyCount: 'Final channel copy \u6570\u91cf',
+            finalClaimSafeExportVideoCount: 'Final video prompt \u6570\u91cf',
+            finalClaimSafeExportAssetCount: 'Final asset handoff \u6570\u91cf',
+            finalClaimSafeExportTraceCount: 'Final claim trace \u6570\u91cf',
+            finalClaimSafeExportBlockedCount: 'Blocked content \u6570\u91cf',
+            finalClaimSafeExportRecommendedAction: '\u63a8\u8350 operator action',
+            finalClaimSafeExportFileWrite: '\u5141\u8bb8\u771f\u5b9e file write',
+            finalClaimSafeExportRealExport: '\u5141\u8bb8\u771f\u5b9e export',
+            finalClaimSafeExportPlatformUpload: '\u5141\u8bb8\u771f\u5b9e platform upload',
+            finalClaimSafeExportProvider: '\u5141\u8bb8\u771f\u5b9e provider',
+            finalClaimSafeExportMediaUpload: '\u5141\u8bb8\u771f\u5b9e media upload',
+            finalClaimSafeExportPolicyCheck: '\u5141\u8bb8\u771f\u5b9e policy \u68c0\u67e5',
+            finalClaimSafeExportExecution: '\u5141\u8bb8\u771f\u5b9e\u6267\u884c',
+            finalClaimSafeExportDisabled: '\u5df2\u7981\u7528',
+            finalClaimSafeExportNoData: '\u6682\u65e0 final claim-safe export packet \u6570\u636e\u3002',
+            finalClaimSafeExportCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 final claim-safe export packet \u5185\u5bb9\u3002',
+            finalClaimSafeExportCopyFailed: '\u65e0\u6cd5\u590d\u5236 final claim-safe export packet \u5185\u5bb9\u3002',
+            finalClaimSafeExportCopied: 'Final claim-safe export packet \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            finalClaimSafeExportCopySummary: '\u590d\u5236 final export summary',
+            finalClaimSafeExportCopyPacketCards: '\u590d\u5236 final export packet cards',
+            finalClaimSafeExportCopyChannelCopy: '\u590d\u5236 final channel copy bundle',
+            finalClaimSafeExportCopyVideoPrompt: '\u590d\u5236 final video prompt bundle',
+            finalClaimSafeExportCopyAssetHandoff: '\u590d\u5236 final asset handoff bundle',
+            finalClaimSafeExportCopyClaimTrace: '\u590d\u5236 final claim trace bundle',
+            finalClaimSafeExportCopyBlockedAppendix: '\u590d\u5236 final blocked content appendix',
+            finalClaimSafeExportCopyOperatorHandoff: '\u590d\u5236 final operator handoff checklist',
+            finalClaimSafeExportCopyManifest: '\u590d\u5236 export file manifest preview',
+            finalClaimSafeExportCopyFull: '\u590d\u5236\u5b8c\u6574 final claim-safe export packet',
+            finalClaimSafeExportPreviewNote: '\u4ec5\u4e3a deterministic final export packet preview\u3002\u4e0d\u5199\u771f\u5b9e\u6587\u4ef6\uff0c\u4e0d\u89e6\u53d1\u771f\u5b9e export\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u53d1\u5e03\u5230\u5e73\u53f0\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u4e0a\u4f20\u6216\u4e0b\u8f7d media\uff0c\u4e0d\u8c03\u7528 LLM\uff0c\u4e0d\u8fdb\u884c scraping \u6216 review crawler\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u5386\u53f2\u8868\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u6267\u884c paid operation\u3002',
+            finalClaimSafeExportPolicyNote: '\u8fd9\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u68c0\u67e5\uff0c\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\uff0c\u4e0d\u662f\u771f\u5b9e claim safety \u8bc4\u7ea7\uff0c\u4e5f\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0 pass rate\u3002',
+            finalClaimSafeExportCopyVideoNote: 'Final channel copy \u662f claim-safe preview copy\uff0c\u4e0d\u662f\u771f\u5b9e ad copy\u3002Final video prompts \u53ea\u662f preview prompts\uff0c\u4e0d\u89e6\u53d1\u771f\u5b9e video generation\u3001provider\u3001media upload\u3001policy check \u6216 execution\u3002',
+            finalClaimSafeExportBlockedNote: 'Blocked appendix cannot enter public delivery or real export\u3002Remaining blockers \u5305\u62ec blocked content\u3001unsupported claim\u3001missing quote\u3001policy check disabled\u3001platform upload disabled\u3001provider disabled\u3001media upload disabled\u3001task creation disabled \u548c missing required fields\u3002',
+            finalClaimSafeExportManifestNote: 'Export file manifest preview \u53ea\u63cf\u8ff0 JSON \u548c Markdown preview file shape\uff1b\u4e0d\u521b\u5efa\u6587\u4ef6\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u53d1\u5e03\u5230\u5e73\u53f0\uff0c\u4e0d\u89e6\u53d1\u771f\u5b9e export\u3002',
+            finalClaimSafeExportOperatorNote: 'Operator handoff \u53ea\u662f manual preview checklist\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e operator task \u6216 approval\u3002',
+            finalClaimSafeExportAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
+            finalClaimSafeExportQualityNote: 'copy / video prompt / asset handoff / claim trace / blocked appendix / operator handoff / safety boundary coverage',
+            finalClaimSafeExportSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export \u548c file write \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -10875,6 +10994,7 @@
                 latestProjectWorkspaceClaimSafeDeliveryQaPack = latestProjectCreativeDecisionPack.claim_safe_delivery_qa_pack || {};
                 latestProjectWorkspaceClaimSafeDeliveryRemediationPack = latestProjectCreativeDecisionPack.claim_safe_delivery_remediation_pack || {};
                 latestProjectWorkspaceClaimSafeRemediationVerificationPack = latestProjectCreativeDecisionPack.claim_safe_remediation_verification_pack || {};
+                latestProjectWorkspaceFinalClaimSafeExportPacketPack = latestProjectCreativeDecisionPack.final_claim_safe_export_packet_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -16754,6 +16874,7 @@
         const PROJECT_WORKSPACE_CLAIM_SAFE_DELIVERY_QA_MARKER = 'Project Workspace claim-safe delivery QA bundle';
         const PROJECT_WORKSPACE_CLAIM_SAFE_DELIVERY_REMEDIATION_MARKER = 'Project Workspace claim-safe delivery remediation bundle';
         const PROJECT_WORKSPACE_CLAIM_SAFE_REMEDIATION_VERIFICATION_MARKER = 'Project Workspace claim-safe remediation verification bundle';
+        const PROJECT_WORKSPACE_FINAL_CLAIM_SAFE_EXPORT_PACKET_MARKER = 'Project Workspace final claim-safe export packet bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -23345,6 +23466,134 @@
         function copyProjectWorkspaceVerificationEvidenceTrace() { return copyProjectWorkspaceClaimSafeRemediationVerificationText('trace'); }
         function copyProjectWorkspaceRetryExportPlan() { return copyProjectWorkspaceClaimSafeRemediationVerificationText('plan'); }
         function copyProjectWorkspaceFullClaimSafeRemediationVerificationPack() { return copyProjectWorkspaceClaimSafeRemediationVerificationText('full'); }
+
+        function projectWorkspaceFinalClaimSafeExportPacketPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceFinalClaimSafeExportPacketPack && Object.keys(latestProjectWorkspaceFinalClaimSafeExportPacketPack).length) return latestProjectWorkspaceFinalClaimSafeExportPacketPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.final_claim_safe_export_packet_pack || {};
+        }
+
+        function projectWorkspaceFinalClaimSafeExportPacketHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspaceFinalClaimSafeExportPacketJsonText(value) {
+            if (!projectWorkspaceFinalClaimSafeExportPacketHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceFinalClaimSafeExportPacketDisabledText(value) {
+            return value === false ? t('finalClaimSafeExportDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportFinalClaimSafeExportPacketSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceFinalClaimSafeExportPacketPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_FINAL_CLAIM_SAFE_EXPORT_PACKET_MARKER,
+                has_final_claim_safe_export_packet_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                final_export_summary: pack.final_export_summary || {},
+                final_export_packet_cards: Array.isArray(pack.final_export_packet_cards) ? pack.final_export_packet_cards : [],
+                final_channel_copy_bundle: Array.isArray(pack.final_channel_copy_bundle) ? pack.final_channel_copy_bundle : [],
+                final_video_prompt_bundle: Array.isArray(pack.final_video_prompt_bundle) ? pack.final_video_prompt_bundle : [],
+                final_asset_handoff_bundle: Array.isArray(pack.final_asset_handoff_bundle) ? pack.final_asset_handoff_bundle : [],
+                final_claim_trace_bundle: Array.isArray(pack.final_claim_trace_bundle) ? pack.final_claim_trace_bundle : [],
+                final_blocked_content_appendix: Array.isArray(pack.final_blocked_content_appendix) ? pack.final_blocked_content_appendix : [],
+                final_operator_handoff_checklist: Array.isArray(pack.final_operator_handoff_checklist) ? pack.final_operator_handoff_checklist : [],
+                export_file_manifest_preview: pack.export_file_manifest_preview || {},
+                final_export_quality_checks: pack.final_export_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceFinalClaimSafeExportPacketSummaryText(pack = projectWorkspaceExportFinalClaimSafeExportPacketSnapshot()) {
+            if (!pack.has_final_claim_safe_export_packet_pack) return '';
+            const summary = pack.final_export_summary || {};
+            return [
+                t('finalClaimSafeExportSummaryTitle'),
+                `${t('finalClaimSafeExportMode')}: ${summary.mode || t('none')}`,
+                `${t('finalClaimSafeExportPacketCount')}: ${summary.final_export_packet_count ?? pack.final_export_packet_cards.length}`,
+                `${t('finalClaimSafeExportCopyCount')}: ${summary.final_channel_copy_count ?? pack.final_channel_copy_bundle.length}`,
+                `${t('finalClaimSafeExportVideoCount')}: ${summary.final_video_prompt_count ?? pack.final_video_prompt_bundle.length}`,
+                `${t('finalClaimSafeExportAssetCount')}: ${summary.final_asset_handoff_count ?? pack.final_asset_handoff_bundle.length}`,
+                `${t('finalClaimSafeExportTraceCount')}: ${summary.final_claim_trace_count ?? pack.final_claim_trace_bundle.length}`,
+                `${t('finalClaimSafeExportBlockedCount')}: ${summary.final_blocked_content_count ?? pack.final_blocked_content_appendix.length}`,
+                `${t('finalClaimSafeExportRecommendedAction')}: ${summary.recommended_operator_action || t('finalClaimSafeExportPreviewNote')}`,
+                `${t('finalClaimSafeExportFileWrite')}: ${projectWorkspaceFinalClaimSafeExportPacketDisabledText(summary.real_file_write_allowed)}`,
+                `${t('finalClaimSafeExportRealExport')}: ${projectWorkspaceFinalClaimSafeExportPacketDisabledText(summary.real_export_allowed)}`,
+                `${t('finalClaimSafeExportPlatformUpload')}: ${projectWorkspaceFinalClaimSafeExportPacketDisabledText(summary.real_platform_upload_allowed)}`,
+                `${t('finalClaimSafeExportProvider')}: ${projectWorkspaceFinalClaimSafeExportPacketDisabledText(summary.real_provider_allowed)}`,
+                `${t('finalClaimSafeExportMediaUpload')}: ${projectWorkspaceFinalClaimSafeExportPacketDisabledText(summary.real_media_upload_allowed)}`,
+                `${t('finalClaimSafeExportPolicyCheck')}: ${projectWorkspaceFinalClaimSafeExportPacketDisabledText(summary.real_policy_check_allowed)}`,
+                `${t('finalClaimSafeExportExecution')}: ${projectWorkspaceFinalClaimSafeExportPacketDisabledText(summary.real_execution_allowed)}`,
+                t('finalClaimSafeExportPreviewNote'),
+                t('finalClaimSafeExportPolicyNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceFinalClaimSafeExportPacketSectionText(titleKey, value) {
+            const body = projectWorkspaceFinalClaimSafeExportPacketJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportFinalClaimSafeExportPacketMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportFinalClaimSafeExportPacketSnapshot(workspace);
+            if (!pack.has_final_claim_safe_export_packet_pack) return '';
+            return [
+                `## ${t('finalClaimSafeExportPacketPackTitle')}`,
+                `## ${t('finalClaimSafeExportSummaryTitle')}`,
+                projectWorkspaceFinalClaimSafeExportPacketSummaryText(pack), '',
+                projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportPacketCardsTitle', pack.final_export_packet_cards), '',
+                projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportChannelCopyTitle', pack.final_channel_copy_bundle), '',
+                projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportVideoPromptTitle', pack.final_video_prompt_bundle), '',
+                projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportAssetHandoffTitle', pack.final_asset_handoff_bundle), '',
+                projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportClaimTraceTitle', pack.final_claim_trace_bundle), '',
+                projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportBlockedAppendixTitle', pack.final_blocked_content_appendix), '',
+                projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportOperatorHandoffTitle', pack.final_operator_handoff_checklist), '',
+                projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportManifestTitle', pack.export_file_manifest_preview), '',
+                projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportQualityTitle', pack.final_export_quality_checks), '',
+                projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportAuditTitle', pack.audit_preview), '',
+                projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportSafetyTitle', pack.safety_boundaries),
+                t('finalClaimSafeExportCopyVideoNote'),
+                t('finalClaimSafeExportBlockedNote'),
+                t('finalClaimSafeExportManifestNote'),
+                t('finalClaimSafeExportOperatorNote'),
+                t('finalClaimSafeExportSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceFinalClaimSafeExportPacketText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceFinalClaimSafeExportPacketStatus');
+            const pack = projectWorkspaceExportFinalClaimSafeExportPacketSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceFinalClaimSafeExportPacketSummaryText(pack)
+                : kind === 'packetCards' ? projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportPacketCardsTitle', pack.final_export_packet_cards)
+                : kind === 'channelCopy' ? projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportChannelCopyTitle', pack.final_channel_copy_bundle)
+                : kind === 'videoPrompt' ? projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportVideoPromptTitle', pack.final_video_prompt_bundle)
+                : kind === 'assetHandoff' ? projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportAssetHandoffTitle', pack.final_asset_handoff_bundle)
+                : kind === 'claimTrace' ? projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportClaimTraceTitle', pack.final_claim_trace_bundle)
+                : kind === 'blockedAppendix' ? projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportBlockedAppendixTitle', pack.final_blocked_content_appendix)
+                : kind === 'operatorHandoff' ? projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportOperatorHandoffTitle', pack.final_operator_handoff_checklist)
+                : kind === 'manifest' ? projectWorkspaceFinalClaimSafeExportPacketSectionText('finalClaimSafeExportManifestTitle', pack.export_file_manifest_preview)
+                : projectWorkspaceExportFinalClaimSafeExportPacketMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('finalClaimSafeExportCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('finalClaimSafeExportCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('finalClaimSafeExportCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('finalClaimSafeExportCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceFinalClaimSafeExportSummary() { return copyProjectWorkspaceFinalClaimSafeExportPacketText('summary'); }
+        function copyProjectWorkspaceFinalExportPacketCards() { return copyProjectWorkspaceFinalClaimSafeExportPacketText('packetCards'); }
+        function copyProjectWorkspaceFinalChannelCopyBundle() { return copyProjectWorkspaceFinalClaimSafeExportPacketText('channelCopy'); }
+        function copyProjectWorkspaceFinalVideoPromptBundle() { return copyProjectWorkspaceFinalClaimSafeExportPacketText('videoPrompt'); }
+        function copyProjectWorkspaceFinalAssetHandoffBundle() { return copyProjectWorkspaceFinalClaimSafeExportPacketText('assetHandoff'); }
+        function copyProjectWorkspaceFinalClaimTraceBundle() { return copyProjectWorkspaceFinalClaimSafeExportPacketText('claimTrace'); }
+        function copyProjectWorkspaceFinalBlockedContentAppendix() { return copyProjectWorkspaceFinalClaimSafeExportPacketText('blockedAppendix'); }
+        function copyProjectWorkspaceFinalOperatorHandoffChecklist() { return copyProjectWorkspaceFinalClaimSafeExportPacketText('operatorHandoff'); }
+        function copyProjectWorkspaceExportFileManifestPreview() { return copyProjectWorkspaceFinalClaimSafeExportPacketText('manifest'); }
+        function copyProjectWorkspaceFullFinalClaimSafeExportPacket() { return copyProjectWorkspaceFinalClaimSafeExportPacketText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -27652,6 +27901,40 @@
             return `<div class="section-block" id="projectWorkspaceClaimSafeRemediationVerificationPlanQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('claimSafeRemediationVerificationPlanQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationPlanNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRetryExportPlan()">${escapeHTML(t('claimSafeRemediationVerificationCopyPlan'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeRemediationVerificationRetryPlanTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeRemediationVerificationJsonText(pack.retry_export_plan) || t('claimSafeRemediationVerificationNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationPlanNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeRemediationVerificationQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeRemediationVerificationJsonText(pack.verification_quality_checks) || t('claimSafeRemediationVerificationNoData'))}</pre><div class="field-helper">remediation action / copy fix / video prompt fix / claim fix / remaining blocker / retry export readiness / safety boundary coverage</div></div><div class="graph-os-card"><strong>${escapeHTML(t('claimSafeRemediationVerificationAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceClaimSafeRemediationVerificationJsonText(pack.audit_preview) || t('claimSafeRemediationVerificationNoData'))}</pre><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('claimSafeRemediationVerificationSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('claimSafeRemediationVerificationSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceFinalClaimSafeExportSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportFinalClaimSafeExportPacketSnapshot(workspace); if (!pack.has_final_claim_safe_export_packet_pack) return '';
+            const summary = pack.final_export_summary || {};
+            return `<div class="section-block" id="projectWorkspaceFinalClaimSafeExportSummaryPanel" data-final-claim-safe-export-packet-marker="${PROJECT_WORKSPACE_FINAL_CLAIM_SAFE_EXPORT_PACKET_MARKER}" data-marker="project_workspace_final_claim_safe_export_packet_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('finalClaimSafeExportPacketPackTitle'))}</div><div class="field-helper">${escapeHTML(t('finalClaimSafeExportPacketPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullFinalClaimSafeExportPacket()">${escapeHTML(t('finalClaimSafeExportCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('finalClaimSafeExportMode'), summary.mode || t('none'))}${metricPill(t('finalClaimSafeExportPacketCount'), String(summary.final_export_packet_count ?? pack.final_export_packet_cards.length))}${metricPill(t('finalClaimSafeExportCopyCount'), String(summary.final_channel_copy_count ?? pack.final_channel_copy_bundle.length))}${metricPill(t('finalClaimSafeExportVideoCount'), String(summary.final_video_prompt_count ?? pack.final_video_prompt_bundle.length))}${metricPill(t('finalClaimSafeExportAssetCount'), String(summary.final_asset_handoff_count ?? pack.final_asset_handoff_bundle.length))}${metricPill(t('finalClaimSafeExportTraceCount'), String(summary.final_claim_trace_count ?? pack.final_claim_trace_bundle.length))}${metricPill(t('finalClaimSafeExportBlockedCount'), String(summary.final_blocked_content_count ?? pack.final_blocked_content_appendix.length))}${metricPill(t('finalClaimSafeExportFileWrite'), projectWorkspaceFinalClaimSafeExportPacketDisabledText(summary.real_file_write_allowed))}${metricPill(t('finalClaimSafeExportRealExport'), projectWorkspaceFinalClaimSafeExportPacketDisabledText(summary.real_export_allowed))}${metricPill(t('finalClaimSafeExportPlatformUpload'), projectWorkspaceFinalClaimSafeExportPacketDisabledText(summary.real_platform_upload_allowed))}${metricPill(t('finalClaimSafeExportProvider'), projectWorkspaceFinalClaimSafeExportPacketDisabledText(summary.real_provider_allowed))}${metricPill(t('finalClaimSafeExportMediaUpload'), projectWorkspaceFinalClaimSafeExportPacketDisabledText(summary.real_media_upload_allowed))}${metricPill(t('finalClaimSafeExportPolicyCheck'), projectWorkspaceFinalClaimSafeExportPacketDisabledText(summary.real_policy_check_allowed))}${metricPill(t('finalClaimSafeExportExecution'), projectWorkspaceFinalClaimSafeExportPacketDisabledText(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalClaimSafeExportPacketSummaryText(pack) || t('finalClaimSafeExportNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalClaimSafeExportPreviewNote'))}</div><div class="field-helper">${escapeHTML(t('finalClaimSafeExportPolicyNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceFinalClaimSafeExportPacketStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFinalClaimSafeExportSummary()">${escapeHTML(t('finalClaimSafeExportCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceFinalExportPacketCardsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportFinalClaimSafeExportPacketSnapshot(workspace); if (!pack.has_final_claim_safe_export_packet_pack) return '';
+            const cards = (pack.final_export_packet_cards || []).slice(0, 18).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.export_packet_id || 'export_packet_id')}</strong><div><strong>delivery_surface:</strong> ${escapeHTML(card.delivery_surface || t('none'))}</div><div><strong>platform_label:</strong> ${escapeHTML(card.platform_label || t('none'))}</div><div><strong>packet_status:</strong> ${escapeHTML(card.packet_status || t('none'))}</div><div><strong>source_retry_export_refs:</strong> ${escapeHTML((card.source_retry_export_refs || []).join(', ') || t('none'))}</div><div><strong>included_copy_refs:</strong> ${escapeHTML((card.included_copy_refs || []).join(', ') || t('none'))}</div><div><strong>included_video_prompt_refs:</strong> ${escapeHTML((card.included_video_prompt_refs || []).join(', ') || t('none'))}</div><div><strong>included_asset_requirement_refs:</strong> ${escapeHTML((card.included_asset_requirement_refs || []).join(', ') || t('none'))}</div><div><strong>included_claim_trace_refs:</strong> ${escapeHTML((card.included_claim_trace_refs || []).join(', ') || t('none'))}</div><div><strong>excluded_blocker_refs:</strong> ${escapeHTML((card.excluded_blocker_refs || []).join(', ') || t('none'))}</div><div><strong>ready_for_preview_export:</strong> ${escapeHTML(String(Boolean(card.ready_for_preview_export)))}</div><div><strong>operator_review_required:</strong> ${escapeHTML(String(Boolean(card.operator_review_required)))}</div><div><strong>recommended_operator_action:</strong> ${escapeHTML(card.recommended_operator_action || t('none'))}</div><div><strong>risk_note:</strong> ${escapeHTML(card.risk_note || t('finalClaimSafeExportPolicyNote'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalClaimSafeExportPacketJsonText({real_file_write_allowed:card.real_file_write_allowed,real_export_allowed:card.real_export_allowed,real_platform_upload_allowed:card.real_platform_upload_allowed,real_execution_allowed:card.real_execution_allowed}) || t('finalClaimSafeExportNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceFinalExportPacketCardsPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('finalClaimSafeExportPacketCardsTitle'))}</div><div class="field-helper">ready_for_preview_export / needs_operator_review / blocked</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFinalExportPacketCards()">${escapeHTML(t('finalClaimSafeExportCopyPacketCards'))}</button></div><div class="graph-os-compact-grid">${cards || `<div class="empty-state">${escapeHTML(t('finalClaimSafeExportNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('finalClaimSafeExportPolicyNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceFinalChannelCopyVideoPromptPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportFinalClaimSafeExportPacketSnapshot(workspace); if (!pack.has_final_claim_safe_export_packet_pack) return '';
+            const copies = (pack.final_channel_copy_bundle || []).slice(0, 12).map((item) => `<div class="graph-os-card"><strong>${escapeHTML(item.final_copy_id || 'final_copy_id')}</strong><div><strong>delivery_surface:</strong> ${escapeHTML(item.delivery_surface || t('none'))}</div><div><strong>copy_type:</strong> ${escapeHTML(item.copy_type || t('none'))}</div><div><strong>copy_text:</strong> ${escapeHTML(item.copy_text || t('none'))}</div><div><strong>source_copy_refs:</strong> ${escapeHTML((item.source_copy_refs || []).join(', ') || t('none'))}</div><div><strong>source_claim_ids:</strong> ${escapeHTML((item.source_claim_ids || []).join(', ') || t('none'))}</div><div><strong>supporting_quote_ids:</strong> ${escapeHTML((item.supporting_quote_ids || []).join(', ') || t('none'))}</div><div><strong>claim_risk_level:</strong> ${escapeHTML(item.claim_risk_level || t('none'))}</div><div><strong>support_status:</strong> ${escapeHTML(item.support_status || t('none'))}</div><div><strong>usage_status:</strong> ${escapeHTML(item.usage_status || t('none'))}</div><div><strong>operator_review_required:</strong> ${escapeHTML(String(Boolean(item.operator_review_required)))}</div></div>`).join('');
+            const videos = (pack.final_video_prompt_bundle || []).slice(0, 12).map((item) => `<div class="graph-os-card"><strong>${escapeHTML(item.final_video_prompt_id || 'final_video_prompt_id')}</strong><div><strong>prompt_text:</strong> ${escapeHTML(item.prompt_text || t('none'))}</div><div><strong>visual_direction:</strong> ${escapeHTML(item.visual_direction || t('none'))}</div><div><strong>shot_refs:</strong> ${escapeHTML((item.shot_refs || []).join(', ') || t('none'))}</div><div><strong>source_video_prompt_refs:</strong> ${escapeHTML((item.source_video_prompt_refs || []).join(', ') || t('none'))}</div><div><strong>disallowed_visual_claims:</strong> ${escapeHTML((item.disallowed_visual_claims || []).join(', ') || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalClaimSafeExportPacketJsonText({real_provider_allowed:item.real_provider_allowed,real_media_upload_allowed:item.real_media_upload_allowed,real_policy_check_allowed:item.real_policy_check_allowed,real_execution_allowed:item.real_execution_allowed}) || t('finalClaimSafeExportNoData'))}</pre></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceFinalChannelCopyVideoPromptPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('finalClaimSafeExportCopyVideoTitle'))}</div><div class="field-helper">${escapeHTML(t('finalClaimSafeExportCopyVideoNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFinalChannelCopyBundle()">${escapeHTML(t('finalClaimSafeExportCopyChannelCopy'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFinalVideoPromptBundle()">${escapeHTML(t('finalClaimSafeExportCopyVideoPrompt'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('finalClaimSafeExportChannelCopyTitle'))}</strong><div class="graph-os-compact-grid">${copies || `<div class="empty-state">${escapeHTML(t('finalClaimSafeExportNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalClaimSafeExportVideoPromptTitle'))}</strong><div class="graph-os-compact-grid">${videos || `<div class="empty-state">${escapeHTML(t('finalClaimSafeExportNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceFinalAssetClaimTraceBlockedPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportFinalClaimSafeExportPacketSnapshot(workspace); if (!pack.has_final_claim_safe_export_packet_pack) return '';
+            const assets = (pack.final_asset_handoff_bundle || []).slice(0, 12).map((item) => `<div class="graph-os-card"><strong>${escapeHTML(item.asset_handoff_id || 'asset_handoff_id')}</strong><div><strong>asset_type:</strong> ${escapeHTML(item.asset_type || t('none'))}</div><div><strong>asset_requirement_summary:</strong> ${escapeHTML(item.asset_requirement_summary || t('none'))}</div><div><strong>required_fields:</strong> ${escapeHTML((item.required_fields || []).join(', ') || t('none'))}</div><div><strong>present_fields:</strong> ${escapeHTML((item.present_fields || []).join(', ') || t('none'))}</div><div><strong>missing_fields:</strong> ${escapeHTML((item.missing_fields || []).join(', ') || t('none'))}</div><div><strong>handoff_status:</strong> ${escapeHTML(item.handoff_status || t('none'))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalClaimSafeExportPacketJsonText({real_media_upload_allowed:item.real_media_upload_allowed,real_file_write_allowed:item.real_file_write_allowed,real_execution_allowed:item.real_execution_allowed}) || t('finalClaimSafeExportNoData'))}</pre></div>`).join('');
+            const traces = (pack.final_claim_trace_bundle || []).slice(0, 12).map((item) => `<div class="graph-os-card"><strong>${escapeHTML(item.trace_id || 'trace_id')}</strong><div><strong>output_ref:</strong> ${escapeHTML(item.output_ref || t('none'))}</div><div><strong>evidence_quality_refs:</strong> ${escapeHTML((item.evidence_quality_refs || []).join(', ') || t('none'))}</div><div><strong>claim_risk_refs:</strong> ${escapeHTML((item.claim_risk_refs || []).join(', ') || t('none'))}</div><div><strong>do_not_claim_refs:</strong> ${escapeHTML((item.do_not_claim_refs || []).join(', ') || t('none'))}</div><div><strong>trace_status:</strong> ${escapeHTML(item.trace_status || t('none'))}</div></div>`).join('');
+            const blocked = (pack.final_blocked_content_appendix || []).slice(0, 12).map((item) => `<div class="graph-os-card"><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalClaimSafeExportPacketJsonText(item) || t('finalClaimSafeExportNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalClaimSafeExportBlockedNote'))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceFinalAssetClaimTraceBlockedPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('finalClaimSafeExportAssetTraceBlockedTitle'))}</div><div class="field-helper">${escapeHTML(t('finalClaimSafeExportBlockedNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFinalAssetHandoffBundle()">${escapeHTML(t('finalClaimSafeExportCopyAssetHandoff'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFinalClaimTraceBundle()">${escapeHTML(t('finalClaimSafeExportCopyClaimTrace'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFinalBlockedContentAppendix()">${escapeHTML(t('finalClaimSafeExportCopyBlockedAppendix'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('finalClaimSafeExportAssetHandoffTitle'))}</strong><div class="graph-os-compact-grid">${assets || `<div class="empty-state">${escapeHTML(t('finalClaimSafeExportNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalClaimSafeExportClaimTraceTitle'))}</strong><div class="graph-os-compact-grid">${traces || `<div class="empty-state">${escapeHTML(t('finalClaimSafeExportNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalClaimSafeExportBlockedAppendixTitle'))}</strong><div class="field-helper">blocked content / remaining blockers / unsupported claim / missing quote / policy check disabled / platform upload disabled</div><div class="graph-os-compact-grid">${blocked || `<div class="empty-state">${escapeHTML(t('finalClaimSafeExportNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceFinalOperatorManifestQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportFinalClaimSafeExportPacketSnapshot(workspace); if (!pack.has_final_claim_safe_export_packet_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('finalClaimSafeExportDisabled'):String(value)}`).join(' | ');
+            const handoff = (pack.final_operator_handoff_checklist || []).map((item)=>({ ...item, operator_task_created: item.operator_task_created === true, real_task_creation_allowed: item.real_task_creation_allowed })).slice(0, 12);
+            return `<div class="section-block" id="projectWorkspaceFinalOperatorManifestQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('finalClaimSafeExportOperatorManifestQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('finalClaimSafeExportManifestNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFinalOperatorHandoffChecklist()">${escapeHTML(t('finalClaimSafeExportCopyOperatorHandoff'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceExportFileManifestPreview()">${escapeHTML(t('finalClaimSafeExportCopyManifest'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('finalClaimSafeExportOperatorHandoffTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalClaimSafeExportPacketJsonText(handoff) || t('finalClaimSafeExportNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalClaimSafeExportOperatorNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalClaimSafeExportManifestTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalClaimSafeExportPacketJsonText(pack.export_file_manifest_preview) || t('finalClaimSafeExportNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalClaimSafeExportManifestNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalClaimSafeExportQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalClaimSafeExportPacketJsonText(pack.final_export_quality_checks) || t('finalClaimSafeExportNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalClaimSafeExportQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalClaimSafeExportAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalClaimSafeExportPacketJsonText(pack.audit_preview) || t('finalClaimSafeExportNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalClaimSafeExportAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('finalClaimSafeExportSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('finalClaimSafeExportSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -28098,6 +28381,8 @@
                 '',
                 projectWorkspaceExportClaimSafeRemediationVerificationMarkdown(workspace),
                 '',
+                projectWorkspaceExportFinalClaimSafeExportPacketMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -28222,6 +28507,7 @@
                 claim_safe_delivery_qa_pack: projectWorkspaceExportClaimSafeDeliveryQaSnapshot(workspace),
                 claim_safe_delivery_remediation_pack: projectWorkspaceExportClaimSafeDeliveryRemediationSnapshot(workspace),
                 claim_safe_remediation_verification_pack: projectWorkspaceExportClaimSafeRemediationVerificationSnapshot(workspace),
+                final_claim_safe_export_packet_pack: projectWorkspaceExportFinalClaimSafeExportPacketSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -40833,6 +41119,11 @@
                     ${renderProjectWorkspaceClaimSafeRemediationVerificationFixPanel(workspace)}
                     ${renderProjectWorkspaceClaimSafeRemediationVerificationRetryBlockerQueuePanel(workspace)}
                     ${renderProjectWorkspaceClaimSafeRemediationVerificationPlanQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceFinalClaimSafeExportSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceFinalExportPacketCardsPanel(workspace)}
+                    ${renderProjectWorkspaceFinalChannelCopyVideoPromptPanel(workspace)}
+                    ${renderProjectWorkspaceFinalAssetClaimTraceBlockedPanel(workspace)}
+                    ${renderProjectWorkspaceFinalOperatorManifestQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
