@@ -3647,6 +3647,7 @@
         let latestProjectWorkspaceCampaignCreativeDossierPack = {};
         let latestProjectWorkspaceProductNavigationPack = {};
         let latestProjectWorkspaceScenarioPresetsPack = {};
+        let latestProjectWorkspaceFinalSystemHealthPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7155,6 +7156,64 @@
             scenarioPresetsReadinessNote: 'Scenario readiness is deterministic preview only. It is not a real demo run, not a real platform pass rate, and not a real compliance conclusion.',
             scenarioPresetsSafetyNote: 'Real LLM, provider, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, and file write remain disabled.'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceFinalSystemHealthMarker: 'Project Workspace final system health bundle',
+            finalSystemHealthPackTitle: 'Final System Health / Regression Map',
+            finalSystemHealthPackHelper: 'Project Workspace final system health bundle. Deterministic final system health preview only; this is not real monitoring, not a real regression job, not a real policy API check, not a real platform compliance conclusion, and not a real platform pass rate.',
+            finalSystemHealthSummaryTitle: 'Final System Health Summary',
+            finalSystemHealthPackPanelTitle: 'Pack Health / Panel Regression',
+            finalSystemHealthPackHealthTitle: 'Pack Health Cards',
+            finalSystemHealthPanelRegressionTitle: 'Panel Regression Cards',
+            finalSystemHealthCopyI18nTitle: 'Copy Export / i18n Regression',
+            finalSystemHealthCopyExportTitle: 'Copy Export Regression Cards',
+            finalSystemHealthI18nTitle: 'i18n Regression Cards',
+            finalSystemHealthDisabledWorkflowScenarioTitle: 'Disabled Capability Regression / Workflow Trace / Scenario Regression',
+            finalSystemHealthDisabledTitle: 'Disabled Capability Regression Cards',
+            finalSystemHealthWorkflowTraceTitle: 'Workflow Integrity Trace',
+            finalSystemHealthScenarioMapTitle: 'Scenario Regression Map',
+            finalSystemHealthReadinessQualityAuditSafetyTitle: 'MVP Readiness / Known Limitations / Quality / Audit / Safety',
+            finalSystemHealthLimitationsTitle: 'Known System Limitations',
+            finalSystemHealthScorecardTitle: 'MVP Readiness Scorecard',
+            finalSystemHealthQualityTitle: 'Final Health Quality Checks',
+            finalSystemHealthAuditTitle: 'Audit Preview',
+            finalSystemHealthSafetyTitle: 'Safety Boundaries',
+            finalSystemHealthMode: 'Mode',
+            finalSystemHealthPackCount: 'Pack health count',
+            finalSystemHealthPanelCount: 'Panel regression count',
+            finalSystemHealthCopyExportCount: 'Copy/export regression count',
+            finalSystemHealthI18nCount: 'i18n regression count',
+            finalSystemHealthDisabledCount: 'Disabled capability regression count',
+            finalSystemHealthScenarioCount: 'Scenario regression count',
+            finalSystemHealthRecommendedAction: 'Recommended operator action',
+            finalSystemHealthExecution: 'Real execution allowed',
+            finalSystemHealthRealExport: 'Real export allowed',
+            finalSystemHealthFileWrite: 'Real file write allowed',
+            finalSystemHealthDisabled: 'disabled',
+            finalSystemHealthNoData: 'No final system health data is available.',
+            finalSystemHealthCopyNoData: 'No final system health content is available to copy.',
+            finalSystemHealthCopyFailed: 'Unable to copy final system health content.',
+            finalSystemHealthCopied: 'Final system health content copied.',
+            finalSystemHealthCopySummary: 'Copy final system health summary',
+            finalSystemHealthCopyPacks: 'Copy pack health cards',
+            finalSystemHealthCopyPanels: 'Copy panel regression cards',
+            finalSystemHealthCopyCopyExport: 'Copy copy/export regression cards',
+            finalSystemHealthCopyI18n: 'Copy i18n regression cards',
+            finalSystemHealthCopyDisabled: 'Copy disabled capability regression cards',
+            finalSystemHealthCopyWorkflow: 'Copy workflow integrity trace',
+            finalSystemHealthCopyScenario: 'Copy scenario regression map',
+            finalSystemHealthCopyLimitations: 'Copy known system limitations',
+            finalSystemHealthCopyFull: 'Copy full final system health pack',
+            finalSystemHealthPreviewNote: 'Deterministic final system health preview only. It is not a real monitoring system, does not read real logs, does not run a real regression job, does not write databases, does not call providers, does not call an LLM, does not query a real policy API, and does not execute real operations.',
+            finalSystemHealthPackNote: 'Pack health covers evidence_quality, claim_risk_guard, final_export_packet, campaign_dossier, product_navigation, scenario_presets, provider_safety_controls, and real_execution_blockers, plus the core 46-92 workspace stages.',
+            finalSystemHealthCopyNote: 'Copy/export regression is preview-only. It does not write files, does not perform real export, does not upload files, does not call providers, does not write databases, and does not execute real operations.',
+            finalSystemHealthI18nNote: 'i18n regression requires EN/ZH, no naked i18n key, no question-mark placeholder, complete copy feedback, and browser-visible text verification.',
+            finalSystemHealthWorkflowNote: 'Workflow trace links review import -> evidence quality -> claim risk -> creative brief -> creative output -> platform delivery -> QA -> remediation -> verification -> final export -> dossier -> navigation -> scenarios, and also provider contract / secret / network / token / audit / real execution blockers.',
+            finalSystemHealthScenarioNote: 'Scenario regression map covers 8 deterministic scenarios. This is preview-only and does not create a real demo run.',
+            finalSystemHealthReadinessNote: 'MVP readiness is deterministic readiness preview only. It does not represent a real platform pass rate, is not a real platform compliance conclusion, is not legal advice, and is not a real policy API result.',
+            finalSystemHealthQualityNote: 'Quality checks cover pack health, panel regression, copy/export, i18n, disabled boundary, workflow trace, scenario regression, and known limitations.',
+            finalSystemHealthAuditNote: 'Audit preview is display-only; it does not write databases and does not read real logs or real history tables.',
+            finalSystemHealthSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
             claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
@@ -7852,6 +7911,64 @@
             scenarioPresetsAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
             scenarioPresetsReadinessNote: 'Scenario readiness \u53ea\u662f deterministic preview\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e demo run\uff0c\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\uff0c\u4e5f\u4e0d\u662f\u771f\u5b9e\u5408\u89c4\u7ed3\u8bba\u3002',
             scenarioPresetsSafetyNote: 'Real LLM\u3001provider\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export \u548c file write \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceFinalSystemHealthMarker: 'Project Workspace final system health bundle',
+            finalSystemHealthPackTitle: 'Final System Health / Regression Map',
+            finalSystemHealthPackHelper: '\u67e5\u770b Project Workspace final system health bundle\u3002\u8fd9\u53ea\u662f deterministic final system health preview\uff0c\u4e0d\u662f\u771f\u5b9e\u76d1\u63a7\u7cfb\u7edf\uff0c\u4e0d\u662f\u771f\u5b9e regression job\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u68c0\u67e5\uff0c\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\uff0c\u4e5f\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\u3002',
+            finalSystemHealthSummaryTitle: 'Final System Health Summary',
+            finalSystemHealthPackPanelTitle: 'Pack Health / Panel Regression',
+            finalSystemHealthPackHealthTitle: 'Pack Health Cards',
+            finalSystemHealthPanelRegressionTitle: 'Panel Regression Cards',
+            finalSystemHealthCopyI18nTitle: 'Copy Export / i18n Regression',
+            finalSystemHealthCopyExportTitle: 'Copy Export Regression Cards',
+            finalSystemHealthI18nTitle: 'i18n Regression Cards',
+            finalSystemHealthDisabledWorkflowScenarioTitle: 'Disabled Capability Regression / Workflow Trace / Scenario Regression',
+            finalSystemHealthDisabledTitle: 'Disabled Capability Regression Cards',
+            finalSystemHealthWorkflowTraceTitle: 'Workflow Integrity Trace',
+            finalSystemHealthScenarioMapTitle: 'Scenario Regression Map',
+            finalSystemHealthReadinessQualityAuditSafetyTitle: 'MVP Readiness / Known Limitations / Quality / Audit / Safety',
+            finalSystemHealthLimitationsTitle: 'Known System Limitations',
+            finalSystemHealthScorecardTitle: 'MVP Readiness Scorecard',
+            finalSystemHealthQualityTitle: 'Final Health Quality Checks',
+            finalSystemHealthAuditTitle: 'Audit Preview',
+            finalSystemHealthSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            finalSystemHealthMode: '\u6a21\u5f0f',
+            finalSystemHealthPackCount: 'Pack health \u6570\u91cf',
+            finalSystemHealthPanelCount: 'Panel regression \u6570\u91cf',
+            finalSystemHealthCopyExportCount: 'Copy/export regression \u6570\u91cf',
+            finalSystemHealthI18nCount: 'i18n regression \u6570\u91cf',
+            finalSystemHealthDisabledCount: 'Disabled capability regression \u6570\u91cf',
+            finalSystemHealthScenarioCount: 'Scenario regression \u6570\u91cf',
+            finalSystemHealthRecommendedAction: '\u63a8\u8350 operator action',
+            finalSystemHealthExecution: '\u5141\u8bb8\u771f\u5b9e execution',
+            finalSystemHealthRealExport: '\u5141\u8bb8\u771f\u5b9e export',
+            finalSystemHealthFileWrite: '\u5141\u8bb8\u771f\u5b9e file write',
+            finalSystemHealthDisabled: '\u5df2\u7981\u7528',
+            finalSystemHealthNoData: '\u6682\u65e0 final system health \u6570\u636e\u3002',
+            finalSystemHealthCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 final system health \u5185\u5bb9\u3002',
+            finalSystemHealthCopyFailed: '\u65e0\u6cd5\u590d\u5236 final system health \u5185\u5bb9\u3002',
+            finalSystemHealthCopied: 'Final system health \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            finalSystemHealthCopySummary: '\u590d\u5236 final system health summary',
+            finalSystemHealthCopyPacks: '\u590d\u5236 pack health cards',
+            finalSystemHealthCopyPanels: '\u590d\u5236 panel regression cards',
+            finalSystemHealthCopyCopyExport: '\u590d\u5236 copy/export regression cards',
+            finalSystemHealthCopyI18n: '\u590d\u5236 i18n regression cards',
+            finalSystemHealthCopyDisabled: '\u590d\u5236 disabled capability regression cards',
+            finalSystemHealthCopyWorkflow: '\u590d\u5236 workflow integrity trace',
+            finalSystemHealthCopyScenario: '\u590d\u5236 scenario regression map',
+            finalSystemHealthCopyLimitations: '\u590d\u5236 known system limitations',
+            finalSystemHealthCopyFull: '\u590d\u5236\u5b8c\u6574 final system health pack',
+            finalSystemHealthPreviewNote: '\u4ec5\u4e3a deterministic final system health preview\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e\u76d1\u63a7\u7cfb\u7edf\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\uff0c\u4e0d\u8fd0\u884c\u771f\u5b9e regression job\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u8c03\u7528 LLM\uff0c\u4e0d\u67e5\u8be2\u771f\u5b9e policy API\uff0c\u4e0d\u6267\u884c\u771f\u5b9e\u64cd\u4f5c\u3002',
+            finalSystemHealthPackNote: 'Pack health \u8986\u76d6 evidence_quality\u3001claim_risk_guard\u3001final_export_packet\u3001campaign_dossier\u3001product_navigation\u3001scenario_presets\u3001provider_safety_controls \u548c real_execution_blockers\uff0c\u4e5f\u8986\u76d6 46-92 \u6838\u5fc3 workspace stages\u3002',
+            finalSystemHealthCopyNote: 'Copy/export regression \u53ea\u662f preview\u3002\u4e0d\u5199\u6587\u4ef6\uff0c\u4e0d\u771f\u5b9e export\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u6267\u884c\u771f\u5b9e\u64cd\u4f5c\u3002',
+            finalSystemHealthI18nNote: 'i18n regression \u8981\u6c42 EN/ZH\u3001\u65e0\u88f8 i18n key\u3001\u65e0\u95ee\u53f7 placeholder\u3001\u5b8c\u6574\u590d\u5236\u53cd\u9988\uff0c\u5e76\u8981\u8fdb\u884c browser-visible text verification\u3002',
+            finalSystemHealthWorkflowNote: 'Workflow trace \u8fde\u63a5 review import -> evidence quality -> claim risk -> creative brief -> creative output -> platform delivery -> QA -> remediation -> verification -> final export -> dossier -> navigation -> scenarios\uff0c\u4e5f\u663e\u793a provider contract / secret / network / token / audit / real execution blockers \u94fe\u8def\u3002',
+            finalSystemHealthScenarioNote: 'Scenario regression map \u8986\u76d6 8 \u4e2a deterministic scenarios\u3002\u8fd9\u53ea\u662f preview\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e demo run\u3002',
+            finalSystemHealthReadinessNote: 'MVP readiness \u53ea\u662f deterministic readiness preview\u3002\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\uff0c\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\uff0c\u4e0d\u662f legal advice\uff0c\u4e5f\u4e0d\u662f\u771f\u5b9e policy API \u7ed3\u679c\u3002',
+            finalSystemHealthQualityNote: 'Quality checks \u8986\u76d6 pack health\u3001panel regression\u3001copy/export\u3001i18n\u3001disabled boundary\u3001workflow trace\u3001scenario regression \u548c known limitations\u3002',
+            finalSystemHealthAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff1b\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u771f\u5b9e\u5386\u53f2\u8868\u3002',
+            finalSystemHealthSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export\u3001file write\u3001secret read\u3001external call \u548c token issue \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -11353,6 +11470,7 @@
                 latestProjectWorkspaceCampaignCreativeDossierPack = latestProjectCreativeDecisionPack.campaign_creative_dossier_pack || {};
                 latestProjectWorkspaceProductNavigationPack = latestProjectCreativeDecisionPack.workspace_product_navigation_pack || {};
                 latestProjectWorkspaceScenarioPresetsPack = latestProjectCreativeDecisionPack.workspace_scenario_presets_pack || {};
+                latestProjectWorkspaceFinalSystemHealthPack = latestProjectCreativeDecisionPack.workspace_final_system_health_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -17236,6 +17354,7 @@
         const PROJECT_WORKSPACE_CAMPAIGN_CREATIVE_DOSSIER_MARKER = 'Project Workspace campaign creative dossier bundle';
         const PROJECT_WORKSPACE_PRODUCT_NAVIGATION_MARKER = 'Project Workspace product navigation bundle';
         const PROJECT_WORKSPACE_SCENARIO_PRESETS_MARKER = 'Project Workspace scenario presets bundle';
+        const PROJECT_WORKSPACE_FINAL_SYSTEM_HEALTH_MARKER = 'Project Workspace final system health bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -24334,6 +24453,135 @@
         function copyProjectWorkspaceScenarioDisabledCapabilityChecks() { return copyProjectWorkspaceScenarioPresetsText('disabled'); }
         function copyProjectWorkspaceScenarioQualityChecks() { return copyProjectWorkspaceScenarioPresetsText('quality'); }
         function copyProjectWorkspaceFullScenarioPresetsPack() { return copyProjectWorkspaceScenarioPresetsText('full'); }
+
+        function projectWorkspaceFinalSystemHealthPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceFinalSystemHealthPack && Object.keys(latestProjectWorkspaceFinalSystemHealthPack).length) return latestProjectWorkspaceFinalSystemHealthPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_final_system_health_pack || {};
+        }
+
+        function projectWorkspaceFinalSystemHealthHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspaceFinalSystemHealthJsonText(value) {
+            if (!projectWorkspaceFinalSystemHealthHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceFinalSystemHealthDisabledText(value) {
+            return value === false || value == null ? t('finalSystemHealthDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportFinalSystemHealthSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceFinalSystemHealthPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_FINAL_SYSTEM_HEALTH_MARKER,
+                has_workspace_final_system_health_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                final_system_health_summary: pack.final_system_health_summary || {},
+                pack_health_cards: Array.isArray(pack.pack_health_cards) ? pack.pack_health_cards : [],
+                panel_regression_cards: Array.isArray(pack.panel_regression_cards) ? pack.panel_regression_cards : [],
+                copy_export_regression_cards: Array.isArray(pack.copy_export_regression_cards) ? pack.copy_export_regression_cards : [],
+                i18n_regression_cards: Array.isArray(pack.i18n_regression_cards) ? pack.i18n_regression_cards : [],
+                disabled_capability_regression_cards: Array.isArray(pack.disabled_capability_regression_cards) ? pack.disabled_capability_regression_cards : [],
+                workflow_integrity_trace: Array.isArray(pack.workflow_integrity_trace) ? pack.workflow_integrity_trace : [],
+                scenario_regression_map: Array.isArray(pack.scenario_regression_map) ? pack.scenario_regression_map : [],
+                known_system_limitations: Array.isArray(pack.known_system_limitations) ? pack.known_system_limitations : [],
+                mvp_readiness_scorecard: pack.mvp_readiness_scorecard || {},
+                final_health_quality_checks: pack.final_health_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceFinalSystemHealthSummaryText(pack = projectWorkspaceExportFinalSystemHealthSnapshot()) {
+            if (!pack.has_workspace_final_system_health_pack) return '';
+            const summary = pack.final_system_health_summary || {};
+            return [
+                t('finalSystemHealthSummaryTitle'),
+                `${t('finalSystemHealthMode')}: ${summary.mode || t('none')}`,
+                `${t('finalSystemHealthPackCount')}: ${summary.pack_health_count ?? pack.pack_health_cards.length}`,
+                `${t('finalSystemHealthPanelCount')}: ${summary.panel_regression_count ?? pack.panel_regression_cards.length}`,
+                `${t('finalSystemHealthCopyExportCount')}: ${summary.copy_export_regression_count ?? pack.copy_export_regression_cards.length}`,
+                `${t('finalSystemHealthI18nCount')}: ${summary.i18n_regression_count ?? pack.i18n_regression_cards.length}`,
+                `${t('finalSystemHealthDisabledCount')}: ${summary.disabled_capability_count ?? pack.disabled_capability_regression_cards.length}`,
+                `${t('finalSystemHealthScenarioCount')}: ${summary.scenario_regression_count ?? pack.scenario_regression_map.length}`,
+                `${t('finalSystemHealthRecommendedAction')}: ${summary.recommended_operator_action || t('finalSystemHealthPreviewNote')}`,
+                `${t('finalSystemHealthExecution')}: ${projectWorkspaceFinalSystemHealthDisabledText(summary.real_execution_allowed)}`,
+                `${t('finalSystemHealthRealExport')}: ${projectWorkspaceFinalSystemHealthDisabledText(summary.real_export_allowed)}`,
+                `${t('finalSystemHealthFileWrite')}: ${projectWorkspaceFinalSystemHealthDisabledText(summary.real_file_write_allowed)}`,
+                t('finalSystemHealthPreviewNote'),
+                t('finalSystemHealthReadinessNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceFinalSystemHealthSectionText(titleKey, value) {
+            const body = projectWorkspaceFinalSystemHealthJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportFinalSystemHealthMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportFinalSystemHealthSnapshot(workspace);
+            if (!pack.has_workspace_final_system_health_pack) return '';
+            return [
+                `## ${t('finalSystemHealthPackTitle')}`,
+                `## ${t('finalSystemHealthSummaryTitle')}`,
+                projectWorkspaceFinalSystemHealthSummaryText(pack), '',
+                projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthPackHealthTitle', pack.pack_health_cards), '',
+                projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthPanelRegressionTitle', pack.panel_regression_cards), '',
+                projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthCopyExportTitle', pack.copy_export_regression_cards), '',
+                projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthI18nTitle', pack.i18n_regression_cards), '',
+                projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthDisabledTitle', pack.disabled_capability_regression_cards), '',
+                projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthWorkflowTraceTitle', pack.workflow_integrity_trace), '',
+                projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthScenarioMapTitle', pack.scenario_regression_map), '',
+                projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthLimitationsTitle', pack.known_system_limitations), '',
+                projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthScorecardTitle', pack.mvp_readiness_scorecard), '',
+                projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthQualityTitle', pack.final_health_quality_checks), '',
+                projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthAuditTitle', pack.audit_preview), '',
+                projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthSafetyTitle', pack.safety_boundaries),
+                t('finalSystemHealthPackNote'),
+                t('finalSystemHealthCopyNote'),
+                t('finalSystemHealthI18nNote'),
+                t('finalSystemHealthWorkflowNote'),
+                t('finalSystemHealthScenarioNote'),
+                t('finalSystemHealthQualityNote'),
+                t('finalSystemHealthAuditNote'),
+                t('finalSystemHealthSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceFinalSystemHealthText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceFinalSystemHealthStatus');
+            const pack = projectWorkspaceExportFinalSystemHealthSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceFinalSystemHealthSummaryText(pack)
+                : kind === 'packs' ? projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthPackHealthTitle', pack.pack_health_cards)
+                : kind === 'panels' ? projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthPanelRegressionTitle', pack.panel_regression_cards)
+                : kind === 'copyExport' ? projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthCopyExportTitle', pack.copy_export_regression_cards)
+                : kind === 'i18n' ? projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthI18nTitle', pack.i18n_regression_cards)
+                : kind === 'disabled' ? projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthDisabledTitle', pack.disabled_capability_regression_cards)
+                : kind === 'workflow' ? projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthWorkflowTraceTitle', pack.workflow_integrity_trace)
+                : kind === 'scenario' ? projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthScenarioMapTitle', pack.scenario_regression_map)
+                : kind === 'limitations' ? projectWorkspaceFinalSystemHealthSectionText('finalSystemHealthLimitationsTitle', pack.known_system_limitations)
+                : projectWorkspaceExportFinalSystemHealthMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('finalSystemHealthCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('finalSystemHealthCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('finalSystemHealthCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('finalSystemHealthCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceFinalSystemHealthSummary() { return copyProjectWorkspaceFinalSystemHealthText('summary'); }
+        function copyProjectWorkspacePackHealthCards() { return copyProjectWorkspaceFinalSystemHealthText('packs'); }
+        function copyProjectWorkspacePanelRegressionCards() { return copyProjectWorkspaceFinalSystemHealthText('panels'); }
+        function copyProjectWorkspaceCopyExportRegressionCards() { return copyProjectWorkspaceFinalSystemHealthText('copyExport'); }
+        function copyProjectWorkspaceI18nRegressionCards() { return copyProjectWorkspaceFinalSystemHealthText('i18n'); }
+        function copyProjectWorkspaceDisabledCapabilityRegressionCards() { return copyProjectWorkspaceFinalSystemHealthText('disabled'); }
+        function copyProjectWorkspaceWorkflowIntegrityTrace() { return copyProjectWorkspaceFinalSystemHealthText('workflow'); }
+        function copyProjectWorkspaceScenarioRegressionMap() { return copyProjectWorkspaceFinalSystemHealthText('scenario'); }
+        function copyProjectWorkspaceKnownSystemLimitations() { return copyProjectWorkspaceFinalSystemHealthText('limitations'); }
+        function copyProjectWorkspaceFullFinalSystemHealthPack() { return copyProjectWorkspaceFinalSystemHealthText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -28773,6 +29021,41 @@
             return `<div class="section-block" id="projectWorkspaceScenarioPresetsCapabilityQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('scenarioPresetsCapabilityQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('scenarioPresetsSafetyNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceScenarioDisabledCapabilityChecks()">${escapeHTML(t('scenarioPresetsCopyDisabled'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceScenarioQualityChecks()">${escapeHTML(t('scenarioPresetsCopyQuality'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('scenarioPresetsDisabledTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceScenarioPresetsJsonText(pack.scenario_disabled_capability_checks) || t('scenarioPresetsNoData'))}</pre><div class="field-helper">real LLM / provider / media / external scraping / database persistence / real_execution / real_policy_check / platform_upload / task_creation / real_export / file_write disabled</div></div><div class="graph-os-card"><strong>${escapeHTML(t('scenarioPresetsQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceScenarioPresetsJsonText(pack.scenario_quality_checks) || t('scenarioPresetsNoData'))}</pre><div class="field-helper">${escapeHTML(t('scenarioPresetsQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('scenarioPresetsAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceScenarioPresetsJsonText(pack.audit_preview) || t('scenarioPresetsNoData'))}</pre><div class="field-helper">${escapeHTML(t('scenarioPresetsAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('scenarioPresetsSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('scenarioPresetsSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceFinalSystemHealthSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportFinalSystemHealthSnapshot(workspace); if (!pack.has_workspace_final_system_health_pack) return '';
+            const summary = pack.final_system_health_summary || {};
+            return `<div class="section-block" id="projectWorkspaceFinalSystemHealthSummaryPanel" data-final-system-health-marker="${PROJECT_WORKSPACE_FINAL_SYSTEM_HEALTH_MARKER}" data-marker="project_workspace_final_system_health_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('finalSystemHealthPackTitle'))}</div><div class="field-helper">${escapeHTML(t('finalSystemHealthPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullFinalSystemHealthPack()">${escapeHTML(t('finalSystemHealthCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('finalSystemHealthMode'), summary.mode || t('none'))}${metricPill(t('finalSystemHealthPackCount'), String(summary.pack_health_count ?? pack.pack_health_cards.length))}${metricPill(t('finalSystemHealthPanelCount'), String(summary.panel_regression_count ?? pack.panel_regression_cards.length))}${metricPill(t('finalSystemHealthCopyExportCount'), String(summary.copy_export_regression_count ?? pack.copy_export_regression_cards.length))}${metricPill(t('finalSystemHealthI18nCount'), String(summary.i18n_regression_count ?? pack.i18n_regression_cards.length))}${metricPill(t('finalSystemHealthDisabledCount'), String(summary.disabled_capability_count ?? pack.disabled_capability_regression_cards.length))}${metricPill(t('finalSystemHealthScenarioCount'), String(summary.scenario_regression_count ?? pack.scenario_regression_map.length))}${metricPill(t('finalSystemHealthExecution'), projectWorkspaceFinalSystemHealthDisabledText(summary.real_execution_allowed))}${metricPill(t('finalSystemHealthRealExport'), projectWorkspaceFinalSystemHealthDisabledText(summary.real_export_allowed))}${metricPill(t('finalSystemHealthFileWrite'), projectWorkspaceFinalSystemHealthDisabledText(summary.real_file_write_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalSystemHealthSummaryText(pack) || t('finalSystemHealthNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalSystemHealthPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceFinalSystemHealthStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFinalSystemHealthSummary()">${escapeHTML(t('finalSystemHealthCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceFinalSystemHealthPackPanelRegressionPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportFinalSystemHealthSnapshot(workspace); if (!pack.has_workspace_final_system_health_pack) return '';
+            const health = pack.pack_health_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.pack_label || card.pack_health_id || t('none'))}</strong><div class="field-helper">pack_health_id: ${escapeHTML(card.pack_health_id || '')} / pack_path: ${escapeHTML(card.pack_path || '')} / stage_group: ${escapeHTML(card.stage_group || '')}</div><div class="field-helper">expected_status: ${escapeHTML(card.expected_status || '')} / observed_status: ${escapeHTML(card.observed_status || '')} / health_status: ${escapeHTML(card.health_status || '')}</div><div class="field-helper">dependency_refs: ${escapeHTML((card.dependency_refs || []).join(', ') || t('none'))}</div><div class="field-helper">missing_dependency_refs: ${escapeHTML((card.missing_dependency_refs || []).join(', ') || t('none'))}</div><div class="field-helper">required_for_mvp: ${escapeHTML(String(card.required_for_mvp))} / real_execution_allowed: ${escapeHTML(projectWorkspaceFinalSystemHealthDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            const panels = pack.panel_regression_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.workspace_section || card.panel_regression_id || t('none'))}</strong><div class="field-helper">panel_regression_id: ${escapeHTML(card.panel_regression_id || '')} / source_pack_ref: ${escapeHTML(card.source_pack_ref || '')}</div><div class="field-helper">expected_panel_count: ${escapeHTML(String(card.expected_panel_count ?? ''))} / expected_panel_topics: ${escapeHTML((card.expected_panel_topics || []).join(', ') || t('none'))}</div><div class="field-helper">panel_status: ${escapeHTML(card.panel_status || '')} / requires_browser_verification: ${escapeHTML(String(card.requires_browser_verification))} / known_frontend_marker: ${escapeHTML(card.known_frontend_marker || '')}</div><div class="field-helper">regression_risk: ${escapeHTML(card.regression_risk || '')} / real_execution_allowed: ${escapeHTML(projectWorkspaceFinalSystemHealthDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceFinalSystemHealthPackPanelRegressionPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('finalSystemHealthPackPanelTitle'))}</div><div class="field-helper">${escapeHTML(t('finalSystemHealthPackNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePackHealthCards()">${escapeHTML(t('finalSystemHealthCopyPacks'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePanelRegressionCards()">${escapeHTML(t('finalSystemHealthCopyPanels'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('finalSystemHealthPackHealthTitle'))}</strong><div class="graph-os-compact-grid">${health || `<div class="empty-state">${escapeHTML(t('finalSystemHealthNoData'))}</div>`}</div><div class="field-helper">evidence_quality / claim_risk_guard / final_export_packet / campaign_dossier / product_navigation / scenario_presets / provider_safety_controls / real_execution_blockers</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalSystemHealthPanelRegressionTitle'))}</strong><div class="graph-os-compact-grid">${panels || `<div class="empty-state">${escapeHTML(t('finalSystemHealthNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceFinalSystemHealthCopyI18nPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportFinalSystemHealthSnapshot(workspace); if (!pack.has_workspace_final_system_health_pack) return '';
+            const copyExport = pack.copy_export_regression_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.copy_export_regression_id || t('none'))}</strong><div class="field-helper">source_pack_ref: ${escapeHTML(card.source_pack_ref || '')}</div><div class="field-helper">copy_targets: ${escapeHTML((card.copy_targets || []).join(', ') || t('none'))}</div><div class="field-helper">export_targets: ${escapeHTML((card.export_targets || []).join(', ') || t('none'))}</div><div class="field-helper">json_export_preview_expected: ${escapeHTML(String(card.json_export_preview_expected))} / markdown_export_preview_expected: ${escapeHTML(String(card.markdown_export_preview_expected))} / regression_status: ${escapeHTML(card.regression_status || '')}</div><div class="field-helper">real_file_write_allowed: ${escapeHTML(projectWorkspaceFinalSystemHealthDisabledText(card.real_file_write_allowed))} / real_export_allowed: ${escapeHTML(projectWorkspaceFinalSystemHealthDisabledText(card.real_export_allowed))}</div></div>`).join('');
+            const i18n = pack.i18n_regression_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.workspace_section || card.i18n_regression_id || t('none'))}</strong><div class="field-helper">i18n_regression_id: ${escapeHTML(card.i18n_regression_id || '')} / expected_languages: ${escapeHTML((card.expected_languages || []).join(', ') || t('none'))}</div><div class="field-helper">checks_for_naked_key: ${escapeHTML(String(card.checks_for_naked_key))} / checks_for_question_mark_placeholder: ${escapeHTML(String(card.checks_for_question_mark_placeholder))} / copy_feedback_required: ${escapeHTML(String(card.copy_feedback_required))} / browser_visible_text_check_required: ${escapeHTML(String(card.browser_visible_text_check_required))}</div><div class="field-helper">regression_status: ${escapeHTML(card.regression_status || '')}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceFinalSystemHealthCopyI18nPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('finalSystemHealthCopyI18nTitle'))}</div><div class="field-helper">${escapeHTML(t('finalSystemHealthCopyNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCopyExportRegressionCards()">${escapeHTML(t('finalSystemHealthCopyCopyExport'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceI18nRegressionCards()">${escapeHTML(t('finalSystemHealthCopyI18n'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('finalSystemHealthCopyExportTitle'))}</strong><div class="graph-os-compact-grid">${copyExport || `<div class="empty-state">${escapeHTML(t('finalSystemHealthNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalSystemHealthI18nTitle'))}</strong><div class="graph-os-compact-grid">${i18n || `<div class="empty-state">${escapeHTML(t('finalSystemHealthNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('finalSystemHealthI18nNote'))}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceFinalSystemHealthDisabledWorkflowScenarioPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportFinalSystemHealthSnapshot(workspace); if (!pack.has_workspace_final_system_health_pack) return '';
+            const disabled = pack.disabled_capability_regression_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.capability_label || card.capability_id || t('none'))}</strong><div class="field-helper">capability_id: ${escapeHTML(card.capability_id || '')} / expected_disabled: ${escapeHTML(String(card.expected_disabled))} / observed_allowed: ${escapeHTML(String(card.observed_allowed))} / must_remain_disabled: ${escapeHTML(String(card.must_remain_disabled))}</div><div class="field-helper">source_guard_refs: ${escapeHTML((card.source_guard_refs || []).join(', ') || t('none'))}</div><div class="field-helper">regression_status: ${escapeHTML(card.regression_status || '')}</div></div>`).join('');
+            const workflow = projectWorkspaceFinalSystemHealthJsonText(pack.workflow_integrity_trace);
+            const scenarios = pack.scenario_regression_map.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.scenario_id || card.scenario_regression_id || t('none'))}</strong><div class="field-helper">scenario_group: ${escapeHTML(card.scenario_group || '')} / expected_status: ${escapeHTML(card.expected_status || '')} / regression_status: ${escapeHTML(card.regression_status || '')}</div><div class="field-helper">source_pack_refs: ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div class="field-helper">expected_blockers: ${escapeHTML((card.expected_blockers || []).join(', ') || t('none'))}</div><div class="field-helper">demo_run_allowed: ${escapeHTML(projectWorkspaceFinalSystemHealthDisabledText(card.demo_run_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspaceFinalSystemHealthDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceFinalSystemHealthDisabledWorkflowScenarioPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('finalSystemHealthDisabledWorkflowScenarioTitle'))}</div><div class="field-helper">${escapeHTML(t('finalSystemHealthWorkflowNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDisabledCapabilityRegressionCards()">${escapeHTML(t('finalSystemHealthCopyDisabled'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceWorkflowIntegrityTrace()">${escapeHTML(t('finalSystemHealthCopyWorkflow'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceScenarioRegressionMap()">${escapeHTML(t('finalSystemHealthCopyScenario'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('finalSystemHealthDisabledTitle'))}</strong><div class="graph-os-compact-grid">${disabled || `<div class="empty-state">${escapeHTML(t('finalSystemHealthNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalSystemHealthWorkflowTraceTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(workflow || t('finalSystemHealthNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalSystemHealthWorkflowNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalSystemHealthScenarioMapTitle'))}</strong><div class="graph-os-compact-grid">${scenarios || `<div class="empty-state">${escapeHTML(t('finalSystemHealthNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('finalSystemHealthScenarioNote'))}</div><div class="field-helper">strong_evidence_ready_preview / weak_evidence_needs_review / unsupported_claim_blocked / video_prompt_visual_claim_risk / delivery_blocked_by_missing_quote / provider_safety_blocked / final_export_ready_preview_only / operator_handoff_required</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceFinalSystemHealthReadinessQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportFinalSystemHealthSnapshot(workspace); if (!pack.has_workspace_final_system_health_pack) return '';
+            const limitations = pack.known_system_limitations.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.limitation_label || card.limitation_id || t('none'))}</strong><div class="field-helper">limitation_id: ${escapeHTML(card.limitation_id || '')}</div><div class="field-helper">${escapeHTML(card.risk_note || '')}</div></div>`).join('');
+            const safety = projectWorkspaceFinalSystemHealthJsonText(pack.safety_boundaries);
+            return `<div class="section-block" id="projectWorkspaceFinalSystemHealthReadinessQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('finalSystemHealthReadinessQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('finalSystemHealthReadinessNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceKnownSystemLimitations()">${escapeHTML(t('finalSystemHealthCopyLimitations'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('finalSystemHealthLimitationsTitle'))}</strong><div class="graph-os-compact-grid">${limitations || `<div class="empty-state">${escapeHTML(t('finalSystemHealthNoData'))}</div>`}</div><div class="field-helper">no real LLM / no real provider / no real media / no real export / no DB persistence / no platform upload / no policy API / no real task creation / no real file write</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalSystemHealthScorecardTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalSystemHealthJsonText(pack.mvp_readiness_scorecard) || t('finalSystemHealthNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalSystemHealthReadinessNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalSystemHealthQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalSystemHealthJsonText(pack.final_health_quality_checks) || t('finalSystemHealthNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalSystemHealthQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalSystemHealthAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalSystemHealthJsonText(pack.audit_preview) || t('finalSystemHealthNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalSystemHealthAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('finalSystemHealthSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">${escapeHTML(t('finalSystemHealthSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -29227,6 +29510,8 @@
                 '',
                 projectWorkspaceExportScenarioPresetsMarkdown(workspace),
                 '',
+                projectWorkspaceExportFinalSystemHealthMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -29355,6 +29640,7 @@
                 campaign_creative_dossier_pack: projectWorkspaceExportCampaignCreativeDossierSnapshot(workspace),
                 workspace_product_navigation_pack: projectWorkspaceExportProductNavigationSnapshot(workspace),
                 workspace_scenario_presets_pack: projectWorkspaceExportScenarioPresetsSnapshot(workspace),
+                workspace_final_system_health_pack: projectWorkspaceExportFinalSystemHealthSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -41986,6 +42272,11 @@
                     ${renderProjectWorkspaceScenarioPresetsSignalCoveragePanel(workspace)}
                     ${renderProjectWorkspaceScenarioPresetsWalkthroughRegressionPanel(workspace)}
                     ${renderProjectWorkspaceScenarioPresetsCapabilityQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceFinalSystemHealthSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceFinalSystemHealthPackPanelRegressionPanel(workspace)}
+                    ${renderProjectWorkspaceFinalSystemHealthCopyI18nPanel(workspace)}
+                    ${renderProjectWorkspaceFinalSystemHealthDisabledWorkflowScenarioPanel(workspace)}
+                    ${renderProjectWorkspaceFinalSystemHealthReadinessQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}

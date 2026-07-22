@@ -16224,6 +16224,237 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_final_system_health_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace final system health bundle",
+            "project_workspace_final_system_health_marker",
+            "PROJECT_WORKSPACE_FINAL_SYSTEM_HEALTH_MARKER",
+            "latestProjectWorkspaceFinalSystemHealthPack",
+            "workspace_final_system_health_pack",
+            "projectWorkspaceFinalSystemHealthPackFromWorkspace",
+            "projectWorkspaceExportFinalSystemHealthSnapshot",
+            "projectWorkspaceExportFinalSystemHealthMarkdown",
+            "renderProjectWorkspaceFinalSystemHealthSummaryPanel",
+            "renderProjectWorkspaceFinalSystemHealthPackPanelRegressionPanel",
+            "renderProjectWorkspaceFinalSystemHealthCopyI18nPanel",
+            "renderProjectWorkspaceFinalSystemHealthDisabledWorkflowScenarioPanel",
+            "renderProjectWorkspaceFinalSystemHealthReadinessQualityAuditSafetyPanel",
+            "copyProjectWorkspaceFinalSystemHealthSummary",
+            "copyProjectWorkspacePackHealthCards",
+            "copyProjectWorkspacePanelRegressionCards",
+            "copyProjectWorkspaceCopyExportRegressionCards",
+            "copyProjectWorkspaceI18nRegressionCards",
+            "copyProjectWorkspaceDisabledCapabilityRegressionCards",
+            "copyProjectWorkspaceWorkflowIntegrityTrace",
+            "copyProjectWorkspaceScenarioRegressionMap",
+            "copyProjectWorkspaceKnownSystemLimitations",
+            "copyProjectWorkspaceFullFinalSystemHealthPack",
+            "workspace_final_system_health_pack: projectWorkspaceExportFinalSystemHealthSnapshot(workspace)",
+            "Final System Health / Regression Map",
+            "Final System Health Summary",
+            "Pack Health Cards",
+            "Panel Regression Cards",
+            "Copy Export Regression Cards",
+            "i18n Regression Cards",
+            "Disabled Capability Regression Cards",
+            "Workflow Integrity Trace",
+            "Scenario Regression Map",
+            "Known System Limitations",
+            "MVP Readiness Scorecard",
+            "Final Health Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "final_system_health_summary",
+            "pack_health_cards",
+            "panel_regression_cards",
+            "copy_export_regression_cards",
+            "i18n_regression_cards",
+            "disabled_capability_regression_cards",
+            "workflow_integrity_trace",
+            "scenario_regression_map",
+            "known_system_limitations",
+            "mvp_readiness_scorecard",
+            "final_health_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+            "card.pack_health_id",
+            "card.pack_label",
+            "card.pack_path",
+            "card.stage_group",
+            "card.expected_status",
+            "card.observed_status",
+            "card.required_for_mvp",
+            "card.dependency_refs",
+            "card.missing_dependency_refs",
+            "card.health_status",
+            "card.panel_regression_id",
+            "card.workspace_section",
+            "card.source_pack_ref",
+            "card.expected_panel_count",
+            "card.expected_panel_topics",
+            "card.panel_status",
+            "card.requires_browser_verification",
+            "card.known_frontend_marker",
+            "card.regression_risk",
+            "card.copy_export_regression_id",
+            "card.copy_targets",
+            "card.export_targets",
+            "card.json_export_preview_expected",
+            "card.markdown_export_preview_expected",
+            "card.real_file_write_allowed",
+            "card.real_export_allowed",
+            "card.i18n_regression_id",
+            "card.expected_languages",
+            "card.checks_for_naked_key",
+            "card.checks_for_question_mark_placeholder",
+            "card.copy_feedback_required",
+            "card.browser_visible_text_check_required",
+            "card.capability_id",
+            "card.capability_label",
+            "card.expected_disabled",
+            "card.observed_allowed",
+            "card.source_guard_refs",
+            "card.regression_status",
+            "card.must_remain_disabled",
+            "card.scenario_id",
+            "card.scenario_group",
+            "card.expected_blockers",
+            "card.demo_run_allowed",
+            "card.real_execution_allowed",
+            "card.limitation_label",
+            "card.limitation_id",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for scenario_id in [
+            "strong_evidence_ready_preview",
+            "weak_evidence_needs_review",
+            "unsupported_claim_blocked",
+            "video_prompt_visual_claim_risk",
+            "delivery_blocked_by_missing_quote",
+            "provider_safety_blocked",
+            "final_export_ready_preview_only",
+            "operator_handoff_required",
+        ]:
+            with self.subTest(scenario_id=scenario_id):
+                self.assertIn(scenario_id, html)
+        for coverage_text in [
+            "evidence_quality / claim_risk_guard / final_export_packet / campaign_dossier / product_navigation / scenario_presets / provider_safety_controls / real_execution_blockers",
+            "review import -> evidence quality -> claim risk -> creative brief -> creative output -> platform delivery -> QA -> remediation -> verification -> final export -> dossier -> navigation -> scenarios",
+            "provider contract / secret / network / token / audit / real execution blockers",
+            "no real LLM / no real provider / no real media / no real export / no DB persistence / no platform upload / no policy API / no real task creation / no real file write",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.",
+        ]:
+            with self.subTest(coverage_text=coverage_text):
+                self.assertIn(coverage_text, html)
+        previous = html.index("renderProjectWorkspaceScenarioPresetsCapabilityQualityAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceFinalSystemHealthSummaryPanel(workspace)")
+        pack_panel = html.index("renderProjectWorkspaceFinalSystemHealthPackPanelRegressionPanel(workspace)")
+        copy_i18n = html.index("renderProjectWorkspaceFinalSystemHealthCopyI18nPanel(workspace)")
+        disabled = html.index("renderProjectWorkspaceFinalSystemHealthDisabledWorkflowScenarioPanel(workspace)")
+        readiness = html.index("renderProjectWorkspaceFinalSystemHealthReadinessQualityAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, pack_panel)
+        self.assertLess(pack_panel, copy_i18n)
+        self.assertLess(copy_i18n, disabled)
+        self.assertLess(disabled, readiness)
+        self.assertLess(readiness, core)
+
+    def test_workspace_final_system_health_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "finalSystemHealthPackTitle",
+            "finalSystemHealthSummaryTitle",
+            "finalSystemHealthPackHealthTitle",
+            "finalSystemHealthPanelRegressionTitle",
+            "finalSystemHealthCopyExportTitle",
+            "finalSystemHealthI18nTitle",
+            "finalSystemHealthDisabledTitle",
+            "finalSystemHealthWorkflowTraceTitle",
+            "finalSystemHealthScenarioMapTitle",
+            "finalSystemHealthLimitationsTitle",
+            "finalSystemHealthScorecardTitle",
+            "finalSystemHealthQualityTitle",
+            "finalSystemHealthAuditTitle",
+            "finalSystemHealthSafetyTitle",
+            "finalSystemHealthCopySummary",
+            "finalSystemHealthCopyPacks",
+            "finalSystemHealthCopyPanels",
+            "finalSystemHealthCopyCopyExport",
+            "finalSystemHealthCopyI18n",
+            "finalSystemHealthCopyDisabled",
+            "finalSystemHealthCopyWorkflow",
+            "finalSystemHealthCopyScenario",
+            "finalSystemHealthCopyLimitations",
+            "finalSystemHealthCopyFull",
+            "finalSystemHealthCopied",
+            "finalSystemHealthCopyFailed",
+            "finalSystemHealthCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace final system health bundle", script)
+            self.assertIn("project_workspace_final_system_health_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceFinalSystemHealthSummaryText"):
+            html.index("async function copyProjectWorkspaceFinalSystemHealthText")
+        ]
+        for key in [
+            "finalSystemHealthPackTitle",
+            "finalSystemHealthSummaryTitle",
+            "finalSystemHealthPackHealthTitle",
+            "finalSystemHealthPanelRegressionTitle",
+            "finalSystemHealthCopyExportTitle",
+            "finalSystemHealthI18nTitle",
+            "finalSystemHealthDisabledTitle",
+            "finalSystemHealthWorkflowTraceTitle",
+            "finalSystemHealthScenarioMapTitle",
+            "finalSystemHealthLimitationsTitle",
+            "finalSystemHealthScorecardTitle",
+            "finalSystemHealthQualityTitle",
+            "finalSystemHealthAuditTitle",
+            "finalSystemHealthSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_FINAL_SYSTEM_HEALTH_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic final system health preview",
+            "not a real monitoring system",
+            "does not read real logs",
+            "does not run a real regression job",
+            "does not write databases",
+            "does not call providers",
+            "does not call an LLM",
+            "does not query a real policy API",
+            "does not execute real operations",
+            "not a real policy API check",
+            "not a real platform compliance conclusion",
+            "not a real platform pass rate",
+            "Copy/export regression is preview-only",
+            "does not write files",
+            "does not perform real export",
+            "does not upload files",
+            "MVP readiness is deterministic readiness preview only",
+            "not legal advice",
+            "Audit preview is display-only; it does not write databases and does not read real logs or real history tables.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [
