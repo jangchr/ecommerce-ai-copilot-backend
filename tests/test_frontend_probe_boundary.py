@@ -16455,6 +16455,269 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_mvp_consolidation_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace MVP consolidation bundle",
+            "project_workspace_mvp_consolidation_marker",
+            "PROJECT_WORKSPACE_MVP_CONSOLIDATION_MARKER",
+            "latestProjectWorkspaceMvpConsolidationPack",
+            "workspace_mvp_consolidation_pack",
+            "projectWorkspaceMvpConsolidationPackFromWorkspace",
+            "projectWorkspaceExportMvpConsolidationSnapshot",
+            "projectWorkspaceExportMvpConsolidationMarkdown",
+            "renderProjectWorkspaceMvpConsolidationSummaryHomePanel",
+            "renderProjectWorkspaceMvpConsolidationActionsBlockersPanel",
+            "renderProjectWorkspaceMvpConsolidationExportScenarioPanel",
+            "renderProjectWorkspaceMvpConsolidationPrioritySimplificationPanel",
+            "renderProjectWorkspaceMvpConsolidationSafetyQualityPanel",
+            "copyProjectWorkspaceMvpConsolidationSummary",
+            "copyProjectWorkspaceHomeStatusCards",
+            "copyProjectWorkspacePrimaryOperatorActionCards",
+            "copyProjectWorkspaceTopBlockerCards",
+            "copyProjectWorkspaceFeaturedExportPacketCards",
+            "copyProjectWorkspaceFeaturedScenarioShortcutCards",
+            "copyProjectWorkspaceModulePriorityCards",
+            "copyProjectWorkspaceSimplificationCards",
+            "copyProjectWorkspaceDisabledCapabilityBanner",
+            "copyProjectWorkspaceFullMvpConsolidationPack",
+            "workspace_mvp_consolidation_pack: projectWorkspaceExportMvpConsolidationSnapshot(workspace)",
+            "Workspace Product Polish / MVP Consolidation",
+            "MVP Consolidation Summary",
+            "Workspace Home Status Cards",
+            "Primary Operator Action Cards",
+            "Top Blocker Cards",
+            "Featured Export Packet Cards",
+            "Featured Scenario Shortcut Cards",
+            "Module Priority Cards",
+            "Workspace Simplification Cards",
+            "Disabled Capability Banner",
+            "MVP Readiness Snapshot",
+            "MVP Consolidation Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "mvp_consolidation_summary",
+            "workspace_home_status_cards",
+            "primary_operator_action_cards",
+            "top_blocker_cards",
+            "featured_export_packet_cards",
+            "featured_scenario_shortcut_cards",
+            "module_priority_cards",
+            "workspace_simplification_cards",
+            "disabled_capability_banner",
+            "mvp_readiness_snapshot",
+            "mvp_consolidation_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+            "card.home_status_id",
+            "card.status_label",
+            "card.status_group",
+            "card.current_status",
+            "card.readiness_status",
+            "card.primary_user_message",
+            "card.secondary_detail",
+            "card.blocks_mvp_demo",
+            "card.real_execution_allowed",
+            "card.primary_action_id",
+            "card.action_label",
+            "card.action_type",
+            "card.why_it_matters",
+            "card.recommended_operator_action",
+            "card.action_status",
+            "card.expected_workspace_destination",
+            "card.creates_real_task",
+            "card.top_blocker_id",
+            "card.blocker_label",
+            "card.blocker_type",
+            "card.source_pack_refs",
+            "card.source_stage_refs",
+            "card.blocker_status",
+            "card.severity",
+            "card.blocks_preview_export",
+            "card.recommended_resolution_preview",
+            "card.operator_review_required",
+            "card.real_task_creation_allowed",
+            "card.featured_export_id",
+            "card.delivery_surface",
+            "card.platform_label",
+            "card.packet_status",
+            "card.source_export_refs",
+            "card.included_copy_count",
+            "card.included_video_prompt_count",
+            "card.included_claim_trace_count",
+            "card.blocked_appendix_count",
+            "card.ready_for_preview_export",
+            "card.real_file_write_allowed",
+            "card.real_export_allowed",
+            "card.real_platform_upload_allowed",
+            "card.scenario_shortcut_id",
+            "card.scenario_id",
+            "card.scenario_label",
+            "card.scenario_group",
+            "card.expected_user_question",
+            "card.expected_workspace_panels",
+            "card.expected_status",
+            "card.expected_blockers",
+            "card.demo_run_allowed",
+            "card.module_group",
+            "card.recommendation",
+            "card.frontend_change_performed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for status_id in [
+            "campaign_status",
+            "claim_safety_status",
+            "final_export_status",
+            "blocker_status",
+            "scenario_demo_status",
+            "provider_safety_status",
+            "mvp_readiness_status",
+        ]:
+            with self.subTest(status_id=status_id):
+                self.assertIn(status_id, html)
+        for blocker in [
+            "unsupported claim",
+            "missing quote",
+            "blocked output",
+            "provider disabled",
+            "policy check disabled",
+            "platform upload disabled",
+            "file write disabled",
+            "real execution disabled",
+        ]:
+            with self.subTest(blocker=blocker):
+                self.assertIn(blocker, html)
+        for scenario_id in [
+            "strong_evidence_ready_preview",
+            "weak_evidence_needs_review",
+            "unsupported_claim_blocked",
+            "video_prompt_visual_claim_risk",
+            "delivery_blocked_by_missing_quote",
+            "provider_safety_blocked",
+            "final_export_ready_preview_only",
+            "operator_handoff_required",
+        ]:
+            with self.subTest(scenario_id=scenario_id):
+                self.assertIn(scenario_id, html)
+        for coverage_text in [
+            "primary / secondary / diagnostic / safety",
+            "show final status first / surface top blockers / group diagnostic panels / keep safety disabled banner visible / put scenario presets near demo entry / keep final export and campaign dossier prominent",
+            "provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled",
+        ]:
+            with self.subTest(coverage_text=coverage_text):
+                self.assertIn(coverage_text, html)
+        previous = html.index("renderProjectWorkspaceFinalSystemHealthReadinessQualityAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceMvpConsolidationSummaryHomePanel(workspace)")
+        actions = html.index("renderProjectWorkspaceMvpConsolidationActionsBlockersPanel(workspace)")
+        export = html.index("renderProjectWorkspaceMvpConsolidationExportScenarioPanel(workspace)")
+        priority = html.index("renderProjectWorkspaceMvpConsolidationPrioritySimplificationPanel(workspace)")
+        safety = html.index("renderProjectWorkspaceMvpConsolidationSafetyQualityPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, actions)
+        self.assertLess(actions, export)
+        self.assertLess(export, priority)
+        self.assertLess(priority, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_mvp_consolidation_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "mvpConsolidationPackTitle",
+            "mvpConsolidationSummaryTitle",
+            "mvpConsolidationHomeStatusTitle",
+            "mvpConsolidationActionsTitle",
+            "mvpConsolidationBlockersTitle",
+            "mvpConsolidationExportTitle",
+            "mvpConsolidationScenarioTitle",
+            "mvpConsolidationPriorityTitle",
+            "mvpConsolidationSimplificationTitle",
+            "mvpConsolidationBannerTitle",
+            "mvpConsolidationReadinessTitle",
+            "mvpConsolidationQualityTitle",
+            "mvpConsolidationAuditTitle",
+            "mvpConsolidationSafetyTitle",
+            "mvpConsolidationCopySummary",
+            "mvpConsolidationCopyHome",
+            "mvpConsolidationCopyActions",
+            "mvpConsolidationCopyBlockers",
+            "mvpConsolidationCopyExport",
+            "mvpConsolidationCopyScenarios",
+            "mvpConsolidationCopyPriority",
+            "mvpConsolidationCopySimplification",
+            "mvpConsolidationCopyBanner",
+            "mvpConsolidationCopyFull",
+            "mvpConsolidationCopied",
+            "mvpConsolidationCopyFailed",
+            "mvpConsolidationCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace MVP consolidation bundle", script)
+            self.assertIn("project_workspace_mvp_consolidation_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceMvpConsolidationSummaryText"):
+            html.index("async function copyProjectWorkspaceMvpConsolidationText")
+        ]
+        for key in [
+            "mvpConsolidationPackTitle",
+            "mvpConsolidationSummaryTitle",
+            "mvpConsolidationHomeStatusTitle",
+            "mvpConsolidationActionsTitle",
+            "mvpConsolidationBlockersTitle",
+            "mvpConsolidationExportTitle",
+            "mvpConsolidationScenarioTitle",
+            "mvpConsolidationPriorityTitle",
+            "mvpConsolidationSimplificationTitle",
+            "mvpConsolidationBannerTitle",
+            "mvpConsolidationReadinessTitle",
+            "mvpConsolidationQualityTitle",
+            "mvpConsolidationAuditTitle",
+            "mvpConsolidationSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_MVP_CONSOLIDATION_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic MVP consolidation preview",
+            "not a real platform pass rate",
+            "not a real compliance conclusion",
+            "not a real policy API result",
+            "does not execute real operations",
+            "does not create real tasks",
+            "does not automatically apply fixes",
+            "does not write files",
+            "does not upload files",
+            "does not call providers",
+            "does not call an LLM",
+            "does not write databases",
+            "does not create a real demo run",
+            "Operator actions are manual suggestions only",
+            "do not create real operator tasks",
+            "do not automatically remediate content",
+            "Final export is preview-only",
+            "does not perform real export",
+            "Product polish suggestions do not directly change real layout",
+            "do not delete existing modules",
+            "do not hide safety boundaries",
+            "Audit preview is display-only; it does not write databases and does not read real logs or real history tables.",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [

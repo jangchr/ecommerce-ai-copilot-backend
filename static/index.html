@@ -3648,6 +3648,7 @@
         let latestProjectWorkspaceProductNavigationPack = {};
         let latestProjectWorkspaceScenarioPresetsPack = {};
         let latestProjectWorkspaceFinalSystemHealthPack = {};
+        let latestProjectWorkspaceMvpConsolidationPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7214,6 +7215,64 @@
             finalSystemHealthAuditNote: 'Audit preview is display-only; it does not write databases and does not read real logs or real history tables.',
             finalSystemHealthSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceMvpConsolidationMarker: 'Project Workspace MVP consolidation bundle',
+            mvpConsolidationPackTitle: 'Workspace Product Polish / MVP Consolidation',
+            mvpConsolidationPackHelper: 'Project Workspace MVP consolidation bundle. Deterministic MVP consolidation preview only; this is not a real platform pass rate, not a real compliance conclusion, and not a real policy API result.',
+            mvpConsolidationSummaryHomeTitle: 'MVP Consolidation Summary / Workspace Home Status',
+            mvpConsolidationSummaryTitle: 'MVP Consolidation Summary',
+            mvpConsolidationHomeStatusTitle: 'Workspace Home Status Cards',
+            mvpConsolidationActionsBlockersTitle: 'Primary Operator Actions / Top Blockers',
+            mvpConsolidationActionsTitle: 'Primary Operator Action Cards',
+            mvpConsolidationBlockersTitle: 'Top Blocker Cards',
+            mvpConsolidationExportScenarioTitle: 'Featured Export Packet / Scenario Shortcuts',
+            mvpConsolidationExportTitle: 'Featured Export Packet Cards',
+            mvpConsolidationScenarioTitle: 'Featured Scenario Shortcut Cards',
+            mvpConsolidationPrioritySimplificationTitle: 'Module Priority / Workspace Simplification',
+            mvpConsolidationPriorityTitle: 'Module Priority Cards',
+            mvpConsolidationSimplificationTitle: 'Workspace Simplification Cards',
+            mvpConsolidationSafetyQualityTitle: 'Disabled Capability Banner / MVP Readiness / Quality / Audit / Safety',
+            mvpConsolidationBannerTitle: 'Disabled Capability Banner',
+            mvpConsolidationReadinessTitle: 'MVP Readiness Snapshot',
+            mvpConsolidationQualityTitle: 'MVP Consolidation Quality Checks',
+            mvpConsolidationAuditTitle: 'Audit Preview',
+            mvpConsolidationSafetyTitle: 'Safety Boundaries',
+            mvpConsolidationMode: 'Mode',
+            mvpConsolidationHomeCount: 'Workspace home status count',
+            mvpConsolidationActionCount: 'Primary operator action count',
+            mvpConsolidationBlockerCount: 'Top blocker count',
+            mvpConsolidationExportCount: 'Featured export packet count',
+            mvpConsolidationScenarioCount: 'Scenario shortcut count',
+            mvpConsolidationPriorityCount: 'Module priority count',
+            mvpConsolidationRecommendedAction: 'Recommended operator action',
+            mvpConsolidationExecution: 'Real execution allowed',
+            mvpConsolidationDisabled: 'disabled',
+            mvpConsolidationNoData: 'No MVP consolidation data is available.',
+            mvpConsolidationCopyNoData: 'No MVP consolidation content is available to copy.',
+            mvpConsolidationCopyFailed: 'Unable to copy MVP consolidation content.',
+            mvpConsolidationCopied: 'MVP consolidation content copied.',
+            mvpConsolidationCopySummary: 'Copy MVP consolidation summary',
+            mvpConsolidationCopyHome: 'Copy workspace home status cards',
+            mvpConsolidationCopyActions: 'Copy primary operator action cards',
+            mvpConsolidationCopyBlockers: 'Copy top blocker cards',
+            mvpConsolidationCopyExport: 'Copy featured export packet cards',
+            mvpConsolidationCopyScenarios: 'Copy featured scenario shortcut cards',
+            mvpConsolidationCopyPriority: 'Copy module priority cards',
+            mvpConsolidationCopySimplification: 'Copy workspace simplification cards',
+            mvpConsolidationCopyBanner: 'Copy disabled capability banner',
+            mvpConsolidationCopyFull: 'Copy full MVP consolidation pack',
+            mvpConsolidationPreviewNote: 'Deterministic MVP consolidation preview only. It does not execute real operations, does not create real tasks, does not automatically apply fixes, does not write files, does not upload files, does not call providers, does not call an LLM, does not write databases, and does not create a real demo run.',
+            mvpConsolidationHomeNote: 'Workspace home status covers campaign_status, claim_safety_status, final_export_status, blocker_status, scenario_demo_status, provider_safety_status, and mvp_readiness_status.',
+            mvpConsolidationActionNote: 'Operator actions are manual suggestions only. They do not create real operator tasks and do not automatically remediate content.',
+            mvpConsolidationBlockerNote: 'Top blockers include unsupported claim, missing quote, blocked output, provider disabled, policy check disabled, platform upload disabled, file write disabled, and real execution disabled.',
+            mvpConsolidationExportNote: 'Final export is preview-only: it does not write files, does not perform real export, and does not upload to a platform. Scenario shortcuts are preview-only and do not create real demo runs.',
+            mvpConsolidationPriorityNote: 'Module priority groups workspace modules into primary, secondary, diagnostic, and safety so future frontend polish can reduce information noise while keeping safety visible.',
+            mvpConsolidationSimplificationNote: 'Product polish suggestions do not directly change real layout, do not delete existing modules, and do not hide safety boundaries.',
+            mvpConsolidationReadinessNote: 'MVP readiness is deterministic MVP readiness preview only. It does not represent a real platform pass rate, is not a real compliance conclusion, and is not a real policy API result.',
+            mvpConsolidationQualityNote: 'Quality checks cover home status, operator actions, top blockers, featured export, scenario shortcuts, module priority, disabled banner, and safety boundary coverage.',
+            mvpConsolidationAuditNote: 'Audit preview is display-only; it does not write databases and does not read real logs or real history tables.',
+            mvpConsolidationSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
             claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
@@ -7969,6 +8028,64 @@
             finalSystemHealthQualityNote: 'Quality checks \u8986\u76d6 pack health\u3001panel regression\u3001copy/export\u3001i18n\u3001disabled boundary\u3001workflow trace\u3001scenario regression \u548c known limitations\u3002',
             finalSystemHealthAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff1b\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u771f\u5b9e\u5386\u53f2\u8868\u3002',
             finalSystemHealthSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export\u3001file write\u3001secret read\u3001external call \u548c token issue \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceMvpConsolidationMarker: 'Project Workspace MVP consolidation bundle',
+            mvpConsolidationPackTitle: 'Workspace Product Polish / MVP Consolidation',
+            mvpConsolidationPackHelper: '\u67e5\u770b Project Workspace MVP consolidation bundle\u3002\u8fd9\u53ea\u662f deterministic MVP consolidation preview\uff0c\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\uff0c\u4e0d\u662f\u771f\u5b9e\u5408\u89c4\u7ed3\u8bba\uff0c\u4e5f\u4e0d\u662f\u771f\u5b9e policy API \u7ed3\u679c\u3002',
+            mvpConsolidationSummaryHomeTitle: 'MVP Consolidation Summary / Workspace Home Status',
+            mvpConsolidationSummaryTitle: 'MVP Consolidation Summary',
+            mvpConsolidationHomeStatusTitle: 'Workspace Home Status Cards',
+            mvpConsolidationActionsBlockersTitle: 'Primary Operator Actions / Top Blockers',
+            mvpConsolidationActionsTitle: 'Primary Operator Action Cards',
+            mvpConsolidationBlockersTitle: 'Top Blocker Cards',
+            mvpConsolidationExportScenarioTitle: 'Featured Export Packet / Scenario Shortcuts',
+            mvpConsolidationExportTitle: 'Featured Export Packet Cards',
+            mvpConsolidationScenarioTitle: 'Featured Scenario Shortcut Cards',
+            mvpConsolidationPrioritySimplificationTitle: 'Module Priority / Workspace Simplification',
+            mvpConsolidationPriorityTitle: 'Module Priority Cards',
+            mvpConsolidationSimplificationTitle: 'Workspace Simplification Cards',
+            mvpConsolidationSafetyQualityTitle: 'Disabled Capability Banner / MVP Readiness / Quality / Audit / Safety',
+            mvpConsolidationBannerTitle: 'Disabled Capability Banner',
+            mvpConsolidationReadinessTitle: 'MVP Readiness Snapshot',
+            mvpConsolidationQualityTitle: 'MVP Consolidation Quality Checks',
+            mvpConsolidationAuditTitle: 'Audit Preview',
+            mvpConsolidationSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            mvpConsolidationMode: '\u6a21\u5f0f',
+            mvpConsolidationHomeCount: 'Workspace home status \u6570\u91cf',
+            mvpConsolidationActionCount: 'Primary operator action \u6570\u91cf',
+            mvpConsolidationBlockerCount: 'Top blocker \u6570\u91cf',
+            mvpConsolidationExportCount: 'Featured export packet \u6570\u91cf',
+            mvpConsolidationScenarioCount: 'Scenario shortcut \u6570\u91cf',
+            mvpConsolidationPriorityCount: 'Module priority \u6570\u91cf',
+            mvpConsolidationRecommendedAction: '\u63a8\u8350 operator action',
+            mvpConsolidationExecution: '\u5141\u8bb8\u771f\u5b9e execution',
+            mvpConsolidationDisabled: '\u5df2\u7981\u7528',
+            mvpConsolidationNoData: '\u6682\u65e0 MVP consolidation \u6570\u636e\u3002',
+            mvpConsolidationCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 MVP consolidation \u5185\u5bb9\u3002',
+            mvpConsolidationCopyFailed: '\u65e0\u6cd5\u590d\u5236 MVP consolidation \u5185\u5bb9\u3002',
+            mvpConsolidationCopied: 'MVP consolidation \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            mvpConsolidationCopySummary: '\u590d\u5236 MVP consolidation summary',
+            mvpConsolidationCopyHome: '\u590d\u5236 workspace home status cards',
+            mvpConsolidationCopyActions: '\u590d\u5236 primary operator action cards',
+            mvpConsolidationCopyBlockers: '\u590d\u5236 top blocker cards',
+            mvpConsolidationCopyExport: '\u590d\u5236 featured export packet cards',
+            mvpConsolidationCopyScenarios: '\u590d\u5236 featured scenario shortcut cards',
+            mvpConsolidationCopyPriority: '\u590d\u5236 module priority cards',
+            mvpConsolidationCopySimplification: '\u590d\u5236 workspace simplification cards',
+            mvpConsolidationCopyBanner: '\u590d\u5236 disabled capability banner',
+            mvpConsolidationCopyFull: '\u590d\u5236\u5b8c\u6574 MVP consolidation pack',
+            mvpConsolidationPreviewNote: '\u4ec5\u4e3a deterministic MVP consolidation preview\u3002\u4e0d\u6267\u884c\u771f\u5b9e\u64cd\u4f5c\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e task\uff0c\u4e0d\u81ea\u52a8\u5e94\u7528\u4fee\u590d\uff0c\u4e0d\u5199\u6587\u4ef6\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u8c03\u7528 LLM\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e demo run\u3002',
+            mvpConsolidationHomeNote: 'Workspace home status \u8986\u76d6 campaign_status\u3001claim_safety_status\u3001final_export_status\u3001blocker_status\u3001scenario_demo_status\u3001provider_safety_status \u548c mvp_readiness_status\u3002',
+            mvpConsolidationActionNote: 'Operator actions \u53ea\u662f\u4eba\u5de5\u5efa\u8bae\u3002\u4e0d\u521b\u5efa\u771f\u5b9e operator task\uff0c\u4e0d\u81ea\u52a8\u4fee\u590d\u5185\u5bb9\u3002',
+            mvpConsolidationBlockerNote: 'Top blockers \u5305\u542b unsupported claim\u3001missing quote\u3001blocked output\u3001provider disabled\u3001policy check disabled\u3001platform upload disabled\u3001file write disabled \u548c real execution disabled\u3002',
+            mvpConsolidationExportNote: 'Final export \u53ea\u662f preview\uff1a\u4e0d\u5199\u6587\u4ef6\uff0c\u4e0d\u771f\u5b9e export\uff0c\u4e0d\u4e0a\u4f20\u5230\u5e73\u53f0\u3002Scenario shortcuts \u4e5f\u53ea\u662f preview\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e demo run\u3002',
+            mvpConsolidationPriorityNote: 'Module priority \u628a workspace modules \u5206\u4e3a primary\u3001secondary\u3001diagnostic \u548c safety\uff0c\u5e2e\u52a9\u540e\u7eed\u524d\u7aef\u4ea7\u54c1\u5316\u51cf\u5c11\u4fe1\u606f\u566a\u97f3\uff0c\u540c\u65f6\u4fdd\u6301\u5b89\u5168\u53ef\u89c1\u3002',
+            mvpConsolidationSimplificationNote: 'Product polish suggestions \u4e0d\u76f4\u63a5\u6539\u771f\u5b9e layout\uff0c\u4e0d\u5220\u9664\u5df2\u6709\u6a21\u5757\uff0c\u4e0d\u9690\u85cf\u5b89\u5168\u8fb9\u754c\u3002',
+            mvpConsolidationReadinessNote: 'MVP readiness \u53ea\u662f deterministic MVP readiness preview\u3002\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\uff0c\u4e0d\u662f\u771f\u5b9e\u5408\u89c4\u7ed3\u8bba\uff0c\u4e5f\u4e0d\u662f\u771f\u5b9e policy API \u7ed3\u679c\u3002',
+            mvpConsolidationQualityNote: 'Quality checks \u8986\u76d6 home status\u3001operator actions\u3001top blockers\u3001featured export\u3001scenario shortcuts\u3001module priority\u3001disabled banner \u548c safety boundary\u3002',
+            mvpConsolidationAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff1b\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u771f\u5b9e\u5386\u53f2\u8868\u3002',
+            mvpConsolidationSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export\u3001file write\u3001secret read\u3001external call \u548c token issue \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -11471,6 +11588,7 @@
                 latestProjectWorkspaceProductNavigationPack = latestProjectCreativeDecisionPack.workspace_product_navigation_pack || {};
                 latestProjectWorkspaceScenarioPresetsPack = latestProjectCreativeDecisionPack.workspace_scenario_presets_pack || {};
                 latestProjectWorkspaceFinalSystemHealthPack = latestProjectCreativeDecisionPack.workspace_final_system_health_pack || {};
+                latestProjectWorkspaceMvpConsolidationPack = latestProjectCreativeDecisionPack.workspace_mvp_consolidation_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -17355,6 +17473,7 @@
         const PROJECT_WORKSPACE_PRODUCT_NAVIGATION_MARKER = 'Project Workspace product navigation bundle';
         const PROJECT_WORKSPACE_SCENARIO_PRESETS_MARKER = 'Project Workspace scenario presets bundle';
         const PROJECT_WORKSPACE_FINAL_SYSTEM_HEALTH_MARKER = 'Project Workspace final system health bundle';
+        const PROJECT_WORKSPACE_MVP_CONSOLIDATION_MARKER = 'Project Workspace MVP consolidation bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -24582,6 +24701,134 @@
         function copyProjectWorkspaceScenarioRegressionMap() { return copyProjectWorkspaceFinalSystemHealthText('scenario'); }
         function copyProjectWorkspaceKnownSystemLimitations() { return copyProjectWorkspaceFinalSystemHealthText('limitations'); }
         function copyProjectWorkspaceFullFinalSystemHealthPack() { return copyProjectWorkspaceFinalSystemHealthText('full'); }
+
+        function projectWorkspaceMvpConsolidationPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceMvpConsolidationPack && Object.keys(latestProjectWorkspaceMvpConsolidationPack).length) return latestProjectWorkspaceMvpConsolidationPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_mvp_consolidation_pack || {};
+        }
+
+        function projectWorkspaceMvpConsolidationHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspaceMvpConsolidationJsonText(value) {
+            if (!projectWorkspaceMvpConsolidationHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceMvpConsolidationDisabledText(value) {
+            return value === false || value == null ? t('mvpConsolidationDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportMvpConsolidationSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceMvpConsolidationPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_MVP_CONSOLIDATION_MARKER,
+                has_workspace_mvp_consolidation_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                mvp_consolidation_summary: pack.mvp_consolidation_summary || {},
+                workspace_home_status_cards: Array.isArray(pack.workspace_home_status_cards) ? pack.workspace_home_status_cards : [],
+                primary_operator_action_cards: Array.isArray(pack.primary_operator_action_cards) ? pack.primary_operator_action_cards : [],
+                top_blocker_cards: Array.isArray(pack.top_blocker_cards) ? pack.top_blocker_cards : [],
+                featured_export_packet_cards: Array.isArray(pack.featured_export_packet_cards) ? pack.featured_export_packet_cards : [],
+                featured_scenario_shortcut_cards: Array.isArray(pack.featured_scenario_shortcut_cards) ? pack.featured_scenario_shortcut_cards : [],
+                module_priority_cards: Array.isArray(pack.module_priority_cards) ? pack.module_priority_cards : [],
+                workspace_simplification_cards: Array.isArray(pack.workspace_simplification_cards) ? pack.workspace_simplification_cards : [],
+                disabled_capability_banner: pack.disabled_capability_banner || {},
+                mvp_readiness_snapshot: pack.mvp_readiness_snapshot || {},
+                mvp_consolidation_quality_checks: pack.mvp_consolidation_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceMvpConsolidationSummaryText(pack = projectWorkspaceExportMvpConsolidationSnapshot()) {
+            if (!pack.has_workspace_mvp_consolidation_pack) return '';
+            const summary = pack.mvp_consolidation_summary || {};
+            return [
+                t('mvpConsolidationSummaryTitle'),
+                `${t('mvpConsolidationMode')}: ${summary.mode || t('none')}`,
+                `${t('mvpConsolidationHomeCount')}: ${summary.home_status_count ?? pack.workspace_home_status_cards.length}`,
+                `${t('mvpConsolidationActionCount')}: ${summary.primary_operator_action_count ?? pack.primary_operator_action_cards.length}`,
+                `${t('mvpConsolidationBlockerCount')}: ${summary.top_blocker_count ?? pack.top_blocker_cards.length}`,
+                `${t('mvpConsolidationExportCount')}: ${summary.featured_export_packet_count ?? pack.featured_export_packet_cards.length}`,
+                `${t('mvpConsolidationScenarioCount')}: ${summary.featured_scenario_shortcut_count ?? pack.featured_scenario_shortcut_cards.length}`,
+                `${t('mvpConsolidationPriorityCount')}: ${summary.module_priority_count ?? pack.module_priority_cards.length}`,
+                `${t('mvpConsolidationRecommendedAction')}: ${summary.recommended_operator_action || t('mvpConsolidationPreviewNote')}`,
+                `${t('mvpConsolidationExecution')}: ${projectWorkspaceMvpConsolidationDisabledText(summary.real_execution_allowed)}`,
+                t('mvpConsolidationPreviewNote'),
+                t('mvpConsolidationReadinessNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceMvpConsolidationSectionText(titleKey, value) {
+            const body = projectWorkspaceMvpConsolidationJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportMvpConsolidationMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMvpConsolidationSnapshot(workspace);
+            if (!pack.has_workspace_mvp_consolidation_pack) return '';
+            return [
+                `## ${t('mvpConsolidationPackTitle')}`,
+                `## ${t('mvpConsolidationSummaryTitle')}`,
+                projectWorkspaceMvpConsolidationSummaryText(pack), '',
+                projectWorkspaceMvpConsolidationSectionText('mvpConsolidationHomeStatusTitle', pack.workspace_home_status_cards), '',
+                projectWorkspaceMvpConsolidationSectionText('mvpConsolidationActionsTitle', pack.primary_operator_action_cards), '',
+                projectWorkspaceMvpConsolidationSectionText('mvpConsolidationBlockersTitle', pack.top_blocker_cards), '',
+                projectWorkspaceMvpConsolidationSectionText('mvpConsolidationExportTitle', pack.featured_export_packet_cards), '',
+                projectWorkspaceMvpConsolidationSectionText('mvpConsolidationScenarioTitle', pack.featured_scenario_shortcut_cards), '',
+                projectWorkspaceMvpConsolidationSectionText('mvpConsolidationPriorityTitle', pack.module_priority_cards), '',
+                projectWorkspaceMvpConsolidationSectionText('mvpConsolidationSimplificationTitle', pack.workspace_simplification_cards), '',
+                projectWorkspaceMvpConsolidationSectionText('mvpConsolidationBannerTitle', pack.disabled_capability_banner), '',
+                projectWorkspaceMvpConsolidationSectionText('mvpConsolidationReadinessTitle', pack.mvp_readiness_snapshot), '',
+                projectWorkspaceMvpConsolidationSectionText('mvpConsolidationQualityTitle', pack.mvp_consolidation_quality_checks), '',
+                projectWorkspaceMvpConsolidationSectionText('mvpConsolidationAuditTitle', pack.audit_preview), '',
+                projectWorkspaceMvpConsolidationSectionText('mvpConsolidationSafetyTitle', pack.safety_boundaries),
+                t('mvpConsolidationHomeNote'),
+                t('mvpConsolidationActionNote'),
+                t('mvpConsolidationBlockerNote'),
+                t('mvpConsolidationExportNote'),
+                t('mvpConsolidationPriorityNote'),
+                t('mvpConsolidationSimplificationNote'),
+                t('mvpConsolidationQualityNote'),
+                t('mvpConsolidationAuditNote'),
+                t('mvpConsolidationSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceMvpConsolidationText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceMvpConsolidationStatus');
+            const pack = projectWorkspaceExportMvpConsolidationSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceMvpConsolidationSummaryText(pack)
+                : kind === 'home' ? projectWorkspaceMvpConsolidationSectionText('mvpConsolidationHomeStatusTitle', pack.workspace_home_status_cards)
+                : kind === 'actions' ? projectWorkspaceMvpConsolidationSectionText('mvpConsolidationActionsTitle', pack.primary_operator_action_cards)
+                : kind === 'blockers' ? projectWorkspaceMvpConsolidationSectionText('mvpConsolidationBlockersTitle', pack.top_blocker_cards)
+                : kind === 'export' ? projectWorkspaceMvpConsolidationSectionText('mvpConsolidationExportTitle', pack.featured_export_packet_cards)
+                : kind === 'scenarios' ? projectWorkspaceMvpConsolidationSectionText('mvpConsolidationScenarioTitle', pack.featured_scenario_shortcut_cards)
+                : kind === 'priority' ? projectWorkspaceMvpConsolidationSectionText('mvpConsolidationPriorityTitle', pack.module_priority_cards)
+                : kind === 'simplification' ? projectWorkspaceMvpConsolidationSectionText('mvpConsolidationSimplificationTitle', pack.workspace_simplification_cards)
+                : kind === 'banner' ? projectWorkspaceMvpConsolidationSectionText('mvpConsolidationBannerTitle', pack.disabled_capability_banner)
+                : projectWorkspaceExportMvpConsolidationMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('mvpConsolidationCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('mvpConsolidationCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('mvpConsolidationCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('mvpConsolidationCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceMvpConsolidationSummary() { return copyProjectWorkspaceMvpConsolidationText('summary'); }
+        function copyProjectWorkspaceHomeStatusCards() { return copyProjectWorkspaceMvpConsolidationText('home'); }
+        function copyProjectWorkspacePrimaryOperatorActionCards() { return copyProjectWorkspaceMvpConsolidationText('actions'); }
+        function copyProjectWorkspaceTopBlockerCards() { return copyProjectWorkspaceMvpConsolidationText('blockers'); }
+        function copyProjectWorkspaceFeaturedExportPacketCards() { return copyProjectWorkspaceMvpConsolidationText('export'); }
+        function copyProjectWorkspaceFeaturedScenarioShortcutCards() { return copyProjectWorkspaceMvpConsolidationText('scenarios'); }
+        function copyProjectWorkspaceModulePriorityCards() { return copyProjectWorkspaceMvpConsolidationText('priority'); }
+        function copyProjectWorkspaceSimplificationCards() { return copyProjectWorkspaceMvpConsolidationText('simplification'); }
+        function copyProjectWorkspaceDisabledCapabilityBanner() { return copyProjectWorkspaceMvpConsolidationText('banner'); }
+        function copyProjectWorkspaceFullMvpConsolidationPack() { return copyProjectWorkspaceMvpConsolidationText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -29056,6 +29303,40 @@
             return `<div class="section-block" id="projectWorkspaceFinalSystemHealthReadinessQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('finalSystemHealthReadinessQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('finalSystemHealthReadinessNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceKnownSystemLimitations()">${escapeHTML(t('finalSystemHealthCopyLimitations'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('finalSystemHealthLimitationsTitle'))}</strong><div class="graph-os-compact-grid">${limitations || `<div class="empty-state">${escapeHTML(t('finalSystemHealthNoData'))}</div>`}</div><div class="field-helper">no real LLM / no real provider / no real media / no real export / no DB persistence / no platform upload / no policy API / no real task creation / no real file write</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalSystemHealthScorecardTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalSystemHealthJsonText(pack.mvp_readiness_scorecard) || t('finalSystemHealthNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalSystemHealthReadinessNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalSystemHealthQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalSystemHealthJsonText(pack.final_health_quality_checks) || t('finalSystemHealthNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalSystemHealthQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('finalSystemHealthAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceFinalSystemHealthJsonText(pack.audit_preview) || t('finalSystemHealthNoData'))}</pre><div class="field-helper">${escapeHTML(t('finalSystemHealthAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('finalSystemHealthSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">${escapeHTML(t('finalSystemHealthSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceMvpConsolidationSummaryHomePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMvpConsolidationSnapshot(workspace); if (!pack.has_workspace_mvp_consolidation_pack) return '';
+            const summary = pack.mvp_consolidation_summary || {};
+            const home = pack.workspace_home_status_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.status_label || card.home_status_id || t('none'))}</strong><div class="field-helper">home_status_id: ${escapeHTML(card.home_status_id || '')} / status_group: ${escapeHTML(card.status_group || '')}</div><div class="field-helper">current_status: ${escapeHTML(card.current_status || '')} / readiness_status: ${escapeHTML(card.readiness_status || '')}</div><div>${escapeHTML(card.primary_user_message || '')}</div><div class="field-helper">${escapeHTML(card.secondary_detail || '')}</div><div class="field-helper">blocks_mvp_demo: ${escapeHTML(String(card.blocks_mvp_demo))} / real_execution_allowed: ${escapeHTML(projectWorkspaceMvpConsolidationDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceMvpConsolidationSummaryHomePanel" data-mvp-consolidation-marker="${PROJECT_WORKSPACE_MVP_CONSOLIDATION_MARKER}" data-marker="project_workspace_mvp_consolidation_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('mvpConsolidationPackTitle'))}</div><div class="field-helper">${escapeHTML(t('mvpConsolidationPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullMvpConsolidationPack()">${escapeHTML(t('mvpConsolidationCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('mvpConsolidationMode'), summary.mode || t('none'))}${metricPill(t('mvpConsolidationHomeCount'), String(summary.home_status_count ?? pack.workspace_home_status_cards.length))}${metricPill(t('mvpConsolidationActionCount'), String(summary.primary_operator_action_count ?? pack.primary_operator_action_cards.length))}${metricPill(t('mvpConsolidationBlockerCount'), String(summary.top_blocker_count ?? pack.top_blocker_cards.length))}${metricPill(t('mvpConsolidationExportCount'), String(summary.featured_export_packet_count ?? pack.featured_export_packet_cards.length))}${metricPill(t('mvpConsolidationScenarioCount'), String(summary.featured_scenario_shortcut_count ?? pack.featured_scenario_shortcut_cards.length))}${metricPill(t('mvpConsolidationPriorityCount'), String(summary.module_priority_count ?? pack.module_priority_cards.length))}${metricPill(t('mvpConsolidationExecution'), projectWorkspaceMvpConsolidationDisabledText(summary.real_execution_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceMvpConsolidationSummaryText(pack) || t('mvpConsolidationNoData'))}</pre><div class="field-helper">${escapeHTML(t('mvpConsolidationPreviewNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceMvpConsolidationStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMvpConsolidationSummary()">${escapeHTML(t('mvpConsolidationCopySummary'))}</button><div class="section-header"><div><div class="json-key">${escapeHTML(t('mvpConsolidationHomeStatusTitle'))}</div><div class="field-helper">${escapeHTML(t('mvpConsolidationHomeNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceHomeStatusCards()">${escapeHTML(t('mvpConsolidationCopyHome'))}</button></div><div class="graph-os-compact-grid">${home || `<div class="empty-state">${escapeHTML(t('mvpConsolidationNoData'))}</div>`}</div><div class="field-helper">campaign_status / claim_safety_status / final_export_status / blocker_status / scenario_demo_status / provider_safety_status / mvp_readiness_status</div></div>`;
+        }
+
+        function renderProjectWorkspaceMvpConsolidationActionsBlockersPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMvpConsolidationSnapshot(workspace); if (!pack.has_workspace_mvp_consolidation_pack) return '';
+            const actions = pack.primary_operator_action_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.action_label || card.primary_action_id || t('none'))}</strong><div class="field-helper">primary_action_id: ${escapeHTML(card.primary_action_id || '')} / action_type: ${escapeHTML(card.action_type || '')} / action_status: ${escapeHTML(card.action_status || '')}</div><div>${escapeHTML(card.why_it_matters || '')}</div><div class="field-helper">${escapeHTML(card.recommended_operator_action || '')}</div><div class="field-helper">expected_workspace_destination: ${escapeHTML(card.expected_workspace_destination || '')}</div><div class="field-helper">creates_real_task: ${escapeHTML(projectWorkspaceMvpConsolidationDisabledText(card.creates_real_task))} / real_execution_allowed: ${escapeHTML(projectWorkspaceMvpConsolidationDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            const blockers = pack.top_blocker_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.blocker_label || card.top_blocker_id || t('none'))}</strong><div class="field-helper">top_blocker_id: ${escapeHTML(card.top_blocker_id || '')} / blocker_type: ${escapeHTML(card.blocker_type || '')} / severity: ${escapeHTML(card.severity || '')}</div><div class="field-helper">source_pack_refs: ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div class="field-helper">source_stage_refs: ${escapeHTML((card.source_stage_refs || []).join(', ') || t('none'))}</div><div class="field-helper">blocker_status: ${escapeHTML(card.blocker_status || '')} / blocks_preview_export: ${escapeHTML(String(card.blocks_preview_export))} / blocks_mvp_demo: ${escapeHTML(String(card.blocks_mvp_demo))}</div><div>${escapeHTML(card.recommended_resolution_preview || '')}</div><div class="field-helper">operator_review_required: ${escapeHTML(String(card.operator_review_required))} / real_task_creation_allowed: ${escapeHTML(projectWorkspaceMvpConsolidationDisabledText(card.real_task_creation_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspaceMvpConsolidationDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceMvpConsolidationActionsBlockersPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('mvpConsolidationActionsBlockersTitle'))}</div><div class="field-helper">${escapeHTML(t('mvpConsolidationActionNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePrimaryOperatorActionCards()">${escapeHTML(t('mvpConsolidationCopyActions'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceTopBlockerCards()">${escapeHTML(t('mvpConsolidationCopyBlockers'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('mvpConsolidationActionsTitle'))}</strong><div class="graph-os-compact-grid">${actions || `<div class="empty-state">${escapeHTML(t('mvpConsolidationNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpConsolidationBlockersTitle'))}</strong><div class="graph-os-compact-grid">${blockers || `<div class="empty-state">${escapeHTML(t('mvpConsolidationNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('mvpConsolidationBlockerNote'))}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceMvpConsolidationExportScenarioPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMvpConsolidationSnapshot(workspace); if (!pack.has_workspace_mvp_consolidation_pack) return '';
+            const exports = pack.featured_export_packet_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.featured_export_id || t('none'))}</strong><div class="field-helper">delivery_surface: ${escapeHTML(card.delivery_surface || '')} / platform_label: ${escapeHTML(card.platform_label || '')} / packet_status: ${escapeHTML(card.packet_status || '')}</div><div class="field-helper">source_export_refs: ${escapeHTML((card.source_export_refs || []).join(', ') || t('none'))}</div><div class="field-helper">included_copy_count: ${escapeHTML(String(card.included_copy_count ?? 0))} / included_video_prompt_count: ${escapeHTML(String(card.included_video_prompt_count ?? 0))} / included_claim_trace_count: ${escapeHTML(String(card.included_claim_trace_count ?? 0))} / blocked_appendix_count: ${escapeHTML(String(card.blocked_appendix_count ?? 0))}</div><div class="field-helper">ready_for_preview_export: ${escapeHTML(String(card.ready_for_preview_export))} / real_file_write_allowed: ${escapeHTML(projectWorkspaceMvpConsolidationDisabledText(card.real_file_write_allowed))} / real_export_allowed: ${escapeHTML(projectWorkspaceMvpConsolidationDisabledText(card.real_export_allowed))} / real_platform_upload_allowed: ${escapeHTML(projectWorkspaceMvpConsolidationDisabledText(card.real_platform_upload_allowed))}</div></div>`).join('');
+            const scenarios = pack.featured_scenario_shortcut_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.scenario_id || card.scenario_shortcut_id || t('none'))}</strong><div class="field-helper">scenario_shortcut_id: ${escapeHTML(card.scenario_shortcut_id || '')} / scenario_group: ${escapeHTML(card.scenario_group || '')} / expected_status: ${escapeHTML(card.expected_status || '')}</div><div>${escapeHTML(card.scenario_label || '')}</div><div class="field-helper">expected_user_question: ${escapeHTML(card.expected_user_question || '')}</div><div class="field-helper">expected_workspace_panels: ${escapeHTML((card.expected_workspace_panels || []).join(', ') || t('none'))}</div><div class="field-helper">expected_blockers: ${escapeHTML((card.expected_blockers || []).join(', ') || t('none'))}</div><div class="field-helper">demo_run_allowed: ${escapeHTML(projectWorkspaceMvpConsolidationDisabledText(card.demo_run_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspaceMvpConsolidationDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceMvpConsolidationExportScenarioPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('mvpConsolidationExportScenarioTitle'))}</div><div class="field-helper">${escapeHTML(t('mvpConsolidationExportNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFeaturedExportPacketCards()">${escapeHTML(t('mvpConsolidationCopyExport'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFeaturedScenarioShortcutCards()">${escapeHTML(t('mvpConsolidationCopyScenarios'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('mvpConsolidationExportTitle'))}</strong><div class="graph-os-compact-grid">${exports || `<div class="empty-state">${escapeHTML(t('mvpConsolidationNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpConsolidationScenarioTitle'))}</strong><div class="graph-os-compact-grid">${scenarios || `<div class="empty-state">${escapeHTML(t('mvpConsolidationNoData'))}</div>`}</div><div class="field-helper">strong_evidence_ready_preview / weak_evidence_needs_review / unsupported_claim_blocked / video_prompt_visual_claim_risk / delivery_blocked_by_missing_quote / provider_safety_blocked / final_export_ready_preview_only / operator_handoff_required</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceMvpConsolidationPrioritySimplificationPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMvpConsolidationSnapshot(workspace); if (!pack.has_workspace_mvp_consolidation_pack) return '';
+            const priority = pack.module_priority_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.module_label || card.module_priority_id || t('none'))}</strong><div class="field-helper">module_group: ${escapeHTML(card.module_group || '')} / module_priority_id: ${escapeHTML(card.module_priority_id || '')}</div><div class="field-helper">source_pack_refs: ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div>${escapeHTML(card.recommended_operator_action || '')}</div><div class="field-helper">real_execution_allowed: ${escapeHTML(projectWorkspaceMvpConsolidationDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            const simplification = pack.workspace_simplification_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.recommendation || card.simplification_id || t('none'))}</strong><div class="field-helper">simplification_id: ${escapeHTML(card.simplification_id || '')}</div><div class="field-helper">frontend_change_performed: ${escapeHTML(projectWorkspaceMvpConsolidationDisabledText(card.frontend_change_performed))}</div><div>${escapeHTML(card.risk_note || t('mvpConsolidationSimplificationNote'))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceMvpConsolidationPrioritySimplificationPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('mvpConsolidationPrioritySimplificationTitle'))}</div><div class="field-helper">${escapeHTML(t('mvpConsolidationPriorityNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceModulePriorityCards()">${escapeHTML(t('mvpConsolidationCopyPriority'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSimplificationCards()">${escapeHTML(t('mvpConsolidationCopySimplification'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('mvpConsolidationPriorityTitle'))}</strong><div class="graph-os-compact-grid">${priority || `<div class="empty-state">${escapeHTML(t('mvpConsolidationNoData'))}</div>`}</div><div class="field-helper">primary / secondary / diagnostic / safety</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpConsolidationSimplificationTitle'))}</strong><div class="graph-os-compact-grid">${simplification || `<div class="empty-state">${escapeHTML(t('mvpConsolidationNoData'))}</div>`}</div><div class="field-helper">show final status first / surface top blockers / group diagnostic panels / keep safety disabled banner visible / put scenario presets near demo entry / keep final export and campaign dossier prominent</div><div class="field-helper">${escapeHTML(t('mvpConsolidationSimplificationNote'))}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceMvpConsolidationSafetyQualityPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMvpConsolidationSnapshot(workspace); if (!pack.has_workspace_mvp_consolidation_pack) return '';
+            const safety = projectWorkspaceMvpConsolidationJsonText(pack.safety_boundaries);
+            return `<div class="section-block" id="projectWorkspaceMvpConsolidationSafetyQualityPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('mvpConsolidationSafetyQualityTitle'))}</div><div class="field-helper">${escapeHTML(t('mvpConsolidationSafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDisabledCapabilityBanner()">${escapeHTML(t('mvpConsolidationCopyBanner'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('mvpConsolidationBannerTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceMvpConsolidationJsonText(pack.disabled_capability_banner) || t('mvpConsolidationNoData'))}</pre><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpConsolidationReadinessTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceMvpConsolidationJsonText(pack.mvp_readiness_snapshot) || t('mvpConsolidationNoData'))}</pre><div class="field-helper">${escapeHTML(t('mvpConsolidationReadinessNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpConsolidationQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceMvpConsolidationJsonText(pack.mvp_consolidation_quality_checks) || t('mvpConsolidationNoData'))}</pre><div class="field-helper">${escapeHTML(t('mvpConsolidationQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpConsolidationAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceMvpConsolidationJsonText(pack.audit_preview) || t('mvpConsolidationNoData'))}</pre><div class="field-helper">${escapeHTML(t('mvpConsolidationAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('mvpConsolidationSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">${escapeHTML(t('mvpConsolidationSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -29512,6 +29793,8 @@
                 '',
                 projectWorkspaceExportFinalSystemHealthMarkdown(workspace),
                 '',
+                projectWorkspaceExportMvpConsolidationMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -29641,6 +29924,7 @@
                 workspace_product_navigation_pack: projectWorkspaceExportProductNavigationSnapshot(workspace),
                 workspace_scenario_presets_pack: projectWorkspaceExportScenarioPresetsSnapshot(workspace),
                 workspace_final_system_health_pack: projectWorkspaceExportFinalSystemHealthSnapshot(workspace),
+                workspace_mvp_consolidation_pack: projectWorkspaceExportMvpConsolidationSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -42277,6 +42561,11 @@
                     ${renderProjectWorkspaceFinalSystemHealthCopyI18nPanel(workspace)}
                     ${renderProjectWorkspaceFinalSystemHealthDisabledWorkflowScenarioPanel(workspace)}
                     ${renderProjectWorkspaceFinalSystemHealthReadinessQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceMvpConsolidationSummaryHomePanel(workspace)}
+                    ${renderProjectWorkspaceMvpConsolidationActionsBlockersPanel(workspace)}
+                    ${renderProjectWorkspaceMvpConsolidationExportScenarioPanel(workspace)}
+                    ${renderProjectWorkspaceMvpConsolidationPrioritySimplificationPanel(workspace)}
+                    ${renderProjectWorkspaceMvpConsolidationSafetyQualityPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
