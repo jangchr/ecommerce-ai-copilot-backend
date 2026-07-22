@@ -16002,6 +16002,228 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_scenario_presets_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace scenario presets bundle",
+            "project_workspace_scenario_presets_marker",
+            "PROJECT_WORKSPACE_SCENARIO_PRESETS_MARKER",
+            "latestProjectWorkspaceScenarioPresetsPack",
+            "workspace_scenario_presets_pack",
+            "projectWorkspaceScenarioPresetsPackFromWorkspace",
+            "projectWorkspaceExportScenarioPresetsSnapshot",
+            "projectWorkspaceExportScenarioPresetsMarkdown",
+            "renderProjectWorkspaceScenarioPresetsSummaryPanel",
+            "renderProjectWorkspaceScenarioPresetsScenarioInputPanel",
+            "renderProjectWorkspaceScenarioPresetsSignalCoveragePanel",
+            "renderProjectWorkspaceScenarioPresetsWalkthroughRegressionPanel",
+            "renderProjectWorkspaceScenarioPresetsCapabilityQualityAuditSafetyPanel",
+            "copyProjectWorkspaceScenarioPresetSummary",
+            "copyProjectWorkspaceDemoScenarioCards",
+            "copyProjectWorkspaceScenarioInputPreviewCards",
+            "copyProjectWorkspaceScenarioExpectedSignalCards",
+            "copyProjectWorkspaceScenarioPackCoverageMap",
+            "copyProjectWorkspaceScenarioOperatorWalkthroughCards",
+            "copyProjectWorkspaceScenarioRegressionAssertions",
+            "copyProjectWorkspaceScenarioDisabledCapabilityChecks",
+            "copyProjectWorkspaceScenarioQualityChecks",
+            "copyProjectWorkspaceFullScenarioPresetsPack",
+            "workspace_scenario_presets_pack: projectWorkspaceExportScenarioPresetsSnapshot(workspace)",
+            "Scenario Presets / Demo Runs",
+            "Scenario Preset Summary",
+            "Demo Scenario Cards",
+            "Scenario Input Preview Cards",
+            "Scenario Expected Signal Cards",
+            "Scenario Pack Coverage Map",
+            "Scenario Operator Walkthrough Cards",
+            "Scenario Regression Assertion Cards",
+            "Scenario Disabled Capability Checks",
+            "Scenario Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "scenario_preset_summary",
+            "demo_scenario_cards",
+            "scenario_input_preview_cards",
+            "scenario_expected_signal_cards",
+            "scenario_pack_coverage_map",
+            "scenario_operator_walkthrough_cards",
+            "scenario_regression_assertion_cards",
+            "scenario_disabled_capability_checks",
+            "scenario_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+            "card.scenario_id",
+            "card.scenario_label",
+            "card.scenario_group",
+            "card.scenario_purpose",
+            "card.source_pack_refs",
+            "card.expected_user_question",
+            "card.expected_workspace_panels",
+            "card.expected_status",
+            "card.expected_blockers",
+            "card.recommended_operator_action",
+            "card.demo_run_allowed",
+            "card.real_execution_allowed",
+            "card.input_preview_id",
+            "card.input_type",
+            "card.input_label",
+            "card.input_summary",
+            "card.uses_real_external_data",
+            "card.uses_real_customer_data",
+            "card.real_scraping_allowed",
+            "card.llm_generation_allowed",
+            "card.signal_id",
+            "card.signal_type",
+            "card.expected_signal",
+            "card.source_stage_refs",
+            "card.expected_workspace_status",
+            "card.expected_operator_action",
+            "card.coverage_id",
+            "card.covered_pack_refs",
+            "card.covered_stage_refs",
+            "card.coverage_status",
+            "card.missing_pack_refs",
+            "card.expected_panel_refs",
+            "card.copy_export_preview_supported",
+            "card.real_export_allowed",
+            "card.walkthrough_steps",
+            "card.creates_real_operator_task",
+            "card.real_task_creation_allowed",
+            "card.assertion_id",
+            "card.assertion_type",
+            "card.expected_value",
+            "card.observed_value",
+            "card.assertion_status",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for scenario_id in [
+            "strong_evidence_ready_preview",
+            "weak_evidence_needs_review",
+            "unsupported_claim_blocked",
+            "video_prompt_visual_claim_risk",
+            "delivery_blocked_by_missing_quote",
+            "provider_safety_blocked",
+            "final_export_ready_preview_only",
+            "operator_handoff_required",
+        ]:
+            with self.subTest(scenario_id=scenario_id):
+                self.assertIn(scenario_id, html)
+        for coverage_text in [
+            "evidence / claim / delivery / QA / provider safety",
+            "product navigation / dossier / final export / claim risk / evidence quality / provider safety packs",
+            "select scenario / view expected user question / view expected panels / view blockers / view recommended operator action / view copy/export preview",
+            "pack exists / panel expected / scenario id present / disabled boundary remains false / no real run / no real export / no real provider",
+            "real LLM / provider / media / external scraping / database persistence / real_execution / real_policy_check / platform_upload / task_creation / real_export / file_write disabled",
+            "strong evidence / weak evidence / blocked claim / video prompt risk / delivery blocker / provider safety / final export / operator handoff coverage",
+        ]:
+            with self.subTest(coverage_text=coverage_text):
+                self.assertIn(coverage_text, html)
+        previous = html.index("renderProjectWorkspaceProductNavigationReadinessLimitQualityAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceScenarioPresetsSummaryPanel(workspace)")
+        scenario_input = html.index("renderProjectWorkspaceScenarioPresetsScenarioInputPanel(workspace)")
+        signal_coverage = html.index("renderProjectWorkspaceScenarioPresetsSignalCoveragePanel(workspace)")
+        walkthrough = html.index("renderProjectWorkspaceScenarioPresetsWalkthroughRegressionPanel(workspace)")
+        safety = html.index("renderProjectWorkspaceScenarioPresetsCapabilityQualityAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, scenario_input)
+        self.assertLess(scenario_input, signal_coverage)
+        self.assertLess(signal_coverage, walkthrough)
+        self.assertLess(walkthrough, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_scenario_presets_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "scenarioPresetsPackTitle",
+            "scenarioPresetsSummaryTitle",
+            "scenarioPresetsScenarioTitle",
+            "scenarioPresetsInputTitle",
+            "scenarioPresetsSignalTitle",
+            "scenarioPresetsCoverageTitle",
+            "scenarioPresetsWalkthroughTitle",
+            "scenarioPresetsRegressionTitle",
+            "scenarioPresetsDisabledTitle",
+            "scenarioPresetsQualityTitle",
+            "scenarioPresetsAuditTitle",
+            "scenarioPresetsSafetyTitle",
+            "scenarioPresetsCopySummary",
+            "scenarioPresetsCopyScenarios",
+            "scenarioPresetsCopyInputs",
+            "scenarioPresetsCopySignals",
+            "scenarioPresetsCopyCoverage",
+            "scenarioPresetsCopyWalkthrough",
+            "scenarioPresetsCopyRegression",
+            "scenarioPresetsCopyDisabled",
+            "scenarioPresetsCopyQuality",
+            "scenarioPresetsCopyFull",
+            "scenarioPresetsCopied",
+            "scenarioPresetsCopyFailed",
+            "scenarioPresetsCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace scenario presets bundle", script)
+            self.assertIn("project_workspace_scenario_presets_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceScenarioPresetsSummaryText"):
+            html.index("async function copyProjectWorkspaceScenarioPresetsText")
+        ]
+        for key in [
+            "scenarioPresetsPackTitle",
+            "scenarioPresetsSummaryTitle",
+            "scenarioPresetsScenarioTitle",
+            "scenarioPresetsInputTitle",
+            "scenarioPresetsSignalTitle",
+            "scenarioPresetsCoverageTitle",
+            "scenarioPresetsWalkthroughTitle",
+            "scenarioPresetsRegressionTitle",
+            "scenarioPresetsDisabledTitle",
+            "scenarioPresetsQualityTitle",
+            "scenarioPresetsAuditTitle",
+            "scenarioPresetsSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_SCENARIO_PRESETS_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic scenario preset preview",
+            "does not create a real demo run",
+            "does not call an LLM",
+            "does not connect to providers",
+            "does not use real external data",
+            "does not scrape reviews",
+            "does not write files",
+            "does not export",
+            "does not upload files",
+            "does not write databases",
+            "does not execute real operations",
+            "not a real demo run",
+            "not a real platform pass rate",
+            "not a real compliance conclusion",
+            "do not generate real reviews",
+            "do not use real customer data",
+            "Operator walkthrough is manual demo guidance only",
+            "does not create real tasks",
+            "run a real demo",
+            "Audit preview is display-only and does not write databases.",
+            "Real LLM, provider, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, and file write remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [

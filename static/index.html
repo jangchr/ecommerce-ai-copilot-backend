@@ -3646,6 +3646,7 @@
         let latestProjectWorkspaceFinalClaimSafeExportPacketPack = {};
         let latestProjectWorkspaceCampaignCreativeDossierPack = {};
         let latestProjectWorkspaceProductNavigationPack = {};
+        let latestProjectWorkspaceScenarioPresetsPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7098,6 +7099,62 @@
             productNavigationAuditNote: 'Audit preview is display-only and does not write databases.',
             productNavigationSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, and file write remain disabled.'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceScenarioPresetsMarker: 'Project Workspace scenario presets bundle',
+            scenarioPresetsPackTitle: 'Scenario Presets / Demo Runs',
+            scenarioPresetsPackHelper: 'Project Workspace scenario presets bundle. Deterministic scenario preset preview from existing workspace packs only. This is not a real demo run, not a real platform pass rate, and not a real compliance conclusion.',
+            scenarioPresetsSummaryTitle: 'Scenario Preset Summary',
+            scenarioPresetsScenarioInputTitle: 'Demo Scenario Cards / Input Preview',
+            scenarioPresetsScenarioTitle: 'Demo Scenario Cards',
+            scenarioPresetsInputTitle: 'Scenario Input Preview Cards',
+            scenarioPresetsSignalCoverageTitle: 'Expected Signals / Pack Coverage Map',
+            scenarioPresetsSignalTitle: 'Scenario Expected Signal Cards',
+            scenarioPresetsCoverageTitle: 'Scenario Pack Coverage Map',
+            scenarioPresetsWalkthroughRegressionTitle: 'Operator Walkthrough / Regression Assertions',
+            scenarioPresetsWalkthroughTitle: 'Scenario Operator Walkthrough Cards',
+            scenarioPresetsRegressionTitle: 'Scenario Regression Assertion Cards',
+            scenarioPresetsCapabilityQualityAuditSafetyTitle: 'Disabled Capability / Quality / Audit / Safety',
+            scenarioPresetsDisabledTitle: 'Scenario Disabled Capability Checks',
+            scenarioPresetsQualityTitle: 'Scenario Quality Checks',
+            scenarioPresetsAuditTitle: 'Audit Preview',
+            scenarioPresetsSafetyTitle: 'Safety Boundaries',
+            scenarioPresetsMode: 'Mode',
+            scenarioPresetsScenarioCount: 'Demo scenario count',
+            scenarioPresetsInputCount: 'Input preview count',
+            scenarioPresetsSignalCount: 'Expected signal count',
+            scenarioPresetsCoverageCount: 'Pack coverage count',
+            scenarioPresetsWalkthroughCount: 'Operator walkthrough count',
+            scenarioPresetsRegressionCount: 'Regression assertion count',
+            scenarioPresetsRecommendedAction: 'Recommended operator action',
+            scenarioPresetsDemoRunAllowed: 'Demo run allowed',
+            scenarioPresetsExecution: 'Real execution allowed',
+            scenarioPresetsLlmGeneration: 'LLM generation allowed',
+            scenarioPresetsRealExport: 'Real export allowed',
+            scenarioPresetsDisabled: 'disabled',
+            scenarioPresetsNoData: 'No scenario presets data is available.',
+            scenarioPresetsCopyNoData: 'No scenario presets content is available to copy.',
+            scenarioPresetsCopyFailed: 'Unable to copy scenario presets content.',
+            scenarioPresetsCopied: 'Scenario presets content copied.',
+            scenarioPresetsCopySummary: 'Copy scenario preset summary',
+            scenarioPresetsCopyScenarios: 'Copy demo scenario cards',
+            scenarioPresetsCopyInputs: 'Copy scenario input preview cards',
+            scenarioPresetsCopySignals: 'Copy scenario expected signal cards',
+            scenarioPresetsCopyCoverage: 'Copy scenario pack coverage map',
+            scenarioPresetsCopyWalkthrough: 'Copy scenario operator walkthrough cards',
+            scenarioPresetsCopyRegression: 'Copy scenario regression assertions',
+            scenarioPresetsCopyDisabled: 'Copy disabled capability checks',
+            scenarioPresetsCopyQuality: 'Copy scenario quality checks',
+            scenarioPresetsCopyFull: 'Copy full scenario presets pack',
+            scenarioPresetsPreviewNote: 'Deterministic scenario preset preview only. It does not create a real demo run, does not call an LLM, does not connect to providers, does not use real external data, does not scrape reviews, does not write files, does not export, does not upload files, does not write databases, and does not execute real operations.',
+            scenarioPresetsScenarioNote: 'Demo scenarios and input previews describe already-derived pack data only. They do not generate real reviews, do not use real customer data, do not fetch external data, and do not run real demo flows.',
+            scenarioPresetsCoverageNote: 'Expected signals cover evidence / claim / delivery / QA / provider safety. Pack coverage covers product navigation / dossier / final export / claim risk / evidence quality / provider safety packs.',
+            scenarioPresetsWalkthroughNote: 'Operator walkthrough is manual demo guidance only: select scenario, view expected user question, view expected panels, view blockers, view recommended operator action, and view copy/export preview. It does not create real tasks or run a real demo.',
+            scenarioPresetsRegressionNote: 'Regression assertions include pack exists, panel expected, scenario id present, disabled boundary remains false, no real run, no real export, and no real provider.',
+            scenarioPresetsQualityNote: 'strong evidence / weak evidence / blocked claim / video prompt risk / delivery blocker / provider safety / final export / operator handoff coverage',
+            scenarioPresetsAuditNote: 'Audit preview is display-only and does not write databases.',
+            scenarioPresetsReadinessNote: 'Scenario readiness is deterministic preview only. It is not a real demo run, not a real platform pass rate, and not a real compliance conclusion.',
+            scenarioPresetsSafetyNote: 'Real LLM, provider, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, and file write remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
             claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
@@ -7739,6 +7796,62 @@
             productNavigationQualityNote: 'pack availability / stage map / copy-export map / trace map / disabled capability boundary coverage',
             productNavigationAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
             productNavigationSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export \u548c file write \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceScenarioPresetsMarker: 'Project Workspace scenario presets bundle',
+            scenarioPresetsPackTitle: 'Scenario Presets / Demo Runs',
+            scenarioPresetsPackHelper: '\u67e5\u770b Project Workspace scenario presets bundle\u3002\u8fd9\u53ea\u662f\u57fa\u4e8e\u5df2\u6709 workspace packs \u7684 deterministic scenario preset preview\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e demo run\uff0c\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\uff0c\u4e5f\u4e0d\u662f\u771f\u5b9e\u5408\u89c4\u7ed3\u8bba\u3002',
+            scenarioPresetsSummaryTitle: 'Scenario Preset Summary',
+            scenarioPresetsScenarioInputTitle: 'Demo Scenario Cards / Input Preview',
+            scenarioPresetsScenarioTitle: 'Demo Scenario Cards',
+            scenarioPresetsInputTitle: 'Scenario Input Preview Cards',
+            scenarioPresetsSignalCoverageTitle: 'Expected Signals / Pack Coverage Map',
+            scenarioPresetsSignalTitle: 'Scenario Expected Signal Cards',
+            scenarioPresetsCoverageTitle: 'Scenario Pack Coverage Map',
+            scenarioPresetsWalkthroughRegressionTitle: 'Operator Walkthrough / Regression Assertions',
+            scenarioPresetsWalkthroughTitle: 'Scenario Operator Walkthrough Cards',
+            scenarioPresetsRegressionTitle: 'Scenario Regression Assertion Cards',
+            scenarioPresetsCapabilityQualityAuditSafetyTitle: 'Disabled Capability / Quality / Audit / Safety',
+            scenarioPresetsDisabledTitle: 'Scenario Disabled Capability Checks',
+            scenarioPresetsQualityTitle: 'Scenario Quality Checks',
+            scenarioPresetsAuditTitle: 'Audit Preview',
+            scenarioPresetsSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            scenarioPresetsMode: '\u6a21\u5f0f',
+            scenarioPresetsScenarioCount: 'Demo scenario \u6570\u91cf',
+            scenarioPresetsInputCount: 'Input preview \u6570\u91cf',
+            scenarioPresetsSignalCount: 'Expected signal \u6570\u91cf',
+            scenarioPresetsCoverageCount: 'Pack coverage \u6570\u91cf',
+            scenarioPresetsWalkthroughCount: 'Operator walkthrough \u6570\u91cf',
+            scenarioPresetsRegressionCount: 'Regression assertion \u6570\u91cf',
+            scenarioPresetsRecommendedAction: '\u63a8\u8350 operator action',
+            scenarioPresetsDemoRunAllowed: '\u5141\u8bb8\u771f\u5b9e demo run',
+            scenarioPresetsExecution: '\u5141\u8bb8\u771f\u5b9e execution',
+            scenarioPresetsLlmGeneration: '\u5141\u8bb8 LLM generation',
+            scenarioPresetsRealExport: '\u5141\u8bb8\u771f\u5b9e export',
+            scenarioPresetsDisabled: '\u5df2\u7981\u7528',
+            scenarioPresetsNoData: '\u6682\u65e0 scenario presets \u6570\u636e\u3002',
+            scenarioPresetsCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 scenario presets \u5185\u5bb9\u3002',
+            scenarioPresetsCopyFailed: '\u65e0\u6cd5\u590d\u5236 scenario presets \u5185\u5bb9\u3002',
+            scenarioPresetsCopied: 'Scenario presets \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            scenarioPresetsCopySummary: '\u590d\u5236 scenario preset summary',
+            scenarioPresetsCopyScenarios: '\u590d\u5236 demo scenario cards',
+            scenarioPresetsCopyInputs: '\u590d\u5236 scenario input preview cards',
+            scenarioPresetsCopySignals: '\u590d\u5236 scenario expected signal cards',
+            scenarioPresetsCopyCoverage: '\u590d\u5236 scenario pack coverage map',
+            scenarioPresetsCopyWalkthrough: '\u590d\u5236 scenario operator walkthrough cards',
+            scenarioPresetsCopyRegression: '\u590d\u5236 scenario regression assertions',
+            scenarioPresetsCopyDisabled: '\u590d\u5236 disabled capability checks',
+            scenarioPresetsCopyQuality: '\u590d\u5236 scenario quality checks',
+            scenarioPresetsCopyFull: '\u590d\u5236\u5b8c\u6574 scenario presets pack',
+            scenarioPresetsPreviewNote: '\u4ec5\u4e3a deterministic scenario preset preview\u3002\u4e0d\u521b\u5efa\u771f\u5b9e demo run\uff0c\u4e0d\u8c03\u7528 LLM\uff0c\u4e0d\u63a5 provider\uff0c\u4e0d\u4f7f\u7528\u771f\u5b9e\u5916\u90e8\u6570\u636e\uff0c\u4e0d\u6293\u53d6\u8bc4\u8bba\uff0c\u4e0d\u5199\u6587\u4ef6\uff0c\u4e0d\u771f\u5b9e export\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u6267\u884c\u771f\u5b9e\u64cd\u4f5c\u3002',
+            scenarioPresetsScenarioNote: 'Demo scenarios \u548c input previews \u53ea\u63cf\u8ff0\u5df2\u6d3e\u751f\u7684 pack \u6570\u636e\u3002\u4e0d\u751f\u6210\u771f\u5b9e\u8bc4\u8bba\uff0c\u4e0d\u4f7f\u7528\u771f\u5b9e\u5ba2\u6237\u6570\u636e\uff0c\u4e0d\u83b7\u53d6\u5916\u90e8\u6570\u636e\uff0c\u4e0d\u8fd0\u884c\u771f\u5b9e demo flow\u3002',
+            scenarioPresetsCoverageNote: 'Expected signals \u8986\u76d6 evidence / claim / delivery / QA / provider safety\u3002Pack coverage \u8986\u76d6 product navigation / dossier / final export / claim risk / evidence quality / provider safety packs\u3002',
+            scenarioPresetsWalkthroughNote: 'Operator walkthrough \u53ea\u662f\u4eba\u5de5\u6f14\u793a\u6b65\u9aa4\uff1a\u9009 scenario\u3001\u770b expected user question\u3001\u770b expected panels\u3001\u770b blockers\u3001\u770b recommended operator action\u3001\u770b copy/export preview\u3002\u4e0d\u521b\u5efa\u771f\u5b9e task\uff0c\u4e0d\u8fd0\u884c\u771f\u5b9e demo\u3002',
+            scenarioPresetsRegressionNote: 'Regression assertions \u5305\u542b pack exists\u3001panel expected\u3001scenario id present\u3001disabled boundary remains false\u3001no real run\u3001no real export \u548c no real provider\u3002',
+            scenarioPresetsQualityNote: 'strong evidence / weak evidence / blocked claim / video prompt risk / delivery blocker / provider safety / final export / operator handoff coverage',
+            scenarioPresetsAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff0c\u4e0d\u5199\u6570\u636e\u5e93\u3002',
+            scenarioPresetsReadinessNote: 'Scenario readiness \u53ea\u662f deterministic preview\u3002\u8fd9\u4e0d\u662f\u771f\u5b9e demo run\uff0c\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\uff0c\u4e5f\u4e0d\u662f\u771f\u5b9e\u5408\u89c4\u7ed3\u8bba\u3002',
+            scenarioPresetsSafetyNote: 'Real LLM\u3001provider\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export \u548c file write \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -11239,6 +11352,7 @@
                 latestProjectWorkspaceFinalClaimSafeExportPacketPack = latestProjectCreativeDecisionPack.final_claim_safe_export_packet_pack || {};
                 latestProjectWorkspaceCampaignCreativeDossierPack = latestProjectCreativeDecisionPack.campaign_creative_dossier_pack || {};
                 latestProjectWorkspaceProductNavigationPack = latestProjectCreativeDecisionPack.workspace_product_navigation_pack || {};
+                latestProjectWorkspaceScenarioPresetsPack = latestProjectCreativeDecisionPack.workspace_scenario_presets_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -17121,6 +17235,7 @@
         const PROJECT_WORKSPACE_FINAL_CLAIM_SAFE_EXPORT_PACKET_MARKER = 'Project Workspace final claim-safe export packet bundle';
         const PROJECT_WORKSPACE_CAMPAIGN_CREATIVE_DOSSIER_MARKER = 'Project Workspace campaign creative dossier bundle';
         const PROJECT_WORKSPACE_PRODUCT_NAVIGATION_MARKER = 'Project Workspace product navigation bundle';
+        const PROJECT_WORKSPACE_SCENARIO_PRESETS_MARKER = 'Project Workspace scenario presets bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -24096,6 +24211,129 @@
         function copyProjectWorkspaceProductReadinessScorecard() { return copyProjectWorkspaceProductNavigationText('scorecard'); }
         function copyProjectWorkspaceKnownLimitationsCards() { return copyProjectWorkspaceProductNavigationText('limitations'); }
         function copyProjectWorkspaceFullProductNavigationPack() { return copyProjectWorkspaceProductNavigationText('full'); }
+
+        function projectWorkspaceScenarioPresetsPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceScenarioPresetsPack && Object.keys(latestProjectWorkspaceScenarioPresetsPack).length) return latestProjectWorkspaceScenarioPresetsPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_scenario_presets_pack || {};
+        }
+
+        function projectWorkspaceScenarioPresetsHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspaceScenarioPresetsJsonText(value) {
+            if (!projectWorkspaceScenarioPresetsHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceScenarioPresetsDisabledText(value) {
+            return value === false || value == null ? t('scenarioPresetsDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportScenarioPresetsSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceScenarioPresetsPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_SCENARIO_PRESETS_MARKER,
+                has_workspace_scenario_presets_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                scenario_preset_summary: pack.scenario_preset_summary || {},
+                demo_scenario_cards: Array.isArray(pack.demo_scenario_cards) ? pack.demo_scenario_cards : [],
+                scenario_input_preview_cards: Array.isArray(pack.scenario_input_preview_cards) ? pack.scenario_input_preview_cards : [],
+                scenario_expected_signal_cards: Array.isArray(pack.scenario_expected_signal_cards) ? pack.scenario_expected_signal_cards : [],
+                scenario_pack_coverage_map: Array.isArray(pack.scenario_pack_coverage_map) ? pack.scenario_pack_coverage_map : [],
+                scenario_operator_walkthrough_cards: Array.isArray(pack.scenario_operator_walkthrough_cards) ? pack.scenario_operator_walkthrough_cards : [],
+                scenario_regression_assertion_cards: Array.isArray(pack.scenario_regression_assertion_cards) ? pack.scenario_regression_assertion_cards : [],
+                scenario_disabled_capability_checks: pack.scenario_disabled_capability_checks || {},
+                scenario_quality_checks: pack.scenario_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceScenarioPresetsSummaryText(pack = projectWorkspaceExportScenarioPresetsSnapshot()) {
+            if (!pack.has_workspace_scenario_presets_pack) return '';
+            const summary = pack.scenario_preset_summary || {};
+            return [
+                t('scenarioPresetsSummaryTitle'),
+                `${t('scenarioPresetsMode')}: ${summary.mode || t('none')}`,
+                `${t('scenarioPresetsScenarioCount')}: ${summary.scenario_count ?? pack.demo_scenario_cards.length}`,
+                `${t('scenarioPresetsInputCount')}: ${summary.input_preview_count ?? pack.scenario_input_preview_cards.length}`,
+                `${t('scenarioPresetsSignalCount')}: ${summary.expected_signal_count ?? pack.scenario_expected_signal_cards.length}`,
+                `${t('scenarioPresetsCoverageCount')}: ${summary.pack_coverage_count ?? pack.scenario_pack_coverage_map.length}`,
+                `${t('scenarioPresetsWalkthroughCount')}: ${summary.operator_walkthrough_count ?? pack.scenario_operator_walkthrough_cards.length}`,
+                `${t('scenarioPresetsRegressionCount')}: ${summary.regression_assertion_count ?? pack.scenario_regression_assertion_cards.length}`,
+                `${t('scenarioPresetsRecommendedAction')}: ${summary.recommended_operator_action || t('scenarioPresetsPreviewNote')}`,
+                `${t('scenarioPresetsDemoRunAllowed')}: ${projectWorkspaceScenarioPresetsDisabledText(summary.demo_run_allowed)}`,
+                `${t('scenarioPresetsExecution')}: ${projectWorkspaceScenarioPresetsDisabledText(summary.real_execution_allowed)}`,
+                `${t('scenarioPresetsLlmGeneration')}: ${projectWorkspaceScenarioPresetsDisabledText(summary.llm_generation_allowed)}`,
+                `${t('scenarioPresetsRealExport')}: ${projectWorkspaceScenarioPresetsDisabledText(summary.real_export_allowed)}`,
+                t('scenarioPresetsPreviewNote'),
+                t('scenarioPresetsReadinessNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceScenarioPresetsSectionText(titleKey, value) {
+            const body = projectWorkspaceScenarioPresetsJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportScenarioPresetsMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportScenarioPresetsSnapshot(workspace);
+            if (!pack.has_workspace_scenario_presets_pack) return '';
+            return [
+                `## ${t('scenarioPresetsPackTitle')}`,
+                `## ${t('scenarioPresetsSummaryTitle')}`,
+                projectWorkspaceScenarioPresetsSummaryText(pack), '',
+                projectWorkspaceScenarioPresetsSectionText('scenarioPresetsScenarioTitle', pack.demo_scenario_cards), '',
+                projectWorkspaceScenarioPresetsSectionText('scenarioPresetsInputTitle', pack.scenario_input_preview_cards), '',
+                projectWorkspaceScenarioPresetsSectionText('scenarioPresetsSignalTitle', pack.scenario_expected_signal_cards), '',
+                projectWorkspaceScenarioPresetsSectionText('scenarioPresetsCoverageTitle', pack.scenario_pack_coverage_map), '',
+                projectWorkspaceScenarioPresetsSectionText('scenarioPresetsWalkthroughTitle', pack.scenario_operator_walkthrough_cards), '',
+                projectWorkspaceScenarioPresetsSectionText('scenarioPresetsRegressionTitle', pack.scenario_regression_assertion_cards), '',
+                projectWorkspaceScenarioPresetsSectionText('scenarioPresetsDisabledTitle', pack.scenario_disabled_capability_checks), '',
+                projectWorkspaceScenarioPresetsSectionText('scenarioPresetsQualityTitle', pack.scenario_quality_checks), '',
+                projectWorkspaceScenarioPresetsSectionText('scenarioPresetsAuditTitle', pack.audit_preview), '',
+                projectWorkspaceScenarioPresetsSectionText('scenarioPresetsSafetyTitle', pack.safety_boundaries),
+                t('scenarioPresetsScenarioNote'),
+                t('scenarioPresetsCoverageNote'),
+                t('scenarioPresetsWalkthroughNote'),
+                t('scenarioPresetsRegressionNote'),
+                t('scenarioPresetsSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceScenarioPresetsText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceScenarioPresetsStatus');
+            const pack = projectWorkspaceExportScenarioPresetsSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceScenarioPresetsSummaryText(pack)
+                : kind === 'scenarios' ? projectWorkspaceScenarioPresetsSectionText('scenarioPresetsScenarioTitle', pack.demo_scenario_cards)
+                : kind === 'inputs' ? projectWorkspaceScenarioPresetsSectionText('scenarioPresetsInputTitle', pack.scenario_input_preview_cards)
+                : kind === 'signals' ? projectWorkspaceScenarioPresetsSectionText('scenarioPresetsSignalTitle', pack.scenario_expected_signal_cards)
+                : kind === 'coverage' ? projectWorkspaceScenarioPresetsSectionText('scenarioPresetsCoverageTitle', pack.scenario_pack_coverage_map)
+                : kind === 'walkthrough' ? projectWorkspaceScenarioPresetsSectionText('scenarioPresetsWalkthroughTitle', pack.scenario_operator_walkthrough_cards)
+                : kind === 'regression' ? projectWorkspaceScenarioPresetsSectionText('scenarioPresetsRegressionTitle', pack.scenario_regression_assertion_cards)
+                : kind === 'disabled' ? projectWorkspaceScenarioPresetsSectionText('scenarioPresetsDisabledTitle', pack.scenario_disabled_capability_checks)
+                : kind === 'quality' ? projectWorkspaceScenarioPresetsSectionText('scenarioPresetsQualityTitle', pack.scenario_quality_checks)
+                : projectWorkspaceExportScenarioPresetsMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('scenarioPresetsCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('scenarioPresetsCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('scenarioPresetsCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('scenarioPresetsCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceScenarioPresetSummary() { return copyProjectWorkspaceScenarioPresetsText('summary'); }
+        function copyProjectWorkspaceDemoScenarioCards() { return copyProjectWorkspaceScenarioPresetsText('scenarios'); }
+        function copyProjectWorkspaceScenarioInputPreviewCards() { return copyProjectWorkspaceScenarioPresetsText('inputs'); }
+        function copyProjectWorkspaceScenarioExpectedSignalCards() { return copyProjectWorkspaceScenarioPresetsText('signals'); }
+        function copyProjectWorkspaceScenarioPackCoverageMap() { return copyProjectWorkspaceScenarioPresetsText('coverage'); }
+        function copyProjectWorkspaceScenarioOperatorWalkthroughCards() { return copyProjectWorkspaceScenarioPresetsText('walkthrough'); }
+        function copyProjectWorkspaceScenarioRegressionAssertions() { return copyProjectWorkspaceScenarioPresetsText('regression'); }
+        function copyProjectWorkspaceScenarioDisabledCapabilityChecks() { return copyProjectWorkspaceScenarioPresetsText('disabled'); }
+        function copyProjectWorkspaceScenarioQualityChecks() { return copyProjectWorkspaceScenarioPresetsText('quality'); }
+        function copyProjectWorkspaceFullScenarioPresetsPack() { return copyProjectWorkspaceScenarioPresetsText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -28502,6 +28740,39 @@
             return `<div class="section-block" id="projectWorkspaceProductNavigationReadinessLimitQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('productNavigationReadinessLimitQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('productNavigationReadinessNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProductReadinessScorecard()">${escapeHTML(t('productNavigationCopyScorecard'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceKnownLimitationsCards()">${escapeHTML(t('productNavigationCopyLimitations'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('productNavigationScorecardTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProductNavigationJsonText(pack.product_readiness_scorecard) || t('productNavigationNoData'))}</pre><div class="field-helper">${escapeHTML(t('productNavigationReadinessNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('productNavigationLimitationsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProductNavigationJsonText(pack.known_limitations_cards) || t('productNavigationNoData'))}</pre><div class="field-helper">${escapeHTML(t('productNavigationLimitationsNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('productNavigationQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProductNavigationJsonText(pack.navigation_quality_checks) || t('productNavigationNoData'))}</pre><div class="field-helper">${escapeHTML(t('productNavigationQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('productNavigationAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceProductNavigationJsonText(pack.audit_preview) || t('productNavigationNoData'))}</pre><div class="field-helper">${escapeHTML(t('productNavigationAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('productNavigationSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('productNavigationSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceScenarioPresetsSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportScenarioPresetsSnapshot(workspace); if (!pack.has_workspace_scenario_presets_pack) return '';
+            const summary = pack.scenario_preset_summary || {};
+            return `<div class="section-block" id="projectWorkspaceScenarioPresetsSummaryPanel" data-scenario-presets-marker="${PROJECT_WORKSPACE_SCENARIO_PRESETS_MARKER}" data-marker="project_workspace_scenario_presets_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('scenarioPresetsPackTitle'))}</div><div class="field-helper">${escapeHTML(t('scenarioPresetsPackHelper'))}</div></div><button class="btn-primary" type="button" onclick="copyProjectWorkspaceFullScenarioPresetsPack()">${escapeHTML(t('scenarioPresetsCopyFull'))}</button></div><div class="metric-strip">${metricPill(t('scenarioPresetsMode'), summary.mode || t('none'))}${metricPill(t('scenarioPresetsScenarioCount'), String(summary.scenario_count ?? pack.demo_scenario_cards.length))}${metricPill(t('scenarioPresetsInputCount'), String(summary.input_preview_count ?? pack.scenario_input_preview_cards.length))}${metricPill(t('scenarioPresetsSignalCount'), String(summary.expected_signal_count ?? pack.scenario_expected_signal_cards.length))}${metricPill(t('scenarioPresetsCoverageCount'), String(summary.pack_coverage_count ?? pack.scenario_pack_coverage_map.length))}${metricPill(t('scenarioPresetsWalkthroughCount'), String(summary.operator_walkthrough_count ?? pack.scenario_operator_walkthrough_cards.length))}${metricPill(t('scenarioPresetsRegressionCount'), String(summary.regression_assertion_count ?? pack.scenario_regression_assertion_cards.length))}${metricPill(t('scenarioPresetsDemoRunAllowed'), projectWorkspaceScenarioPresetsDisabledText(summary.demo_run_allowed))}${metricPill(t('scenarioPresetsExecution'), projectWorkspaceScenarioPresetsDisabledText(summary.real_execution_allowed))}${metricPill(t('scenarioPresetsLlmGeneration'), projectWorkspaceScenarioPresetsDisabledText(summary.llm_generation_allowed))}${metricPill(t('scenarioPresetsRealExport'), projectWorkspaceScenarioPresetsDisabledText(summary.real_export_allowed))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceScenarioPresetsSummaryText(pack) || t('scenarioPresetsNoData'))}</pre><div class="field-helper">${escapeHTML(t('scenarioPresetsPreviewNote'))}</div><div class="field-helper">${escapeHTML(t('scenarioPresetsReadinessNote'))}</div><div class="quick-use-copy-status" id="projectWorkspaceScenarioPresetsStatus"></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceScenarioPresetSummary()">${escapeHTML(t('scenarioPresetsCopySummary'))}</button></div>`;
+        }
+
+        function renderProjectWorkspaceScenarioPresetsScenarioInputPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportScenarioPresetsSnapshot(workspace); if (!pack.has_workspace_scenario_presets_pack) return '';
+            const scenarios = (pack.demo_scenario_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.scenario_id || 'scenario_id')}</strong><div><strong>scenario_label:</strong> ${escapeHTML(card.scenario_label || t('none'))}</div><div><strong>scenario_group:</strong> ${escapeHTML(card.scenario_group || t('none'))}</div><div><strong>scenario_purpose:</strong> ${escapeHTML(card.scenario_purpose || t('none'))}</div><div><strong>source_pack_refs:</strong> ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div><strong>expected_user_question:</strong> ${escapeHTML(card.expected_user_question || t('none'))}</div><div><strong>expected_workspace_panels:</strong> ${escapeHTML((card.expected_workspace_panels || []).join(', ') || t('none'))}</div><div><strong>expected_status:</strong> ${escapeHTML(card.expected_status || t('none'))}</div><div><strong>expected_blockers:</strong> ${escapeHTML((card.expected_blockers || []).join(', ') || t('none'))}</div><div><strong>recommended_operator_action:</strong> ${escapeHTML(card.recommended_operator_action || t('none'))}</div><div><strong>demo_run_allowed:</strong> ${escapeHTML(projectWorkspaceScenarioPresetsDisabledText(card.demo_run_allowed))}</div><div><strong>real_execution_allowed:</strong> ${escapeHTML(projectWorkspaceScenarioPresetsDisabledText(card.real_execution_allowed))}</div><div><strong>risk_note:</strong> ${escapeHTML(card.risk_note || t('scenarioPresetsScenarioNote'))}</div></div>`).join('');
+            const inputs = (pack.scenario_input_preview_cards || []).slice(0, 12).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.input_preview_id || 'input_preview_id')}</strong><div><strong>scenario_id:</strong> ${escapeHTML(card.scenario_id || t('none'))}</div><div><strong>input_type:</strong> ${escapeHTML(card.input_type || t('none'))}</div><div><strong>input_label:</strong> ${escapeHTML(card.input_label || t('none'))}</div><div><strong>input_summary:</strong> ${escapeHTML(card.input_summary || t('none'))}</div><div><strong>source_pack_refs:</strong> ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div><strong>uses_real_external_data:</strong> ${escapeHTML(projectWorkspaceScenarioPresetsDisabledText(card.uses_real_external_data))}</div><div><strong>uses_real_customer_data:</strong> ${escapeHTML(projectWorkspaceScenarioPresetsDisabledText(card.uses_real_customer_data))}</div><div><strong>real_scraping_allowed:</strong> ${escapeHTML(projectWorkspaceScenarioPresetsDisabledText(card.real_scraping_allowed))}</div><div><strong>llm_generation_allowed:</strong> ${escapeHTML(projectWorkspaceScenarioPresetsDisabledText(card.llm_generation_allowed))}</div><div><strong>real_execution_allowed:</strong> ${escapeHTML(projectWorkspaceScenarioPresetsDisabledText(card.real_execution_allowed))}</div><div><strong>risk_note:</strong> ${escapeHTML(card.risk_note || t('scenarioPresetsScenarioNote'))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceScenarioPresetsScenarioInputPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('scenarioPresetsScenarioInputTitle'))}</div><div class="field-helper">${escapeHTML(t('scenarioPresetsScenarioNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDemoScenarioCards()">${escapeHTML(t('scenarioPresetsCopyScenarios'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceScenarioInputPreviewCards()">${escapeHTML(t('scenarioPresetsCopyInputs'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('scenarioPresetsScenarioTitle'))}</strong><div class="graph-os-compact-grid">${scenarios || `<div class="empty-state">${escapeHTML(t('scenarioPresetsNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('scenarioPresetsInputTitle'))}</strong><div class="graph-os-compact-grid">${inputs || `<div class="empty-state">${escapeHTML(t('scenarioPresetsNoData'))}</div>`}</div></div></div><div class="field-helper">strong_evidence_ready_preview / weak_evidence_needs_review / unsupported_claim_blocked / video_prompt_visual_claim_risk / delivery_blocked_by_missing_quote / provider_safety_blocked / final_export_ready_preview_only / operator_handoff_required</div></div>`;
+        }
+
+        function renderProjectWorkspaceScenarioPresetsSignalCoveragePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportScenarioPresetsSnapshot(workspace); if (!pack.has_workspace_scenario_presets_pack) return '';
+            const signals = (pack.scenario_expected_signal_cards || []).slice(0, 16).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.signal_id || 'signal_id')}</strong><div><strong>scenario_id:</strong> ${escapeHTML(card.scenario_id || t('none'))}</div><div><strong>signal_type:</strong> ${escapeHTML(card.signal_type || t('none'))}</div><div><strong>expected_signal:</strong> ${escapeHTML(card.expected_signal || t('none'))}</div><div><strong>source_stage_refs:</strong> ${escapeHTML((card.source_stage_refs || []).join(', ') || t('none'))}</div><div><strong>source_pack_refs:</strong> ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div><strong>expected_workspace_status:</strong> ${escapeHTML(card.expected_workspace_status || t('none'))}</div><div><strong>expected_operator_action:</strong> ${escapeHTML(card.expected_operator_action || t('none'))}</div><div><strong>risk_note:</strong> ${escapeHTML(card.risk_note || t('scenarioPresetsReadinessNote'))}</div></div>`).join('');
+            const coverage = (pack.scenario_pack_coverage_map || []).slice(0, 16).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.coverage_id || 'coverage_id')}</strong><div><strong>scenario_id:</strong> ${escapeHTML(card.scenario_id || t('none'))}</div><div><strong>covered_pack_refs:</strong> ${escapeHTML((card.covered_pack_refs || []).join(', ') || t('none'))}</div><div><strong>covered_stage_refs:</strong> ${escapeHTML((card.covered_stage_refs || []).join(', ') || t('none'))}</div><div><strong>coverage_status:</strong> ${escapeHTML(card.coverage_status || t('none'))}</div><div><strong>missing_pack_refs:</strong> ${escapeHTML((card.missing_pack_refs || []).join(', ') || t('none'))}</div><div><strong>expected_panel_refs:</strong> ${escapeHTML((card.expected_panel_refs || []).join(', ') || t('none'))}</div><div><strong>copy_export_preview_supported:</strong> ${escapeHTML(String(Boolean(card.copy_export_preview_supported)))}</div><div><strong>real_export_allowed:</strong> ${escapeHTML(projectWorkspaceScenarioPresetsDisabledText(card.real_export_allowed))}</div><div><strong>real_execution_allowed:</strong> ${escapeHTML(projectWorkspaceScenarioPresetsDisabledText(card.real_execution_allowed))}</div><div><strong>risk_note:</strong> ${escapeHTML(card.risk_note || t('scenarioPresetsCoverageNote'))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceScenarioPresetsSignalCoveragePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('scenarioPresetsSignalCoverageTitle'))}</div><div class="field-helper">${escapeHTML(t('scenarioPresetsCoverageNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceScenarioExpectedSignalCards()">${escapeHTML(t('scenarioPresetsCopySignals'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceScenarioPackCoverageMap()">${escapeHTML(t('scenarioPresetsCopyCoverage'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('scenarioPresetsSignalTitle'))}</strong><div class="graph-os-compact-grid">${signals || `<div class="empty-state">${escapeHTML(t('scenarioPresetsNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('scenarioPresetsCoverageTitle'))}</strong><div class="graph-os-compact-grid">${coverage || `<div class="empty-state">${escapeHTML(t('scenarioPresetsNoData'))}</div>`}</div></div></div><div class="field-helper">evidence / claim / delivery / QA / provider safety / product navigation / dossier / final export / claim risk / evidence quality / provider safety packs</div></div>`;
+        }
+
+        function renderProjectWorkspaceScenarioPresetsWalkthroughRegressionPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportScenarioPresetsSnapshot(workspace); if (!pack.has_workspace_scenario_presets_pack) return '';
+            const walkthrough = (pack.scenario_operator_walkthrough_cards || []).slice(0, 16).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.walkthrough_id || 'walkthrough_id')}</strong><div><strong>scenario_id:</strong> ${escapeHTML(card.scenario_id || t('none'))}</div><div><strong>walkthrough_steps:</strong> ${escapeHTML((card.walkthrough_steps || []).join(' | ') || t('none'))}</div><div><strong>recommended_operator_action:</strong> ${escapeHTML(card.recommended_operator_action || t('none'))}</div><div><strong>creates_real_operator_task:</strong> ${escapeHTML(projectWorkspaceScenarioPresetsDisabledText(card.creates_real_operator_task))}</div><div><strong>real_task_creation_allowed:</strong> ${escapeHTML(projectWorkspaceScenarioPresetsDisabledText(card.real_task_creation_allowed))}</div><div><strong>real_execution_allowed:</strong> ${escapeHTML(projectWorkspaceScenarioPresetsDisabledText(card.real_execution_allowed))}</div><div><strong>risk_note:</strong> ${escapeHTML(card.risk_note || t('scenarioPresetsWalkthroughNote'))}</div></div>`).join('');
+            const regression = (pack.scenario_regression_assertion_cards || []).slice(0, 24).map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.assertion_id || 'assertion_id')}</strong><div><strong>assertion_type:</strong> ${escapeHTML(card.assertion_type || t('none'))}</div><div><strong>source_pack_refs:</strong> ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div><strong>expected_value:</strong> ${escapeHTML(String(card.expected_value ?? t('none')))}</div><div><strong>observed_value:</strong> ${escapeHTML(String(card.observed_value ?? t('none')))}</div><div><strong>assertion_status:</strong> ${escapeHTML(card.assertion_status || t('none'))}</div><div><strong>real_execution_allowed:</strong> ${escapeHTML(projectWorkspaceScenarioPresetsDisabledText(card.real_execution_allowed))}</div><div><strong>risk_note:</strong> ${escapeHTML(card.risk_note || t('scenarioPresetsRegressionNote'))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceScenarioPresetsWalkthroughRegressionPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('scenarioPresetsWalkthroughRegressionTitle'))}</div><div class="field-helper">${escapeHTML(t('scenarioPresetsWalkthroughNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceScenarioOperatorWalkthroughCards()">${escapeHTML(t('scenarioPresetsCopyWalkthrough'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceScenarioRegressionAssertions()">${escapeHTML(t('scenarioPresetsCopyRegression'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('scenarioPresetsWalkthroughTitle'))}</strong><div class="graph-os-compact-grid">${walkthrough || `<div class="empty-state">${escapeHTML(t('scenarioPresetsNoData'))}</div>`}</div><div class="field-helper">select scenario / view expected user question / view expected panels / view blockers / view recommended operator action / view copy/export preview</div></div><div class="graph-os-card"><strong>${escapeHTML(t('scenarioPresetsRegressionTitle'))}</strong><div class="graph-os-compact-grid">${regression || `<div class="empty-state">${escapeHTML(t('scenarioPresetsNoData'))}</div>`}</div><div class="field-helper">pack exists / panel expected / scenario id present / disabled boundary remains false / no real run / no real export / no real provider</div></div></div><div class="field-helper">${escapeHTML(t('scenarioPresetsRegressionNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspaceScenarioPresetsCapabilityQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportScenarioPresetsSnapshot(workspace); if (!pack.has_workspace_scenario_presets_pack) return '';
+            const disabled = Object.entries(pack.safety_boundaries || {}).map(([key,value])=>`${key}: ${value===false?t('scenarioPresetsDisabled'):String(value)}`).join(' | ');
+            return `<div class="section-block" id="projectWorkspaceScenarioPresetsCapabilityQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('scenarioPresetsCapabilityQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('scenarioPresetsSafetyNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceScenarioDisabledCapabilityChecks()">${escapeHTML(t('scenarioPresetsCopyDisabled'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceScenarioQualityChecks()">${escapeHTML(t('scenarioPresetsCopyQuality'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('scenarioPresetsDisabledTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceScenarioPresetsJsonText(pack.scenario_disabled_capability_checks) || t('scenarioPresetsNoData'))}</pre><div class="field-helper">real LLM / provider / media / external scraping / database persistence / real_execution / real_policy_check / platform_upload / task_creation / real_export / file_write disabled</div></div><div class="graph-os-card"><strong>${escapeHTML(t('scenarioPresetsQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceScenarioPresetsJsonText(pack.scenario_quality_checks) || t('scenarioPresetsNoData'))}</pre><div class="field-helper">${escapeHTML(t('scenarioPresetsQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('scenarioPresetsAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceScenarioPresetsJsonText(pack.audit_preview) || t('scenarioPresetsNoData'))}</pre><div class="field-helper">${escapeHTML(t('scenarioPresetsAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('scenarioPresetsSafetyTitle'))}:</strong> ${escapeHTML(disabled || t('none'))}</div><div class="field-helper">${escapeHTML(t('scenarioPresetsSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -28954,6 +29225,8 @@
                 '',
                 projectWorkspaceExportProductNavigationMarkdown(workspace),
                 '',
+                projectWorkspaceExportScenarioPresetsMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -29081,6 +29354,7 @@
                 final_claim_safe_export_packet_pack: projectWorkspaceExportFinalClaimSafeExportPacketSnapshot(workspace),
                 campaign_creative_dossier_pack: projectWorkspaceExportCampaignCreativeDossierSnapshot(workspace),
                 workspace_product_navigation_pack: projectWorkspaceExportProductNavigationSnapshot(workspace),
+                workspace_scenario_presets_pack: projectWorkspaceExportScenarioPresetsSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -41707,6 +41981,11 @@
                     ${renderProjectWorkspaceProductNavigationActionCopyExportPanel(workspace)}
                     ${renderProjectWorkspaceProductNavigationPanelTracePanel(workspace)}
                     ${renderProjectWorkspaceProductNavigationReadinessLimitQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspaceScenarioPresetsSummaryPanel(workspace)}
+                    ${renderProjectWorkspaceScenarioPresetsScenarioInputPanel(workspace)}
+                    ${renderProjectWorkspaceScenarioPresetsSignalCoveragePanel(workspace)}
+                    ${renderProjectWorkspaceScenarioPresetsWalkthroughRegressionPanel(workspace)}
+                    ${renderProjectWorkspaceScenarioPresetsCapabilityQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
