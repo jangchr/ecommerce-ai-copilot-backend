@@ -43819,6 +43819,367 @@ def _rw_workspace_mvp_consolidation_pack(creative_decision_pack: dict) -> dict:
     }
 
 
+def _rw_workspace_demo_campaign_walkthrough_pack(creative_decision_pack: dict) -> dict:
+    source_pack_ids = [
+        "workspace_mvp_consolidation_pack",
+        "workspace_final_system_health_pack",
+        "workspace_scenario_presets_pack",
+        "workspace_product_navigation_pack",
+        "campaign_creative_dossier_pack",
+        "final_claim_safe_export_packet_pack",
+        "claim_safe_remediation_verification_pack",
+        "claim_safe_delivery_remediation_pack",
+        "claim_safe_delivery_qa_pack",
+        "claim_safe_platform_delivery_pack",
+        "claim_safe_creative_output_pack",
+        "claim_safe_creative_brief_pack",
+        "claim_risk_guard_pack",
+        "review_evidence_quality_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_real_execution_approval_token_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_capability_permission_matrix_pack",
+    ]
+    packs = {pack_id: dict(creative_decision_pack.get(pack_id) or {}) for pack_id in source_pack_ids}
+
+    def pack_status(pack_id: str) -> str:
+        pack = packs.get(pack_id) or {}
+        if not pack:
+            return "missing"
+        if pack.get("pack_version"):
+            return "present"
+        return "partial"
+
+    demo_storyline_specs = [
+        (
+            "claim_safe_creative_demo",
+            "Claim-safe creative demo",
+            "claim_safe_campaign",
+            ["review_evidence_quality_pack", "claim_risk_guard_pack", "claim_safe_creative_brief_pack", "claim_safe_creative_output_pack"],
+            "Show how supplied evidence becomes claim-safe creative output.",
+            "How does CrossGrowth turn review evidence into safer campaign copy?",
+            "Operator can explain evidence quality, claim support, and preview creative without real LLM calls.",
+            "Evidence-backed creative stays preview-only until manual review.",
+        ),
+        (
+            "blocked_claim_demo",
+            "Blocked claim demo",
+            "claim_safety",
+            ["claim_risk_guard_pack", "claim_safe_delivery_remediation_pack", "claim_safe_remediation_verification_pack"],
+            "Show unsupported claims, do-not-claim refs, and remediation preview.",
+            "Why is this claim blocked before delivery?",
+            "Operator can explain missing support and required manual review.",
+            "Blocked claims remain blocked; no legal advice or real policy API is used.",
+        ),
+        (
+            "final_export_preview_demo",
+            "Final export preview demo",
+            "final_handoff",
+            ["final_claim_safe_export_packet_pack", "campaign_creative_dossier_pack"],
+            "Show final export packet and campaign dossier handoff without file writes.",
+            "What is ready for preview export and what remains blocked?",
+            "Operator sees final copy, prompt, claim trace, and blocked appendix in one handoff preview.",
+            "Final export is copy/export preview only and never writes files.",
+        ),
+        (
+            "provider_safety_blocked_demo",
+            "Provider safety blocked demo",
+            "safety_boundary",
+            ["workspace_provider_invocation_audit_packet_pack", "workspace_real_execution_approval_token_pack", "workspace_network_external_call_block_guard_pack", "workspace_secret_environment_gate_pack"],
+            "Show provider, secret, network, token, and execution blockers.",
+            "Why are real provider calls blocked in this demo?",
+            "Operator can show that provider and real execution paths are disabled by design.",
+            "Provider safety remains visible and real execution stays disabled.",
+        ),
+        (
+            "mvp_home_walkthrough_demo",
+            "MVP home walkthrough demo",
+            "mvp_home",
+            ["workspace_mvp_consolidation_pack", "workspace_final_system_health_pack", "workspace_product_navigation_pack", "workspace_scenario_presets_pack"],
+            "Show the productized MVP home storyline from status to blockers and scenarios.",
+            "What should a demo operator inspect first?",
+            "Operator can walk through final status, blockers, export preview, navigation, and scenario shortcuts.",
+            "MVP home is deterministic preview guidance, not a real task or demo run.",
+        ),
+    ]
+    demo_storyline_cards = [
+        {
+            "storyline_id": storyline_id,
+            "storyline_label": label,
+            "storyline_group": group,
+            "source_pack_refs": refs,
+            "demo_purpose": purpose,
+            "opening_user_question": question,
+            "expected_demo_outcome": outcome,
+            "primary_takeaway": takeaway,
+            "recommended_presenter_note": "Present this as deterministic preview metadata; do not claim legal or platform approval.",
+            "demo_run_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Storyline is preview-only and does not create a real demo run.",
+        }
+        for storyline_id, label, group, refs, purpose, question, outcome, takeaway in demo_storyline_specs
+    ]
+
+    walkthrough_stage_specs = [
+        ("review_import", "Review import", "review_ingestion", ["review_import_pack"], ["review_import"], "Imported review/source breakdown is visible.", "Explain that supplied review data is used only in this request.", "Review Import", "preview_ready", []),
+        ("evidence_quality", "Evidence quality", "claim_safe_campaign", ["review_evidence_quality_pack"], ["evidence_quality"], "Evidence quality and quote support are summarized.", "Explain sample strength and quote limitations.", "Review Evidence Quality", "preview_ready", []),
+        ("claim_risk_guard", "Claim risk guard", "claim_safe_campaign", ["claim_risk_guard_pack"], ["claim_risk_guard"], "Supported, restricted, and blocked claims are visible.", "Explain claim support and do-not-claim refs.", "Claim Risk Guard", "manual_review_required", ["unsupported_claim"]),
+        ("claim_safe_brief", "Claim-safe brief", "claim_safe_campaign", ["claim_safe_creative_brief_pack"], ["claim_safe_brief"], "Claim-safe brief pillars are visible.", "Explain safe usage notes before creative output.", "Claim-Safe Creative Brief", "preview_ready", []),
+        ("claim_safe_output", "Claim-safe output", "creative_output", ["claim_safe_creative_output_pack"], ["claim_safe_output"], "Copy, captions, hooks, and video prompt previews are visible.", "Explain that output is deterministic preview and not a real ad.", "Claim-Safe Creative Output", "preview_ready", []),
+        ("platform_delivery", "Platform delivery", "delivery_preview", ["claim_safe_platform_delivery_pack"], ["platform_delivery"], "Delivery surface readiness is visible.", "Explain platform upload remains disabled.", "Claim-Safe Platform Delivery", "manual_review_required", ["platform_upload_disabled"]),
+        ("delivery_qa", "Delivery QA", "delivery_preview", ["claim_safe_delivery_qa_pack"], ["delivery_qa"], "QA and export readiness gates are visible.", "Explain blockers before retry readiness.", "Claim-Safe Delivery QA", "manual_review_required", ["missing_quote"]),
+        ("remediation", "Remediation", "delivery_preview", ["claim_safe_delivery_remediation_pack"], ["remediation"], "Remediation actions are previewed.", "Explain no automatic fix or task is created.", "Claim-Safe Delivery Remediation", "manual_review_required", ["operator_review_required"]),
+        ("remediation_verification", "Remediation verification", "delivery_preview", ["claim_safe_remediation_verification_pack"], ["verification"], "Verification and retry export readiness are visible.", "Explain verification is deterministic preview only.", "Claim-Safe Remediation Verification", "manual_review_required", ["remaining_blockers"]),
+        ("final_export_packet", "Final export packet", "final_handoff", ["final_claim_safe_export_packet_pack"], ["final_export"], "Final packet and blocked appendix are visible.", "Explain preview export does not write files.", "Final Claim-Safe Export Packet", "preview_ready", ["real_export_disabled", "file_write_disabled"]),
+        ("campaign_dossier", "Campaign dossier", "final_handoff", ["campaign_creative_dossier_pack"], ["dossier"], "Campaign dossier and operator handoff checklist are visible.", "Explain manual handoff without task creation.", "Campaign Creative Dossier", "manual_handoff_required", ["task_creation_disabled"]),
+        ("product_navigation", "Product navigation", "workspace_index", ["workspace_product_navigation_pack"], ["navigation"], "Product navigation and stage map are visible.", "Explain where the operator should click next.", "Workspace Product Navigation", "preview_ready", []),
+        ("scenario_presets", "Scenario presets", "workspace_index", ["workspace_scenario_presets_pack"], ["scenario"], "Scenario shortcuts and expected signals are visible.", "Explain that no real demo run is created.", "Scenario Presets", "preview_ready", ["demo_run_disabled"]),
+        ("final_system_health", "Final system health", "diagnostic", ["workspace_final_system_health_pack"], ["final_health"], "Pack health and regression map are visible.", "Explain this is not real monitoring or a real regression job.", "Final System Health", "preview_ready", ["real_regression_job_disabled"]),
+        ("mvp_consolidation", "MVP consolidation", "mvp_home", ["workspace_mvp_consolidation_pack"], ["mvp_home"], "MVP home status, top blockers, and module priorities are visible.", "Explain product polish suggestions without changing layout.", "MVP Consolidation", "preview_ready", []),
+    ]
+    walkthrough_step_cards = [
+        {
+            "walkthrough_step_id": f"walkthrough_step_{index}_{step_id}",
+            "step_order": index,
+            "step_label": label,
+            "step_group": group,
+            "source_pack_refs": refs,
+            "source_stage_refs": stages,
+            "what_user_sees": what_user_sees,
+            "what_operator_explains": operator_explains,
+            "expected_workspace_section": section,
+            "expected_status": "missing_source_pack" if any(pack_status(ref) == "missing" for ref in refs) else expected_status,
+            "expected_blockers": expected_blockers,
+            "recommended_operator_action": "Continue the manual walkthrough in Project Workspace; do not run real execution.",
+            "copy_export_preview_available": step_id in {"final_export_packet", "campaign_dossier", "scenario_presets", "mvp_consolidation"},
+            "creates_real_task": False,
+            "demo_run_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Walkthrough step is deterministic presenter guidance only.",
+        }
+        for index, (step_id, label, group, refs, stages, what_user_sees, operator_explains, section, expected_status, expected_blockers) in enumerate(walkthrough_stage_specs, start=1)
+    ]
+
+    evidence_to_claim_walkthrough_cards = [
+        {
+            "evidence_claim_step_id": "evidence_to_claim_support_preview",
+            "source_evidence_refs": ["review_evidence_quality_pack", "review_import_pack"],
+            "source_claim_refs": ["claim_risk_guard_pack", "claim_safe_creative_brief_pack"],
+            "evidence_quality_status": "preview_available" if pack_status("review_evidence_quality_pack") != "missing" else "missing_source_pack",
+            "sample_strength": "deterministic_supplied_review_sample_only",
+            "claim_support_status": "support_preview_requires_manual_review",
+            "claim_risk_level": "mixed_preview",
+            "do_not_claim_refs": ["unsupported_claim", "missing_quote", "do_not_claim"],
+            "operator_explanation": "Evidence quality informs claim support and do-not-claim guidance, but no real scraping or policy decision is performed.",
+            "real_scraping_allowed": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "This is not legal advice and not a real policy API result.",
+        }
+    ]
+    creative_to_delivery_walkthrough_cards = [
+        {
+            "creative_delivery_step_id": "creative_output_to_platform_delivery_preview",
+            "creative_surface": "claim_safe_creative_output_preview",
+            "delivery_surface": "platform_delivery_preview",
+            "platform_label": "manual_preview",
+            "source_claim_refs": ["claim_risk_guard_pack", "claim_safe_creative_brief_pack"],
+            "source_output_refs": ["claim_safe_creative_output_pack", "claim_safe_platform_delivery_pack"],
+            "claim_safety_status": "claim_safe_preview_requires_manual_review",
+            "delivery_readiness_status": "preview_ready_with_disabled_upload",
+            "safe_usage_note": "Use only supported, lower-strength wording from the preview; do not publish automatically.",
+            "operator_explanation": "Creative output flows into delivery readiness while provider calls and platform upload remain disabled.",
+            "real_provider_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "No real provider, media, upload, or platform operation is performed.",
+        }
+    ]
+    qa_remediation_walkthrough_cards = [
+        {
+            "qa_remediation_step_id": "qa_blocker_to_remediation_verification_preview",
+            "qa_status": "manual_review_required",
+            "blocker_refs": ["missing_quote", "unsupported_claim", "provider_disabled"],
+            "remediation_refs": ["claim_safe_delivery_remediation_pack"],
+            "verification_refs": ["claim_safe_remediation_verification_pack"],
+            "remaining_blockers": ["real_policy_check_disabled", "task_creation_disabled", "real_execution_disabled"],
+            "retry_readiness_status": "preview_only_not_real_export",
+            "operator_explanation": "QA blockers flow into remediation and verification previews, but no automatic fix or task is created.",
+            "creates_real_task": False,
+            "real_policy_check_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Remediation is deterministic preview only.",
+        }
+    ]
+    final_export_handoff_walkthrough_cards = [
+        {
+            "handoff_step_id": "final_export_to_campaign_dossier_handoff_preview",
+            "export_packet_ref": "final_claim_safe_export_packet_pack",
+            "campaign_dossier_ref": "campaign_creative_dossier_pack",
+            "packet_status": "preview_ready" if pack_status("final_claim_safe_export_packet_pack") != "missing" else "missing_source_pack",
+            "ready_for_preview_export": True,
+            "included_copy_refs": ["final_claim_safe_export_packet_pack.copy_preview"],
+            "included_video_prompt_refs": ["final_claim_safe_export_packet_pack.video_prompt_preview"],
+            "included_claim_trace_refs": ["final_claim_safe_export_packet_pack.claim_trace_preview"],
+            "blocked_appendix_refs": ["campaign_creative_dossier_pack.blocked_appendix"],
+            "operator_handoff_note": "Use the campaign dossier for manual handoff only; do not write files, upload, or export.",
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Final export handoff is preview-only.",
+        }
+    ]
+
+    scenario_pack = packs.get("workspace_scenario_presets_pack") or {}
+    scenario_cards = list(scenario_pack.get("demo_scenario_cards") or [])
+    scenario_branch_cards = [
+        {
+            "scenario_branch_id": f"walkthrough_branch_{card.get('scenario_id')}",
+            "scenario_id": card.get("scenario_id"),
+            "scenario_label": card.get("scenario_label"),
+            "scenario_group": card.get("scenario_group"),
+            "expected_user_question": card.get("expected_user_question"),
+            "expected_workspace_panels": card.get("expected_workspace_panels") or [],
+            "expected_status": card.get("expected_status"),
+            "expected_blockers": card.get("expected_blockers") or [],
+            "recommended_operator_action": card.get("recommended_operator_action"),
+            "demo_run_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Scenario branch is a deterministic walkthrough shortcut and does not create a real demo run.",
+        }
+        for card in scenario_cards[:8]
+    ]
+    presenter_note_cards = [
+        {
+            "presenter_note_id": "not_legal_or_policy_advice",
+            "note_group": "safety",
+            "note_text": "Presenter note: this walkthrough is not legal advice, not a real policy API result, and not a real platform compliance conclusion.",
+            "source_pack_refs": ["claim_risk_guard_pack", "workspace_final_system_health_pack"],
+            "real_execution_allowed": False,
+            "risk_note": "Use cautious demo language and avoid real legal or platform claims.",
+        },
+        {
+            "presenter_note_id": "preview_only_operations",
+            "note_group": "operations",
+            "note_text": "Presenter note: copy/export controls are previews only; no files are written, no platform upload occurs, and no provider is called.",
+            "source_pack_refs": ["final_claim_safe_export_packet_pack", "workspace_mvp_consolidation_pack"],
+            "real_execution_allowed": False,
+            "risk_note": "Do not imply real export, upload, task creation, or execution.",
+        },
+    ]
+    demo_copy_export_map = [
+        {
+            "copy_export_map_id": "walkthrough_full_pack_copy_export_preview",
+            "source_pack_ref": "workspace_demo_campaign_walkthrough_pack",
+            "copy_targets": ["summary", "storyline_cards", "walkthrough_steps", "scenario_branches", "presenter_notes", "full_pack"],
+            "export_targets": ["json_preview", "markdown_preview"],
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "risk_note": "Copy/export map describes preview surfaces only and does not write files or export.",
+        }
+    ]
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "secret_read": False,
+        "secret_read_enabled": False,
+        "external_call": False,
+        "external_call_enabled": False,
+        "token_issue": False,
+        "token_issue_enabled": False,
+    }
+    return {
+        "pack_version": "workspace_demo_campaign_walkthrough_pack_v1",
+        "demo_walkthrough_summary": {
+            "mode": "demo_campaign_walkthrough_preview_deterministic_presenter_walkthrough_dry_run_only",
+            "source_packs": source_pack_ids,
+            "storyline_count": len(demo_storyline_cards),
+            "walkthrough_step_count": len(walkthrough_step_cards),
+            "scenario_branch_count": len(scenario_branch_cards),
+            "presenter_note_count": len(presenter_note_cards),
+            "demo_run_allowed": False,
+            "real_task_creation_allowed": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_provider_allowed": False,
+            "llm_generation_allowed": False,
+            "database_persistence_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": "Use this deterministic presenter walkthrough for demo preparation only; do not create a real demo run, call providers, call LLMs, scrape, write files, export, upload, persist, or execute.",
+        },
+        "demo_storyline_cards": demo_storyline_cards,
+        "walkthrough_step_cards": walkthrough_step_cards,
+        "evidence_to_claim_walkthrough_cards": evidence_to_claim_walkthrough_cards,
+        "creative_to_delivery_walkthrough_cards": creative_to_delivery_walkthrough_cards,
+        "qa_remediation_walkthrough_cards": qa_remediation_walkthrough_cards,
+        "final_export_handoff_walkthrough_cards": final_export_handoff_walkthrough_cards,
+        "scenario_branch_cards": scenario_branch_cards,
+        "presenter_note_cards": presenter_note_cards,
+        "demo_copy_export_map": demo_copy_export_map,
+        "walkthrough_quality_checks": {
+            "evidence_covered": True,
+            "claim_safety_covered": True,
+            "creative_output_covered": True,
+            "delivery_covered": True,
+            "qa_covered": True,
+            "remediation_covered": True,
+            "verification_covered": True,
+            "final_export_covered": True,
+            "dossier_covered": True,
+            "navigation_covered": True,
+            "scenario_covered": len(scenario_branch_cards) >= 8,
+            "mvp_home_covered": True,
+            "disabled_safety_boundary_covered": all(value is False for value in safety_boundaries.values()),
+            "real_execution_performed": False,
+            "database_write_performed": False,
+            "file_write_performed": False,
+            "real_export_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "real_scraping_performed": False,
+            "real_demo_run_created": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "workspace_demo_campaign_walkthrough_preview",
+            "source": "creative_decision_pack.workspace_demo_campaign_walkthrough_pack",
+            "audit_record_created": False,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "operator_task_created": False,
+            "demo_run_created": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -44055,6 +44416,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_mvp_consolidation_pack"] = (
         _rw_workspace_mvp_consolidation_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_demo_campaign_walkthrough_pack"] = (
+        _rw_workspace_demo_campaign_walkthrough_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
