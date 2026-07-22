@@ -43111,6 +43111,386 @@ def _rw_workspace_scenario_presets_pack(creative_decision_pack: dict) -> dict:
     }
 
 
+def _rw_workspace_final_system_health_pack(creative_decision_pack: dict) -> dict:
+    source_pack_ids = [
+        "workspace_scenario_presets_pack",
+        "workspace_product_navigation_pack",
+        "campaign_creative_dossier_pack",
+        "final_claim_safe_export_packet_pack",
+        "claim_safe_remediation_verification_pack",
+        "claim_safe_delivery_remediation_pack",
+        "claim_safe_delivery_qa_pack",
+        "claim_safe_platform_delivery_pack",
+        "claim_safe_creative_output_pack",
+        "claim_safe_creative_brief_pack",
+        "claim_risk_guard_pack",
+        "review_evidence_quality_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_real_execution_approval_token_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_capability_permission_matrix_pack",
+        "campaign_export_pack",
+        "review_import_pack",
+        "competitor_review_comparison_pack",
+    ]
+    packs = {pack_id: dict(creative_decision_pack.get(pack_id) or {}) for pack_id in source_pack_ids}
+
+    def pack_status(pack_id: str) -> str:
+        pack = packs.get(pack_id) or {}
+        if not pack:
+            return "missing"
+        if pack.get("pack_version"):
+            return "present"
+        return "partial"
+
+    def missing_dependencies(refs: list[str]) -> list[str]:
+        return [ref for ref in refs if pack_status(ref) == "missing"]
+
+    pack_specs = [
+        ("review_import", "Review Import", "creative_decision_pack.review_import_pack", "review_ingestion", "review_import_pack", []),
+        ("competitor_review_comparison", "Competitor Review Comparison", "creative_decision_pack.competitor_review_comparison_pack", "review_ingestion", "competitor_review_comparison_pack", ["review_import_pack"]),
+        ("evidence_quality", "Evidence Quality", "creative_decision_pack.review_evidence_quality_pack", "claim_safe_campaign", "review_evidence_quality_pack", ["review_import_pack", "competitor_review_comparison_pack"]),
+        ("claim_risk_guard", "Claim Risk Guard", "creative_decision_pack.claim_risk_guard_pack", "claim_safe_campaign", "claim_risk_guard_pack", ["review_evidence_quality_pack"]),
+        ("claim_safe_brief", "Claim-Safe Creative Brief", "creative_decision_pack.claim_safe_creative_brief_pack", "claim_safe_campaign", "claim_safe_creative_brief_pack", ["claim_risk_guard_pack", "review_evidence_quality_pack"]),
+        ("claim_safe_output", "Claim-Safe Creative Output", "creative_decision_pack.claim_safe_creative_output_pack", "claim_safe_campaign", "claim_safe_creative_output_pack", ["claim_safe_creative_brief_pack"]),
+        ("platform_delivery", "Claim-Safe Platform Delivery", "creative_decision_pack.claim_safe_platform_delivery_pack", "delivery_preview", "claim_safe_platform_delivery_pack", ["claim_safe_creative_output_pack"]),
+        ("delivery_qa", "Claim-Safe Delivery QA", "creative_decision_pack.claim_safe_delivery_qa_pack", "delivery_preview", "claim_safe_delivery_qa_pack", ["claim_safe_platform_delivery_pack"]),
+        ("remediation", "Claim-Safe Delivery Remediation", "creative_decision_pack.claim_safe_delivery_remediation_pack", "delivery_preview", "claim_safe_delivery_remediation_pack", ["claim_safe_delivery_qa_pack"]),
+        ("remediation_verification", "Claim-Safe Remediation Verification", "creative_decision_pack.claim_safe_remediation_verification_pack", "delivery_preview", "claim_safe_remediation_verification_pack", ["claim_safe_delivery_remediation_pack"]),
+        ("final_export_packet", "Final Claim-Safe Export Packet", "creative_decision_pack.final_claim_safe_export_packet_pack", "final_handoff", "final_claim_safe_export_packet_pack", ["claim_safe_remediation_verification_pack", "claim_safe_delivery_remediation_pack"]),
+        ("campaign_dossier", "Campaign Creative Dossier", "creative_decision_pack.campaign_creative_dossier_pack", "final_handoff", "campaign_creative_dossier_pack", ["final_claim_safe_export_packet_pack"]),
+        ("product_navigation", "Workspace Product Navigation", "creative_decision_pack.workspace_product_navigation_pack", "workspace_index", "workspace_product_navigation_pack", ["campaign_creative_dossier_pack", "final_claim_safe_export_packet_pack"]),
+        ("scenario_presets", "Scenario Presets", "creative_decision_pack.workspace_scenario_presets_pack", "workspace_index", "workspace_scenario_presets_pack", ["workspace_product_navigation_pack", "campaign_creative_dossier_pack"]),
+        ("provider_safety_controls", "Provider Safety Controls", "creative_decision_pack.workspace_provider_invocation_audit_packet_pack", "safety_controls", "workspace_provider_invocation_audit_packet_pack", ["workspace_secret_environment_gate_pack", "workspace_network_external_call_block_guard_pack", "workspace_real_execution_approval_token_pack"]),
+        ("real_execution_blockers", "Real Execution Blockers", "creative_decision_pack.workspace_real_execution_approval_token_pack", "safety_controls", "workspace_real_execution_approval_token_pack", ["workspace_network_external_call_block_guard_pack", "workspace_secret_environment_gate_pack"]),
+    ]
+    pack_health_cards = []
+    for pack_id, label, path, stage_group, source_pack_ref, deps in pack_specs:
+        missing = missing_dependencies(deps)
+        observed = pack_status(source_pack_ref)
+        health_status = "healthy_preview" if observed == "present" and not missing else "needs_operator_review"
+        pack_health_cards.append({
+            "pack_health_id": pack_id,
+            "pack_label": label,
+            "pack_path": path,
+            "stage_group": stage_group,
+            "expected_status": "present",
+            "observed_status": observed,
+            "required_for_mvp": True,
+            "dependency_refs": deps,
+            "missing_dependency_refs": missing,
+            "health_status": health_status,
+            "recommended_operator_action": "Review this deterministic health preview; do not run real regression or external execution.",
+            "real_execution_allowed": False,
+            "risk_note": "Pack health is derived from existing response packs only and is not real monitoring.",
+        })
+
+    panel_specs = [
+        ("review_import", "Review Import / Evidence Ingestion", "review_import_pack", 5, ["source breakdown", "review import", "competitor comparison"], "project_workspace_review_import_marker"),
+        ("evidence_quality", "Review Evidence Quality", "review_evidence_quality_pack", 5, ["evidence summary", "quote quality", "source trace"], "project_workspace_review_evidence_quality_marker"),
+        ("claim_safety", "Claim Risk / Claim-Safe Creative", "claim_risk_guard_pack", 15, ["claim risk", "creative brief", "creative output"], "project_workspace_claim_risk_guard_marker"),
+        ("delivery_qa", "Claim-Safe Delivery / QA / Remediation", "claim_safe_delivery_qa_pack", 20, ["platform delivery", "QA", "remediation", "verification"], "project_workspace_claim_safe_delivery_qa_marker"),
+        ("final_handoff", "Final Export / Dossier / Navigation", "final_claim_safe_export_packet_pack", 15, ["final export packet", "campaign dossier", "product navigation"], "project_workspace_final_claim_safe_export_packet_marker"),
+        ("scenario_presets", "Scenario Presets / Demo Runs", "workspace_scenario_presets_pack", 5, ["scenario presets", "demo inputs", "regression assertions"], "project_workspace_scenario_presets_marker"),
+        ("provider_safety", "Provider Safety / Execution Guards", "workspace_provider_invocation_audit_packet_pack", 25, ["provider contract", "secret gate", "network block", "approval token", "audit packet"], "project_workspace_provider_invocation_audit_packet_marker"),
+    ]
+    panel_regression_cards = [
+        {
+            "panel_regression_id": f"panel_{section_id}",
+            "workspace_section": section,
+            "source_pack_ref": source_pack_ref,
+            "expected_panel_count": expected_count,
+            "expected_panel_topics": topics,
+            "panel_status": "expected_frontend_preview" if pack_status(source_pack_ref) != "missing" else "blocked_missing_source_pack",
+            "requires_browser_verification": True,
+            "known_frontend_marker": marker,
+            "regression_risk": "medium" if expected_count > 10 else "low",
+            "recommended_operator_action": "Verify EN/ZH browser rendering in the frontend chapter; this backend pack only previews expected coverage.",
+            "real_execution_allowed": False,
+            "risk_note": "Panel regression cards do not modify frontend files or perform browser automation.",
+        }
+        for section_id, section, source_pack_ref, expected_count, topics, marker in panel_specs
+    ]
+
+    copy_export_regression_cards = [
+        {
+            "copy_export_regression_id": f"copy_export_{pack_id}",
+            "source_pack_ref": pack_id,
+            "copy_targets": copy_targets,
+            "export_targets": ["json_preview", "markdown_preview"],
+            "json_export_preview_expected": True,
+            "markdown_export_preview_expected": True,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "regression_status": "preview_expected" if pack_status(pack_id) != "missing" else "blocked_missing_source_pack",
+            "risk_note": "Copy/export regression describes preview surfaces only and does not write files or export.",
+        }
+        for pack_id, copy_targets in [
+            ("review_evidence_quality_pack", ["summary", "cards", "evidence_trace", "full_pack"]),
+            ("claim_risk_guard_pack", ["summary", "claim_cards", "risk_cards", "full_pack"]),
+            ("final_claim_safe_export_packet_pack", ["summary", "packet_cards", "blocked_appendix", "full_pack"]),
+            ("campaign_creative_dossier_pack", ["summary", "stage_cards", "handoff_checklist", "full_pack"]),
+            ("workspace_product_navigation_pack", ["summary", "stage_cards", "availability", "full_pack"]),
+            ("workspace_scenario_presets_pack", ["summary", "scenario_cards", "regression_assertions", "full_pack"]),
+        ]
+    ]
+
+    i18n_regression_cards = [
+        {
+            "i18n_regression_id": f"i18n_{section_id}",
+            "workspace_section": section,
+            "expected_languages": ["EN", "ZH"],
+            "checks_for_naked_key": True,
+            "checks_for_question_mark_placeholder": True,
+            "copy_feedback_required": True,
+            "browser_visible_text_check_required": True,
+            "regression_status": "browser_verification_required",
+            "risk_note": "This preview requires frontend EN/ZH checks and does not represent a legal, policy, or platform compliance conclusion.",
+        }
+        for section_id, section, _source, _count, _topics, _marker in panel_specs
+    ]
+
+    capability_ids = [
+        "provider",
+        "llm",
+        "media",
+        "external_scraping",
+        "database_persistence",
+        "real_execution",
+        "real_policy_check",
+        "platform_upload",
+        "task_creation",
+        "real_export",
+        "file_write",
+        "secret_read",
+        "external_call",
+        "token_issue",
+    ]
+    source_guard_refs = [
+        "workspace_capability_permission_matrix_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_real_execution_approval_token_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+    ]
+    disabled_capability_regression_cards = [
+        {
+            "capability_id": capability,
+            "capability_label": capability.replace("_", " ").title(),
+            "expected_disabled": True,
+            "observed_allowed": False,
+            "source_guard_refs": source_guard_refs,
+            "regression_status": "pass_disabled",
+            "must_remain_disabled": True,
+            "risk_note": "Capability must remain disabled in this deterministic health preview.",
+        }
+        for capability in capability_ids
+    ]
+
+    workflow_integrity_trace = [
+        {
+            "trace_id": "review_to_scenario_workspace_trace",
+            "trace_chain": [
+                "review import",
+                "evidence quality",
+                "claim risk",
+                "creative brief",
+                "creative output",
+                "platform delivery",
+                "QA",
+                "remediation",
+                "verification",
+                "final export",
+                "dossier",
+                "navigation",
+                "scenarios",
+            ],
+            "source_pack_refs": [
+                "review_import_pack",
+                "review_evidence_quality_pack",
+                "claim_risk_guard_pack",
+                "claim_safe_creative_brief_pack",
+                "claim_safe_creative_output_pack",
+                "claim_safe_platform_delivery_pack",
+                "claim_safe_delivery_qa_pack",
+                "claim_safe_delivery_remediation_pack",
+                "claim_safe_remediation_verification_pack",
+                "final_claim_safe_export_packet_pack",
+                "campaign_creative_dossier_pack",
+                "workspace_product_navigation_pack",
+                "workspace_scenario_presets_pack",
+            ],
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "database_write_performed": False,
+            "real_execution_allowed": False,
+        },
+        {
+            "trace_id": "provider_contract_secret_network_token_audit_blocker_trace",
+            "trace_chain": [
+                "provider contract",
+                "secret environment gate",
+                "network external call block guard",
+                "approval token preview",
+                "provider invocation audit",
+                "real execution blockers",
+            ],
+            "source_pack_refs": [
+                "workspace_provider_adapter_contract_pack",
+                "workspace_secret_environment_gate_pack",
+                "workspace_network_external_call_block_guard_pack",
+                "workspace_real_execution_approval_token_pack",
+                "workspace_provider_invocation_audit_packet_pack",
+                "workspace_capability_permission_matrix_pack",
+            ],
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "database_write_performed": False,
+            "real_execution_allowed": False,
+        },
+    ]
+
+    scenario_pack = packs.get("workspace_scenario_presets_pack") or {}
+    scenario_cards = list(scenario_pack.get("demo_scenario_cards") or [])
+    scenario_regression_map = [
+        {
+            "scenario_regression_id": f"final_health_{card.get('scenario_id')}",
+            "scenario_id": card.get("scenario_id"),
+            "scenario_group": card.get("scenario_group"),
+            "source_pack_refs": card.get("source_pack_refs") or [],
+            "expected_status": card.get("expected_status"),
+            "expected_blockers": card.get("expected_blockers") or [],
+            "regression_status": "covered",
+            "demo_run_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Scenario regression map is derived from deterministic scenario presets and does not create a real demo run.",
+        }
+        for card in scenario_cards
+    ]
+
+    known_system_limitations = [
+        {"limitation_id": "no_real_llm", "limitation_label": "no real LLM", "risk_note": "LLM calls remain disabled."},
+        {"limitation_id": "no_real_provider", "limitation_label": "no real provider", "risk_note": "Provider calls remain disabled."},
+        {"limitation_id": "no_real_media", "limitation_label": "no real media", "risk_note": "Media upload and download remain disabled."},
+        {"limitation_id": "no_real_export", "limitation_label": "no real export", "risk_note": "Real export remains disabled."},
+        {"limitation_id": "no_db_persistence", "limitation_label": "no DB persistence", "risk_note": "Database persistence is not performed."},
+        {"limitation_id": "no_platform_upload", "limitation_label": "no platform upload", "risk_note": "Platform upload and publishing remain disabled."},
+        {"limitation_id": "no_policy_api", "limitation_label": "no policy API", "risk_note": "Real policy APIs are not queried."},
+        {"limitation_id": "no_real_task_creation", "limitation_label": "no real task creation", "risk_note": "Operator task creation is preview-only."},
+        {"limitation_id": "no_real_file_write", "limitation_label": "no real file write", "risk_note": "File writes remain disabled for preview exports."},
+    ]
+
+    healthy_pack_count = sum(1 for card in pack_health_cards if card["health_status"] == "healthy_preview")
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "secret_read": False,
+        "secret_read_enabled": False,
+        "external_call": False,
+        "external_call_enabled": False,
+        "token_issue": False,
+        "token_issue_enabled": False,
+    }
+    return {
+        "pack_version": "workspace_final_system_health_pack_v1",
+        "final_system_health_summary": {
+            "mode": "final_system_health_preview_deterministic_regression_map_dry_run_only",
+            "source_packs": source_pack_ids,
+            "pack_health_count": len(pack_health_cards),
+            "healthy_pack_count": healthy_pack_count,
+            "panel_regression_count": len(panel_regression_cards),
+            "copy_export_regression_count": len(copy_export_regression_cards),
+            "i18n_regression_count": len(i18n_regression_cards),
+            "disabled_capability_count": len(disabled_capability_regression_cards),
+            "workflow_trace_count": len(workflow_integrity_trace),
+            "scenario_regression_count": len(scenario_regression_map),
+            "known_limitation_count": len(known_system_limitations),
+            "real_monitoring_system": False,
+            "real_regression_job_allowed": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_provider_allowed": False,
+            "llm_generation_allowed": False,
+            "database_persistence_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": "Use this deterministic final system health preview for manual regression planning only; do not call providers, LLMs, policy APIs, write files, export, persist, or run real jobs.",
+        },
+        "pack_health_cards": pack_health_cards,
+        "panel_regression_cards": panel_regression_cards,
+        "copy_export_regression_cards": copy_export_regression_cards,
+        "i18n_regression_cards": i18n_regression_cards,
+        "disabled_capability_regression_cards": disabled_capability_regression_cards,
+        "workflow_integrity_trace": workflow_integrity_trace,
+        "scenario_regression_map": scenario_regression_map,
+        "known_system_limitations": known_system_limitations,
+        "mvp_readiness_scorecard": {
+            "scorecard_id": "workspace_final_system_health_mvp_readiness",
+            "readiness_score": round((healthy_pack_count / len(pack_health_cards)) * 100, 2) if pack_health_cards else 0,
+            "readiness_status": "deterministic_mvp_preview_ready" if healthy_pack_count == len(pack_health_cards) else "deterministic_mvp_preview_needs_review",
+            "does_not_represent_real_platform_pass_rate": True,
+            "does_not_represent_real_compliance_conclusion": True,
+            "is_not_legal_advice": True,
+            "real_execution_allowed": False,
+            "risk_note": "MVP readiness is deterministic preview scoring only and not a real compliance, platform, or delivery result.",
+        },
+        "final_health_quality_checks": {
+            "pack_health_covered": bool(pack_health_cards),
+            "panel_regression_covered": bool(panel_regression_cards),
+            "copy_export_covered": bool(copy_export_regression_cards),
+            "i18n_covered": bool(i18n_regression_cards),
+            "disabled_boundary_covered": len(disabled_capability_regression_cards) == len(capability_ids),
+            "workflow_trace_covered": bool(workflow_integrity_trace),
+            "scenario_regression_covered": len(scenario_regression_map) >= 8,
+            "known_limitations_covered": len(known_system_limitations) >= 9,
+            "provider_secret_network_token_audit_trace_covered": any("provider contract" in " ".join(trace["trace_chain"]) for trace in workflow_integrity_trace),
+            "real_execution_performed": False,
+            "database_write_performed": False,
+            "file_write_performed": False,
+            "real_export_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "real_scraping_performed": False,
+            "real_regression_job_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "workspace_final_system_health_preview",
+            "source": "creative_decision_pack.workspace_final_system_health_pack",
+            "audit_record_created": False,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "operator_task_created": False,
+            "real_regression_job_created": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -43341,6 +43721,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_scenario_presets_pack"] = (
         _rw_workspace_scenario_presets_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_final_system_health_pack"] = (
+        _rw_workspace_final_system_health_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(

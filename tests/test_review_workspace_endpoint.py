@@ -10353,6 +10353,387 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
                 self.assertIn(key, boundaries)
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_final_system_health_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-final-system-health-preview",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "FINALHEALTH001",
+                "title": "Compact Travel Mug",
+                "reviews": [
+                    {
+                        "rating": 2,
+                        "title": "Leaks during commute",
+                        "text": (
+                            "Leaks during commute and the lid seal drips "
+                            "into my bag every morning."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 5,
+                        "title": "Easy to clean",
+                        "text": (
+                            "The cup is easy to clean after coffee and fits "
+                            "my office bag."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 1,
+                        "title": "Competitor seal problem",
+                        "text": (
+                            "Competitor lid also leaks in a work bag, so I "
+                            "would not trust it for travel."
+                        ),
+                        "source_section": "competitor_review",
+                        "metadata": {"source_type": "competitor"},
+                    },
+                ],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+            "campaign_export_pack",
+            "review_evidence_quality_pack",
+            "claim_risk_guard_pack",
+            "claim_safe_creative_brief_pack",
+            "claim_safe_creative_output_pack",
+            "claim_safe_platform_delivery_pack",
+            "claim_safe_delivery_qa_pack",
+            "claim_safe_delivery_remediation_pack",
+            "claim_safe_remediation_verification_pack",
+            "final_claim_safe_export_packet_pack",
+            "campaign_creative_dossier_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "workspace_real_execution_approval_token_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_product_navigation_pack",
+            "workspace_scenario_presets_pack",
+            "workspace_final_system_health_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_final_system_health_pack"]
+        self.assertEqual(pack["pack_version"], "workspace_final_system_health_pack_v1")
+        for required_key in [
+            "final_system_health_summary",
+            "pack_health_cards",
+            "panel_regression_cards",
+            "copy_export_regression_cards",
+            "i18n_regression_cards",
+            "disabled_capability_regression_cards",
+            "workflow_integrity_trace",
+            "scenario_regression_map",
+            "known_system_limitations",
+            "mvp_readiness_scorecard",
+            "final_health_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+        ]:
+            with self.subTest(required_key=required_key):
+                self.assertIn(required_key, pack)
+                self.assertTrue(pack[required_key])
+
+        summary = pack["final_system_health_summary"]
+        self.assertIn("final_system_health_preview", summary["mode"])
+        self.assertIn("deterministic_regression_map", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        for source_pack in [
+            "workspace_scenario_presets_pack",
+            "workspace_product_navigation_pack",
+            "campaign_creative_dossier_pack",
+            "final_claim_safe_export_packet_pack",
+            "claim_safe_remediation_verification_pack",
+            "claim_safe_delivery_remediation_pack",
+            "claim_safe_delivery_qa_pack",
+            "claim_safe_platform_delivery_pack",
+            "claim_safe_creative_output_pack",
+            "claim_safe_creative_brief_pack",
+            "claim_risk_guard_pack",
+            "review_evidence_quality_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "workspace_real_execution_approval_token_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_capability_permission_matrix_pack",
+            "campaign_export_pack",
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+        ]:
+            self.assertIn(source_pack, summary["source_packs"])
+        for disabled_key in [
+            "real_monitoring_system",
+            "real_regression_job_allowed",
+            "real_file_write_allowed",
+            "real_export_allowed",
+            "real_provider_allowed",
+            "llm_generation_allowed",
+            "database_persistence_allowed",
+            "real_execution_allowed",
+        ]:
+            self.assertFalse(summary[disabled_key])
+
+        pack_health_ids = {card["pack_health_id"] for card in pack["pack_health_cards"]}
+        for pack_health_id in [
+            "review_import",
+            "competitor_review_comparison",
+            "evidence_quality",
+            "claim_risk_guard",
+            "claim_safe_brief",
+            "claim_safe_output",
+            "platform_delivery",
+            "delivery_qa",
+            "remediation",
+            "remediation_verification",
+            "final_export_packet",
+            "campaign_dossier",
+            "product_navigation",
+            "scenario_presets",
+            "provider_safety_controls",
+            "real_execution_blockers",
+        ]:
+            with self.subTest(pack_health_id=pack_health_id):
+                self.assertIn(pack_health_id, pack_health_ids)
+        for card in pack["pack_health_cards"]:
+            for field in [
+                "pack_health_id",
+                "pack_label",
+                "pack_path",
+                "stage_group",
+                "expected_status",
+                "observed_status",
+                "required_for_mvp",
+                "dependency_refs",
+                "missing_dependency_refs",
+                "health_status",
+                "recommended_operator_action",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(pack=card["pack_health_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["real_execution_allowed"])
+        for required_health_id in [
+            "evidence_quality",
+            "claim_risk_guard",
+            "final_export_packet",
+            "campaign_dossier",
+            "product_navigation",
+            "scenario_presets",
+            "provider_safety_controls",
+            "real_execution_blockers",
+        ]:
+            self.assertIn(required_health_id, pack_health_ids)
+
+        for card in pack["panel_regression_cards"]:
+            for field in [
+                "panel_regression_id",
+                "workspace_section",
+                "source_pack_ref",
+                "expected_panel_count",
+                "expected_panel_topics",
+                "panel_status",
+                "requires_browser_verification",
+                "known_frontend_marker",
+                "regression_risk",
+                "recommended_operator_action",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(panel=card["panel_regression_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["real_execution_allowed"])
+
+        for card in pack["copy_export_regression_cards"]:
+            for field in [
+                "copy_export_regression_id",
+                "source_pack_ref",
+                "copy_targets",
+                "export_targets",
+                "json_export_preview_expected",
+                "markdown_export_preview_expected",
+                "real_file_write_allowed",
+                "real_export_allowed",
+                "regression_status",
+                "risk_note",
+            ]:
+                with self.subTest(copy_export=card["copy_export_regression_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["real_file_write_allowed"])
+            self.assertFalse(card["real_export_allowed"])
+
+        for card in pack["i18n_regression_cards"]:
+            self.assertEqual(card["expected_languages"], ["EN", "ZH"])
+            self.assertTrue(card["checks_for_naked_key"])
+            self.assertTrue(card["checks_for_question_mark_placeholder"])
+            self.assertTrue(card["copy_feedback_required"])
+            self.assertTrue(card["browser_visible_text_check_required"])
+
+        capability_ids = {
+            card["capability_id"]
+            for card in pack["disabled_capability_regression_cards"]
+        }
+        for capability in [
+            "provider",
+            "llm",
+            "media",
+            "external_scraping",
+            "database_persistence",
+            "real_execution",
+            "real_policy_check",
+            "platform_upload",
+            "task_creation",
+            "real_export",
+            "file_write",
+            "secret_read",
+            "external_call",
+            "token_issue",
+        ]:
+            with self.subTest(capability=capability):
+                self.assertIn(capability, capability_ids)
+        for card in pack["disabled_capability_regression_cards"]:
+            self.assertTrue(card["expected_disabled"])
+            self.assertFalse(card["observed_allowed"])
+            self.assertTrue(card["must_remain_disabled"])
+
+        trace_text = " ".join(
+            " ".join(trace["trace_chain"])
+            for trace in pack["workflow_integrity_trace"]
+        )
+        for token in [
+            "review import",
+            "evidence quality",
+            "claim risk",
+            "creative brief",
+            "creative output",
+            "platform delivery",
+            "QA",
+            "remediation",
+            "verification",
+            "final export",
+            "dossier",
+            "navigation",
+            "scenarios",
+            "provider contract",
+            "secret",
+            "network",
+            "approval token",
+            "audit",
+            "real execution blockers",
+        ]:
+            with self.subTest(trace_token=token):
+                self.assertIn(token, trace_text)
+
+        scenario_ids = {
+            card["scenario_id"]
+            for card in pack["scenario_regression_map"]
+        }
+        for scenario_id in [
+            "strong_evidence_ready_preview",
+            "weak_evidence_needs_review",
+            "unsupported_claim_blocked",
+            "video_prompt_visual_claim_risk",
+            "delivery_blocked_by_missing_quote",
+            "provider_safety_blocked",
+            "final_export_ready_preview_only",
+            "operator_handoff_required",
+        ]:
+            with self.subTest(scenario_id=scenario_id):
+                self.assertIn(scenario_id, scenario_ids)
+        self.assertGreaterEqual(len(scenario_ids), 8)
+
+        limitation_text = " ".join(
+            item["limitation_label"] for item in pack["known_system_limitations"]
+        )
+        for limitation in [
+            "no real LLM",
+            "no real provider",
+            "no real media",
+            "no real export",
+            "no DB persistence",
+            "no platform upload",
+            "no policy API",
+            "no real task creation",
+            "no real file write",
+        ]:
+            with self.subTest(limitation=limitation):
+                self.assertIn(limitation, limitation_text)
+
+        scorecard = pack["mvp_readiness_scorecard"]
+        self.assertIn("readiness_score", scorecard)
+        self.assertTrue(scorecard["does_not_represent_real_platform_pass_rate"])
+        self.assertTrue(scorecard["does_not_represent_real_compliance_conclusion"])
+        self.assertTrue(scorecard["is_not_legal_advice"])
+        self.assertFalse(scorecard["real_execution_allowed"])
+
+        checks = pack["final_health_quality_checks"]
+        for key in [
+            "pack_health_covered",
+            "panel_regression_covered",
+            "copy_export_covered",
+            "i18n_covered",
+            "disabled_boundary_covered",
+            "workflow_trace_covered",
+            "scenario_regression_covered",
+            "known_limitations_covered",
+            "provider_secret_network_token_audit_trace_covered",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "real_execution_performed",
+            "database_write_performed",
+            "file_write_performed",
+            "real_export_performed",
+            "provider_called",
+            "llm_called",
+            "real_scraping_performed",
+            "real_regression_job_performed",
+        ]:
+            self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["audit_record_created"])
+        self.assertFalse(audit["database_write_allowed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["operator_task_created"])
+        self.assertFalse(audit["real_regression_job_created"])
+        self.assertFalse(audit["real_file_write_allowed"])
+        self.assertFalse(audit["real_export_allowed"])
+        self.assertFalse(audit["real_execution_allowed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider", "provider_enabled", "llm", "llm_enabled",
+            "media", "media_enabled", "external_scraping",
+            "external_scraping_enabled", "database_persistence",
+            "database_persistence_enabled", "real_execution",
+            "real_execution_enabled", "real_policy_check",
+            "real_policy_check_enabled", "platform_upload",
+            "platform_upload_enabled", "task_creation",
+            "task_creation_enabled", "real_export", "real_export_enabled",
+            "file_write", "file_write_enabled", "secret_read",
+            "secret_read_enabled", "external_call", "external_call_enabled",
+            "token_issue", "token_issue_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertIn(key, boundaries)
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
