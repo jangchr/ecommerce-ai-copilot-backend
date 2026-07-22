@@ -10734,6 +10734,382 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
                 self.assertIn(key, boundaries)
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_mvp_consolidation_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-mvp-consolidation-preview",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "MVPCONSOLIDATE001",
+                "title": "Compact Travel Mug",
+                "reviews": [
+                    {
+                        "rating": 2,
+                        "title": "Leaks during commute",
+                        "text": (
+                            "Leaks during commute and the lid seal drips "
+                            "into my bag every morning."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 5,
+                        "title": "Easy to clean",
+                        "text": (
+                            "The cup is easy to clean after coffee and fits "
+                            "my office bag."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 1,
+                        "title": "Competitor seal problem",
+                        "text": (
+                            "Competitor lid also leaks in a work bag, so I "
+                            "would not trust it for travel."
+                        ),
+                        "source_section": "competitor_review",
+                        "metadata": {"source_type": "competitor"},
+                    },
+                ],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        for existing_pack in [
+            "workspace_final_system_health_pack",
+            "workspace_scenario_presets_pack",
+            "workspace_product_navigation_pack",
+            "campaign_creative_dossier_pack",
+            "final_claim_safe_export_packet_pack",
+            "claim_safe_remediation_verification_pack",
+            "claim_safe_delivery_remediation_pack",
+            "claim_safe_delivery_qa_pack",
+            "claim_safe_platform_delivery_pack",
+            "claim_safe_creative_output_pack",
+            "claim_safe_creative_brief_pack",
+            "claim_risk_guard_pack",
+            "review_evidence_quality_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "workspace_real_execution_approval_token_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_mvp_consolidation_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_mvp_consolidation_pack"]
+        self.assertEqual(pack["pack_version"], "workspace_mvp_consolidation_pack_v1")
+        for required_key in [
+            "mvp_consolidation_summary",
+            "workspace_home_status_cards",
+            "primary_operator_action_cards",
+            "top_blocker_cards",
+            "featured_export_packet_cards",
+            "featured_scenario_shortcut_cards",
+            "module_priority_cards",
+            "workspace_simplification_cards",
+            "disabled_capability_banner",
+            "mvp_readiness_snapshot",
+            "mvp_consolidation_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+        ]:
+            with self.subTest(required_key=required_key):
+                self.assertIn(required_key, pack)
+                self.assertTrue(pack[required_key])
+
+        summary = pack["mvp_consolidation_summary"]
+        self.assertIn("workspace_mvp_consolidation_preview", summary["mode"])
+        self.assertIn("deterministic_product_polish", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        for source_pack in [
+            "workspace_final_system_health_pack",
+            "workspace_scenario_presets_pack",
+            "workspace_product_navigation_pack",
+            "campaign_creative_dossier_pack",
+            "final_claim_safe_export_packet_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "workspace_real_execution_approval_token_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_capability_permission_matrix_pack",
+        ]:
+            self.assertIn(source_pack, summary["source_packs"])
+        for disabled_key in [
+            "real_task_creation_allowed",
+            "real_file_write_allowed",
+            "real_export_allowed",
+            "real_platform_upload_allowed",
+            "real_provider_allowed",
+            "llm_generation_allowed",
+            "database_persistence_allowed",
+            "real_execution_allowed",
+        ]:
+            self.assertFalse(summary[disabled_key])
+
+        home_ids = {card["home_status_id"] for card in pack["workspace_home_status_cards"]}
+        for home_id in [
+            "campaign_status",
+            "claim_safety_status",
+            "final_export_status",
+            "blocker_status",
+            "scenario_demo_status",
+            "provider_safety_status",
+            "mvp_readiness_status",
+        ]:
+            with self.subTest(home_id=home_id):
+                self.assertIn(home_id, home_ids)
+        for card in pack["workspace_home_status_cards"]:
+            for field in [
+                "home_status_id",
+                "status_label",
+                "status_group",
+                "source_pack_refs",
+                "current_status",
+                "readiness_status",
+                "primary_user_message",
+                "secondary_detail",
+                "recommended_operator_action",
+                "blocks_mvp_demo",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(home=card["home_status_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["real_execution_allowed"])
+
+        for card in pack["primary_operator_action_cards"]:
+            for field in [
+                "primary_action_id",
+                "action_label",
+                "action_type",
+                "source_pack_refs",
+                "why_it_matters",
+                "recommended_operator_action",
+                "action_status",
+                "expected_workspace_destination",
+                "creates_real_task",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(action=card["primary_action_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["creates_real_task"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        blocker_text = " ".join(
+            f"{card['top_blocker_id']} {card['blocker_label']}"
+            for card in pack["top_blocker_cards"]
+        )
+        for blocker in [
+            "unsupported claim",
+            "missing quote",
+            "provider disabled",
+            "policy check disabled",
+            "platform upload disabled",
+            "file write disabled",
+            "real execution disabled",
+        ]:
+            with self.subTest(blocker=blocker):
+                self.assertIn(blocker, blocker_text.lower())
+        for card in pack["top_blocker_cards"]:
+            for field in [
+                "top_blocker_id",
+                "blocker_label",
+                "blocker_type",
+                "source_pack_refs",
+                "source_stage_refs",
+                "blocker_status",
+                "severity",
+                "blocks_preview_export",
+                "blocks_mvp_demo",
+                "recommended_resolution_preview",
+                "operator_review_required",
+                "real_task_creation_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(blocker=card["top_blocker_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["real_task_creation_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        for card in pack["featured_export_packet_cards"]:
+            for field in [
+                "featured_export_id",
+                "delivery_surface",
+                "platform_label",
+                "packet_status",
+                "source_export_refs",
+                "included_copy_count",
+                "included_video_prompt_count",
+                "included_claim_trace_count",
+                "blocked_appendix_count",
+                "ready_for_preview_export",
+                "real_file_write_allowed",
+                "real_export_allowed",
+                "real_platform_upload_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(export=card["featured_export_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["real_file_write_allowed"])
+            self.assertFalse(card["real_export_allowed"])
+            self.assertFalse(card["real_platform_upload_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        scenario_ids = {
+            card["scenario_id"]
+            for card in pack["featured_scenario_shortcut_cards"]
+        }
+        for scenario_id in [
+            "strong_evidence_ready_preview",
+            "weak_evidence_needs_review",
+            "unsupported_claim_blocked",
+            "video_prompt_visual_claim_risk",
+            "delivery_blocked_by_missing_quote",
+            "provider_safety_blocked",
+            "final_export_ready_preview_only",
+            "operator_handoff_required",
+        ]:
+            with self.subTest(scenario_id=scenario_id):
+                self.assertIn(scenario_id, scenario_ids)
+        for card in pack["featured_scenario_shortcut_cards"]:
+            for field in [
+                "scenario_shortcut_id",
+                "scenario_id",
+                "scenario_label",
+                "scenario_group",
+                "expected_user_question",
+                "expected_workspace_panels",
+                "expected_status",
+                "expected_blockers",
+                "recommended_operator_action",
+                "demo_run_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(scenario=card["scenario_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["demo_run_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        module_groups = {card["module_group"] for card in pack["module_priority_cards"]}
+        for group in ["primary", "secondary", "diagnostic", "safety"]:
+            self.assertIn(group, module_groups)
+
+        simplification_text = " ".join(
+            card["recommendation"] for card in pack["workspace_simplification_cards"]
+        )
+        for recommendation in [
+            "show final status first",
+            "surface top blockers",
+            "group diagnostic panels",
+            "keep safety disabled banner visible",
+            "put scenario presets near demo entry",
+            "keep final export and campaign dossier prominent",
+        ]:
+            self.assertIn(recommendation, simplification_text)
+        self.assertTrue(
+            all(not card["frontend_change_performed"] for card in pack["workspace_simplification_cards"])
+        )
+
+        banner = pack["disabled_capability_banner"]
+        for capability in [
+            "provider",
+            "llm",
+            "media",
+            "external_scraping",
+            "database_persistence",
+            "real_execution",
+            "real_policy_check",
+            "platform_upload",
+            "task_creation",
+            "real_export",
+            "file_write",
+            "secret_read",
+            "external_call",
+            "token_issue",
+        ]:
+            with self.subTest(capability=capability):
+                self.assertIn(capability, banner["disabled_capabilities"])
+        self.assertTrue(banner["all_real_capabilities_disabled"])
+        self.assertFalse(banner["provider_allowed"])
+        self.assertFalse(banner["llm_allowed"])
+        self.assertFalse(banner["real_execution_allowed"])
+        self.assertFalse(banner["real_export_allowed"])
+        self.assertFalse(banner["file_write_allowed"])
+
+        readiness = pack["mvp_readiness_snapshot"]
+        self.assertIn("readiness_score", readiness)
+        self.assertTrue(readiness["does_not_represent_real_platform_pass_rate"])
+        self.assertTrue(readiness["does_not_represent_real_compliance_conclusion"])
+        self.assertTrue(readiness["is_not_legal_advice"])
+        self.assertFalse(readiness["real_execution_allowed"])
+
+        checks = pack["mvp_consolidation_quality_checks"]
+        for key in [
+            "home_status_covered",
+            "operator_actions_covered",
+            "top_blockers_covered",
+            "featured_export_covered",
+            "scenario_shortcuts_covered",
+            "module_priority_covered",
+            "disabled_banner_covered",
+            "safety_boundary_covered",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "frontend_layout_changed",
+            "real_execution_performed",
+            "database_write_performed",
+            "file_write_performed",
+            "real_export_performed",
+            "provider_called",
+            "llm_called",
+            "real_scraping_performed",
+            "real_task_created",
+        ]:
+            self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["audit_record_created"])
+        self.assertFalse(audit["database_write_allowed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["operator_task_created"])
+        self.assertFalse(audit["real_file_write_allowed"])
+        self.assertFalse(audit["real_export_allowed"])
+        self.assertFalse(audit["real_execution_allowed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider", "provider_enabled", "llm", "llm_enabled",
+            "media", "media_enabled", "external_scraping",
+            "external_scraping_enabled", "database_persistence",
+            "database_persistence_enabled", "real_execution",
+            "real_execution_enabled", "real_policy_check",
+            "real_policy_check_enabled", "platform_upload",
+            "platform_upload_enabled", "task_creation",
+            "task_creation_enabled", "real_export", "real_export_enabled",
+            "file_write", "file_write_enabled", "secret_read",
+            "secret_read_enabled", "external_call", "external_call_enabled",
+            "token_issue", "token_issue_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertIn(key, boundaries)
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):

@@ -43491,6 +43491,334 @@ def _rw_workspace_final_system_health_pack(creative_decision_pack: dict) -> dict
     }
 
 
+def _rw_workspace_mvp_consolidation_pack(creative_decision_pack: dict) -> dict:
+    source_pack_ids = [
+        "workspace_final_system_health_pack",
+        "workspace_scenario_presets_pack",
+        "workspace_product_navigation_pack",
+        "campaign_creative_dossier_pack",
+        "final_claim_safe_export_packet_pack",
+        "claim_safe_remediation_verification_pack",
+        "claim_safe_delivery_remediation_pack",
+        "claim_safe_delivery_qa_pack",
+        "claim_safe_platform_delivery_pack",
+        "claim_safe_creative_output_pack",
+        "claim_safe_creative_brief_pack",
+        "claim_risk_guard_pack",
+        "review_evidence_quality_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_real_execution_approval_token_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_capability_permission_matrix_pack",
+    ]
+    packs = {pack_id: dict(creative_decision_pack.get(pack_id) or {}) for pack_id in source_pack_ids}
+
+    def pack_status(pack_id: str) -> str:
+        pack = packs.get(pack_id) or {}
+        if not pack:
+            return "missing"
+        if pack.get("pack_version"):
+            return "present"
+        return "partial"
+
+    home_specs = [
+        ("campaign_status", "Campaign status", "primary", ["campaign_creative_dossier_pack"], "Campaign dossier preview is ready for manual review.", False),
+        ("claim_safety_status", "Claim safety status", "primary", ["claim_risk_guard_pack", "review_evidence_quality_pack"], "Claim safety remains evidence-bound and preview-only.", False),
+        ("final_export_status", "Final export status", "primary", ["final_claim_safe_export_packet_pack"], "Final export packet is available as preview only.", False),
+        ("blocker_status", "Top blocker status", "primary", ["claim_safe_delivery_remediation_pack", "claim_safe_remediation_verification_pack"], "Top blockers are surfaced before any preview export.", True),
+        ("scenario_demo_status", "Scenario demo status", "secondary", ["workspace_scenario_presets_pack"], "Eight deterministic scenario shortcuts are available for demo preview.", False),
+        ("provider_safety_status", "Provider safety status", "safety", ["workspace_provider_invocation_audit_packet_pack", "workspace_real_execution_approval_token_pack"], "Provider and real execution paths remain disabled.", True),
+        ("mvp_readiness_status", "MVP readiness status", "primary", ["workspace_final_system_health_pack", "workspace_product_navigation_pack"], "MVP readiness is deterministic preview scoring only.", False),
+    ]
+    workspace_home_status_cards = []
+    for status_id, label, group, refs, message, blocks_demo in home_specs:
+        missing = [ref for ref in refs if pack_status(ref) == "missing"]
+        workspace_home_status_cards.append({
+            "home_status_id": status_id,
+            "status_label": label,
+            "status_group": group,
+            "source_pack_refs": refs,
+            "current_status": "present" if not missing else "missing_source_pack",
+            "readiness_status": "preview_ready" if not missing and not blocks_demo else "manual_review_required",
+            "primary_user_message": message,
+            "secondary_detail": "Derived from existing workspace packs only; no frontend layout change is performed by this backend pack.",
+            "recommended_operator_action": "Use this MVP home preview to decide which existing workspace panel to inspect next.",
+            "blocks_mvp_demo": bool(blocks_demo),
+            "real_execution_allowed": False,
+            "risk_note": "Workspace home status is deterministic product polish metadata only and does not execute.",
+        })
+
+    primary_operator_action_cards = [
+        {
+            "primary_action_id": "review_top_blockers",
+            "action_label": "Review top blockers first",
+            "action_type": "manual_review",
+            "source_pack_refs": ["workspace_final_system_health_pack", "claim_safe_delivery_remediation_pack"],
+            "why_it_matters": "Keeps unsupported claims, missing quote support, and disabled provider boundaries visible before demo.",
+            "recommended_operator_action": "Open the blocker and remediation preview panels; do not create a real task.",
+            "action_status": "preview_ready",
+            "expected_workspace_destination": "Top Blockers / Remediation Preview",
+            "creates_real_task": False,
+            "real_execution_allowed": False,
+            "risk_note": "Action card is manual guidance only and does not create operator tasks.",
+        },
+        {
+            "primary_action_id": "inspect_final_export_packet",
+            "action_label": "Inspect final export packet preview",
+            "action_type": "preview_inspection",
+            "source_pack_refs": ["final_claim_safe_export_packet_pack", "campaign_creative_dossier_pack"],
+            "why_it_matters": "Keeps final copy, prompt, claim trace, blocked appendix, and dossier handoff prominent.",
+            "recommended_operator_action": "Copy or review preview data only; do not write files or upload to platforms.",
+            "action_status": "preview_ready",
+            "expected_workspace_destination": "Final Export / Campaign Dossier",
+            "creates_real_task": False,
+            "real_execution_allowed": False,
+            "risk_note": "Preview inspection does not perform a real export.",
+        },
+        {
+            "primary_action_id": "open_scenario_demo_preview",
+            "action_label": "Open scenario demo preview",
+            "action_type": "demo_preview",
+            "source_pack_refs": ["workspace_scenario_presets_pack", "workspace_product_navigation_pack"],
+            "why_it_matters": "Lets the operator demo deterministic user questions without using real customer data.",
+            "recommended_operator_action": "Use the scenario shortcuts as preview-only navigation hints.",
+            "action_status": "preview_ready",
+            "expected_workspace_destination": "Scenario Presets / Demo Runs",
+            "creates_real_task": False,
+            "real_execution_allowed": False,
+            "risk_note": "No real demo run is created.",
+        },
+    ]
+
+    blocker_specs = [
+        ("unsupported_claim", "Unsupported claim", "claim_safety", ["claim_risk_guard_pack"], ["claim_risk_guard"], "blocked", "high", True, True),
+        ("missing_quote", "Missing quote", "evidence_quality", ["review_evidence_quality_pack"], ["evidence_quality"], "needs_review", "high", True, True),
+        ("blocked_output", "Blocked output", "creative_output", ["claim_safe_creative_output_pack"], ["claim_safe_output"], "blocked", "medium", True, True),
+        ("provider_disabled", "Provider disabled", "provider_safety", ["workspace_provider_invocation_audit_packet_pack"], ["provider_safety_controls"], "disabled_by_design", "high", False, True),
+        ("policy_check_disabled", "Policy check disabled", "safety_boundary", ["workspace_capability_permission_matrix_pack"], ["provider_safety_controls"], "disabled_by_design", "medium", False, True),
+        ("platform_upload_disabled", "Platform upload disabled", "delivery_boundary", ["final_claim_safe_export_packet_pack"], ["final_export_packet"], "disabled_by_design", "medium", True, True),
+        ("file_write_disabled", "File write disabled", "export_boundary", ["final_claim_safe_export_packet_pack"], ["final_export_packet"], "disabled_by_design", "medium", True, True),
+        ("real_execution_disabled", "Real execution disabled", "execution_boundary", ["workspace_real_execution_approval_token_pack"], ["real_execution_blockers"], "disabled_by_design", "high", True, True),
+    ]
+    top_blocker_cards = [
+        {
+            "top_blocker_id": blocker_id,
+            "blocker_label": label,
+            "blocker_type": blocker_type,
+            "source_pack_refs": refs,
+            "source_stage_refs": stages,
+            "blocker_status": status,
+            "severity": severity,
+            "blocks_preview_export": blocks_export,
+            "blocks_mvp_demo": blocks_demo,
+            "recommended_resolution_preview": "Resolve in the deterministic preview workflow or keep the item blocked for manual review.",
+            "operator_review_required": True,
+            "real_task_creation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Blocker is preview metadata only and does not create tasks, call policy APIs, or execute.",
+        }
+        for blocker_id, label, blocker_type, refs, stages, status, severity, blocks_export, blocks_demo in blocker_specs
+    ]
+
+    final_export_pack = packs.get("final_claim_safe_export_packet_pack") or {}
+    export_cards = list(final_export_pack.get("final_export_packet_cards") or [])
+    if not export_cards:
+        export_cards = [{
+            "delivery_surface": "workspace_preview",
+            "platform_label": "manual",
+            "packet_status": "preview_available" if pack_status("final_claim_safe_export_packet_pack") != "missing" else "missing_source_pack",
+        }]
+    featured_export_packet_cards = []
+    for index, card in enumerate(export_cards[:6], start=1):
+        featured_export_packet_cards.append({
+            "featured_export_id": f"featured_export_{index}",
+            "delivery_surface": card.get("delivery_surface") or card.get("surface_id") or "workspace_preview",
+            "platform_label": card.get("platform_label") or card.get("platform") or "manual",
+            "packet_status": card.get("packet_status") or card.get("readiness_status") or "preview_available",
+            "source_export_refs": ["final_claim_safe_export_packet_pack", "campaign_creative_dossier_pack"],
+            "included_copy_count": len(card.get("copy_refs") or card.get("copy_items") or []),
+            "included_video_prompt_count": len(card.get("video_prompt_refs") or card.get("video_prompt_items") or []),
+            "included_claim_trace_count": len(card.get("claim_trace_refs") or card.get("claim_trace_items") or []),
+            "blocked_appendix_count": len(card.get("blocked_appendix_refs") or card.get("blocked_items") or []),
+            "ready_for_preview_export": True,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Featured export packet is preview-only and does not write files, export, upload, or execute.",
+        })
+
+    scenario_pack = packs.get("workspace_scenario_presets_pack") or {}
+    scenario_cards = list(scenario_pack.get("demo_scenario_cards") or [])
+    featured_scenario_shortcut_cards = [
+        {
+            "scenario_shortcut_id": f"scenario_shortcut_{card.get('scenario_id')}",
+            "scenario_id": card.get("scenario_id"),
+            "scenario_label": card.get("scenario_label"),
+            "scenario_group": card.get("scenario_group"),
+            "expected_user_question": card.get("expected_user_question"),
+            "expected_workspace_panels": card.get("expected_workspace_panels") or [],
+            "expected_status": card.get("expected_status"),
+            "expected_blockers": card.get("expected_blockers") or [],
+            "recommended_operator_action": card.get("recommended_operator_action"),
+            "demo_run_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Scenario shortcut is deterministic and does not create a real demo run.",
+        }
+        for card in scenario_cards[:8]
+    ]
+
+    module_priority_cards = [
+        {"module_priority_id": "primary_final_status", "module_group": "primary", "module_label": "Final status and top blockers", "source_pack_refs": ["workspace_mvp_consolidation_pack", "workspace_final_system_health_pack"], "recommended_operator_action": "Show final status first.", "real_execution_allowed": False},
+        {"module_priority_id": "secondary_scenario_navigation", "module_group": "secondary", "module_label": "Scenario presets and product navigation", "source_pack_refs": ["workspace_scenario_presets_pack", "workspace_product_navigation_pack"], "recommended_operator_action": "Put scenario presets near demo entry.", "real_execution_allowed": False},
+        {"module_priority_id": "diagnostic_health_maps", "module_group": "diagnostic", "module_label": "Health, regression, and trace maps", "source_pack_refs": ["workspace_final_system_health_pack"], "recommended_operator_action": "Group diagnostic panels to reduce information noise.", "real_execution_allowed": False},
+        {"module_priority_id": "safety_disabled_boundaries", "module_group": "safety", "module_label": "Disabled safety boundaries", "source_pack_refs": ["workspace_provider_invocation_audit_packet_pack"], "recommended_operator_action": "Keep safety disabled banner visible.", "real_execution_allowed": False},
+    ]
+    workspace_simplification_cards = [
+        {"simplification_id": "show_final_status_first", "recommendation": "show final status first", "frontend_change_performed": False, "risk_note": "Product polish suggestion only."},
+        {"simplification_id": "surface_top_blockers", "recommendation": "surface top blockers", "frontend_change_performed": False, "risk_note": "Product polish suggestion only."},
+        {"simplification_id": "group_diagnostic_panels", "recommendation": "group diagnostic panels", "frontend_change_performed": False, "risk_note": "Product polish suggestion only."},
+        {"simplification_id": "keep_safety_disabled_banner_visible", "recommendation": "keep safety disabled banner visible", "frontend_change_performed": False, "risk_note": "Product polish suggestion only."},
+        {"simplification_id": "put_scenario_presets_near_demo_entry", "recommendation": "put scenario presets near demo entry", "frontend_change_performed": False, "risk_note": "Product polish suggestion only."},
+        {"simplification_id": "keep_final_export_and_dossier_prominent", "recommendation": "keep final export and campaign dossier prominent", "frontend_change_performed": False, "risk_note": "Product polish suggestion only."},
+    ]
+
+    capability_ids = [
+        "provider",
+        "llm",
+        "media",
+        "external_scraping",
+        "database_persistence",
+        "real_execution",
+        "real_policy_check",
+        "platform_upload",
+        "task_creation",
+        "real_export",
+        "file_write",
+        "secret_read",
+        "external_call",
+        "token_issue",
+    ]
+    disabled_capability_banner = {
+        "banner_id": "workspace_mvp_disabled_capability_banner",
+        "banner_status": "visible_preview_required",
+        "disabled_capabilities": capability_ids,
+        "all_real_capabilities_disabled": True,
+        "provider_allowed": False,
+        "llm_allowed": False,
+        "real_execution_allowed": False,
+        "real_export_allowed": False,
+        "file_write_allowed": False,
+        "risk_note": "Real provider, LLM, media, scraping, persistence, execution, upload, export, file write, secret read, external call, and token issue remain disabled.",
+    }
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "secret_read": False,
+        "secret_read_enabled": False,
+        "external_call": False,
+        "external_call_enabled": False,
+        "token_issue": False,
+        "token_issue_enabled": False,
+    }
+    ready_home_count = sum(1 for card in workspace_home_status_cards if card["current_status"] == "present")
+    return {
+        "pack_version": "workspace_mvp_consolidation_pack_v1",
+        "mvp_consolidation_summary": {
+            "mode": "workspace_mvp_consolidation_preview_deterministic_product_polish_dry_run_only",
+            "source_packs": source_pack_ids,
+            "home_status_count": len(workspace_home_status_cards),
+            "primary_operator_action_count": len(primary_operator_action_cards),
+            "top_blocker_count": len(top_blocker_cards),
+            "featured_export_packet_count": len(featured_export_packet_cards),
+            "featured_scenario_shortcut_count": len(featured_scenario_shortcut_cards),
+            "module_priority_count": len(module_priority_cards),
+            "workspace_simplification_count": len(workspace_simplification_cards),
+            "real_task_creation_allowed": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_provider_allowed": False,
+            "llm_generation_allowed": False,
+            "database_persistence_allowed": False,
+            "real_execution_allowed": False,
+            "recommended_operator_action": "Use this deterministic MVP consolidation preview to polish the workspace home experience manually; do not create tasks, write files, export, upload, call providers, call LLMs, or persist.",
+        },
+        "workspace_home_status_cards": workspace_home_status_cards,
+        "primary_operator_action_cards": primary_operator_action_cards,
+        "top_blocker_cards": top_blocker_cards,
+        "featured_export_packet_cards": featured_export_packet_cards,
+        "featured_scenario_shortcut_cards": featured_scenario_shortcut_cards,
+        "module_priority_cards": module_priority_cards,
+        "workspace_simplification_cards": workspace_simplification_cards,
+        "disabled_capability_banner": disabled_capability_banner,
+        "mvp_readiness_snapshot": {
+            "snapshot_id": "workspace_mvp_consolidation_readiness_snapshot",
+            "readiness_score": round((ready_home_count / len(workspace_home_status_cards)) * 100, 2) if workspace_home_status_cards else 0,
+            "readiness_status": "deterministic_mvp_preview_ready" if ready_home_count == len(workspace_home_status_cards) else "deterministic_mvp_preview_needs_review",
+            "does_not_represent_real_platform_pass_rate": True,
+            "does_not_represent_real_compliance_conclusion": True,
+            "is_not_legal_advice": True,
+            "real_execution_allowed": False,
+            "risk_note": "MVP readiness is deterministic product polish preview only.",
+        },
+        "mvp_consolidation_quality_checks": {
+            "home_status_covered": bool(workspace_home_status_cards),
+            "operator_actions_covered": bool(primary_operator_action_cards),
+            "top_blockers_covered": bool(top_blocker_cards),
+            "featured_export_covered": bool(featured_export_packet_cards),
+            "scenario_shortcuts_covered": len(featured_scenario_shortcut_cards) >= 8,
+            "module_priority_covered": {"primary", "secondary", "diagnostic", "safety"} <= {card["module_group"] for card in module_priority_cards},
+            "disabled_banner_covered": bool(disabled_capability_banner),
+            "safety_boundary_covered": all(value is False for value in safety_boundaries.values()),
+            "frontend_layout_changed": False,
+            "real_execution_performed": False,
+            "database_write_performed": False,
+            "file_write_performed": False,
+            "real_export_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "real_scraping_performed": False,
+            "real_task_created": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "workspace_mvp_consolidation_preview",
+            "source": "creative_decision_pack.workspace_mvp_consolidation_pack",
+            "audit_record_created": False,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "operator_task_created": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -43724,6 +44052,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_final_system_health_pack"] = (
         _rw_workspace_final_system_health_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_mvp_consolidation_pack"] = (
+        _rw_workspace_mvp_consolidation_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
