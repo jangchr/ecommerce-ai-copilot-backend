@@ -3650,6 +3650,7 @@
         let latestProjectWorkspaceFinalSystemHealthPack = {};
         let latestProjectWorkspaceMvpConsolidationPack = {};
         let latestProjectWorkspaceDemoCampaignWalkthroughPack = {};
+        let latestProjectWorkspaceMvpReadinessDossierPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7326,6 +7327,63 @@
             demoCampaignWalkthroughAuditNote: 'Audit preview is display-only; it does not write databases and does not read real logs or real history tables.',
             demoCampaignWalkthroughSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceMvpReadinessDossierMarker: 'Project Workspace MVP readiness dossier bundle',
+            mvpReadinessDossierPackTitle: 'MVP Readiness Dossier / Final Freeze',
+            mvpReadinessDossierPackHelper: 'Project Workspace MVP readiness dossier bundle. Deterministic MVP readiness and final freeze preview only; this is not a real release, not a production readiness job, not a real platform pass rate, not a real compliance conclusion, not a real policy API result, and not legal advice.',
+            mvpReadinessDossierSummaryInventoryTitle: 'MVP Readiness Summary / Capability Inventory',
+            mvpReadinessDossierSummaryTitle: 'MVP Readiness Dossier Summary',
+            mvpReadinessDossierInventoryTitle: 'MVP Capability Inventory Cards',
+            mvpReadinessDossierBoundaryFreezeTitle: 'Disabled Boundary Locks / Final Freeze Checklist',
+            mvpReadinessDossierBoundaryTitle: 'MVP Disabled Boundary Lock Cards',
+            mvpReadinessDossierFreezeTitle: 'MVP Final Freeze Checklist',
+            mvpReadinessDossierReleaseUnlockTitle: 'Release Candidate Preview / Post-MVP Unlock Gates',
+            mvpReadinessDossierReleaseTitle: 'MVP Release Candidate Cards',
+            mvpReadinessDossierUnlockTitle: 'Post-MVP Unlock Gate Cards',
+            mvpReadinessDossierHandoffValidationTitle: 'MVP Handoff Dossier / Final Validation / Limitations / Risk Register',
+            mvpReadinessDossierHandoffTitle: 'MVP Handoff Dossier Cards',
+            mvpReadinessDossierValidationTitle: 'Final Validation Matrix',
+            mvpReadinessDossierLimitationsTitle: 'Final Known Limitations',
+            mvpReadinessDossierRiskTitle: 'Final Risk Register Cards',
+            mvpReadinessDossierQualityAuditTitle: 'MVP Readiness Quality / Audit / Safety Boundaries',
+            mvpReadinessDossierQualityTitle: 'MVP Readiness Quality Checks',
+            mvpReadinessDossierAuditTitle: 'Audit Preview',
+            mvpReadinessDossierSafetyTitle: 'Safety Boundaries',
+            mvpReadinessDossierMode: 'Mode',
+            mvpReadinessDossierCapabilityCount: 'Capability inventory count',
+            mvpReadinessDossierBoundaryCount: 'Disabled boundary lock count',
+            mvpReadinessDossierFreezeCount: 'Final freeze checklist count',
+            mvpReadinessDossierReleaseCount: 'Release candidate count',
+            mvpReadinessDossierUnlockCount: 'Post-MVP unlock gate count',
+            mvpReadinessDossierValidationCount: 'Final validation matrix count',
+            mvpReadinessDossierRecommendedAction: 'Recommended operator action',
+            mvpReadinessDossierExecution: 'Real execution allowed',
+            mvpReadinessDossierDisabled: 'disabled',
+            mvpReadinessDossierNoData: 'No MVP readiness dossier data is available.',
+            mvpReadinessDossierCopyNoData: 'No MVP readiness dossier content is available to copy.',
+            mvpReadinessDossierCopyFailed: 'Unable to copy MVP readiness dossier content.',
+            mvpReadinessDossierCopied: 'MVP readiness dossier content copied.',
+            mvpReadinessDossierCopySummary: 'Copy MVP readiness dossier summary',
+            mvpReadinessDossierCopyInventory: 'Copy MVP capability inventory cards',
+            mvpReadinessDossierCopyBoundary: 'Copy MVP disabled boundary lock cards',
+            mvpReadinessDossierCopyFreeze: 'Copy MVP final freeze checklist',
+            mvpReadinessDossierCopyRelease: 'Copy MVP release candidate cards',
+            mvpReadinessDossierCopyUnlock: 'Copy post-MVP unlock gate cards',
+            mvpReadinessDossierCopyHandoff: 'Copy MVP handoff dossier cards',
+            mvpReadinessDossierCopyValidation: 'Copy final validation matrix',
+            mvpReadinessDossierCopyLimitations: 'Copy final known limitations',
+            mvpReadinessDossierCopyRisk: 'Copy final risk register cards',
+            mvpReadinessDossierCopyFull: 'Copy full MVP readiness dossier pack',
+            mvpReadinessDossierPreviewNote: 'Deterministic MVP readiness and final freeze preview only. It does not create a real release, does not create a real tag, does not create real tasks, does not export files, does not write files, does not upload files, does not call providers, does not call an LLM, does not write databases, does not read real logs, does not create real audit events, and does not execute real operations.',
+            mvpReadinessDossierInventoryNote: 'Capability inventory covers review import, competitor comparison, evidence quality, claim safety, delivery, final export, dossier, navigation, scenarios, system health, MVP consolidation, demo walkthrough, and provider safety controls without claiming real launch readiness.',
+            mvpReadinessDossierBoundaryNote: 'Disabled boundary locks keep provider, llm, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue disabled for MVP.',
+            mvpReadinessDossierFreezeNote: 'Final freeze checks are preview checks only. They do not run a real production readiness job and do not certify a real platform pass rate or compliance conclusion.',
+            mvpReadinessDossierReleaseNote: 'Release candidate and post-MVP unlock gates are preview-only. They do not create a real release, do not create a tag, and do not unlock real LLM, provider, database, file export, platform upload, or task creation capabilities.',
+            mvpReadinessDossierHandoffNote: 'Handoff dossier cards only explain what the demo can show and what it must not claim. They must not provide legal advice, must not claim real platform approval, and must not claim a real platform pass rate.',
+            mvpReadinessDossierQualityNote: 'Quality checks cover capability inventory, disabled boundary locks, freeze checklist, release candidate preview, post-MVP unlock gates, handoff dossier, validation matrix, known limitations, risk register, and safety boundary coverage.',
+            mvpReadinessDossierAuditNote: 'Audit preview is display-only; it does not write databases, does not read real logs or real history tables, and does not create real audit events.',
+            mvpReadinessDossierSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
             claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
@@ -8191,6 +8249,63 @@
             demoCampaignWalkthroughQualityNote: 'Walkthrough quality checks \u8986\u76d6 evidence\u3001claim safety\u3001creative output\u3001delivery\u3001QA\u3001remediation\u3001verification\u3001final export\u3001dossier\u3001navigation\u3001scenario\u3001MVP home \u548c disabled safety boundary\u3002',
             demoCampaignWalkthroughAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff1b\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u771f\u5b9e\u5386\u53f2\u8868\u3002',
             demoCampaignWalkthroughSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export\u3001file write\u3001secret read\u3001external call \u548c token issue \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceMvpReadinessDossierMarker: 'Project Workspace MVP readiness dossier bundle',
+            mvpReadinessDossierPackTitle: 'MVP Readiness Dossier / Final Freeze',
+            mvpReadinessDossierPackHelper: '\u67e5\u770b Project Workspace MVP readiness dossier bundle\u3002\u8fd9\u53ea\u662f deterministic MVP readiness \u548c final freeze preview\uff0c\u4e0d\u662f\u771f\u5b9e release\uff0c\u4e0d\u662f\u771f\u5b9e production readiness job\uff0c\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\uff0c\u4e0d\u662f\u771f\u5b9e\u5408\u89c4\u7ed3\u8bba\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u7ed3\u679c\uff0c\u4e5f\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\u3002',
+            mvpReadinessDossierSummaryInventoryTitle: 'MVP Readiness Summary / Capability Inventory',
+            mvpReadinessDossierSummaryTitle: 'MVP Readiness Dossier Summary',
+            mvpReadinessDossierInventoryTitle: 'MVP Capability Inventory Cards',
+            mvpReadinessDossierBoundaryFreezeTitle: 'Disabled Boundary Locks / Final Freeze Checklist',
+            mvpReadinessDossierBoundaryTitle: 'MVP Disabled Boundary Lock Cards',
+            mvpReadinessDossierFreezeTitle: 'MVP Final Freeze Checklist',
+            mvpReadinessDossierReleaseUnlockTitle: 'Release Candidate Preview / Post-MVP Unlock Gates',
+            mvpReadinessDossierReleaseTitle: 'MVP Release Candidate Cards',
+            mvpReadinessDossierUnlockTitle: 'Post-MVP Unlock Gate Cards',
+            mvpReadinessDossierHandoffValidationTitle: 'MVP Handoff Dossier / Final Validation / Limitations / Risk Register',
+            mvpReadinessDossierHandoffTitle: 'MVP Handoff Dossier Cards',
+            mvpReadinessDossierValidationTitle: 'Final Validation Matrix',
+            mvpReadinessDossierLimitationsTitle: 'Final Known Limitations',
+            mvpReadinessDossierRiskTitle: 'Final Risk Register Cards',
+            mvpReadinessDossierQualityAuditTitle: 'MVP Readiness Quality / Audit / Safety Boundaries',
+            mvpReadinessDossierQualityTitle: 'MVP Readiness Quality Checks',
+            mvpReadinessDossierAuditTitle: 'Audit Preview',
+            mvpReadinessDossierSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            mvpReadinessDossierMode: '\u6a21\u5f0f',
+            mvpReadinessDossierCapabilityCount: 'Capability inventory \u6570\u91cf',
+            mvpReadinessDossierBoundaryCount: 'Disabled boundary lock \u6570\u91cf',
+            mvpReadinessDossierFreezeCount: 'Final freeze checklist \u6570\u91cf',
+            mvpReadinessDossierReleaseCount: 'Release candidate \u6570\u91cf',
+            mvpReadinessDossierUnlockCount: 'Post-MVP unlock gate \u6570\u91cf',
+            mvpReadinessDossierValidationCount: 'Final validation matrix \u6570\u91cf',
+            mvpReadinessDossierRecommendedAction: '\u63a8\u8350 operator action',
+            mvpReadinessDossierExecution: '\u5141\u8bb8\u771f\u5b9e execution',
+            mvpReadinessDossierDisabled: '\u5df2\u7981\u7528',
+            mvpReadinessDossierNoData: '\u6682\u65e0 MVP readiness dossier \u6570\u636e\u3002',
+            mvpReadinessDossierCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 MVP readiness dossier \u5185\u5bb9\u3002',
+            mvpReadinessDossierCopyFailed: '\u65e0\u6cd5\u590d\u5236 MVP readiness dossier \u5185\u5bb9\u3002',
+            mvpReadinessDossierCopied: 'MVP readiness dossier \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            mvpReadinessDossierCopySummary: '\u590d\u5236 MVP readiness dossier summary',
+            mvpReadinessDossierCopyInventory: '\u590d\u5236 MVP capability inventory cards',
+            mvpReadinessDossierCopyBoundary: '\u590d\u5236 MVP disabled boundary lock cards',
+            mvpReadinessDossierCopyFreeze: '\u590d\u5236 MVP final freeze checklist',
+            mvpReadinessDossierCopyRelease: '\u590d\u5236 MVP release candidate cards',
+            mvpReadinessDossierCopyUnlock: '\u590d\u5236 post-MVP unlock gate cards',
+            mvpReadinessDossierCopyHandoff: '\u590d\u5236 MVP handoff dossier cards',
+            mvpReadinessDossierCopyValidation: '\u590d\u5236 final validation matrix',
+            mvpReadinessDossierCopyLimitations: '\u590d\u5236 final known limitations',
+            mvpReadinessDossierCopyRisk: '\u590d\u5236 final risk register cards',
+            mvpReadinessDossierCopyFull: '\u590d\u5236\u5b8c\u6574 MVP readiness dossier pack',
+            mvpReadinessDossierPreviewNote: '\u4ec5\u4e3a deterministic MVP readiness \u548c final freeze preview\u3002\u4e0d\u521b\u5efa\u771f\u5b9e release\uff0c\u4e0d\u6253\u771f\u5b9e tag\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e task\uff0c\u4e0d\u771f\u5b9e export\uff0c\u4e0d\u5199\u6587\u4ef6\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u8c03\u7528 LLM\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e audit event\uff0c\u4e0d\u6267\u884c\u771f\u5b9e\u64cd\u4f5c\u3002',
+            mvpReadinessDossierInventoryNote: 'Capability inventory \u8986\u76d6 review import\u3001competitor comparison\u3001evidence quality\u3001claim safety\u3001delivery\u3001final export\u3001dossier\u3001navigation\u3001scenarios\u3001system health\u3001MVP consolidation\u3001demo walkthrough \u548c provider safety controls\uff0c\u4f46\u4e0d\u58f0\u79f0\u771f\u5b9e\u4e0a\u7ebf\u51c6\u5907\u5b8c\u6210\u3002',
+            mvpReadinessDossierBoundaryNote: 'Disabled boundary locks \u4fdd\u6301 provider\u3001llm\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export\u3001file write\u3001secret read\u3001external call \u548c token issue \u5728 MVP \u9636\u6bb5\u7981\u7528\u3002',
+            mvpReadinessDossierFreezeNote: 'Final freeze checks \u53ea\u662f preview checks\u3002\u4e0d\u8fd0\u884c\u771f\u5b9e production readiness job\uff0c\u4e0d\u8bc1\u660e\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\u6216\u5408\u89c4\u7ed3\u8bba\u3002',
+            mvpReadinessDossierReleaseNote: 'Release candidate \u548c post-MVP unlock gates \u90fd\u53ea\u662f preview\u3002\u4e0d\u521b\u5efa\u771f\u5b9e release\uff0c\u4e0d\u6253 tag\uff0c\u4e0d\u89e3\u9501\u771f\u5b9e LLM\u3001provider\u3001database\u3001file export\u3001platform upload \u6216 task creation \u80fd\u529b\u3002',
+            mvpReadinessDossierHandoffNote: 'Handoff dossier cards \u53ea\u8bf4\u660e demo \u80fd\u5c55\u793a\u4ec0\u4e48\u548c\u4e0d\u80fd\u58f0\u79f0\u4ec0\u4e48\u3002\u4e0d\u80fd\u8f93\u51fa\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u80fd\u58f0\u79f0\u771f\u5b9e\u5e73\u53f0\u5ba1\u6279\uff0c\u4e0d\u80fd\u58f0\u79f0\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\u3002',
+            mvpReadinessDossierQualityNote: 'Quality checks \u8986\u76d6 capability inventory\u3001disabled boundary locks\u3001freeze checklist\u3001release candidate preview\u3001post-MVP unlock gates\u3001handoff dossier\u3001validation matrix\u3001known limitations\u3001risk register \u548c safety boundary\u3002',
+            mvpReadinessDossierAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff1b\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u771f\u5b9e\u5386\u53f2\u8868\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e audit event\u3002',
+            mvpReadinessDossierSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export\u3001file write\u3001secret read\u3001external call \u548c token issue \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -11695,6 +11810,7 @@
                 latestProjectWorkspaceFinalSystemHealthPack = latestProjectCreativeDecisionPack.workspace_final_system_health_pack || {};
                 latestProjectWorkspaceMvpConsolidationPack = latestProjectCreativeDecisionPack.workspace_mvp_consolidation_pack || {};
                 latestProjectWorkspaceDemoCampaignWalkthroughPack = latestProjectCreativeDecisionPack.workspace_demo_campaign_walkthrough_pack || {};
+                latestProjectWorkspaceMvpReadinessDossierPack = latestProjectCreativeDecisionPack.workspace_mvp_readiness_dossier_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -17581,6 +17697,7 @@
         const PROJECT_WORKSPACE_FINAL_SYSTEM_HEALTH_MARKER = 'Project Workspace final system health bundle';
         const PROJECT_WORKSPACE_MVP_CONSOLIDATION_MARKER = 'Project Workspace MVP consolidation bundle';
         const PROJECT_WORKSPACE_DEMO_CAMPAIGN_WALKTHROUGH_MARKER = 'Project Workspace demo campaign walkthrough bundle';
+        const PROJECT_WORKSPACE_MVP_READINESS_DOSSIER_MARKER = 'Project Workspace MVP readiness dossier bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -25062,6 +25179,142 @@
         function copyProjectWorkspaceScenarioBranchCards() { return copyProjectWorkspaceDemoCampaignWalkthroughText('scenarios'); }
         function copyProjectWorkspacePresenterNoteCards() { return copyProjectWorkspaceDemoCampaignWalkthroughText('presenter'); }
         function copyProjectWorkspaceFullDemoCampaignWalkthroughPack() { return copyProjectWorkspaceDemoCampaignWalkthroughText('full'); }
+        function projectWorkspaceMvpReadinessDossierPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceMvpReadinessDossierPack && Object.keys(latestProjectWorkspaceMvpReadinessDossierPack).length) return latestProjectWorkspaceMvpReadinessDossierPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_mvp_readiness_dossier_pack || {};
+        }
+
+        function projectWorkspaceMvpReadinessDossierHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspaceMvpReadinessDossierSanitizePlaceholderText(value) {
+            return String(value || '').replace(/\?{4,}/g, 'placeholder tokens');
+        }
+
+        function projectWorkspaceMvpReadinessDossierJsonText(value) {
+            if (!projectWorkspaceMvpReadinessDossierHasData(value)) return '';
+            return projectWorkspaceMvpReadinessDossierSanitizePlaceholderText(JSON.stringify(value, null, 2));
+        }
+
+        function projectWorkspaceMvpReadinessDossierDisabledText(value) {
+            return value === false || value == null ? t('mvpReadinessDossierDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportMvpReadinessDossierSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceMvpReadinessDossierPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_MVP_READINESS_DOSSIER_MARKER,
+                has_workspace_mvp_readiness_dossier_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                mvp_readiness_dossier_summary: pack.mvp_readiness_dossier_summary || {},
+                mvp_capability_inventory_cards: Array.isArray(pack.mvp_capability_inventory_cards) ? pack.mvp_capability_inventory_cards : [],
+                mvp_disabled_boundary_lock_cards: Array.isArray(pack.mvp_disabled_boundary_lock_cards) ? pack.mvp_disabled_boundary_lock_cards : [],
+                mvp_final_freeze_checklist: Array.isArray(pack.mvp_final_freeze_checklist) ? pack.mvp_final_freeze_checklist : [],
+                mvp_release_candidate_cards: Array.isArray(pack.mvp_release_candidate_cards) ? pack.mvp_release_candidate_cards : [],
+                post_mvp_unlock_gate_cards: Array.isArray(pack.post_mvp_unlock_gate_cards) ? pack.post_mvp_unlock_gate_cards : [],
+                mvp_handoff_dossier_cards: Array.isArray(pack.mvp_handoff_dossier_cards) ? pack.mvp_handoff_dossier_cards : [],
+                final_validation_matrix: Array.isArray(pack.final_validation_matrix) ? pack.final_validation_matrix : [],
+                final_known_limitations: Array.isArray(pack.final_known_limitations) ? pack.final_known_limitations : [],
+                final_risk_register_cards: Array.isArray(pack.final_risk_register_cards) ? pack.final_risk_register_cards : [],
+                mvp_readiness_quality_checks: pack.mvp_readiness_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceMvpReadinessDossierSummaryText(pack = projectWorkspaceExportMvpReadinessDossierSnapshot()) {
+            if (!pack.has_workspace_mvp_readiness_dossier_pack) return '';
+            const summary = pack.mvp_readiness_dossier_summary || {};
+            return projectWorkspaceMvpReadinessDossierSanitizePlaceholderText([
+                t('mvpReadinessDossierSummaryTitle'),
+                `${t('mvpReadinessDossierMode')}: ${summary.mode || t('none')}`,
+                `${t('mvpReadinessDossierCapabilityCount')}: ${summary.capability_inventory_count ?? pack.mvp_capability_inventory_cards.length}`,
+                `${t('mvpReadinessDossierBoundaryCount')}: ${summary.disabled_boundary_lock_count ?? pack.mvp_disabled_boundary_lock_cards.length}`,
+                `${t('mvpReadinessDossierFreezeCount')}: ${summary.final_freeze_check_count ?? pack.mvp_final_freeze_checklist.length}`,
+                `${t('mvpReadinessDossierReleaseCount')}: ${summary.release_candidate_count ?? pack.mvp_release_candidate_cards.length}`,
+                `${t('mvpReadinessDossierUnlockCount')}: ${summary.post_mvp_unlock_gate_count ?? pack.post_mvp_unlock_gate_cards.length}`,
+                `${t('mvpReadinessDossierValidationCount')}: ${pack.final_validation_matrix.length}`,
+                `${t('mvpReadinessDossierRecommendedAction')}: ${summary.risk_note || t('mvpReadinessDossierPreviewNote')}`,
+                `release_tag_created: ${projectWorkspaceMvpReadinessDossierDisabledText(summary.release_tag_created)}`,
+                `real_release_created: ${projectWorkspaceMvpReadinessDossierDisabledText(summary.real_release_created)}`,
+                `real_file_write_allowed: ${projectWorkspaceMvpReadinessDossierDisabledText(summary.real_file_write_allowed)}`,
+                `real_export_allowed: ${projectWorkspaceMvpReadinessDossierDisabledText(summary.real_export_allowed)}`,
+                `real_provider_allowed: ${projectWorkspaceMvpReadinessDossierDisabledText(summary.real_provider_allowed)}`,
+                `${t('mvpReadinessDossierExecution')}: ${projectWorkspaceMvpReadinessDossierDisabledText(summary.real_execution_allowed)}`,
+                t('mvpReadinessDossierPreviewNote')
+            ].join('\n'));
+        }
+
+        function projectWorkspaceMvpReadinessDossierSectionText(titleKey, value) {
+            const body = projectWorkspaceMvpReadinessDossierJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportMvpReadinessDossierMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMvpReadinessDossierSnapshot(workspace);
+            if (!pack.has_workspace_mvp_readiness_dossier_pack) return '';
+            return [
+                `## ${t('mvpReadinessDossierPackTitle')}`,
+                `## ${t('mvpReadinessDossierSummaryTitle')}`,
+                projectWorkspaceMvpReadinessDossierSummaryText(pack), '',
+                projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierInventoryTitle', pack.mvp_capability_inventory_cards), '',
+                projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierBoundaryTitle', pack.mvp_disabled_boundary_lock_cards), '',
+                projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierFreezeTitle', pack.mvp_final_freeze_checklist), '',
+                projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierReleaseTitle', pack.mvp_release_candidate_cards), '',
+                projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierUnlockTitle', pack.post_mvp_unlock_gate_cards), '',
+                projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierHandoffTitle', pack.mvp_handoff_dossier_cards), '',
+                projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierValidationTitle', pack.final_validation_matrix), '',
+                projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierLimitationsTitle', pack.final_known_limitations), '',
+                projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierRiskTitle', pack.final_risk_register_cards), '',
+                projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierQualityTitle', pack.mvp_readiness_quality_checks), '',
+                projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierAuditTitle', pack.audit_preview), '',
+                projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierSafetyTitle', pack.safety_boundaries),
+                t('mvpReadinessDossierInventoryNote'),
+                t('mvpReadinessDossierBoundaryNote'),
+                t('mvpReadinessDossierFreezeNote'),
+                t('mvpReadinessDossierReleaseNote'),
+                t('mvpReadinessDossierHandoffNote'),
+                t('mvpReadinessDossierQualityNote'),
+                t('mvpReadinessDossierAuditNote'),
+                t('mvpReadinessDossierSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceMvpReadinessDossierText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceMvpReadinessDossierStatus');
+            const pack = projectWorkspaceExportMvpReadinessDossierSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceMvpReadinessDossierSummaryText(pack)
+                : kind === 'inventory' ? projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierInventoryTitle', pack.mvp_capability_inventory_cards)
+                : kind === 'boundary' ? projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierBoundaryTitle', pack.mvp_disabled_boundary_lock_cards)
+                : kind === 'freeze' ? projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierFreezeTitle', pack.mvp_final_freeze_checklist)
+                : kind === 'release' ? projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierReleaseTitle', pack.mvp_release_candidate_cards)
+                : kind === 'unlock' ? projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierUnlockTitle', pack.post_mvp_unlock_gate_cards)
+                : kind === 'handoff' ? projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierHandoffTitle', pack.mvp_handoff_dossier_cards)
+                : kind === 'validation' ? projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierValidationTitle', pack.final_validation_matrix)
+                : kind === 'limitations' ? projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierLimitationsTitle', pack.final_known_limitations)
+                : kind === 'risk' ? projectWorkspaceMvpReadinessDossierSectionText('mvpReadinessDossierRiskTitle', pack.final_risk_register_cards)
+                : projectWorkspaceExportMvpReadinessDossierMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('mvpReadinessDossierCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('mvpReadinessDossierCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('mvpReadinessDossierCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('mvpReadinessDossierCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceMvpReadinessDossierSummary() { return copyProjectWorkspaceMvpReadinessDossierText('summary'); }
+        function copyProjectWorkspaceMvpCapabilityInventoryCards() { return copyProjectWorkspaceMvpReadinessDossierText('inventory'); }
+        function copyProjectWorkspaceMvpDisabledBoundaryLockCards() { return copyProjectWorkspaceMvpReadinessDossierText('boundary'); }
+        function copyProjectWorkspaceMvpFinalFreezeChecklist() { return copyProjectWorkspaceMvpReadinessDossierText('freeze'); }
+        function copyProjectWorkspaceMvpReleaseCandidateCards() { return copyProjectWorkspaceMvpReadinessDossierText('release'); }
+        function copyProjectWorkspacePostMvpUnlockGateCards() { return copyProjectWorkspaceMvpReadinessDossierText('unlock'); }
+        function copyProjectWorkspaceMvpHandoffDossierCards() { return copyProjectWorkspaceMvpReadinessDossierText('handoff'); }
+        function copyProjectWorkspaceFinalValidationMatrix() { return copyProjectWorkspaceMvpReadinessDossierText('validation'); }
+        function copyProjectWorkspaceFinalKnownLimitations() { return copyProjectWorkspaceMvpReadinessDossierText('limitations'); }
+        function copyProjectWorkspaceFinalRiskRegisterCards() { return copyProjectWorkspaceMvpReadinessDossierText('risk'); }
+        function copyProjectWorkspaceFullMvpReadinessDossierPack() { return copyProjectWorkspaceMvpReadinessDossierText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -29606,6 +29859,42 @@
             return `<div class="section-block" id="projectWorkspaceDemoCampaignWalkthroughExportQualityPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('demoCampaignWalkthroughExportQualityTitle'))}</div><div class="field-helper">${escapeHTML(t('demoCampaignWalkthroughSafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullDemoCampaignWalkthroughPack()">${escapeHTML(t('demoCampaignWalkthroughCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('demoCampaignWalkthroughCopyExportTitle'))}</strong><div class="graph-os-compact-grid">${copyMap || `<div class="empty-state">${escapeHTML(t('demoCampaignWalkthroughNoData'))}</div>`}</div><div class="field-helper">copy/export preview only; no real export, no file write, no platform upload.</div></div><div class="graph-os-card"><strong>${escapeHTML(t('demoCampaignWalkthroughQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceDemoCampaignWalkthroughJsonText(pack.walkthrough_quality_checks) || t('demoCampaignWalkthroughNoData'))}</pre><div class="field-helper">evidence / claim safety / creative output / delivery / QA / remediation / verification / final export / dossier / navigation / scenario / MVP home / disabled safety boundary</div><div class="field-helper">${escapeHTML(t('demoCampaignWalkthroughQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('demoCampaignWalkthroughAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceDemoCampaignWalkthroughJsonText(pack.audit_preview) || t('demoCampaignWalkthroughNoData'))}</pre><div class="field-helper">${escapeHTML(t('demoCampaignWalkthroughAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('demoCampaignWalkthroughSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled</div><div class="field-helper">${escapeHTML(t('demoCampaignWalkthroughSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceMvpReadinessDossierSummaryInventoryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMvpReadinessDossierSnapshot(workspace); if (!pack.has_workspace_mvp_readiness_dossier_pack) return '';
+            const summary = pack.mvp_readiness_dossier_summary || {};
+            const inventory = pack.mvp_capability_inventory_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.capability_label || card.capability_inventory_id || t('none'))}</strong><div class="field-helper">capability_inventory_id: ${escapeHTML(card.capability_inventory_id || '')} / capability_group: ${escapeHTML(card.capability_group || '')}</div><div class="field-helper">source_pack_refs: ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div class="field-helper">current_mvp_status: ${escapeHTML(card.current_mvp_status || '')} / demo_ready: ${escapeHTML(String(card.demo_ready))} / operator_visible: ${escapeHTML(String(card.operator_visible))} / copy_export_preview_supported: ${escapeHTML(String(card.copy_export_preview_supported))}</div><div class="field-helper">requires_real_provider: ${escapeHTML(projectWorkspaceMvpReadinessDossierDisabledText(card.requires_real_provider))} / requires_real_database: ${escapeHTML(projectWorkspaceMvpReadinessDossierDisabledText(card.requires_real_database))} / requires_real_file_write: ${escapeHTML(projectWorkspaceMvpReadinessDossierDisabledText(card.requires_real_file_write))} / real_execution_allowed: ${escapeHTML(projectWorkspaceMvpReadinessDossierDisabledText(card.real_execution_allowed))}</div><div>${escapeHTML(card.risk_note || '')}</div></div>`).join('');
+            return projectWorkspaceMvpReadinessDossierSanitizePlaceholderText(`<div class="section-block" id="projectWorkspaceMvpReadinessDossierSummaryInventoryPanel" data-marker="project_workspace_mvp_readiness_dossier_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('mvpReadinessDossierSummaryInventoryTitle'))}</div><div class="field-helper">${escapeHTML(t('mvpReadinessDossierPackHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMvpReadinessDossierSummary()">${escapeHTML(t('mvpReadinessDossierCopySummary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMvpCapabilityInventoryCards()">${escapeHTML(t('mvpReadinessDossierCopyInventory'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullMvpReadinessDossierPack()">${escapeHTML(t('mvpReadinessDossierCopyFull'))}</button></div></div><div class="metric-strip">${metricPill(t('mvpReadinessDossierMode'), summary.mode || t('none'))}${metricPill(t('mvpReadinessDossierCapabilityCount'), String(summary.capability_inventory_count ?? pack.mvp_capability_inventory_cards.length))}${metricPill(t('mvpReadinessDossierBoundaryCount'), String(summary.disabled_boundary_lock_count ?? pack.mvp_disabled_boundary_lock_cards.length))}${metricPill(t('mvpReadinessDossierFreezeCount'), String(summary.final_freeze_check_count ?? pack.mvp_final_freeze_checklist.length))}${metricPill(t('mvpReadinessDossierReleaseCount'), String(summary.release_candidate_count ?? pack.mvp_release_candidate_cards.length))}${metricPill(t('mvpReadinessDossierUnlockCount'), String(summary.post_mvp_unlock_gate_count ?? pack.post_mvp_unlock_gate_cards.length))}${metricPill(t('mvpReadinessDossierValidationCount'), String(pack.final_validation_matrix.length))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceMvpReadinessDossierSummaryText(pack))}</pre><div class="graph-os-compact-grid">${inventory || `<div class="empty-state">${escapeHTML(t('mvpReadinessDossierNoData'))}</div>`}</div><div class="field-helper">review_import / competitor_comparison / evidence_quality / claim_risk_guard / claim_safe_brief / claim_safe_output / platform_delivery / delivery_qa / remediation / remediation_verification / final_export_packet / campaign_dossier / product_navigation / scenario_presets / final_system_health / mvp_consolidation / demo_walkthrough / provider_safety_controls</div><div class="demo-warning">${escapeHTML(t('mvpReadinessDossierInventoryNote'))}</div><div id="projectWorkspaceMvpReadinessDossierStatus" class="field-helper" aria-live="polite"></div></div>`);
+        }
+
+        function renderProjectWorkspaceMvpReadinessDossierBoundaryFreezePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMvpReadinessDossierSnapshot(workspace); if (!pack.has_workspace_mvp_readiness_dossier_pack) return '';
+            const locks = pack.mvp_disabled_boundary_lock_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.capability_label || card.boundary_lock_id || t('none'))}</strong><div class="field-helper">boundary_lock_id: ${escapeHTML(card.boundary_lock_id || '')} / capability_id: ${escapeHTML(card.capability_id || '')}</div><div class="field-helper">expected_disabled: ${escapeHTML(String(card.expected_disabled))} / observed_allowed: ${escapeHTML(projectWorkspaceMvpReadinessDossierDisabledText(card.observed_allowed))} / must_remain_disabled_for_mvp: ${escapeHTML(String(card.must_remain_disabled_for_mvp))} / unlock_not_allowed_in_this_phase: ${escapeHTML(String(card.unlock_not_allowed_in_this_phase))}</div><div class="field-helper">source_guard_refs: ${escapeHTML((card.source_guard_refs || []).join(', ') || t('none'))}</div><div class="field-helper">unlock_requires: ${escapeHTML((card.unlock_requires || []).join(', ') || t('none'))}</div><div>${escapeHTML(card.risk_note || '')}</div></div>`).join('');
+            const checks = pack.mvp_final_freeze_checklist.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.check_label || card.freeze_check_id || t('none'))}</strong><div class="field-helper">freeze_check_id: ${escapeHTML(card.freeze_check_id || '')} / check_group: ${escapeHTML(card.check_group || '')}</div><div class="field-helper">expected_status: ${escapeHTML(card.expected_status || '')} / observed_status: ${escapeHTML(card.observed_status || '')} / blocks_mvp_freeze: ${escapeHTML(String(card.blocks_mvp_freeze))}</div><div class="field-helper">requires_browser_verification: ${escapeHTML(String(card.requires_browser_verification))} / requires_batch_gate: ${escapeHTML(String(card.requires_batch_gate))} / real_execution_allowed: ${escapeHTML(projectWorkspaceMvpReadinessDossierDisabledText(card.real_execution_allowed))}</div><div>${escapeHTML(card.recommended_operator_action || '')}</div></div>`).join('');
+            return projectWorkspaceMvpReadinessDossierSanitizePlaceholderText(`<div class="section-block" id="projectWorkspaceMvpReadinessDossierBoundaryFreezePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('mvpReadinessDossierBoundaryFreezeTitle'))}</div><div class="field-helper">${escapeHTML(t('mvpReadinessDossierFreezeNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMvpDisabledBoundaryLockCards()">${escapeHTML(t('mvpReadinessDossierCopyBoundary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMvpFinalFreezeChecklist()">${escapeHTML(t('mvpReadinessDossierCopyFreeze'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('mvpReadinessDossierBoundaryTitle'))}</strong><div class="graph-os-compact-grid">${locks || `<div class="empty-state">${escapeHTML(t('mvpReadinessDossierNoData'))}</div>`}</div><div class="field-helper">provider / llm / media / external_scraping / database_persistence / real_execution / real_policy_check / platform_upload / task_creation / real_export / file_write / secret_read / external_call / token_issue</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpReadinessDossierFreezeTitle'))}</strong><div class="graph-os-compact-grid">${checks || `<div class="empty-state">${escapeHTML(t('mvpReadinessDossierNoData'))}</div>`}</div><div class="field-helper">batch-gate / EN-ZH browser validation / no naked i18n key / no placeholder tokens / panel rendering / copy feedback / JSON export preview / Markdown export preview / disabled boundary / git clean / origin main sync</div></div></div><div class="demo-warning">${escapeHTML(t('mvpReadinessDossierBoundaryNote'))}</div></div>`);
+        }
+
+        function renderProjectWorkspaceMvpReadinessDossierReleaseUnlockPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMvpReadinessDossierSnapshot(workspace); if (!pack.has_workspace_mvp_readiness_dossier_pack) return '';
+            const releases = pack.mvp_release_candidate_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.release_label || card.release_candidate_id || t('none'))}</strong><div class="field-helper">release_candidate_id: ${escapeHTML(card.release_candidate_id || '')} / release_scope: ${escapeHTML(card.release_scope || '')}</div><div class="field-helper">included_stage_refs: ${escapeHTML((card.included_stage_refs || []).join(', ') || t('none'))}</div><div class="field-helper">included_pack_refs: ${escapeHTML((card.included_pack_refs || []).join(', ') || t('none'))}</div><div class="field-helper">excluded_real_capabilities: ${escapeHTML((card.excluded_real_capabilities || []).join(', ') || t('none'))}</div><div class="field-helper">readiness_status: ${escapeHTML(card.readiness_status || '')} / release_tag_created: ${escapeHTML(projectWorkspaceMvpReadinessDossierDisabledText(card.release_tag_created))} / real_release_created: ${escapeHTML(projectWorkspaceMvpReadinessDossierDisabledText(card.real_release_created))} / real_execution_allowed: ${escapeHTML(projectWorkspaceMvpReadinessDossierDisabledText(card.real_execution_allowed))}</div><div>${escapeHTML(card.risk_note || '')}</div></div>`).join('');
+            const unlocks = pack.post_mvp_unlock_gate_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.future_capability_label || card.unlock_gate_id || t('none'))}</strong><div class="field-helper">unlock_gate_id: ${escapeHTML(card.unlock_gate_id || '')} / future_capability_group: ${escapeHTML(card.future_capability_group || '')}</div><div class="field-helper">currently_disabled: ${escapeHTML(String(card.currently_disabled))} / not_allowed_in_mvp: ${escapeHTML(String(card.not_allowed_in_mvp))}</div><div class="field-helper">required_preconditions: ${escapeHTML((card.required_preconditions || []).join(', ') || t('none'))}</div><div class="field-helper">required_tests: ${escapeHTML((card.required_tests || []).join(', ') || t('none'))}</div><div class="field-helper">required_operator_approvals: ${escapeHTML((card.required_operator_approvals || []).join(', ') || t('none'))}</div><div class="field-helper">required_audit_controls: ${escapeHTML((card.required_audit_controls || []).join(', ') || t('none'))}</div><div>${escapeHTML(card.risk_note || '')}</div></div>`).join('');
+            return projectWorkspaceMvpReadinessDossierSanitizePlaceholderText(`<div class="section-block" id="projectWorkspaceMvpReadinessDossierReleaseUnlockPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('mvpReadinessDossierReleaseUnlockTitle'))}</div><div class="field-helper">${escapeHTML(t('mvpReadinessDossierReleaseNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMvpReleaseCandidateCards()">${escapeHTML(t('mvpReadinessDossierCopyRelease'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePostMvpUnlockGateCards()">${escapeHTML(t('mvpReadinessDossierCopyUnlock'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('mvpReadinessDossierReleaseTitle'))}</strong><div class="graph-os-compact-grid">${releases || `<div class="empty-state">${escapeHTML(t('mvpReadinessDossierNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpReadinessDossierUnlockTitle'))}</strong><div class="graph-os-compact-grid">${unlocks || `<div class="empty-state">${escapeHTML(t('mvpReadinessDossierNoData'))}</div>`}</div><div class="field-helper">future real LLM / provider / database / file export / platform upload / task creation</div></div></div><div class="demo-warning">${escapeHTML(t('mvpReadinessDossierReleaseNote'))}</div></div>`);
+        }
+
+        function renderProjectWorkspaceMvpReadinessDossierHandoffValidationPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMvpReadinessDossierSnapshot(workspace); if (!pack.has_workspace_mvp_readiness_dossier_pack) return '';
+            const handoffs = pack.mvp_handoff_dossier_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.handoff_label || card.handoff_dossier_id || t('none'))}</strong><div class="field-helper">handoff_dossier_id: ${escapeHTML(card.handoff_dossier_id || '')} / handoff_group: ${escapeHTML(card.handoff_group || '')}</div><div class="field-helper">source_pack_refs: ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div><strong>what_to_show:</strong> ${escapeHTML(card.what_to_show || '')}</div><div><strong>what_to_explain:</strong> ${escapeHTML(card.what_to_explain || '')}</div><div><strong>what_not_to_claim:</strong> ${escapeHTML(card.what_not_to_claim || '')}</div><div class="field-helper">operator_note: ${escapeHTML(card.operator_note || '')}</div><div class="field-helper">ready_for_demo: ${escapeHTML(String(card.ready_for_demo))} / real_file_write_allowed: ${escapeHTML(projectWorkspaceMvpReadinessDossierDisabledText(card.real_file_write_allowed))} / real_export_allowed: ${escapeHTML(projectWorkspaceMvpReadinessDossierDisabledText(card.real_export_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspaceMvpReadinessDossierDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            const validation = projectWorkspaceMvpReadinessDossierJsonText(pack.final_validation_matrix);
+            const limitations = projectWorkspaceMvpReadinessDossierJsonText(pack.final_known_limitations);
+            const risks = projectWorkspaceMvpReadinessDossierJsonText(pack.final_risk_register_cards);
+            return projectWorkspaceMvpReadinessDossierSanitizePlaceholderText(`<div class="section-block" id="projectWorkspaceMvpReadinessDossierHandoffValidationPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('mvpReadinessDossierHandoffValidationTitle'))}</div><div class="field-helper">${escapeHTML(t('mvpReadinessDossierHandoffNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMvpHandoffDossierCards()">${escapeHTML(t('mvpReadinessDossierCopyHandoff'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFinalValidationMatrix()">${escapeHTML(t('mvpReadinessDossierCopyValidation'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFinalKnownLimitations()">${escapeHTML(t('mvpReadinessDossierCopyLimitations'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFinalRiskRegisterCards()">${escapeHTML(t('mvpReadinessDossierCopyRisk'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('mvpReadinessDossierHandoffTitle'))}</strong><div class="graph-os-compact-grid">${handoffs || `<div class="empty-state">${escapeHTML(t('mvpReadinessDossierNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpReadinessDossierValidationTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(validation || t('mvpReadinessDossierNoData'))}</pre><div class="field-helper">backend tests / frontend tests / browser EN/ZH / i18n / copy/export preview / disabled boundary / git status / push status</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpReadinessDossierLimitationsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(limitations || t('mvpReadinessDossierNoData'))}</pre><div class="field-helper">no real LLM / no real provider / no real media / no real export / no DB persistence / no platform upload / no policy API / no real task creation / no real file write / no real release tag</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpReadinessDossierRiskTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(risks || t('mvpReadinessDossierNoData'))}</pre><div class="field-helper">claim risk / unsupported claim / missing quote / provider disabled / policy check disabled / platform upload disabled / file write disabled / real execution disabled / demo-only limitation</div></div></div><div class="demo-warning">${escapeHTML(t('mvpReadinessDossierHandoffNote'))}</div></div>`);
+        }
+
+        function renderProjectWorkspaceMvpReadinessDossierQualityAuditPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportMvpReadinessDossierSnapshot(workspace); if (!pack.has_workspace_mvp_readiness_dossier_pack) return '';
+            const safety = projectWorkspaceMvpReadinessDossierJsonText(pack.safety_boundaries);
+            return projectWorkspaceMvpReadinessDossierSanitizePlaceholderText(`<div class="section-block" id="projectWorkspaceMvpReadinessDossierQualityAuditPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('mvpReadinessDossierQualityAuditTitle'))}</div><div class="field-helper">${escapeHTML(t('mvpReadinessDossierSafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullMvpReadinessDossierPack()">${escapeHTML(t('mvpReadinessDossierCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('mvpReadinessDossierQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceMvpReadinessDossierJsonText(pack.mvp_readiness_quality_checks) || t('mvpReadinessDossierNoData'))}</pre><div class="field-helper">capability inventory / disabled boundary locks / freeze checklist / release candidate preview / post-MVP unlock gates / handoff dossier / validation matrix / known limitations / risk register / safety boundary</div><div class="field-helper">${escapeHTML(t('mvpReadinessDossierQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpReadinessDossierAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceMvpReadinessDossierJsonText(pack.audit_preview) || t('mvpReadinessDossierNoData'))}</pre><div class="field-helper">${escapeHTML(t('mvpReadinessDossierAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('mvpReadinessDossierSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled</div><div class="field-helper">${escapeHTML(t('mvpReadinessDossierSafetyNote'))}</div></div>`);
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -30066,6 +30355,8 @@
                 '',
                 projectWorkspaceExportDemoCampaignWalkthroughMarkdown(workspace),
                 '',
+                projectWorkspaceExportMvpReadinessDossierMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -30197,6 +30488,7 @@
                 workspace_final_system_health_pack: projectWorkspaceExportFinalSystemHealthSnapshot(workspace),
                 workspace_mvp_consolidation_pack: projectWorkspaceExportMvpConsolidationSnapshot(workspace),
                 workspace_demo_campaign_walkthrough_pack: projectWorkspaceExportDemoCampaignWalkthroughSnapshot(workspace),
+                workspace_mvp_readiness_dossier_pack: projectWorkspaceExportMvpReadinessDossierSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -42843,6 +43135,11 @@
                     ${renderProjectWorkspaceDemoCampaignWalkthroughCreativeQaPanel(workspace)}
                     ${renderProjectWorkspaceDemoCampaignWalkthroughHandoffScenarioPanel(workspace)}
                     ${renderProjectWorkspaceDemoCampaignWalkthroughExportQualityPanel(workspace)}
+                    ${renderProjectWorkspaceMvpReadinessDossierSummaryInventoryPanel(workspace)}
+                    ${renderProjectWorkspaceMvpReadinessDossierBoundaryFreezePanel(workspace)}
+                    ${renderProjectWorkspaceMvpReadinessDossierReleaseUnlockPanel(workspace)}
+                    ${renderProjectWorkspaceMvpReadinessDossierHandoffValidationPanel(workspace)}
+                    ${renderProjectWorkspaceMvpReadinessDossierQualityAuditPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}

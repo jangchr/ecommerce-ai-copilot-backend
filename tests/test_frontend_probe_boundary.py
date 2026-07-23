@@ -16996,6 +16996,297 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_mvp_readiness_dossier_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace MVP readiness dossier bundle",
+            "project_workspace_mvp_readiness_dossier_marker",
+            "PROJECT_WORKSPACE_MVP_READINESS_DOSSIER_MARKER",
+            "latestProjectWorkspaceMvpReadinessDossierPack",
+            "workspace_mvp_readiness_dossier_pack",
+            "projectWorkspaceMvpReadinessDossierPackFromWorkspace",
+            "projectWorkspaceExportMvpReadinessDossierSnapshot",
+            "projectWorkspaceExportMvpReadinessDossierMarkdown",
+            "renderProjectWorkspaceMvpReadinessDossierSummaryInventoryPanel",
+            "renderProjectWorkspaceMvpReadinessDossierBoundaryFreezePanel",
+            "renderProjectWorkspaceMvpReadinessDossierReleaseUnlockPanel",
+            "renderProjectWorkspaceMvpReadinessDossierHandoffValidationPanel",
+            "renderProjectWorkspaceMvpReadinessDossierQualityAuditPanel",
+            "copyProjectWorkspaceMvpReadinessDossierSummary",
+            "copyProjectWorkspaceMvpCapabilityInventoryCards",
+            "copyProjectWorkspaceMvpDisabledBoundaryLockCards",
+            "copyProjectWorkspaceMvpFinalFreezeChecklist",
+            "copyProjectWorkspaceMvpReleaseCandidateCards",
+            "copyProjectWorkspacePostMvpUnlockGateCards",
+            "copyProjectWorkspaceMvpHandoffDossierCards",
+            "copyProjectWorkspaceFinalValidationMatrix",
+            "copyProjectWorkspaceFinalKnownLimitations",
+            "copyProjectWorkspaceFinalRiskRegisterCards",
+            "copyProjectWorkspaceFullMvpReadinessDossierPack",
+            "workspace_mvp_readiness_dossier_pack: projectWorkspaceExportMvpReadinessDossierSnapshot(workspace)",
+            "MVP Readiness Dossier / Final Freeze",
+            "MVP Readiness Dossier Summary",
+            "MVP Capability Inventory Cards",
+            "MVP Disabled Boundary Lock Cards",
+            "MVP Final Freeze Checklist",
+            "MVP Release Candidate Cards",
+            "Post-MVP Unlock Gate Cards",
+            "MVP Handoff Dossier Cards",
+            "Final Validation Matrix",
+            "Final Known Limitations",
+            "Final Risk Register Cards",
+            "MVP Readiness Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "mvp_readiness_dossier_summary",
+            "mvp_capability_inventory_cards",
+            "mvp_disabled_boundary_lock_cards",
+            "mvp_final_freeze_checklist",
+            "mvp_release_candidate_cards",
+            "post_mvp_unlock_gate_cards",
+            "mvp_handoff_dossier_cards",
+            "final_validation_matrix",
+            "final_known_limitations",
+            "final_risk_register_cards",
+            "mvp_readiness_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+            "card.capability_inventory_id",
+            "card.capability_label",
+            "card.capability_group",
+            "card.current_mvp_status",
+            "card.demo_ready",
+            "card.operator_visible",
+            "card.copy_export_preview_supported",
+            "card.requires_real_provider",
+            "card.requires_real_database",
+            "card.requires_real_file_write",
+            "card.real_execution_allowed",
+            "card.boundary_lock_id",
+            "card.capability_id",
+            "card.expected_disabled",
+            "card.observed_allowed",
+            "card.must_remain_disabled_for_mvp",
+            "card.source_guard_refs",
+            "card.unlock_requires",
+            "card.unlock_not_allowed_in_this_phase",
+            "card.freeze_check_id",
+            "card.check_label",
+            "card.check_group",
+            "card.expected_status",
+            "card.observed_status",
+            "card.blocks_mvp_freeze",
+            "card.recommended_operator_action",
+            "card.requires_browser_verification",
+            "card.requires_batch_gate",
+            "card.release_candidate_id",
+            "card.release_label",
+            "card.release_scope",
+            "card.included_stage_refs",
+            "card.included_pack_refs",
+            "card.excluded_real_capabilities",
+            "card.readiness_status",
+            "card.release_tag_created",
+            "card.real_release_created",
+            "card.unlock_gate_id",
+            "card.future_capability_label",
+            "card.future_capability_group",
+            "card.currently_disabled",
+            "card.required_preconditions",
+            "card.required_tests",
+            "card.required_operator_approvals",
+            "card.required_audit_controls",
+            "card.not_allowed_in_mvp",
+            "card.handoff_dossier_id",
+            "card.handoff_label",
+            "card.handoff_group",
+            "card.what_to_show",
+            "card.what_to_explain",
+            "card.what_not_to_claim",
+            "card.operator_note",
+            "card.ready_for_demo",
+            "card.real_file_write_allowed",
+            "card.real_export_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for capability_id in [
+            "review_import",
+            "competitor_comparison",
+            "evidence_quality",
+            "claim_risk_guard",
+            "claim_safe_brief",
+            "claim_safe_output",
+            "platform_delivery",
+            "delivery_qa",
+            "remediation",
+            "remediation_verification",
+            "final_export_packet",
+            "campaign_dossier",
+            "product_navigation",
+            "scenario_presets",
+            "final_system_health",
+            "mvp_consolidation",
+            "demo_walkthrough",
+            "provider_safety_controls",
+        ]:
+            with self.subTest(capability_id=capability_id):
+                self.assertIn(capability_id, html)
+        for boundary_id in [
+            "provider",
+            "llm",
+            "media",
+            "external_scraping",
+            "database_persistence",
+            "real_execution",
+            "real_policy_check",
+            "platform_upload",
+            "task_creation",
+            "real_export",
+            "file_write",
+            "secret_read",
+            "external_call",
+            "token_issue",
+        ]:
+            with self.subTest(boundary_id=boundary_id):
+                self.assertIn(boundary_id, html)
+        for freeze_or_gate in [
+            "batch-gate",
+            "EN-ZH browser validation",
+            "no naked i18n key",
+            "no placeholder tokens",
+            "panel rendering",
+            "copy feedback",
+            "JSON export preview",
+            "Markdown export preview",
+            "disabled boundary",
+            "git clean",
+            "origin main sync",
+            "future real LLM",
+            "provider / database / file export / platform upload / task creation",
+            "backend tests / frontend tests / browser EN/ZH",
+            "no real LLM / no real provider / no real media / no real export",
+            "claim risk / unsupported claim / missing quote",
+        ]:
+            with self.subTest(freeze_or_gate=freeze_or_gate):
+                self.assertIn(freeze_or_gate, html)
+        previous = html.index("renderProjectWorkspaceDemoCampaignWalkthroughExportQualityPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceMvpReadinessDossierSummaryInventoryPanel(workspace)")
+        boundary = html.index("renderProjectWorkspaceMvpReadinessDossierBoundaryFreezePanel(workspace)")
+        release = html.index("renderProjectWorkspaceMvpReadinessDossierReleaseUnlockPanel(workspace)")
+        handoff = html.index("renderProjectWorkspaceMvpReadinessDossierHandoffValidationPanel(workspace)")
+        quality = html.index("renderProjectWorkspaceMvpReadinessDossierQualityAuditPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, boundary)
+        self.assertLess(boundary, release)
+        self.assertLess(release, handoff)
+        self.assertLess(handoff, quality)
+        self.assertLess(quality, core)
+
+    def test_workspace_mvp_readiness_dossier_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "mvpReadinessDossierPackTitle",
+            "mvpReadinessDossierSummaryTitle",
+            "mvpReadinessDossierInventoryTitle",
+            "mvpReadinessDossierBoundaryTitle",
+            "mvpReadinessDossierFreezeTitle",
+            "mvpReadinessDossierReleaseTitle",
+            "mvpReadinessDossierUnlockTitle",
+            "mvpReadinessDossierHandoffTitle",
+            "mvpReadinessDossierValidationTitle",
+            "mvpReadinessDossierLimitationsTitle",
+            "mvpReadinessDossierRiskTitle",
+            "mvpReadinessDossierQualityTitle",
+            "mvpReadinessDossierAuditTitle",
+            "mvpReadinessDossierSafetyTitle",
+            "mvpReadinessDossierCopySummary",
+            "mvpReadinessDossierCopyInventory",
+            "mvpReadinessDossierCopyBoundary",
+            "mvpReadinessDossierCopyFreeze",
+            "mvpReadinessDossierCopyRelease",
+            "mvpReadinessDossierCopyUnlock",
+            "mvpReadinessDossierCopyHandoff",
+            "mvpReadinessDossierCopyValidation",
+            "mvpReadinessDossierCopyLimitations",
+            "mvpReadinessDossierCopyRisk",
+            "mvpReadinessDossierCopyFull",
+            "mvpReadinessDossierCopied",
+            "mvpReadinessDossierCopyFailed",
+            "mvpReadinessDossierCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace MVP readiness dossier bundle", script)
+            self.assertIn("project_workspace_mvp_readiness_dossier_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceMvpReadinessDossierSummaryText"):
+            html.index("async function copyProjectWorkspaceMvpReadinessDossierText")
+        ]
+        for key in [
+            "mvpReadinessDossierPackTitle",
+            "mvpReadinessDossierSummaryTitle",
+            "mvpReadinessDossierInventoryTitle",
+            "mvpReadinessDossierBoundaryTitle",
+            "mvpReadinessDossierFreezeTitle",
+            "mvpReadinessDossierReleaseTitle",
+            "mvpReadinessDossierUnlockTitle",
+            "mvpReadinessDossierHandoffTitle",
+            "mvpReadinessDossierValidationTitle",
+            "mvpReadinessDossierLimitationsTitle",
+            "mvpReadinessDossierRiskTitle",
+            "mvpReadinessDossierQualityTitle",
+            "mvpReadinessDossierAuditTitle",
+            "mvpReadinessDossierSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_MVP_READINESS_DOSSIER_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic MVP readiness",
+            "final freeze preview",
+            "not a real release",
+            "not a production readiness job",
+            "not a real platform pass rate",
+            "not a real compliance conclusion",
+            "not a real policy API result",
+            "not legal advice",
+            "does not create a real release",
+            "does not create a real tag",
+            "does not create real tasks",
+            "does not export files",
+            "does not write files",
+            "does not upload files",
+            "does not call providers",
+            "does not call an LLM",
+            "does not write databases",
+            "does not read real logs",
+            "does not create real audit events",
+            "does not execute real operations",
+            "do not create a real release",
+            "do not create a tag",
+            "do not unlock real LLM",
+            "Handoff dossier cards only explain what the demo can show",
+            "must not provide legal advice",
+            "must not claim real platform approval",
+            "Audit preview is display-only; it does not write databases, does not read real logs or real history tables, and does not create real audit events.",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [
