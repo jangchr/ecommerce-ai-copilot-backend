@@ -16718,6 +16718,284 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_demo_campaign_walkthrough_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace demo campaign walkthrough bundle",
+            "project_workspace_demo_campaign_walkthrough_marker",
+            "PROJECT_WORKSPACE_DEMO_CAMPAIGN_WALKTHROUGH_MARKER",
+            "latestProjectWorkspaceDemoCampaignWalkthroughPack",
+            "workspace_demo_campaign_walkthrough_pack",
+            "projectWorkspaceDemoCampaignWalkthroughPackFromWorkspace",
+            "projectWorkspaceExportDemoCampaignWalkthroughSnapshot",
+            "projectWorkspaceExportDemoCampaignWalkthroughMarkdown",
+            "renderProjectWorkspaceDemoCampaignWalkthroughSummaryStorylinesPanel",
+            "renderProjectWorkspaceDemoCampaignWalkthroughStepsEvidencePanel",
+            "renderProjectWorkspaceDemoCampaignWalkthroughCreativeQaPanel",
+            "renderProjectWorkspaceDemoCampaignWalkthroughHandoffScenarioPanel",
+            "renderProjectWorkspaceDemoCampaignWalkthroughExportQualityPanel",
+            "copyProjectWorkspaceDemoWalkthroughSummary",
+            "copyProjectWorkspaceDemoStorylineCards",
+            "copyProjectWorkspaceWalkthroughStepCards",
+            "copyProjectWorkspaceEvidenceToClaimWalkthroughCards",
+            "copyProjectWorkspaceCreativeToDeliveryWalkthroughCards",
+            "copyProjectWorkspaceQaRemediationWalkthroughCards",
+            "copyProjectWorkspaceFinalExportHandoffWalkthroughCards",
+            "copyProjectWorkspaceScenarioBranchCards",
+            "copyProjectWorkspacePresenterNoteCards",
+            "copyProjectWorkspaceFullDemoCampaignWalkthroughPack",
+            "workspace_demo_campaign_walkthrough_pack: projectWorkspaceExportDemoCampaignWalkthroughSnapshot(workspace)",
+            "Demo-Ready Campaign Walkthrough",
+            "Demo Walkthrough Summary",
+            "Demo Storyline Cards",
+            "Walkthrough Step Cards",
+            "Evidence to Claim Walkthrough Cards",
+            "Creative to Delivery Walkthrough Cards",
+            "QA Remediation Walkthrough Cards",
+            "Final Export Handoff Walkthrough Cards",
+            "Scenario Branch Cards",
+            "Presenter Note Cards",
+            "Demo Copy Export Map",
+            "Walkthrough Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "demo_walkthrough_summary",
+            "demo_storyline_cards",
+            "walkthrough_step_cards",
+            "evidence_to_claim_walkthrough_cards",
+            "creative_to_delivery_walkthrough_cards",
+            "qa_remediation_walkthrough_cards",
+            "final_export_handoff_walkthrough_cards",
+            "scenario_branch_cards",
+            "presenter_note_cards",
+            "demo_copy_export_map",
+            "walkthrough_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+            "card.storyline_id",
+            "card.storyline_label",
+            "card.storyline_group",
+            "card.demo_purpose",
+            "card.opening_user_question",
+            "card.expected_demo_outcome",
+            "card.primary_takeaway",
+            "card.recommended_presenter_note",
+            "card.walkthrough_step_id",
+            "card.step_order",
+            "card.step_label",
+            "card.step_group",
+            "card.source_pack_refs",
+            "card.source_stage_refs",
+            "card.what_user_sees",
+            "card.what_operator_explains",
+            "card.expected_workspace_section",
+            "card.expected_status",
+            "card.expected_blockers",
+            "card.recommended_operator_action",
+            "card.copy_export_preview_available",
+            "card.creates_real_task",
+            "card.evidence_claim_step_id",
+            "card.source_evidence_refs",
+            "card.source_claim_refs",
+            "card.evidence_quality_status",
+            "card.sample_strength",
+            "card.claim_support_status",
+            "card.claim_risk_level",
+            "card.do_not_claim_refs",
+            "card.real_scraping_allowed",
+            "card.real_policy_check_allowed",
+            "card.creative_delivery_step_id",
+            "card.creative_surface",
+            "card.delivery_surface",
+            "card.platform_label",
+            "card.source_output_refs",
+            "card.claim_safety_status",
+            "card.delivery_readiness_status",
+            "card.safe_usage_note",
+            "card.qa_remediation_step_id",
+            "card.qa_status",
+            "card.blocker_refs",
+            "card.remediation_refs",
+            "card.verification_refs",
+            "card.remaining_blockers",
+            "card.retry_readiness_status",
+            "card.handoff_step_id",
+            "card.export_packet_ref",
+            "card.campaign_dossier_ref",
+            "card.packet_status",
+            "card.ready_for_preview_export",
+            "card.included_copy_refs",
+            "card.included_video_prompt_refs",
+            "card.included_claim_trace_refs",
+            "card.blocked_appendix_refs",
+            "card.operator_handoff_note",
+            "card.scenario_branch_id",
+            "card.scenario_id",
+            "card.scenario_label",
+            "card.expected_user_question",
+            "card.expected_workspace_panels",
+            "card.demo_run_allowed",
+            "card.real_file_write_allowed",
+            "card.real_export_allowed",
+            "card.real_platform_upload_allowed",
+            "card.real_execution_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for storyline_id in [
+            "claim_safe_creative_demo",
+            "blocked_claim_demo",
+            "final_export_preview_demo",
+            "provider_safety_blocked_demo",
+            "mvp_home_walkthrough_demo",
+        ]:
+            with self.subTest(storyline_id=storyline_id):
+                self.assertIn(storyline_id, html)
+        for scenario_id in [
+            "strong_evidence_ready_preview",
+            "weak_evidence_needs_review",
+            "unsupported_claim_blocked",
+            "video_prompt_visual_claim_risk",
+            "delivery_blocked_by_missing_quote",
+            "provider_safety_blocked",
+            "final_export_ready_preview_only",
+            "operator_handoff_required",
+        ]:
+            with self.subTest(scenario_id=scenario_id):
+                self.assertIn(scenario_id, html)
+        for stage_id in [
+            "review_import",
+            "evidence_quality",
+            "claim_risk_guard",
+            "claim_safe_brief",
+            "claim_safe_output",
+            "platform_delivery",
+            "delivery_qa",
+            "remediation",
+            "remediation_verification",
+            "final export",
+            "dossier",
+            "navigation",
+            "scenario",
+            "MVP home",
+        ]:
+            with self.subTest(stage_id=stage_id):
+                self.assertIn(stage_id, html)
+        previous = html.index("renderProjectWorkspaceMvpConsolidationSafetyQualityPanel(workspace)")
+        summary = html.index("renderProjectWorkspaceDemoCampaignWalkthroughSummaryStorylinesPanel(workspace)")
+        steps = html.index("renderProjectWorkspaceDemoCampaignWalkthroughStepsEvidencePanel(workspace)")
+        creative = html.index("renderProjectWorkspaceDemoCampaignWalkthroughCreativeQaPanel(workspace)")
+        handoff = html.index("renderProjectWorkspaceDemoCampaignWalkthroughHandoffScenarioPanel(workspace)")
+        safety = html.index("renderProjectWorkspaceDemoCampaignWalkthroughExportQualityPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, steps)
+        self.assertLess(steps, creative)
+        self.assertLess(creative, handoff)
+        self.assertLess(handoff, safety)
+        self.assertLess(safety, core)
+
+    def test_workspace_demo_campaign_walkthrough_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "demoCampaignWalkthroughPackTitle",
+            "demoCampaignWalkthroughSummaryTitle",
+            "demoCampaignWalkthroughStorylineTitle",
+            "demoCampaignWalkthroughStepsTitle",
+            "demoCampaignWalkthroughEvidenceClaimTitle",
+            "demoCampaignWalkthroughCreativeDeliveryTitle",
+            "demoCampaignWalkthroughQaTitle",
+            "demoCampaignWalkthroughHandoffTitle",
+            "demoCampaignWalkthroughScenarioTitle",
+            "demoCampaignWalkthroughPresenterTitle",
+            "demoCampaignWalkthroughCopyExportTitle",
+            "demoCampaignWalkthroughQualityTitle",
+            "demoCampaignWalkthroughAuditTitle",
+            "demoCampaignWalkthroughSafetyTitle",
+            "demoCampaignWalkthroughCopySummary",
+            "demoCampaignWalkthroughCopyStorylines",
+            "demoCampaignWalkthroughCopySteps",
+            "demoCampaignWalkthroughCopyEvidenceClaim",
+            "demoCampaignWalkthroughCopyCreativeDelivery",
+            "demoCampaignWalkthroughCopyQa",
+            "demoCampaignWalkthroughCopyHandoff",
+            "demoCampaignWalkthroughCopyScenarios",
+            "demoCampaignWalkthroughCopyPresenter",
+            "demoCampaignWalkthroughCopyFull",
+            "demoCampaignWalkthroughCopied",
+            "demoCampaignWalkthroughCopyFailed",
+            "demoCampaignWalkthroughCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace demo campaign walkthrough bundle", script)
+            self.assertIn("project_workspace_demo_campaign_walkthrough_marker", script)
+        markdown = html[
+            html.index("function projectWorkspaceDemoCampaignWalkthroughSummaryText"):
+            html.index("async function copyProjectWorkspaceDemoCampaignWalkthroughText")
+        ]
+        for key in [
+            "demoCampaignWalkthroughPackTitle",
+            "demoCampaignWalkthroughSummaryTitle",
+            "demoCampaignWalkthroughStorylineTitle",
+            "demoCampaignWalkthroughStepsTitle",
+            "demoCampaignWalkthroughEvidenceClaimTitle",
+            "demoCampaignWalkthroughCreativeDeliveryTitle",
+            "demoCampaignWalkthroughQaTitle",
+            "demoCampaignWalkthroughHandoffTitle",
+            "demoCampaignWalkthroughScenarioTitle",
+            "demoCampaignWalkthroughPresenterTitle",
+            "demoCampaignWalkthroughCopyExportTitle",
+            "demoCampaignWalkthroughQualityTitle",
+            "demoCampaignWalkthroughAuditTitle",
+            "demoCampaignWalkthroughSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_DEMO_CAMPAIGN_WALKTHROUGH_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic presenter walkthrough preview",
+            "not a real demo run",
+            "not a real platform pass rate",
+            "not a real compliance conclusion",
+            "not a real policy API result",
+            "not legal advice",
+            "does not create a real demo run",
+            "does not call an LLM",
+            "does not call providers",
+            "does not use real customer data",
+            "does not create real tasks",
+            "does not export files",
+            "does not write files",
+            "does not upload files",
+            "does not write databases",
+            "does not read real logs",
+            "does not execute real operations",
+            "No new reviews are scraped",
+            "no real policy API is queried",
+            "no real legal advice is produced",
+            "do not automatically fix content",
+            "do not create tasks",
+            "do not upload to a platform",
+            "do not perform real export",
+            "Presenter notes are manual demo talk tracks",
+            "Audit preview is display-only; it does not write databases and does not read real logs or real history tables.",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [

@@ -3649,6 +3649,7 @@
         let latestProjectWorkspaceScenarioPresetsPack = {};
         let latestProjectWorkspaceFinalSystemHealthPack = {};
         let latestProjectWorkspaceMvpConsolidationPack = {};
+        let latestProjectWorkspaceDemoCampaignWalkthroughPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7273,6 +7274,58 @@
             mvpConsolidationAuditNote: 'Audit preview is display-only; it does not write databases and does not read real logs or real history tables.',
             mvpConsolidationSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspaceDemoCampaignWalkthroughMarker: 'Project Workspace demo campaign walkthrough bundle',
+            demoCampaignWalkthroughPackTitle: 'Demo-Ready Campaign Walkthrough',
+            demoCampaignWalkthroughPackHelper: 'Project Workspace demo campaign walkthrough bundle. Deterministic presenter walkthrough preview only; this is not a real demo run, not a real platform pass rate, not a real compliance conclusion, not a real policy API result, and not legal advice.',
+            demoCampaignWalkthroughSummaryStorylinesTitle: 'Demo Walkthrough Summary / Storylines',
+            demoCampaignWalkthroughSummaryTitle: 'Demo Walkthrough Summary',
+            demoCampaignWalkthroughStorylineTitle: 'Demo Storyline Cards',
+            demoCampaignWalkthroughStepsEvidenceTitle: 'Walkthrough Steps / Evidence to Claim',
+            demoCampaignWalkthroughStepsTitle: 'Walkthrough Step Cards',
+            demoCampaignWalkthroughEvidenceClaimTitle: 'Evidence to Claim Walkthrough Cards',
+            demoCampaignWalkthroughCreativeQaTitle: 'Creative to Delivery / QA Remediation',
+            demoCampaignWalkthroughCreativeDeliveryTitle: 'Creative to Delivery Walkthrough Cards',
+            demoCampaignWalkthroughQaTitle: 'QA Remediation Walkthrough Cards',
+            demoCampaignWalkthroughHandoffScenarioTitle: 'Final Export Handoff / Scenario Branches / Presenter Notes',
+            demoCampaignWalkthroughHandoffTitle: 'Final Export Handoff Walkthrough Cards',
+            demoCampaignWalkthroughScenarioTitle: 'Scenario Branch Cards',
+            demoCampaignWalkthroughPresenterTitle: 'Presenter Note Cards',
+            demoCampaignWalkthroughExportQualityTitle: 'Demo Copy Export / Quality / Audit / Safety',
+            demoCampaignWalkthroughCopyExportTitle: 'Demo Copy Export Map',
+            demoCampaignWalkthroughQualityTitle: 'Walkthrough Quality Checks',
+            demoCampaignWalkthroughAuditTitle: 'Audit Preview',
+            demoCampaignWalkthroughSafetyTitle: 'Safety Boundaries',
+            demoCampaignWalkthroughMode: 'Mode',
+            demoCampaignWalkthroughStorylineCount: 'Storyline count',
+            demoCampaignWalkthroughStepCount: 'Walkthrough step count',
+            demoCampaignWalkthroughScenarioCount: 'Scenario branch count',
+            demoCampaignWalkthroughPresenterCount: 'Presenter note count',
+            demoCampaignWalkthroughRecommendedPresenterNote: 'Recommended presenter note',
+            demoCampaignWalkthroughExecution: 'Real execution allowed',
+            demoCampaignWalkthroughDisabled: 'disabled',
+            demoCampaignWalkthroughNoData: 'No demo campaign walkthrough data is available.',
+            demoCampaignWalkthroughCopyNoData: 'No demo campaign walkthrough content is available to copy.',
+            demoCampaignWalkthroughCopyFailed: 'Unable to copy demo campaign walkthrough content.',
+            demoCampaignWalkthroughCopied: 'Demo campaign walkthrough content copied.',
+            demoCampaignWalkthroughCopySummary: 'Copy demo walkthrough summary',
+            demoCampaignWalkthroughCopyStorylines: 'Copy demo storyline cards',
+            demoCampaignWalkthroughCopySteps: 'Copy walkthrough step cards',
+            demoCampaignWalkthroughCopyEvidenceClaim: 'Copy evidence to claim walkthrough cards',
+            demoCampaignWalkthroughCopyCreativeDelivery: 'Copy creative to delivery walkthrough cards',
+            demoCampaignWalkthroughCopyQa: 'Copy QA remediation walkthrough cards',
+            demoCampaignWalkthroughCopyHandoff: 'Copy final export handoff walkthrough cards',
+            demoCampaignWalkthroughCopyScenarios: 'Copy scenario branch cards',
+            demoCampaignWalkthroughCopyPresenter: 'Copy presenter note cards',
+            demoCampaignWalkthroughCopyFull: 'Copy full demo campaign walkthrough pack',
+            demoCampaignWalkthroughPreviewNote: 'Deterministic presenter walkthrough preview only. It does not create a real demo run, does not call an LLM, does not call providers, does not use real customer data, does not create real tasks, does not export files, does not write files, does not upload files, does not write databases, does not read real logs, and does not execute real operations.',
+            demoCampaignWalkthroughEvidenceNote: 'Evidence and claims come only from existing packs. No new reviews are scraped, no real policy API is queried, no real legal advice is produced, and this is not a real platform compliance conclusion.',
+            demoCampaignWalkthroughCreativeNote: 'Creative, delivery, QA, remediation, and verification cards are preview-only. They do not automatically fix content, do not create tasks, do not call providers, and do not upload to a platform.',
+            demoCampaignWalkthroughHandoffNote: 'Final export handoff and scenario branches are preview-only. They do not write files, do not perform real export, and do not create real handoff tasks. Presenter notes are manual demo talk tracks, not legal advice or real platform compliance conclusions.',
+            demoCampaignWalkthroughQualityNote: 'Walkthrough quality checks cover evidence, claim safety, creative output, delivery, QA, remediation, verification, final export, dossier, navigation, scenario, MVP home, and disabled safety boundary coverage.',
+            demoCampaignWalkthroughAuditNote: 'Audit preview is display-only; it does not write databases and does not read real logs or real history tables.',
+            demoCampaignWalkthroughSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
             claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
@@ -8086,6 +8139,58 @@
             mvpConsolidationQualityNote: 'Quality checks \u8986\u76d6 home status\u3001operator actions\u3001top blockers\u3001featured export\u3001scenario shortcuts\u3001module priority\u3001disabled banner \u548c safety boundary\u3002',
             mvpConsolidationAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff1b\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u771f\u5b9e\u5386\u53f2\u8868\u3002',
             mvpConsolidationSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export\u3001file write\u3001secret read\u3001external call \u548c token issue \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspaceDemoCampaignWalkthroughMarker: 'Project Workspace demo campaign walkthrough bundle',
+            demoCampaignWalkthroughPackTitle: 'Demo-Ready Campaign Walkthrough',
+            demoCampaignWalkthroughPackHelper: '\u67e5\u770b Project Workspace demo campaign walkthrough bundle\u3002\u8fd9\u53ea\u662f deterministic presenter walkthrough preview\uff0c\u4e0d\u662f\u771f\u5b9e demo run\uff0c\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u901a\u8fc7\u7387\uff0c\u4e0d\u662f\u771f\u5b9e\u5408\u89c4\u7ed3\u8bba\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u7ed3\u679c\uff0c\u4e5f\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\u3002',
+            demoCampaignWalkthroughSummaryStorylinesTitle: 'Demo Walkthrough Summary / Storylines',
+            demoCampaignWalkthroughSummaryTitle: 'Demo Walkthrough Summary',
+            demoCampaignWalkthroughStorylineTitle: 'Demo Storyline Cards',
+            demoCampaignWalkthroughStepsEvidenceTitle: 'Walkthrough Steps / Evidence to Claim',
+            demoCampaignWalkthroughStepsTitle: 'Walkthrough Step Cards',
+            demoCampaignWalkthroughEvidenceClaimTitle: 'Evidence to Claim Walkthrough Cards',
+            demoCampaignWalkthroughCreativeQaTitle: 'Creative to Delivery / QA Remediation',
+            demoCampaignWalkthroughCreativeDeliveryTitle: 'Creative to Delivery Walkthrough Cards',
+            demoCampaignWalkthroughQaTitle: 'QA Remediation Walkthrough Cards',
+            demoCampaignWalkthroughHandoffScenarioTitle: 'Final Export Handoff / Scenario Branches / Presenter Notes',
+            demoCampaignWalkthroughHandoffTitle: 'Final Export Handoff Walkthrough Cards',
+            demoCampaignWalkthroughScenarioTitle: 'Scenario Branch Cards',
+            demoCampaignWalkthroughPresenterTitle: 'Presenter Note Cards',
+            demoCampaignWalkthroughExportQualityTitle: 'Demo Copy Export / Quality / Audit / Safety',
+            demoCampaignWalkthroughCopyExportTitle: 'Demo Copy Export Map',
+            demoCampaignWalkthroughQualityTitle: 'Walkthrough Quality Checks',
+            demoCampaignWalkthroughAuditTitle: 'Audit Preview',
+            demoCampaignWalkthroughSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            demoCampaignWalkthroughMode: '\u6a21\u5f0f',
+            demoCampaignWalkthroughStorylineCount: 'Storyline \u6570\u91cf',
+            demoCampaignWalkthroughStepCount: 'Walkthrough step \u6570\u91cf',
+            demoCampaignWalkthroughScenarioCount: 'Scenario branch \u6570\u91cf',
+            demoCampaignWalkthroughPresenterCount: 'Presenter note \u6570\u91cf',
+            demoCampaignWalkthroughRecommendedPresenterNote: '\u63a8\u8350 presenter note',
+            demoCampaignWalkthroughExecution: '\u5141\u8bb8\u771f\u5b9e execution',
+            demoCampaignWalkthroughDisabled: '\u5df2\u7981\u7528',
+            demoCampaignWalkthroughNoData: '\u6682\u65e0 demo campaign walkthrough \u6570\u636e\u3002',
+            demoCampaignWalkthroughCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 demo campaign walkthrough \u5185\u5bb9\u3002',
+            demoCampaignWalkthroughCopyFailed: '\u65e0\u6cd5\u590d\u5236 demo campaign walkthrough \u5185\u5bb9\u3002',
+            demoCampaignWalkthroughCopied: 'Demo campaign walkthrough \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            demoCampaignWalkthroughCopySummary: '\u590d\u5236 demo walkthrough summary',
+            demoCampaignWalkthroughCopyStorylines: '\u590d\u5236 demo storyline cards',
+            demoCampaignWalkthroughCopySteps: '\u590d\u5236 walkthrough step cards',
+            demoCampaignWalkthroughCopyEvidenceClaim: '\u590d\u5236 evidence to claim walkthrough cards',
+            demoCampaignWalkthroughCopyCreativeDelivery: '\u590d\u5236 creative to delivery walkthrough cards',
+            demoCampaignWalkthroughCopyQa: '\u590d\u5236 QA remediation walkthrough cards',
+            demoCampaignWalkthroughCopyHandoff: '\u590d\u5236 final export handoff walkthrough cards',
+            demoCampaignWalkthroughCopyScenarios: '\u590d\u5236 scenario branch cards',
+            demoCampaignWalkthroughCopyPresenter: '\u590d\u5236 presenter note cards',
+            demoCampaignWalkthroughCopyFull: '\u590d\u5236\u5b8c\u6574 demo campaign walkthrough pack',
+            demoCampaignWalkthroughPreviewNote: '\u4ec5\u4e3a deterministic presenter walkthrough preview\u3002\u4e0d\u521b\u5efa\u771f\u5b9e demo run\uff0c\u4e0d\u8c03\u7528 LLM\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u4f7f\u7528\u771f\u5b9e\u5ba2\u6237\u6570\u636e\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e task\uff0c\u4e0d\u771f\u5b9e export\uff0c\u4e0d\u5199\u6587\u4ef6\uff0c\u4e0d\u4e0a\u4f20\u6587\u4ef6\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\uff0c\u4e0d\u6267\u884c\u771f\u5b9e\u64cd\u4f5c\u3002',
+            demoCampaignWalkthroughEvidenceNote: 'Evidence \u548c claim \u53ea\u6765\u81ea\u5df2\u6709 packs\u3002\u4e0d\u6293\u53d6\u65b0\u8bc4\u8bba\uff0c\u4e0d\u67e5\u8be2\u771f\u5b9e policy API\uff0c\u4e0d\u8f93\u51fa\u771f\u5b9e\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e5f\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\u3002',
+            demoCampaignWalkthroughCreativeNote: 'Creative\u3001delivery\u3001QA\u3001remediation \u548c verification \u90fd\u53ea\u662f preview\u3002\u4e0d\u81ea\u52a8\u4fee\u590d\u5185\u5bb9\uff0c\u4e0d\u521b\u5efa task\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u4e0a\u4f20\u5230\u5e73\u53f0\u3002',
+            demoCampaignWalkthroughHandoffNote: 'Final export handoff \u548c scenario branches \u90fd\u53ea\u662f preview\u3002\u4e0d\u5199\u6587\u4ef6\uff0c\u4e0d\u771f\u5b9e export\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e handoff task\u3002Presenter notes \u662f\u4eba\u5de5 demo \u8bdd\u672f\uff0c\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e5f\u4e0d\u662f\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u7ed3\u8bba\u3002',
+            demoCampaignWalkthroughQualityNote: 'Walkthrough quality checks \u8986\u76d6 evidence\u3001claim safety\u3001creative output\u3001delivery\u3001QA\u3001remediation\u3001verification\u3001final export\u3001dossier\u3001navigation\u3001scenario\u3001MVP home \u548c disabled safety boundary\u3002',
+            demoCampaignWalkthroughAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff1b\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u771f\u5b9e\u5386\u53f2\u8868\u3002',
+            demoCampaignWalkthroughSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export\u3001file write\u3001secret read\u3001external call \u548c token issue \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -11589,6 +11694,7 @@
                 latestProjectWorkspaceScenarioPresetsPack = latestProjectCreativeDecisionPack.workspace_scenario_presets_pack || {};
                 latestProjectWorkspaceFinalSystemHealthPack = latestProjectCreativeDecisionPack.workspace_final_system_health_pack || {};
                 latestProjectWorkspaceMvpConsolidationPack = latestProjectCreativeDecisionPack.workspace_mvp_consolidation_pack || {};
+                latestProjectWorkspaceDemoCampaignWalkthroughPack = latestProjectCreativeDecisionPack.workspace_demo_campaign_walkthrough_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -17474,6 +17580,7 @@
         const PROJECT_WORKSPACE_SCENARIO_PRESETS_MARKER = 'Project Workspace scenario presets bundle';
         const PROJECT_WORKSPACE_FINAL_SYSTEM_HEALTH_MARKER = 'Project Workspace final system health bundle';
         const PROJECT_WORKSPACE_MVP_CONSOLIDATION_MARKER = 'Project Workspace MVP consolidation bundle';
+        const PROJECT_WORKSPACE_DEMO_CAMPAIGN_WALKTHROUGH_MARKER = 'Project Workspace demo campaign walkthrough bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -24829,6 +24936,132 @@
         function copyProjectWorkspaceSimplificationCards() { return copyProjectWorkspaceMvpConsolidationText('simplification'); }
         function copyProjectWorkspaceDisabledCapabilityBanner() { return copyProjectWorkspaceMvpConsolidationText('banner'); }
         function copyProjectWorkspaceFullMvpConsolidationPack() { return copyProjectWorkspaceMvpConsolidationText('full'); }
+        function projectWorkspaceDemoCampaignWalkthroughPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspaceDemoCampaignWalkthroughPack && Object.keys(latestProjectWorkspaceDemoCampaignWalkthroughPack).length) return latestProjectWorkspaceDemoCampaignWalkthroughPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_demo_campaign_walkthrough_pack || {};
+        }
+
+        function projectWorkspaceDemoCampaignWalkthroughHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspaceDemoCampaignWalkthroughJsonText(value) {
+            if (!projectWorkspaceDemoCampaignWalkthroughHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspaceDemoCampaignWalkthroughDisabledText(value) {
+            return value === false || value == null ? t('demoCampaignWalkthroughDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportDemoCampaignWalkthroughSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceDemoCampaignWalkthroughPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_DEMO_CAMPAIGN_WALKTHROUGH_MARKER,
+                has_workspace_demo_campaign_walkthrough_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                demo_walkthrough_summary: pack.demo_walkthrough_summary || {},
+                demo_storyline_cards: Array.isArray(pack.demo_storyline_cards) ? pack.demo_storyline_cards : [],
+                walkthrough_step_cards: Array.isArray(pack.walkthrough_step_cards) ? pack.walkthrough_step_cards : [],
+                evidence_to_claim_walkthrough_cards: Array.isArray(pack.evidence_to_claim_walkthrough_cards) ? pack.evidence_to_claim_walkthrough_cards : [],
+                creative_to_delivery_walkthrough_cards: Array.isArray(pack.creative_to_delivery_walkthrough_cards) ? pack.creative_to_delivery_walkthrough_cards : [],
+                qa_remediation_walkthrough_cards: Array.isArray(pack.qa_remediation_walkthrough_cards) ? pack.qa_remediation_walkthrough_cards : [],
+                final_export_handoff_walkthrough_cards: Array.isArray(pack.final_export_handoff_walkthrough_cards) ? pack.final_export_handoff_walkthrough_cards : [],
+                scenario_branch_cards: Array.isArray(pack.scenario_branch_cards) ? pack.scenario_branch_cards : [],
+                presenter_note_cards: Array.isArray(pack.presenter_note_cards) ? pack.presenter_note_cards : [],
+                demo_copy_export_map: Array.isArray(pack.demo_copy_export_map) ? pack.demo_copy_export_map : [],
+                walkthrough_quality_checks: pack.walkthrough_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspaceDemoCampaignWalkthroughSummaryText(pack = projectWorkspaceExportDemoCampaignWalkthroughSnapshot()) {
+            if (!pack.has_workspace_demo_campaign_walkthrough_pack) return '';
+            const summary = pack.demo_walkthrough_summary || {};
+            return [
+                t('demoCampaignWalkthroughSummaryTitle'),
+                `${t('demoCampaignWalkthroughMode')}: ${summary.mode || t('none')}`,
+                `${t('demoCampaignWalkthroughStorylineCount')}: ${summary.storyline_count ?? pack.demo_storyline_cards.length}`,
+                `${t('demoCampaignWalkthroughStepCount')}: ${summary.walkthrough_step_count ?? pack.walkthrough_step_cards.length}`,
+                `${t('demoCampaignWalkthroughScenarioCount')}: ${summary.scenario_branch_count ?? pack.scenario_branch_cards.length}`,
+                `${t('demoCampaignWalkthroughPresenterCount')}: ${summary.presenter_note_count ?? pack.presenter_note_cards.length}`,
+                `${t('demoCampaignWalkthroughRecommendedPresenterNote')}: ${summary.recommended_presenter_note || t('demoCampaignWalkthroughPreviewNote')}`,
+                `demo_run_allowed: ${projectWorkspaceDemoCampaignWalkthroughDisabledText(summary.demo_run_allowed)}`,
+                `llm_generation_allowed: ${projectWorkspaceDemoCampaignWalkthroughDisabledText(summary.llm_generation_allowed)}`,
+                `real_provider_allowed: ${projectWorkspaceDemoCampaignWalkthroughDisabledText(summary.real_provider_allowed)}`,
+                `real_file_write_allowed: ${projectWorkspaceDemoCampaignWalkthroughDisabledText(summary.real_file_write_allowed)}`,
+                `database_persistence_allowed: ${projectWorkspaceDemoCampaignWalkthroughDisabledText(summary.database_persistence_allowed)}`,
+                `${t('demoCampaignWalkthroughExecution')}: ${projectWorkspaceDemoCampaignWalkthroughDisabledText(summary.real_execution_allowed)}`,
+                t('demoCampaignWalkthroughPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspaceDemoCampaignWalkthroughSectionText(titleKey, value) {
+            const body = projectWorkspaceDemoCampaignWalkthroughJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportDemoCampaignWalkthroughMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportDemoCampaignWalkthroughSnapshot(workspace);
+            if (!pack.has_workspace_demo_campaign_walkthrough_pack) return '';
+            return [
+                `## ${t('demoCampaignWalkthroughPackTitle')}`,
+                `## ${t('demoCampaignWalkthroughSummaryTitle')}`,
+                projectWorkspaceDemoCampaignWalkthroughSummaryText(pack), '',
+                projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughStorylineTitle', pack.demo_storyline_cards), '',
+                projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughStepsTitle', pack.walkthrough_step_cards), '',
+                projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughEvidenceClaimTitle', pack.evidence_to_claim_walkthrough_cards), '',
+                projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughCreativeDeliveryTitle', pack.creative_to_delivery_walkthrough_cards), '',
+                projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughQaTitle', pack.qa_remediation_walkthrough_cards), '',
+                projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughHandoffTitle', pack.final_export_handoff_walkthrough_cards), '',
+                projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughScenarioTitle', pack.scenario_branch_cards), '',
+                projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughPresenterTitle', pack.presenter_note_cards), '',
+                projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughCopyExportTitle', pack.demo_copy_export_map), '',
+                projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughQualityTitle', pack.walkthrough_quality_checks), '',
+                projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughAuditTitle', pack.audit_preview), '',
+                projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughSafetyTitle', pack.safety_boundaries),
+                t('demoCampaignWalkthroughEvidenceNote'),
+                t('demoCampaignWalkthroughCreativeNote'),
+                t('demoCampaignWalkthroughHandoffNote'),
+                t('demoCampaignWalkthroughQualityNote'),
+                t('demoCampaignWalkthroughAuditNote'),
+                t('demoCampaignWalkthroughSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspaceDemoCampaignWalkthroughText(kind = 'full') {
+            const status = document.getElementById('projectWorkspaceDemoCampaignWalkthroughStatus');
+            const pack = projectWorkspaceExportDemoCampaignWalkthroughSnapshot();
+            const text = kind === 'summary' ? projectWorkspaceDemoCampaignWalkthroughSummaryText(pack)
+                : kind === 'storylines' ? projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughStorylineTitle', pack.demo_storyline_cards)
+                : kind === 'steps' ? projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughStepsTitle', pack.walkthrough_step_cards)
+                : kind === 'evidence_claim' ? projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughEvidenceClaimTitle', pack.evidence_to_claim_walkthrough_cards)
+                : kind === 'creative_delivery' ? projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughCreativeDeliveryTitle', pack.creative_to_delivery_walkthrough_cards)
+                : kind === 'qa' ? projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughQaTitle', pack.qa_remediation_walkthrough_cards)
+                : kind === 'handoff' ? projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughHandoffTitle', pack.final_export_handoff_walkthrough_cards)
+                : kind === 'scenarios' ? projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughScenarioTitle', pack.scenario_branch_cards)
+                : kind === 'presenter' ? projectWorkspaceDemoCampaignWalkthroughSectionText('demoCampaignWalkthroughPresenterTitle', pack.presenter_note_cards)
+                : projectWorkspaceExportDemoCampaignWalkthroughMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('demoCampaignWalkthroughCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('demoCampaignWalkthroughCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('demoCampaignWalkthroughCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('demoCampaignWalkthroughCopyFailed'); }
+        }
+
+        function copyProjectWorkspaceDemoWalkthroughSummary() { return copyProjectWorkspaceDemoCampaignWalkthroughText('summary'); }
+        function copyProjectWorkspaceDemoStorylineCards() { return copyProjectWorkspaceDemoCampaignWalkthroughText('storylines'); }
+        function copyProjectWorkspaceWalkthroughStepCards() { return copyProjectWorkspaceDemoCampaignWalkthroughText('steps'); }
+        function copyProjectWorkspaceEvidenceToClaimWalkthroughCards() { return copyProjectWorkspaceDemoCampaignWalkthroughText('evidence_claim'); }
+        function copyProjectWorkspaceCreativeToDeliveryWalkthroughCards() { return copyProjectWorkspaceDemoCampaignWalkthroughText('creative_delivery'); }
+        function copyProjectWorkspaceQaRemediationWalkthroughCards() { return copyProjectWorkspaceDemoCampaignWalkthroughText('qa'); }
+        function copyProjectWorkspaceFinalExportHandoffWalkthroughCards() { return copyProjectWorkspaceDemoCampaignWalkthroughText('handoff'); }
+        function copyProjectWorkspaceScenarioBranchCards() { return copyProjectWorkspaceDemoCampaignWalkthroughText('scenarios'); }
+        function copyProjectWorkspacePresenterNoteCards() { return copyProjectWorkspaceDemoCampaignWalkthroughText('presenter'); }
+        function copyProjectWorkspaceFullDemoCampaignWalkthroughPack() { return copyProjectWorkspaceDemoCampaignWalkthroughText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -29337,6 +29570,42 @@
             return `<div class="section-block" id="projectWorkspaceMvpConsolidationSafetyQualityPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('mvpConsolidationSafetyQualityTitle'))}</div><div class="field-helper">${escapeHTML(t('mvpConsolidationSafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDisabledCapabilityBanner()">${escapeHTML(t('mvpConsolidationCopyBanner'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('mvpConsolidationBannerTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceMvpConsolidationJsonText(pack.disabled_capability_banner) || t('mvpConsolidationNoData'))}</pre><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpConsolidationReadinessTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceMvpConsolidationJsonText(pack.mvp_readiness_snapshot) || t('mvpConsolidationNoData'))}</pre><div class="field-helper">${escapeHTML(t('mvpConsolidationReadinessNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpConsolidationQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceMvpConsolidationJsonText(pack.mvp_consolidation_quality_checks) || t('mvpConsolidationNoData'))}</pre><div class="field-helper">${escapeHTML(t('mvpConsolidationQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpConsolidationAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceMvpConsolidationJsonText(pack.audit_preview) || t('mvpConsolidationNoData'))}</pre><div class="field-helper">${escapeHTML(t('mvpConsolidationAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('mvpConsolidationSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">${escapeHTML(t('mvpConsolidationSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspaceDemoCampaignWalkthroughSummaryStorylinesPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportDemoCampaignWalkthroughSnapshot(workspace); if (!pack.has_workspace_demo_campaign_walkthrough_pack) return '';
+            const summary = pack.demo_walkthrough_summary || {};
+            const storylines = pack.demo_storyline_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.storyline_label || card.storyline_id || t('none'))}</strong><div class="field-helper">storyline_id: ${escapeHTML(card.storyline_id || '')} / storyline_group: ${escapeHTML(card.storyline_group || '')}</div><div class="field-helper">demo_purpose: ${escapeHTML(card.demo_purpose || '')}</div><div class="field-helper">opening_user_question: ${escapeHTML(card.opening_user_question || '')}</div><div class="field-helper">expected_demo_outcome: ${escapeHTML(card.expected_demo_outcome || '')}</div><div>${escapeHTML(card.primary_takeaway || '')}</div><div class="field-helper">recommended_presenter_note: ${escapeHTML(card.recommended_presenter_note || '')}</div><div class="field-helper">demo_run_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.demo_run_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceDemoCampaignWalkthroughSummaryStorylinesPanel" data-marker="project_workspace_demo_campaign_walkthrough_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('demoCampaignWalkthroughSummaryStorylinesTitle'))}</div><div class="field-helper">${escapeHTML(t('demoCampaignWalkthroughPackHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDemoWalkthroughSummary()">${escapeHTML(t('demoCampaignWalkthroughCopySummary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDemoStorylineCards()">${escapeHTML(t('demoCampaignWalkthroughCopyStorylines'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullDemoCampaignWalkthroughPack()">${escapeHTML(t('demoCampaignWalkthroughCopyFull'))}</button></div></div><div class="metric-strip">${metricPill(t('demoCampaignWalkthroughMode'), summary.mode || t('none'))}${metricPill(t('demoCampaignWalkthroughStorylineCount'), String(summary.storyline_count ?? pack.demo_storyline_cards.length))}${metricPill(t('demoCampaignWalkthroughStepCount'), String(summary.walkthrough_step_count ?? pack.walkthrough_step_cards.length))}${metricPill(t('demoCampaignWalkthroughScenarioCount'), String(summary.scenario_branch_count ?? pack.scenario_branch_cards.length))}${metricPill(t('demoCampaignWalkthroughPresenterCount'), String(summary.presenter_note_count ?? pack.presenter_note_cards.length))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceDemoCampaignWalkthroughSummaryText(pack))}</pre><div class="graph-os-compact-grid">${storylines || `<div class="empty-state">${escapeHTML(t('demoCampaignWalkthroughNoData'))}</div>`}</div><div class="field-helper">claim_safe_creative_demo / blocked_claim_demo / final_export_preview_demo / provider_safety_blocked_demo / mvp_home_walkthrough_demo</div><div class="demo-warning">${escapeHTML(t('demoCampaignWalkthroughPreviewNote'))}</div><div id="projectWorkspaceDemoCampaignWalkthroughStatus" class="field-helper" aria-live="polite"></div></div>`;
+        }
+
+        function renderProjectWorkspaceDemoCampaignWalkthroughStepsEvidencePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportDemoCampaignWalkthroughSnapshot(workspace); if (!pack.has_workspace_demo_campaign_walkthrough_pack) return '';
+            const steps = pack.walkthrough_step_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.step_label || card.walkthrough_step_id || t('none'))}</strong><div class="field-helper">walkthrough_step_id: ${escapeHTML(card.walkthrough_step_id || '')} / step_order: ${escapeHTML(String(card.step_order ?? ''))} / step_group: ${escapeHTML(card.step_group || '')}</div><div class="field-helper">source_pack_refs: ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div class="field-helper">source_stage_refs: ${escapeHTML((card.source_stage_refs || []).join(', ') || t('none'))}</div><div>${escapeHTML(card.what_user_sees || '')}</div><div class="field-helper">what_operator_explains: ${escapeHTML(card.what_operator_explains || '')}</div><div class="field-helper">expected_workspace_section: ${escapeHTML(card.expected_workspace_section || '')} / expected_status: ${escapeHTML(card.expected_status || '')}</div><div class="field-helper">expected_blockers: ${escapeHTML((card.expected_blockers || []).join(', ') || t('none'))}</div><div class="field-helper">recommended_operator_action: ${escapeHTML(card.recommended_operator_action || '')}</div><div class="field-helper">copy_export_preview_available: ${escapeHTML(String(card.copy_export_preview_available))} / creates_real_task: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.creates_real_task))} / demo_run_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.demo_run_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            const evidence = pack.evidence_to_claim_walkthrough_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.evidence_claim_step_id || t('none'))}</strong><div class="field-helper">source_evidence_refs: ${escapeHTML((card.source_evidence_refs || []).join(', ') || t('none'))}</div><div class="field-helper">source_claim_refs: ${escapeHTML((card.source_claim_refs || []).join(', ') || t('none'))}</div><div class="field-helper">evidence_quality_status: ${escapeHTML(card.evidence_quality_status || '')} / sample_strength: ${escapeHTML(card.sample_strength || '')} / claim_support_status: ${escapeHTML(card.claim_support_status || '')} / claim_risk_level: ${escapeHTML(card.claim_risk_level || '')}</div><div class="field-helper">do_not_claim_refs: ${escapeHTML((card.do_not_claim_refs || []).join(', ') || t('none'))}</div><div>${escapeHTML(card.operator_explanation || '')}</div><div class="field-helper">real_scraping_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.real_scraping_allowed))} / real_policy_check_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.real_policy_check_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceDemoCampaignWalkthroughStepsEvidencePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('demoCampaignWalkthroughStepsEvidenceTitle'))}</div><div class="field-helper">${escapeHTML(t('demoCampaignWalkthroughEvidenceNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceWalkthroughStepCards()">${escapeHTML(t('demoCampaignWalkthroughCopySteps'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceEvidenceToClaimWalkthroughCards()">${escapeHTML(t('demoCampaignWalkthroughCopyEvidenceClaim'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('demoCampaignWalkthroughStepsTitle'))}</strong><div class="graph-os-compact-grid">${steps || `<div class="empty-state">${escapeHTML(t('demoCampaignWalkthroughNoData'))}</div>`}</div><div class="field-helper">review_import / evidence_quality / claim_risk_guard / claim_safe_brief</div></div><div class="graph-os-card"><strong>${escapeHTML(t('demoCampaignWalkthroughEvidenceClaimTitle'))}</strong><div class="graph-os-compact-grid">${evidence || `<div class="empty-state">${escapeHTML(t('demoCampaignWalkthroughNoData'))}</div>`}</div><div class="field-helper">${escapeHTML(t('demoCampaignWalkthroughEvidenceNote'))}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceDemoCampaignWalkthroughCreativeQaPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportDemoCampaignWalkthroughSnapshot(workspace); if (!pack.has_workspace_demo_campaign_walkthrough_pack) return '';
+            const creative = pack.creative_to_delivery_walkthrough_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.creative_delivery_step_id || t('none'))}</strong><div class="field-helper">creative_surface: ${escapeHTML(card.creative_surface || '')} / delivery_surface: ${escapeHTML(card.delivery_surface || '')} / platform_label: ${escapeHTML(card.platform_label || '')}</div><div class="field-helper">source_claim_refs: ${escapeHTML((card.source_claim_refs || []).join(', ') || t('none'))}</div><div class="field-helper">source_output_refs: ${escapeHTML((card.source_output_refs || []).join(', ') || t('none'))}</div><div class="field-helper">claim_safety_status: ${escapeHTML(card.claim_safety_status || '')} / delivery_readiness_status: ${escapeHTML(card.delivery_readiness_status || '')}</div><div>${escapeHTML(card.safe_usage_note || card.operator_explanation || '')}</div><div class="field-helper">real_provider_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.real_provider_allowed))} / real_platform_upload_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.real_platform_upload_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            const qa = pack.qa_remediation_walkthrough_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.qa_remediation_step_id || t('none'))}</strong><div class="field-helper">qa_status: ${escapeHTML(card.qa_status || '')} / retry_readiness_status: ${escapeHTML(card.retry_readiness_status || '')}</div><div class="field-helper">blocker_refs: ${escapeHTML((card.blocker_refs || []).join(', ') || t('none'))}</div><div class="field-helper">remediation_refs: ${escapeHTML((card.remediation_refs || []).join(', ') || t('none'))}</div><div class="field-helper">verification_refs: ${escapeHTML((card.verification_refs || []).join(', ') || t('none'))}</div><div class="field-helper">remaining_blockers: ${escapeHTML((card.remaining_blockers || []).join(', ') || t('none'))}</div><div>${escapeHTML(card.operator_explanation || '')}</div><div class="field-helper">creates_real_task: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.creates_real_task))} / real_policy_check_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.real_policy_check_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceDemoCampaignWalkthroughCreativeQaPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('demoCampaignWalkthroughCreativeQaTitle'))}</div><div class="field-helper">${escapeHTML(t('demoCampaignWalkthroughCreativeNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCreativeToDeliveryWalkthroughCards()">${escapeHTML(t('demoCampaignWalkthroughCopyCreativeDelivery'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceQaRemediationWalkthroughCards()">${escapeHTML(t('demoCampaignWalkthroughCopyQa'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('demoCampaignWalkthroughCreativeDeliveryTitle'))}</strong><div class="graph-os-compact-grid">${creative || `<div class="empty-state">${escapeHTML(t('demoCampaignWalkthroughNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('demoCampaignWalkthroughQaTitle'))}</strong><div class="graph-os-compact-grid">${qa || `<div class="empty-state">${escapeHTML(t('demoCampaignWalkthroughNoData'))}</div>`}</div><div class="field-helper">claim_safe_output / platform_delivery / delivery_qa / remediation / remediation_verification</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceDemoCampaignWalkthroughHandoffScenarioPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportDemoCampaignWalkthroughSnapshot(workspace); if (!pack.has_workspace_demo_campaign_walkthrough_pack) return '';
+            const handoff = pack.final_export_handoff_walkthrough_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.handoff_step_id || t('none'))}</strong><div class="field-helper">export_packet_ref: ${escapeHTML(card.export_packet_ref || '')} / campaign_dossier_ref: ${escapeHTML(card.campaign_dossier_ref || '')} / packet_status: ${escapeHTML(card.packet_status || '')}</div><div class="field-helper">ready_for_preview_export: ${escapeHTML(String(card.ready_for_preview_export))}</div><div class="field-helper">included_copy_refs: ${escapeHTML((card.included_copy_refs || []).join(', ') || t('none'))}</div><div class="field-helper">included_video_prompt_refs: ${escapeHTML((card.included_video_prompt_refs || []).join(', ') || t('none'))}</div><div class="field-helper">included_claim_trace_refs: ${escapeHTML((card.included_claim_trace_refs || []).join(', ') || t('none'))}</div><div class="field-helper">blocked_appendix_refs: ${escapeHTML((card.blocked_appendix_refs || []).join(', ') || t('none'))}</div><div>${escapeHTML(card.operator_handoff_note || '')}</div><div class="field-helper">real_file_write_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.real_file_write_allowed))} / real_export_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.real_export_allowed))} / real_platform_upload_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.real_platform_upload_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            const scenarios = pack.scenario_branch_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.scenario_label || card.scenario_id || t('none'))}</strong><div class="field-helper">scenario_branch_id: ${escapeHTML(card.scenario_branch_id || '')} / scenario_id: ${escapeHTML(card.scenario_id || '')} / scenario_group: ${escapeHTML(card.scenario_group || '')}</div><div class="field-helper">expected_user_question: ${escapeHTML(card.expected_user_question || '')}</div><div class="field-helper">expected_workspace_panels: ${escapeHTML((card.expected_workspace_panels || []).join(', ') || t('none'))}</div><div class="field-helper">expected_status: ${escapeHTML(card.expected_status || '')} / expected_blockers: ${escapeHTML((card.expected_blockers || []).join(', ') || t('none'))}</div><div>${escapeHTML(card.recommended_operator_action || '')}</div><div class="field-helper">demo_run_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.demo_run_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspaceDemoCampaignWalkthroughDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            const presenter = pack.presenter_note_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.presenter_note_id || card.note_label || t('none'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceDemoCampaignWalkthroughJsonText(card) || t('demoCampaignWalkthroughNoData'))}</pre><div class="field-helper">${escapeHTML(t('demoCampaignWalkthroughHandoffNote'))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspaceDemoCampaignWalkthroughHandoffScenarioPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('demoCampaignWalkthroughHandoffScenarioTitle'))}</div><div class="field-helper">${escapeHTML(t('demoCampaignWalkthroughHandoffNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFinalExportHandoffWalkthroughCards()">${escapeHTML(t('demoCampaignWalkthroughCopyHandoff'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceScenarioBranchCards()">${escapeHTML(t('demoCampaignWalkthroughCopyScenarios'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePresenterNoteCards()">${escapeHTML(t('demoCampaignWalkthroughCopyPresenter'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('demoCampaignWalkthroughHandoffTitle'))}</strong><div class="graph-os-compact-grid">${handoff || `<div class="empty-state">${escapeHTML(t('demoCampaignWalkthroughNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('demoCampaignWalkthroughScenarioTitle'))}</strong><div class="graph-os-compact-grid">${scenarios || `<div class="empty-state">${escapeHTML(t('demoCampaignWalkthroughNoData'))}</div>`}</div><div class="field-helper">strong_evidence_ready_preview / weak_evidence_needs_review / unsupported_claim_blocked / video_prompt_visual_claim_risk / delivery_blocked_by_missing_quote / provider_safety_blocked / final_export_ready_preview_only / operator_handoff_required</div></div><div class="graph-os-card"><strong>${escapeHTML(t('demoCampaignWalkthroughPresenterTitle'))}</strong><div class="graph-os-compact-grid">${presenter || `<div class="empty-state">${escapeHTML(t('demoCampaignWalkthroughNoData'))}</div>`}</div></div></div></div>`;
+        }
+
+        function renderProjectWorkspaceDemoCampaignWalkthroughExportQualityPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportDemoCampaignWalkthroughSnapshot(workspace); if (!pack.has_workspace_demo_campaign_walkthrough_pack) return '';
+            const copyMap = pack.demo_copy_export_map.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.copy_export_id || card.export_label || t('none'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceDemoCampaignWalkthroughJsonText(card) || t('demoCampaignWalkthroughNoData'))}</pre></div>`).join('');
+            const safety = projectWorkspaceDemoCampaignWalkthroughJsonText(pack.safety_boundaries);
+            return `<div class="section-block" id="projectWorkspaceDemoCampaignWalkthroughExportQualityPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('demoCampaignWalkthroughExportQualityTitle'))}</div><div class="field-helper">${escapeHTML(t('demoCampaignWalkthroughSafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullDemoCampaignWalkthroughPack()">${escapeHTML(t('demoCampaignWalkthroughCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('demoCampaignWalkthroughCopyExportTitle'))}</strong><div class="graph-os-compact-grid">${copyMap || `<div class="empty-state">${escapeHTML(t('demoCampaignWalkthroughNoData'))}</div>`}</div><div class="field-helper">copy/export preview only; no real export, no file write, no platform upload.</div></div><div class="graph-os-card"><strong>${escapeHTML(t('demoCampaignWalkthroughQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceDemoCampaignWalkthroughJsonText(pack.walkthrough_quality_checks) || t('demoCampaignWalkthroughNoData'))}</pre><div class="field-helper">evidence / claim safety / creative output / delivery / QA / remediation / verification / final export / dossier / navigation / scenario / MVP home / disabled safety boundary</div><div class="field-helper">${escapeHTML(t('demoCampaignWalkthroughQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('demoCampaignWalkthroughAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceDemoCampaignWalkthroughJsonText(pack.audit_preview) || t('demoCampaignWalkthroughNoData'))}</pre><div class="field-helper">${escapeHTML(t('demoCampaignWalkthroughAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('demoCampaignWalkthroughSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled</div><div class="field-helper">${escapeHTML(t('demoCampaignWalkthroughSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -29795,6 +30064,8 @@
                 '',
                 projectWorkspaceExportMvpConsolidationMarkdown(workspace),
                 '',
+                projectWorkspaceExportDemoCampaignWalkthroughMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -29925,6 +30196,7 @@
                 workspace_scenario_presets_pack: projectWorkspaceExportScenarioPresetsSnapshot(workspace),
                 workspace_final_system_health_pack: projectWorkspaceExportFinalSystemHealthSnapshot(workspace),
                 workspace_mvp_consolidation_pack: projectWorkspaceExportMvpConsolidationSnapshot(workspace),
+                workspace_demo_campaign_walkthrough_pack: projectWorkspaceExportDemoCampaignWalkthroughSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -42566,6 +42838,11 @@
                     ${renderProjectWorkspaceMvpConsolidationExportScenarioPanel(workspace)}
                     ${renderProjectWorkspaceMvpConsolidationPrioritySimplificationPanel(workspace)}
                     ${renderProjectWorkspaceMvpConsolidationSafetyQualityPanel(workspace)}
+                    ${renderProjectWorkspaceDemoCampaignWalkthroughSummaryStorylinesPanel(workspace)}
+                    ${renderProjectWorkspaceDemoCampaignWalkthroughStepsEvidencePanel(workspace)}
+                    ${renderProjectWorkspaceDemoCampaignWalkthroughCreativeQaPanel(workspace)}
+                    ${renderProjectWorkspaceDemoCampaignWalkthroughHandoffScenarioPanel(workspace)}
+                    ${renderProjectWorkspaceDemoCampaignWalkthroughExportQualityPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
