@@ -3651,6 +3651,7 @@
         let latestProjectWorkspaceMvpConsolidationPack = {};
         let latestProjectWorkspaceDemoCampaignWalkthroughPack = {};
         let latestProjectWorkspaceMvpReadinessDossierPack = {};
+        let latestProjectWorkspacePhase2DatabasePersistenceGatePack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7384,6 +7385,60 @@
             mvpReadinessDossierAuditNote: 'Audit preview is display-only; it does not write databases, does not read real logs or real history tables, and does not create real audit events.',
             mvpReadinessDossierSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspacePhase2DatabasePersistenceGateMarker: 'Project Workspace phase2 database persistence gate bundle',
+            phase2DatabaseGatePackTitle: 'Phase 2 Database Persistence Gate',
+            phase2DatabaseGatePackHelper: 'Project Workspace phase2 database persistence gate bundle. Deterministic storage contract preview only; it does not connect to a database, create migration, write DB, write files, read secrets, read real logs, save real customer data, call providers, make external calls, create approvals, or run a production readiness job.',
+            phase2DatabaseGateSummaryContractsTitle: 'Database Persistence Gate Summary / State Snapshot Contracts',
+            phase2DatabaseGateSummaryTitle: 'Database Persistence Gate Summary',
+            phase2DatabaseGateSnapshotTitle: 'State Snapshot Contract Cards',
+            phase2DatabaseGateBoundaryStorageTitle: 'Persistence Boundary Locks / Storage Candidates',
+            phase2DatabaseGateBoundaryTitle: 'Persistence Boundary Lock Cards',
+            phase2DatabaseGateStorageTitle: 'Storage Candidate Cards',
+            phase2DatabaseGateMigrationSensitivityTitle: 'Migration Readiness / Data Sensitivity',
+            phase2DatabaseGateMigrationTitle: 'Migration Readiness Cards',
+            phase2DatabaseGateSensitivityTitle: 'Data Sensitivity Cards',
+            phase2DatabaseGateAuditRollbackTestApprovalTitle: 'Audit Event / Rollback Recovery / Test Plan / Operator Approval',
+            phase2DatabaseGateAuditEventTitle: 'Audit Event Contract Cards',
+            phase2DatabaseGateRollbackTitle: 'Rollback Recovery Contract Cards',
+            phase2DatabaseGateTestPlanTitle: 'Persistence Test Plan Cards',
+            phase2DatabaseGateApprovalTitle: 'Operator Approval Gate Cards',
+            phase2DatabaseGateBlockersQualityAuditSafetyTitle: 'Phase 2 Unlock Blockers / Quality / Audit / Safety',
+            phase2DatabaseGateBlockersTitle: 'Phase 2 Unlock Blockers',
+            phase2DatabaseGateQualityTitle: 'Database Gate Quality Checks',
+            phase2DatabaseGateAuditTitle: 'Audit Preview',
+            phase2DatabaseGateSafetyTitle: 'Safety Boundaries',
+            phase2DatabaseGateMode: 'Mode',
+            phase2DatabaseGateSnapshotCount: 'Snapshot contract count',
+            phase2DatabaseGateBoundaryCount: 'Boundary lock count',
+            phase2DatabaseGateStorageCount: 'Storage candidate count',
+            phase2DatabaseGateMigrationCount: 'Migration readiness count',
+            phase2DatabaseGateSensitivityCount: 'Data sensitivity count',
+            phase2DatabaseGateBlockerCount: 'Unlock blocker count',
+            phase2DatabaseGateRecommendedAction: 'Recommended operator action',
+            phase2DatabaseGateDisabled: 'disabled',
+            phase2DatabaseGateNoData: 'No database persistence gate data is available.',
+            phase2DatabaseGateCopyNoData: 'No database persistence gate content is available to copy.',
+            phase2DatabaseGateCopyFailed: 'Unable to copy database persistence gate content.',
+            phase2DatabaseGateCopied: 'Database persistence gate content copied.',
+            phase2DatabaseGateCopySummary: 'Copy database persistence gate summary',
+            phase2DatabaseGateCopySnapshots: 'Copy state snapshot contract cards',
+            phase2DatabaseGateCopyBoundary: 'Copy persistence boundary lock cards',
+            phase2DatabaseGateCopyStorage: 'Copy storage candidate cards',
+            phase2DatabaseGateCopyMigration: 'Copy migration readiness cards',
+            phase2DatabaseGateCopySensitivity: 'Copy data sensitivity cards',
+            phase2DatabaseGateCopyAuditEvent: 'Copy audit event contract cards',
+            phase2DatabaseGateCopyRollback: 'Copy rollback recovery contract cards',
+            phase2DatabaseGateCopyTestPlan: 'Copy persistence test plan cards',
+            phase2DatabaseGateCopyFull: 'Copy full database persistence gate pack',
+            phase2DatabaseGatePreviewNote: 'Deterministic storage contract preview only. It does not connect to a database, create migration, write DB, write files, read secrets, make external calls, call providers, save real customer data, create approvals, create audit events, execute rollback, or run a production readiness job.',
+            phase2DatabaseGateBoundaryNote: 'Persistence locks are preview-only and do not unlock real database persistence, file write, secret read, external call, real execution, provider, or LLM capabilities.',
+            phase2DatabaseGateMigrationNote: 'Migration readiness and data sensitivity are preview-only. They do not create migrations, do not run backfill, and do not persist unredacted sensitive fields or provider secrets.',
+            phase2DatabaseGateAuditRollbackNote: 'Audit, rollback, test plan, and operator approval cards describe future contracts only. They do not create real audit events, execute rollback, create approvals, write databases, or run a production readiness job.',
+            phase2DatabaseGateQualityNote: 'Quality checks cover state snapshot contract, boundary locks, storage candidates, migration readiness, data sensitivity, audit contract, rollback contract, test plan, operator approval, unlock blockers, and safety boundary.',
+            phase2DatabaseGateAuditNote: 'Audit preview is display-only; it does not write databases, does not read real logs or real history tables, and does not create real audit events.',
+            phase2DatabaseGateSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
             claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
@@ -8306,6 +8361,60 @@
             mvpReadinessDossierQualityNote: 'Quality checks \u8986\u76d6 capability inventory\u3001disabled boundary locks\u3001freeze checklist\u3001release candidate preview\u3001post-MVP unlock gates\u3001handoff dossier\u3001validation matrix\u3001known limitations\u3001risk register \u548c safety boundary\u3002',
             mvpReadinessDossierAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff1b\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u771f\u5b9e\u5386\u53f2\u8868\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e audit event\u3002',
             mvpReadinessDossierSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export\u3001file write\u3001secret read\u3001external call \u548c token issue \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspacePhase2DatabasePersistenceGateMarker: 'Project Workspace phase2 database persistence gate bundle',
+            phase2DatabaseGatePackTitle: 'Phase 2 Database Persistence Gate',
+            phase2DatabaseGatePackHelper: '\u67e5\u770b Project Workspace phase2 database persistence gate bundle\u3002\u8fd9\u53ea\u662f deterministic storage contract preview\uff0c\u4e0d\u8fde\u63a5\u6570\u636e\u5e93\uff0c\u4e0d\u521b\u5efa migration\uff0c\u4e0d\u5199 DB\uff0c\u4e0d\u5199\u6587\u4ef6\uff0c\u4e0d\u8bfb\u53d6 secret\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\uff0c\u4e0d\u4fdd\u5b58\u771f\u5b9e\u5ba2\u6237\u6570\u636e\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u53d1\u5916\u90e8\u8bf7\u6c42\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e approval\uff0c\u4e0d\u6267\u884c\u771f\u5b9e production readiness job\u3002',
+            phase2DatabaseGateSummaryContractsTitle: 'Database Persistence Gate Summary / State Snapshot Contracts',
+            phase2DatabaseGateSummaryTitle: 'Database Persistence Gate Summary',
+            phase2DatabaseGateSnapshotTitle: 'State Snapshot Contract Cards',
+            phase2DatabaseGateBoundaryStorageTitle: 'Persistence Boundary Locks / Storage Candidates',
+            phase2DatabaseGateBoundaryTitle: 'Persistence Boundary Lock Cards',
+            phase2DatabaseGateStorageTitle: 'Storage Candidate Cards',
+            phase2DatabaseGateMigrationSensitivityTitle: 'Migration Readiness / Data Sensitivity',
+            phase2DatabaseGateMigrationTitle: 'Migration Readiness Cards',
+            phase2DatabaseGateSensitivityTitle: 'Data Sensitivity Cards',
+            phase2DatabaseGateAuditRollbackTestApprovalTitle: 'Audit Event / Rollback Recovery / Test Plan / Operator Approval',
+            phase2DatabaseGateAuditEventTitle: 'Audit Event Contract Cards',
+            phase2DatabaseGateRollbackTitle: 'Rollback Recovery Contract Cards',
+            phase2DatabaseGateTestPlanTitle: 'Persistence Test Plan Cards',
+            phase2DatabaseGateApprovalTitle: 'Operator Approval Gate Cards',
+            phase2DatabaseGateBlockersQualityAuditSafetyTitle: 'Phase 2 Unlock Blockers / Quality / Audit / Safety',
+            phase2DatabaseGateBlockersTitle: 'Phase 2 Unlock Blockers',
+            phase2DatabaseGateQualityTitle: 'Database Gate Quality Checks',
+            phase2DatabaseGateAuditTitle: 'Audit Preview',
+            phase2DatabaseGateSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            phase2DatabaseGateMode: '\u6a21\u5f0f',
+            phase2DatabaseGateSnapshotCount: 'Snapshot contract \u6570\u91cf',
+            phase2DatabaseGateBoundaryCount: 'Boundary lock \u6570\u91cf',
+            phase2DatabaseGateStorageCount: 'Storage candidate \u6570\u91cf',
+            phase2DatabaseGateMigrationCount: 'Migration readiness \u6570\u91cf',
+            phase2DatabaseGateSensitivityCount: 'Data sensitivity \u6570\u91cf',
+            phase2DatabaseGateBlockerCount: 'Unlock blocker \u6570\u91cf',
+            phase2DatabaseGateRecommendedAction: '\u63a8\u8350 operator action',
+            phase2DatabaseGateDisabled: '\u5df2\u7981\u7528',
+            phase2DatabaseGateNoData: '\u6682\u65e0 database persistence gate \u6570\u636e\u3002',
+            phase2DatabaseGateCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 database persistence gate \u5185\u5bb9\u3002',
+            phase2DatabaseGateCopyFailed: '\u65e0\u6cd5\u590d\u5236 database persistence gate \u5185\u5bb9\u3002',
+            phase2DatabaseGateCopied: 'Database persistence gate \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            phase2DatabaseGateCopySummary: '\u590d\u5236 database persistence gate summary',
+            phase2DatabaseGateCopySnapshots: '\u590d\u5236 state snapshot contract cards',
+            phase2DatabaseGateCopyBoundary: '\u590d\u5236 persistence boundary lock cards',
+            phase2DatabaseGateCopyStorage: '\u590d\u5236 storage candidate cards',
+            phase2DatabaseGateCopyMigration: '\u590d\u5236 migration readiness cards',
+            phase2DatabaseGateCopySensitivity: '\u590d\u5236 data sensitivity cards',
+            phase2DatabaseGateCopyAuditEvent: '\u590d\u5236 audit event contract cards',
+            phase2DatabaseGateCopyRollback: '\u590d\u5236 rollback recovery contract cards',
+            phase2DatabaseGateCopyTestPlan: '\u590d\u5236 persistence test plan cards',
+            phase2DatabaseGateCopyFull: '\u590d\u5236\u5b8c\u6574 database persistence gate pack',
+            phase2DatabaseGatePreviewNote: '\u4ec5\u4e3a deterministic storage contract preview\u3002\u4e0d\u8fde\u63a5\u6570\u636e\u5e93\uff0c\u4e0d\u521b\u5efa migration\uff0c\u4e0d\u5199 DB\uff0c\u4e0d\u5199\u6587\u4ef6\uff0c\u4e0d\u8bfb\u53d6 secret\uff0c\u4e0d\u53d1\u5916\u90e8\u8bf7\u6c42\uff0c\u4e0d\u8c03\u7528 provider\uff0c\u4e0d\u4fdd\u5b58\u771f\u5b9e\u5ba2\u6237\u6570\u636e\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e approval\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e audit event\uff0c\u4e0d\u6267\u884c rollback\uff0c\u4e0d\u6267\u884c\u771f\u5b9e production readiness job\u3002',
+            phase2DatabaseGateBoundaryNote: 'Persistence locks \u53ea\u662f preview\uff0c\u4e0d\u89e3\u9501\u771f\u5b9e database persistence\u3001file write\u3001secret read\u3001external call\u3001real execution\u3001provider \u6216 LLM \u80fd\u529b\u3002',
+            phase2DatabaseGateMigrationNote: 'Migration readiness \u548c data sensitivity \u53ea\u662f preview\u3002\u4e0d\u521b\u5efa migration\uff0c\u4e0d\u6267\u884c backfill\uff0c\u4e0d\u4fdd\u5b58\u672a\u8131\u654f\u654f\u611f\u5b57\u6bb5\u6216 provider secret\u3002',
+            phase2DatabaseGateAuditRollbackNote: 'Audit\u3001rollback\u3001test plan \u548c operator approval cards \u53ea\u63cf\u8ff0\u672a\u6765 contract\u3002\u4e0d\u521b\u5efa\u771f\u5b9e audit event\uff0c\u4e0d\u6267\u884c rollback\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e approval\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u6267\u884c\u771f\u5b9e production readiness job\u3002',
+            phase2DatabaseGateQualityNote: 'Quality checks \u8986\u76d6 state snapshot contract\u3001boundary locks\u3001storage candidates\u3001migration readiness\u3001data sensitivity\u3001audit contract\u3001rollback contract\u3001test plan\u3001operator approval\u3001unlock blockers \u548c safety boundary\u3002',
+            phase2DatabaseGateAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff1b\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u771f\u5b9e\u5386\u53f2\u8868\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e audit event\u3002',
+            phase2DatabaseGateSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export\u3001file write\u3001secret read\u3001external call \u548c token issue \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -11811,6 +11920,7 @@
                 latestProjectWorkspaceMvpConsolidationPack = latestProjectCreativeDecisionPack.workspace_mvp_consolidation_pack || {};
                 latestProjectWorkspaceDemoCampaignWalkthroughPack = latestProjectCreativeDecisionPack.workspace_demo_campaign_walkthrough_pack || {};
                 latestProjectWorkspaceMvpReadinessDossierPack = latestProjectCreativeDecisionPack.workspace_mvp_readiness_dossier_pack || {};
+                latestProjectWorkspacePhase2DatabasePersistenceGatePack = latestProjectCreativeDecisionPack.workspace_phase2_database_persistence_gate_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -17698,6 +17808,7 @@
         const PROJECT_WORKSPACE_MVP_CONSOLIDATION_MARKER = 'Project Workspace MVP consolidation bundle';
         const PROJECT_WORKSPACE_DEMO_CAMPAIGN_WALKTHROUGH_MARKER = 'Project Workspace demo campaign walkthrough bundle';
         const PROJECT_WORKSPACE_MVP_READINESS_DOSSIER_MARKER = 'Project Workspace MVP readiness dossier bundle';
+        const PROJECT_WORKSPACE_PHASE2_DATABASE_PERSISTENCE_GATE_MARKER = 'Project Workspace phase2 database persistence gate bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -25315,6 +25426,135 @@
         function copyProjectWorkspaceFinalKnownLimitations() { return copyProjectWorkspaceMvpReadinessDossierText('limitations'); }
         function copyProjectWorkspaceFinalRiskRegisterCards() { return copyProjectWorkspaceMvpReadinessDossierText('risk'); }
         function copyProjectWorkspaceFullMvpReadinessDossierPack() { return copyProjectWorkspaceMvpReadinessDossierText('full'); }
+        function projectWorkspacePhase2DatabasePersistenceGatePackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspacePhase2DatabasePersistenceGatePack && Object.keys(latestProjectWorkspacePhase2DatabasePersistenceGatePack).length) return latestProjectWorkspacePhase2DatabasePersistenceGatePack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_phase2_database_persistence_gate_pack || {};
+        }
+
+        function projectWorkspacePhase2DatabasePersistenceGateHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspacePhase2DatabasePersistenceGateJsonText(value) {
+            if (!projectWorkspacePhase2DatabasePersistenceGateHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspacePhase2DatabasePersistenceGateDisabledText(value) {
+            return value === false || value == null ? t('phase2DatabaseGateDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportPhase2DatabasePersistenceGateSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspacePhase2DatabasePersistenceGatePackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PHASE2_DATABASE_PERSISTENCE_GATE_MARKER,
+                has_workspace_phase2_database_persistence_gate_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                database_persistence_gate_summary: pack.database_persistence_gate_summary || {},
+                state_snapshot_contract_cards: Array.isArray(pack.state_snapshot_contract_cards) ? pack.state_snapshot_contract_cards : [],
+                persistence_boundary_lock_cards: Array.isArray(pack.persistence_boundary_lock_cards) ? pack.persistence_boundary_lock_cards : [],
+                storage_candidate_cards: Array.isArray(pack.storage_candidate_cards) ? pack.storage_candidate_cards : [],
+                migration_readiness_cards: Array.isArray(pack.migration_readiness_cards) ? pack.migration_readiness_cards : [],
+                data_sensitivity_cards: Array.isArray(pack.data_sensitivity_cards) ? pack.data_sensitivity_cards : [],
+                audit_event_contract_cards: Array.isArray(pack.audit_event_contract_cards) ? pack.audit_event_contract_cards : [],
+                rollback_recovery_contract_cards: Array.isArray(pack.rollback_recovery_contract_cards) ? pack.rollback_recovery_contract_cards : [],
+                persistence_test_plan_cards: Array.isArray(pack.persistence_test_plan_cards) ? pack.persistence_test_plan_cards : [],
+                operator_approval_gate_cards: Array.isArray(pack.operator_approval_gate_cards) ? pack.operator_approval_gate_cards : [],
+                phase2_unlock_blockers: Array.isArray(pack.phase2_unlock_blockers) ? pack.phase2_unlock_blockers : [],
+                database_gate_quality_checks: pack.database_gate_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspacePhase2DatabasePersistenceGateSummaryText(pack = projectWorkspaceExportPhase2DatabasePersistenceGateSnapshot()) {
+            if (!pack.has_workspace_phase2_database_persistence_gate_pack) return '';
+            const summary = pack.database_persistence_gate_summary || {};
+            return [
+                t('phase2DatabaseGateSummaryTitle'),
+                `${t('phase2DatabaseGateMode')}: ${summary.mode || t('none')}`,
+                `${t('phase2DatabaseGateSnapshotCount')}: ${summary.state_snapshot_contract_count ?? pack.state_snapshot_contract_cards.length}`,
+                `${t('phase2DatabaseGateBoundaryCount')}: ${summary.persistence_boundary_lock_count ?? pack.persistence_boundary_lock_cards.length}`,
+                `${t('phase2DatabaseGateStorageCount')}: ${summary.storage_candidate_count ?? pack.storage_candidate_cards.length}`,
+                `${t('phase2DatabaseGateMigrationCount')}: ${summary.migration_readiness_count ?? pack.migration_readiness_cards.length}`,
+                `${t('phase2DatabaseGateSensitivityCount')}: ${summary.data_sensitivity_count ?? pack.data_sensitivity_cards.length}`,
+                `${t('phase2DatabaseGateBlockerCount')}: ${summary.phase2_unlock_blocker_count ?? pack.phase2_unlock_blockers.length}`,
+                `${t('phase2DatabaseGateRecommendedAction')}: ${summary.risk_note || t('phase2DatabaseGatePreviewNote')}`,
+                `real_database_write_allowed: ${projectWorkspacePhase2DatabasePersistenceGateDisabledText(summary.real_database_write_allowed)}`,
+                `real_file_write_allowed: ${projectWorkspacePhase2DatabasePersistenceGateDisabledText(summary.real_file_write_allowed)}`,
+                `real_execution_allowed: ${projectWorkspacePhase2DatabasePersistenceGateDisabledText(summary.real_execution_allowed)}`,
+                `external_call_allowed: ${projectWorkspacePhase2DatabasePersistenceGateDisabledText(summary.external_call_allowed)}`,
+                `secret_read_allowed: ${projectWorkspacePhase2DatabasePersistenceGateDisabledText(summary.secret_read_allowed)}`,
+                t('phase2DatabaseGatePreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspacePhase2DatabasePersistenceGateSectionText(titleKey, value) {
+            const body = projectWorkspacePhase2DatabasePersistenceGateJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportPhase2DatabasePersistenceGateMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2DatabasePersistenceGateSnapshot(workspace);
+            if (!pack.has_workspace_phase2_database_persistence_gate_pack) return '';
+            return [
+                `## ${t('phase2DatabaseGatePackTitle')}`,
+                projectWorkspacePhase2DatabasePersistenceGateSummaryText(pack), '',
+                projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateSnapshotTitle', pack.state_snapshot_contract_cards), '',
+                projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateBoundaryTitle', pack.persistence_boundary_lock_cards), '',
+                projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateStorageTitle', pack.storage_candidate_cards), '',
+                projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateMigrationTitle', pack.migration_readiness_cards), '',
+                projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateSensitivityTitle', pack.data_sensitivity_cards), '',
+                projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateAuditEventTitle', pack.audit_event_contract_cards), '',
+                projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateRollbackTitle', pack.rollback_recovery_contract_cards), '',
+                projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateTestPlanTitle', pack.persistence_test_plan_cards), '',
+                projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateApprovalTitle', pack.operator_approval_gate_cards), '',
+                projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateBlockersTitle', pack.phase2_unlock_blockers), '',
+                projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateQualityTitle', pack.database_gate_quality_checks), '',
+                projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateAuditTitle', pack.audit_preview), '',
+                projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateSafetyTitle', pack.safety_boundaries),
+                t('phase2DatabaseGatePreviewNote'),
+                t('phase2DatabaseGateBoundaryNote'),
+                t('phase2DatabaseGateMigrationNote'),
+                t('phase2DatabaseGateAuditRollbackNote'),
+                t('phase2DatabaseGateQualityNote'),
+                t('phase2DatabaseGateAuditNote'),
+                t('phase2DatabaseGateSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspacePhase2DatabasePersistenceGateText(kind = 'full') {
+            const status = document.getElementById('projectWorkspacePhase2DatabasePersistenceGateStatus');
+            const pack = projectWorkspaceExportPhase2DatabasePersistenceGateSnapshot();
+            const text = kind === 'summary' ? projectWorkspacePhase2DatabasePersistenceGateSummaryText(pack)
+                : kind === 'snapshots' ? projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateSnapshotTitle', pack.state_snapshot_contract_cards)
+                : kind === 'boundary' ? projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateBoundaryTitle', pack.persistence_boundary_lock_cards)
+                : kind === 'storage' ? projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateStorageTitle', pack.storage_candidate_cards)
+                : kind === 'migration' ? projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateMigrationTitle', pack.migration_readiness_cards)
+                : kind === 'sensitivity' ? projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateSensitivityTitle', pack.data_sensitivity_cards)
+                : kind === 'audit_event' ? projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateAuditEventTitle', pack.audit_event_contract_cards)
+                : kind === 'rollback' ? projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateRollbackTitle', pack.rollback_recovery_contract_cards)
+                : kind === 'test_plan' ? projectWorkspacePhase2DatabasePersistenceGateSectionText('phase2DatabaseGateTestPlanTitle', pack.persistence_test_plan_cards)
+                : projectWorkspaceExportPhase2DatabasePersistenceGateMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('phase2DatabaseGateCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('phase2DatabaseGateCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('phase2DatabaseGateCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('phase2DatabaseGateCopyFailed'); }
+        }
+
+        function copyProjectWorkspacePhase2DatabasePersistenceGateSummary() { return copyProjectWorkspacePhase2DatabasePersistenceGateText('summary'); }
+        function copyProjectWorkspaceStateSnapshotContractCards() { return copyProjectWorkspacePhase2DatabasePersistenceGateText('snapshots'); }
+        function copyProjectWorkspacePersistenceBoundaryLockCards() { return copyProjectWorkspacePhase2DatabasePersistenceGateText('boundary'); }
+        function copyProjectWorkspaceStorageCandidateCards() { return copyProjectWorkspacePhase2DatabasePersistenceGateText('storage'); }
+        function copyProjectWorkspaceMigrationReadinessCards() { return copyProjectWorkspacePhase2DatabasePersistenceGateText('migration'); }
+        function copyProjectWorkspaceDataSensitivityCards() { return copyProjectWorkspacePhase2DatabasePersistenceGateText('sensitivity'); }
+        function copyProjectWorkspaceAuditEventContractCards() { return copyProjectWorkspacePhase2DatabasePersistenceGateText('audit_event'); }
+        function copyProjectWorkspaceRollbackRecoveryContractCards() { return copyProjectWorkspacePhase2DatabasePersistenceGateText('rollback'); }
+        function copyProjectWorkspacePersistenceTestPlanCards() { return copyProjectWorkspacePhase2DatabasePersistenceGateText('test_plan'); }
+        function copyProjectWorkspaceFullPhase2DatabasePersistenceGatePack() { return copyProjectWorkspacePhase2DatabasePersistenceGateText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -29895,6 +30135,45 @@
             return projectWorkspaceMvpReadinessDossierSanitizePlaceholderText(`<div class="section-block" id="projectWorkspaceMvpReadinessDossierQualityAuditPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('mvpReadinessDossierQualityAuditTitle'))}</div><div class="field-helper">${escapeHTML(t('mvpReadinessDossierSafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullMvpReadinessDossierPack()">${escapeHTML(t('mvpReadinessDossierCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('mvpReadinessDossierQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceMvpReadinessDossierJsonText(pack.mvp_readiness_quality_checks) || t('mvpReadinessDossierNoData'))}</pre><div class="field-helper">capability inventory / disabled boundary locks / freeze checklist / release candidate preview / post-MVP unlock gates / handoff dossier / validation matrix / known limitations / risk register / safety boundary</div><div class="field-helper">${escapeHTML(t('mvpReadinessDossierQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('mvpReadinessDossierAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspaceMvpReadinessDossierJsonText(pack.audit_preview) || t('mvpReadinessDossierNoData'))}</pre><div class="field-helper">${escapeHTML(t('mvpReadinessDossierAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('mvpReadinessDossierSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled</div><div class="field-helper">${escapeHTML(t('mvpReadinessDossierSafetyNote'))}</div></div>`);
         }
 
+        function renderProjectWorkspacePhase2DatabasePersistenceGateSummaryContractsPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2DatabasePersistenceGateSnapshot(workspace); if (!pack.has_workspace_phase2_database_persistence_gate_pack) return '';
+            const summary = pack.database_persistence_gate_summary || {};
+            const snapshots = pack.state_snapshot_contract_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.snapshot_label || card.snapshot_contract_id || t('none'))}</strong><div class="field-helper">snapshot_contract_id: ${escapeHTML(card.snapshot_contract_id || '')} / snapshot_group: ${escapeHTML(card.snapshot_group || '')}</div><div><strong>state_scope:</strong> ${escapeHTML(card.state_scope || '')}</div><div><strong>recommended_storage_shape:</strong> ${escapeHTML(card.recommended_storage_shape || '')}</div><div class="field-helper">required_identifiers: ${escapeHTML((card.required_identifiers || []).join(', ') || t('none'))}</div><div class="field-helper">required_timestamps: ${escapeHTML((card.required_timestamps || []).join(', ') || t('none'))}</div><div class="field-helper">required_status_fields: ${escapeHTML((card.required_status_fields || []).join(', ') || t('none'))}</div><div class="field-helper">excluded_sensitive_fields: ${escapeHTML((card.excluded_sensitive_fields || []).join(', ') || t('none'))}</div><div class="field-helper">retention_note: ${escapeHTML(card.retention_note || '')}</div><div class="field-helper">real_database_write_allowed: ${escapeHTML(projectWorkspacePhase2DatabasePersistenceGateDisabledText(card.real_database_write_allowed))} / real_file_write_allowed: ${escapeHTML(projectWorkspacePhase2DatabasePersistenceGateDisabledText(card.real_file_write_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspacePhase2DatabasePersistenceGateDisabledText(card.real_execution_allowed))}</div><div>${escapeHTML(card.risk_note || '')}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspacePhase2DatabasePersistenceGateSummaryContractsPanel" data-marker="project_workspace_phase2_database_persistence_gate_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2DatabaseGateSummaryContractsTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2DatabaseGatePackHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2DatabasePersistenceGateSummary()">${escapeHTML(t('phase2DatabaseGateCopySummary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceStateSnapshotContractCards()">${escapeHTML(t('phase2DatabaseGateCopySnapshots'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2DatabasePersistenceGatePack()">${escapeHTML(t('phase2DatabaseGateCopyFull'))}</button></div></div><div class="metric-strip">${metricPill(t('phase2DatabaseGateMode'), summary.mode || t('none'))}${metricPill(t('phase2DatabaseGateSnapshotCount'), String(summary.state_snapshot_contract_count ?? pack.state_snapshot_contract_cards.length))}${metricPill(t('phase2DatabaseGateBoundaryCount'), String(summary.persistence_boundary_lock_count ?? pack.persistence_boundary_lock_cards.length))}${metricPill(t('phase2DatabaseGateStorageCount'), String(summary.storage_candidate_count ?? pack.storage_candidate_cards.length))}${metricPill(t('phase2DatabaseGateMigrationCount'), String(summary.migration_readiness_count ?? pack.migration_readiness_cards.length))}${metricPill(t('phase2DatabaseGateSensitivityCount'), String(summary.data_sensitivity_count ?? pack.data_sensitivity_cards.length))}${metricPill(t('phase2DatabaseGateBlockerCount'), String(summary.phase2_unlock_blocker_count ?? pack.phase2_unlock_blockers.length))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspacePhase2DatabasePersistenceGateSummaryText(pack) || t('phase2DatabaseGateNoData'))}</pre><div class="graph-os-compact-grid">${snapshots || `<div class="empty-state">${escapeHTML(t('phase2DatabaseGateNoData'))}</div>`}</div><div class="field-helper">review_import_snapshot / evidence_quality_snapshot / claim_risk_snapshot / creative_output_snapshot / delivery_qa_snapshot / final_export_packet_snapshot / campaign_dossier_snapshot / scenario_preset_snapshot / mvp_readiness_snapshot</div><div class="demo-warning">${escapeHTML(t('phase2DatabaseGatePreviewNote'))}</div><div id="projectWorkspacePhase2DatabasePersistenceGateStatus" class="field-helper" aria-live="polite"></div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2DatabasePersistenceGateBoundaryStoragePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2DatabasePersistenceGateSnapshot(workspace); if (!pack.has_workspace_phase2_database_persistence_gate_pack) return '';
+            const locks = pack.persistence_boundary_lock_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.capability_label || card.boundary_lock_id || t('none'))}</strong><div class="field-helper">boundary_lock_id: ${escapeHTML(card.boundary_lock_id || '')} / capability_id: ${escapeHTML(card.capability_id || '')}</div><div class="field-helper">expected_disabled: ${escapeHTML(String(card.expected_disabled))} / observed_allowed: ${escapeHTML(projectWorkspacePhase2DatabasePersistenceGateDisabledText(card.observed_allowed))} / must_remain_disabled_until_unlocked: ${escapeHTML(String(card.must_remain_disabled_until_unlocked))}</div><div class="field-helper">unlock_requires: ${escapeHTML((card.unlock_requires || []).join(', ') || t('none'))}</div><div class="field-helper">source_guard_refs: ${escapeHTML((card.source_guard_refs || []).join(', ') || t('none'))}</div><div>${escapeHTML(card.risk_note || '')}</div></div>`).join('');
+            const storage = pack.storage_candidate_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.storage_label || card.storage_candidate_id || t('none'))}</strong><div class="field-helper">storage_candidate_id: ${escapeHTML(card.storage_candidate_id || '')} / storage_type: ${escapeHTML(card.storage_type || '')}</div><div><strong>candidate_data_shape:</strong> ${escapeHTML(card.candidate_data_shape || '')}</div><div><strong>why_persist:</strong> ${escapeHTML(card.why_persist || '')}</div><div><strong>why_not_persist_yet:</strong> ${escapeHTML(card.why_not_persist_yet || '')}</div><div class="field-helper">contains_user_content: ${escapeHTML(String(card.contains_user_content))} / contains_generated_content: ${escapeHTML(String(card.contains_generated_content))} / contains_sensitive_data: ${escapeHTML(String(card.contains_sensitive_data))}</div><div class="field-helper">requires_retention_policy: ${escapeHTML(String(card.requires_retention_policy))} / requires_deletion_policy: ${escapeHTML(String(card.requires_deletion_policy))} / real_database_write_allowed: ${escapeHTML(projectWorkspacePhase2DatabasePersistenceGateDisabledText(card.real_database_write_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspacePhase2DatabasePersistenceGateBoundaryStoragePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2DatabaseGateBoundaryStorageTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2DatabaseGateBoundaryNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePersistenceBoundaryLockCards()">${escapeHTML(t('phase2DatabaseGateCopyBoundary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceStorageCandidateCards()">${escapeHTML(t('phase2DatabaseGateCopyStorage'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2DatabaseGateBoundaryTitle'))}</strong><div class="graph-os-compact-grid">${locks || `<div class="empty-state">${escapeHTML(t('phase2DatabaseGateNoData'))}</div>`}</div><div class="field-helper">database_persistence / file_write / secret_read / external_call / real_execution / provider / llm</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DatabaseGateStorageTitle'))}</strong><div class="graph-os-compact-grid">${storage || `<div class="empty-state">${escapeHTML(t('phase2DatabaseGateNoData'))}</div>`}</div></div></div><div class="demo-warning">${escapeHTML(t('phase2DatabaseGateBoundaryNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2DatabasePersistenceGateMigrationSensitivityPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2DatabasePersistenceGateSnapshot(workspace); if (!pack.has_workspace_phase2_database_persistence_gate_pack) return '';
+            const migrations = pack.migration_readiness_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.migration_label || card.migration_readiness_id || t('none'))}</strong><div class="field-helper">migration_readiness_id: ${escapeHTML(card.migration_readiness_id || '')} / migration_scope: ${escapeHTML(card.migration_scope || '')}</div><div class="field-helper">required_schema_refs: ${escapeHTML((card.required_schema_refs || []).join(', ') || t('none'))}</div><div><strong>required_backfill_plan:</strong> ${escapeHTML(card.required_backfill_plan || '')}</div><div><strong>required_rollback_plan:</strong> ${escapeHTML(card.required_rollback_plan || '')}</div><div class="field-helper">required_test_refs: ${escapeHTML((card.required_test_refs || []).join(', ') || t('none'))}</div><div class="field-helper">ready_for_migration: ${escapeHTML(projectWorkspacePhase2DatabasePersistenceGateDisabledText(card.ready_for_migration))} / real_database_write_allowed: ${escapeHTML(projectWorkspacePhase2DatabasePersistenceGateDisabledText(card.real_database_write_allowed))}</div></div>`).join('');
+            const sensitivity = pack.data_sensitivity_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.data_label || card.data_sensitivity_id || t('none'))}</strong><div class="field-helper">data_sensitivity_id: ${escapeHTML(card.data_sensitivity_id || '')} / data_group: ${escapeHTML(card.data_group || '')} / sensitivity_level: ${escapeHTML(card.sensitivity_level || '')}</div><div class="field-helper">contains_customer_data: ${escapeHTML(String(card.contains_customer_data))} / contains_review_text: ${escapeHTML(String(card.contains_review_text))} / contains_generated_copy: ${escapeHTML(String(card.contains_generated_copy))} / contains_provider_secret: ${escapeHTML(String(card.contains_provider_secret))}</div><div class="field-helper">allowed_in_mvp_preview: ${escapeHTML(String(card.allowed_in_mvp_preview))} / allowed_for_real_persistence: ${escapeHTML(projectWorkspacePhase2DatabasePersistenceGateDisabledText(card.allowed_for_real_persistence))}</div><div>${escapeHTML(card.required_redaction_note || '')}</div><div>${escapeHTML(card.risk_note || '')}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspacePhase2DatabasePersistenceGateMigrationSensitivityPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2DatabaseGateMigrationSensitivityTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2DatabaseGateMigrationNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMigrationReadinessCards()">${escapeHTML(t('phase2DatabaseGateCopyMigration'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDataSensitivityCards()">${escapeHTML(t('phase2DatabaseGateCopySensitivity'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2DatabaseGateMigrationTitle'))}</strong><div class="graph-os-compact-grid">${migrations || `<div class="empty-state">${escapeHTML(t('phase2DatabaseGateNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DatabaseGateSensitivityTitle'))}</strong><div class="graph-os-compact-grid">${sensitivity || `<div class="empty-state">${escapeHTML(t('phase2DatabaseGateNoData'))}</div>`}</div><div class="field-helper">provider secret / customer data / review text / generated copy</div></div></div><div class="demo-warning">${escapeHTML(t('phase2DatabaseGateMigrationNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2DatabasePersistenceGateAuditRollbackTestApprovalPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2DatabasePersistenceGateSnapshot(workspace); if (!pack.has_workspace_phase2_database_persistence_gate_pack) return '';
+            const auditEvents = projectWorkspacePhase2DatabasePersistenceGateJsonText(pack.audit_event_contract_cards);
+            const rollback = projectWorkspacePhase2DatabasePersistenceGateJsonText(pack.rollback_recovery_contract_cards);
+            const tests = projectWorkspacePhase2DatabasePersistenceGateJsonText(pack.persistence_test_plan_cards);
+            const approvals = projectWorkspacePhase2DatabasePersistenceGateJsonText(pack.operator_approval_gate_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2DatabasePersistenceGateAuditRollbackTestApprovalPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2DatabaseGateAuditRollbackTestApprovalTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2DatabaseGateAuditRollbackNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAuditEventContractCards()">${escapeHTML(t('phase2DatabaseGateCopyAuditEvent'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRollbackRecoveryContractCards()">${escapeHTML(t('phase2DatabaseGateCopyRollback'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePersistenceTestPlanCards()">${escapeHTML(t('phase2DatabaseGateCopyTestPlan'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2DatabaseGateAuditEventTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(auditEvents || t('phase2DatabaseGateNoData'))}</pre><div class="field-helper">future audit event shape only / no real audit event / no database write</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DatabaseGateRollbackTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(rollback || t('phase2DatabaseGateNoData'))}</pre><div class="field-helper">DB write failure / migration failure / schema mismatch / partial write / recovery preview only / no real rollback</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DatabaseGateTestPlanTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(tests || t('phase2DatabaseGateNoData'))}</pre><div class="field-helper">unit tests / contract tests / migration dry-run tests / rollback dry-run tests / redaction tests / permission boundary tests / audit event tests</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DatabaseGateApprovalTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(approvals || t('phase2DatabaseGateNoData'))}</pre><div class="field-helper">future human approval required / no real approval created / no production readiness job</div></div></div><div class="demo-warning">${escapeHTML(t('phase2DatabaseGateAuditRollbackNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2DatabasePersistenceGateBlockersQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2DatabasePersistenceGateSnapshot(workspace); if (!pack.has_workspace_phase2_database_persistence_gate_pack) return '';
+            const blockers = projectWorkspacePhase2DatabasePersistenceGateJsonText(pack.phase2_unlock_blockers);
+            const quality = projectWorkspacePhase2DatabasePersistenceGateJsonText(pack.database_gate_quality_checks);
+            const audit = projectWorkspacePhase2DatabasePersistenceGateJsonText(pack.audit_preview);
+            const safety = projectWorkspacePhase2DatabasePersistenceGateJsonText(pack.safety_boundaries);
+            return `<div class="section-block" id="projectWorkspacePhase2DatabasePersistenceGateBlockersQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2DatabaseGateBlockersQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2DatabaseGateSafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2DatabasePersistenceGatePack()">${escapeHTML(t('phase2DatabaseGateCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2DatabaseGateBlockersTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2DatabaseGateNoData'))}</pre><div class="field-helper">no schema migration / no DB connection config / no retention policy / no deletion policy / no redaction policy / no audit sink / no rollback plan implemented / no production approval</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DatabaseGateQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2DatabaseGateNoData'))}</pre><div class="field-helper">state snapshot contract / boundary locks / storage candidates / migration readiness / data sensitivity / audit contract / rollback contract / test plan / operator approval / unlock blockers / safety boundary</div><div class="field-helper">${escapeHTML(t('phase2DatabaseGateQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DatabaseGateAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2DatabaseGateNoData'))}</pre><div class="field-helper">${escapeHTML(t('phase2DatabaseGateAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2DatabaseGateSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled</div><div class="field-helper">${escapeHTML(t('phase2DatabaseGateSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -30357,6 +30636,8 @@
                 '',
                 projectWorkspaceExportMvpReadinessDossierMarkdown(workspace),
                 '',
+                projectWorkspaceExportPhase2DatabasePersistenceGateMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -30489,6 +30770,7 @@
                 workspace_mvp_consolidation_pack: projectWorkspaceExportMvpConsolidationSnapshot(workspace),
                 workspace_demo_campaign_walkthrough_pack: projectWorkspaceExportDemoCampaignWalkthroughSnapshot(workspace),
                 workspace_mvp_readiness_dossier_pack: projectWorkspaceExportMvpReadinessDossierSnapshot(workspace),
+                workspace_phase2_database_persistence_gate_pack: projectWorkspaceExportPhase2DatabasePersistenceGateSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -43140,6 +43422,11 @@
                     ${renderProjectWorkspaceMvpReadinessDossierReleaseUnlockPanel(workspace)}
                     ${renderProjectWorkspaceMvpReadinessDossierHandoffValidationPanel(workspace)}
                     ${renderProjectWorkspaceMvpReadinessDossierQualityAuditPanel(workspace)}
+                    ${renderProjectWorkspacePhase2DatabasePersistenceGateSummaryContractsPanel(workspace)}
+                    ${renderProjectWorkspacePhase2DatabasePersistenceGateBoundaryStoragePanel(workspace)}
+                    ${renderProjectWorkspacePhase2DatabasePersistenceGateMigrationSensitivityPanel(workspace)}
+                    ${renderProjectWorkspacePhase2DatabasePersistenceGateAuditRollbackTestApprovalPanel(workspace)}
+                    ${renderProjectWorkspacePhase2DatabasePersistenceGateBlockersQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}

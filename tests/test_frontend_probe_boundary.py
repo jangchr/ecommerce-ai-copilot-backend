@@ -17287,6 +17287,216 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_phase2_database_persistence_gate_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace phase2 database persistence gate bundle",
+            "project_workspace_phase2_database_persistence_gate_marker",
+            "PROJECT_WORKSPACE_PHASE2_DATABASE_PERSISTENCE_GATE_MARKER",
+            "latestProjectWorkspacePhase2DatabasePersistenceGatePack",
+            "workspace_phase2_database_persistence_gate_pack",
+            "projectWorkspacePhase2DatabasePersistenceGatePackFromWorkspace",
+            "projectWorkspaceExportPhase2DatabasePersistenceGateSnapshot",
+            "projectWorkspaceExportPhase2DatabasePersistenceGateMarkdown",
+            "renderProjectWorkspacePhase2DatabasePersistenceGateSummaryContractsPanel",
+            "renderProjectWorkspacePhase2DatabasePersistenceGateBoundaryStoragePanel",
+            "renderProjectWorkspacePhase2DatabasePersistenceGateMigrationSensitivityPanel",
+            "renderProjectWorkspacePhase2DatabasePersistenceGateAuditRollbackTestApprovalPanel",
+            "renderProjectWorkspacePhase2DatabasePersistenceGateBlockersQualityAuditSafetyPanel",
+            "copyProjectWorkspacePhase2DatabasePersistenceGateSummary",
+            "copyProjectWorkspaceStateSnapshotContractCards",
+            "copyProjectWorkspacePersistenceBoundaryLockCards",
+            "copyProjectWorkspaceStorageCandidateCards",
+            "copyProjectWorkspaceMigrationReadinessCards",
+            "copyProjectWorkspaceDataSensitivityCards",
+            "copyProjectWorkspaceAuditEventContractCards",
+            "copyProjectWorkspaceRollbackRecoveryContractCards",
+            "copyProjectWorkspacePersistenceTestPlanCards",
+            "copyProjectWorkspaceFullPhase2DatabasePersistenceGatePack",
+            "workspace_phase2_database_persistence_gate_pack: projectWorkspaceExportPhase2DatabasePersistenceGateSnapshot(workspace)",
+            "Phase 2 Database Persistence Gate",
+            "Database Persistence Gate Summary / State Snapshot Contracts",
+            "Database Persistence Gate Summary",
+            "State Snapshot Contract Cards",
+            "Persistence Boundary Locks / Storage Candidates",
+            "Persistence Boundary Lock Cards",
+            "Storage Candidate Cards",
+            "Migration Readiness / Data Sensitivity",
+            "Migration Readiness Cards",
+            "Data Sensitivity Cards",
+            "Audit Event / Rollback Recovery / Test Plan / Operator Approval",
+            "Audit Event Contract Cards",
+            "Rollback Recovery Contract Cards",
+            "Persistence Test Plan Cards",
+            "Operator Approval Gate Cards",
+            "Phase 2 Unlock Blockers",
+            "Database Gate Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "database_persistence_gate_summary",
+            "state_snapshot_contract_cards",
+            "persistence_boundary_lock_cards",
+            "storage_candidate_cards",
+            "migration_readiness_cards",
+            "data_sensitivity_cards",
+            "audit_event_contract_cards",
+            "rollback_recovery_contract_cards",
+            "persistence_test_plan_cards",
+            "operator_approval_gate_cards",
+            "phase2_unlock_blockers",
+            "database_gate_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+            "card.snapshot_contract_id",
+            "card.snapshot_label",
+            "card.snapshot_group",
+            "card.state_scope",
+            "card.recommended_storage_shape",
+            "card.required_identifiers",
+            "card.required_timestamps",
+            "card.required_status_fields",
+            "card.excluded_sensitive_fields",
+            "card.retention_note",
+            "card.real_database_write_allowed",
+            "card.real_file_write_allowed",
+            "card.real_execution_allowed",
+            "card.boundary_lock_id",
+            "card.capability_id",
+            "card.expected_disabled",
+            "card.observed_allowed",
+            "card.must_remain_disabled_until_unlocked",
+            "card.storage_candidate_id",
+            "card.why_persist",
+            "card.why_not_persist_yet",
+            "card.contains_customer_data",
+            "card.contains_review_text",
+            "card.contains_generated_copy",
+            "card.contains_provider_secret",
+            "card.ready_for_migration",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for coverage in [
+            "review_import_snapshot",
+            "evidence_quality_snapshot",
+            "claim_risk_snapshot",
+            "creative_output_snapshot",
+            "delivery_qa_snapshot",
+            "final_export_packet_snapshot",
+            "campaign_dossier_snapshot",
+            "scenario_preset_snapshot",
+            "mvp_readiness_snapshot",
+            "database_persistence / file_write / secret_read / external_call / real_execution / provider / llm",
+            "provider secret / customer data / review text / generated copy",
+            "DB write failure / migration failure / schema mismatch / partial write / recovery preview only / no real rollback",
+            "unit tests / contract tests / migration dry-run tests / rollback dry-run tests / redaction tests / permission boundary tests / audit event tests",
+            "no schema migration / no DB connection config / no retention policy / no deletion policy / no redaction policy / no audit sink / no rollback plan implemented / no production approval",
+            "state snapshot contract / boundary locks / storage candidates / migration readiness / data sensitivity / audit contract / rollback contract / test plan / operator approval / unlock blockers / safety boundary",
+            "provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled",
+        ]:
+            with self.subTest(coverage=coverage):
+                self.assertIn(coverage, html)
+        previous = html.index("renderProjectWorkspaceMvpReadinessDossierQualityAuditPanel(workspace)")
+        summary = html.index("renderProjectWorkspacePhase2DatabasePersistenceGateSummaryContractsPanel(workspace)")
+        boundary = html.index("renderProjectWorkspacePhase2DatabasePersistenceGateBoundaryStoragePanel(workspace)")
+        migration = html.index("renderProjectWorkspacePhase2DatabasePersistenceGateMigrationSensitivityPanel(workspace)")
+        audit = html.index("renderProjectWorkspacePhase2DatabasePersistenceGateAuditRollbackTestApprovalPanel(workspace)")
+        blockers = html.index("renderProjectWorkspacePhase2DatabasePersistenceGateBlockersQualityAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, boundary)
+        self.assertLess(boundary, migration)
+        self.assertLess(migration, audit)
+        self.assertLess(audit, blockers)
+        self.assertLess(blockers, core)
+
+    def test_workspace_phase2_database_persistence_gate_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "phase2DatabaseGatePackTitle",
+            "phase2DatabaseGatePackHelper",
+            "phase2DatabaseGateSummaryContractsTitle",
+            "phase2DatabaseGateBoundaryStorageTitle",
+            "phase2DatabaseGateMigrationSensitivityTitle",
+            "phase2DatabaseGateAuditRollbackTestApprovalTitle",
+            "phase2DatabaseGateBlockersQualityAuditSafetyTitle",
+            "phase2DatabaseGateCopySummary",
+            "phase2DatabaseGateCopySnapshots",
+            "phase2DatabaseGateCopyBoundary",
+            "phase2DatabaseGateCopyStorage",
+            "phase2DatabaseGateCopyMigration",
+            "phase2DatabaseGateCopySensitivity",
+            "phase2DatabaseGateCopyAuditEvent",
+            "phase2DatabaseGateCopyRollback",
+            "phase2DatabaseGateCopyTestPlan",
+            "phase2DatabaseGateCopyFull",
+            "phase2DatabaseGateCopied",
+            "phase2DatabaseGateCopyFailed",
+            "phase2DatabaseGateCopyNoData",
+            "phase2DatabaseGatePreviewNote",
+            "phase2DatabaseGateSafetyNote",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace phase2 database persistence gate bundle", script)
+            self.assertIn("project_workspace_phase2_database_persistence_gate_marker", script)
+        markdown = html[
+            html.index("function projectWorkspacePhase2DatabasePersistenceGateSummaryText"):
+            html.index("async function copyProjectWorkspacePhase2DatabasePersistenceGateText")
+        ]
+        for key in [
+            "phase2DatabaseGatePackTitle",
+            "phase2DatabaseGateSummaryTitle",
+            "phase2DatabaseGateSnapshotTitle",
+            "phase2DatabaseGateBoundaryTitle",
+            "phase2DatabaseGateStorageTitle",
+            "phase2DatabaseGateMigrationTitle",
+            "phase2DatabaseGateSensitivityTitle",
+            "phase2DatabaseGateAuditEventTitle",
+            "phase2DatabaseGateRollbackTitle",
+            "phase2DatabaseGateTestPlanTitle",
+            "phase2DatabaseGateApprovalTitle",
+            "phase2DatabaseGateBlockersTitle",
+            "phase2DatabaseGateQualityTitle",
+            "phase2DatabaseGateAuditTitle",
+            "phase2DatabaseGateSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PHASE2_DATABASE_PERSISTENCE_GATE_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic storage contract preview only",
+            "does not connect to a database",
+            "create migration",
+            "write DB",
+            "write files",
+            "read secrets",
+            "read real logs",
+            "save real customer data",
+            "make external calls",
+            "call providers",
+            "create approvals",
+            "create audit events",
+            "execute rollback",
+            "run a production readiness job",
+            "does not write databases",
+            "does not read real logs or real history tables",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [
