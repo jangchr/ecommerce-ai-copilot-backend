@@ -44622,6 +44622,531 @@ def _rw_workspace_mvp_readiness_dossier_pack(creative_decision_pack: dict) -> di
     }
 
 
+def _rw_workspace_phase2_database_persistence_gate_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_ids = [
+        "workspace_mvp_readiness_dossier_pack",
+        "workspace_demo_campaign_walkthrough_pack",
+        "workspace_mvp_consolidation_pack",
+        "workspace_final_system_health_pack",
+        "workspace_scenario_presets_pack",
+        "workspace_product_navigation_pack",
+        "campaign_creative_dossier_pack",
+        "final_claim_safe_export_packet_pack",
+        "review_evidence_quality_pack",
+        "claim_risk_guard_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_capability_permission_matrix_pack",
+    ]
+    packs = {pack_id: dict(creative_decision_pack.get(pack_id) or {}) for pack_id in source_pack_ids}
+
+    snapshot_specs = [
+        (
+            "review_import_snapshot",
+            "Review import snapshot",
+            "review_state",
+            ["review_import_pack", "workspace_product_navigation_pack"],
+            "normalized review counts, source breakdown, product refs, import warnings",
+            "workspace_review_import_snapshot",
+            ["workspace_id", "product_id", "source_id"],
+            ["imported_at_preview", "last_refreshed_at_preview"],
+            ["source_status", "normalization_status", "duplicate_status"],
+            ["raw_unredacted_review_text", "provider_secret", "source_auth_token"],
+        ),
+        (
+            "evidence_quality_snapshot",
+            "Evidence quality snapshot",
+            "evidence_state",
+            ["review_evidence_quality_pack"],
+            "quote refs, evidence quality scores, missing quote warnings",
+            "workspace_evidence_quality_snapshot",
+            ["workspace_id", "evidence_id", "quote_id"],
+            ["evaluated_at_preview"],
+            ["support_status", "evidence_quality_status"],
+            ["raw_unredacted_review_text", "buyer_identifier", "provider_secret"],
+        ),
+        (
+            "claim_risk_snapshot",
+            "Claim risk snapshot",
+            "claim_state",
+            ["claim_risk_guard_pack"],
+            "claim ids, support status, risk level, do-not-claim refs",
+            "workspace_claim_risk_snapshot",
+            ["workspace_id", "claim_id"],
+            ["checked_at_preview"],
+            ["claim_risk_level", "support_status", "allowed_usage_status"],
+            ["unsupported_claim_text_without_evidence", "provider_secret"],
+        ),
+        (
+            "creative_output_snapshot",
+            "Creative output snapshot",
+            "creative_state",
+            ["campaign_creative_dossier_pack", "final_claim_safe_export_packet_pack"],
+            "claim-safe copy, creative sections, operator handoff refs",
+            "workspace_creative_output_snapshot",
+            ["workspace_id", "creative_asset_id", "claim_ref_id"],
+            ["generated_at_preview"],
+            ["creative_status", "claim_safety_status", "export_preview_status"],
+            ["unreviewed_generated_copy", "provider_secret"],
+        ),
+        (
+            "delivery_qa_snapshot",
+            "Delivery QA snapshot",
+            "delivery_state",
+            ["final_claim_safe_export_packet_pack", "workspace_final_system_health_pack"],
+            "delivery QA status, blocked reasons, readiness checks",
+            "workspace_delivery_qa_snapshot",
+            ["workspace_id", "delivery_surface", "qa_check_id"],
+            ["qa_checked_at_preview"],
+            ["delivery_status", "qa_status", "blocker_status"],
+            ["platform_credentials", "provider_secret", "unredacted_user_upload"],
+        ),
+        (
+            "final_export_packet_snapshot",
+            "Final export packet snapshot",
+            "export_state",
+            ["final_claim_safe_export_packet_pack"],
+            "preview export manifest, copy refs, blocked export reasons",
+            "workspace_final_export_packet_snapshot",
+            ["workspace_id", "export_packet_id"],
+            ["export_previewed_at"],
+            ["export_readiness_status", "blocked_reason_status"],
+            ["real_file_path", "download_token", "provider_secret"],
+        ),
+        (
+            "campaign_dossier_snapshot",
+            "Campaign dossier snapshot",
+            "handoff_state",
+            ["campaign_creative_dossier_pack"],
+            "operator-facing campaign dossier cards and evidence trace refs",
+            "workspace_campaign_dossier_snapshot",
+            ["workspace_id", "dossier_id"],
+            ["dossier_previewed_at"],
+            ["handoff_status", "evidence_trace_status"],
+            ["customer_identifier", "provider_secret", "private_notes"],
+        ),
+        (
+            "scenario_preset_snapshot",
+            "Scenario preset snapshot",
+            "scenario_state",
+            ["workspace_scenario_presets_pack"],
+            "deterministic scenario preset ids, demo run preview refs",
+            "workspace_scenario_preset_snapshot",
+            ["workspace_id", "scenario_id"],
+            ["scenario_previewed_at"],
+            ["scenario_status", "demo_run_preview_status"],
+            ["real_customer_data", "provider_secret", "external_account_id"],
+        ),
+        (
+            "mvp_readiness_snapshot",
+            "MVP readiness snapshot",
+            "readiness_state",
+            ["workspace_mvp_readiness_dossier_pack", "workspace_final_system_health_pack"],
+            "MVP freeze readiness, disabled boundaries, final known limitations",
+            "workspace_mvp_readiness_snapshot",
+            ["workspace_id", "readiness_dossier_id"],
+            ["readiness_checked_at_preview"],
+            ["mvp_readiness_status", "boundary_lock_status", "freeze_status"],
+            ["provider_secret", "real_log_excerpt", "database_connection_string"],
+        ),
+    ]
+    state_snapshot_contract_cards = [
+        {
+            "snapshot_contract_id": snapshot_id,
+            "snapshot_label": label,
+            "snapshot_group": group,
+            "source_pack_refs": refs,
+            "state_scope": state_scope,
+            "recommended_storage_shape": storage_shape,
+            "required_identifiers": identifiers,
+            "required_timestamps": timestamps,
+            "required_status_fields": status_fields,
+            "excluded_sensitive_fields": excluded_fields,
+            "retention_note": "Requires a future retention policy before real database persistence.",
+            "real_database_write_allowed": False,
+            "real_file_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "State snapshot contract is preview-only and does not write to a database or file.",
+        }
+        for (
+            snapshot_id,
+            label,
+            group,
+            refs,
+            state_scope,
+            storage_shape,
+            identifiers,
+            timestamps,
+            status_fields,
+            excluded_fields,
+        ) in snapshot_specs
+    ]
+
+    boundary_specs = [
+        ("database_persistence", "Database persistence"),
+        ("file_write", "File write"),
+        ("secret_read", "Secret read"),
+        ("external_call", "External call"),
+        ("real_execution", "Real execution"),
+        ("provider", "Provider"),
+        ("llm", "LLM"),
+    ]
+    persistence_boundary_lock_cards = [
+        {
+            "boundary_lock_id": f"phase2_db_gate_boundary_{capability_id}",
+            "capability_id": capability_id,
+            "capability_label": label,
+            "expected_disabled": True,
+            "observed_allowed": False,
+            "must_remain_disabled_until_unlocked": True,
+            "unlock_requires": [
+                "schema migration plan",
+                "retention and deletion policy",
+                "redaction policy",
+                "audit sink",
+                "rollback plan",
+                "production approval",
+            ],
+            "source_guard_refs": [
+                "workspace_capability_permission_matrix_pack",
+                "workspace_secret_environment_gate_pack",
+                "workspace_network_external_call_block_guard_pack",
+                "workspace_provider_invocation_audit_packet_pack",
+            ],
+            "risk_note": f"{label} remains disabled for the Phase 2 database persistence gate preview.",
+        }
+        for capability_id, label in boundary_specs
+    ]
+
+    storage_specs = [
+        ("workspace_snapshot", "Workspace state snapshot", "structured_snapshot", ["workspace_mvp_readiness_dossier_pack", "workspace_final_system_health_pack"], "workspace_id plus pack status cards", "Resume and compare preview workspace state.", "No schema migration, retention policy, deletion policy, or redaction policy exists.", True, True, False),
+        ("evidence_trace", "Evidence trace", "evidence_refs", ["review_evidence_quality_pack", "claim_risk_guard_pack"], "quote ids, claim ids, support status", "Support future claim-safety review continuity.", "Review text and buyer content need redaction and retention rules first.", True, False, True),
+        ("creative_dossier", "Campaign creative dossier", "handoff_document", ["campaign_creative_dossier_pack"], "dossier cards and operator notes", "Support future operator handoff history.", "Generated copy needs policy review and delete controls before persistence.", False, True, False),
+        ("export_packet_preview", "Final export packet preview", "export_preview", ["final_claim_safe_export_packet_pack"], "export manifest preview and blocker state", "Support future export readiness history.", "Real export and file paths remain disabled.", False, True, False),
+        ("provider_safety_receipt", "Provider safety receipt", "safety_receipt", ["workspace_provider_invocation_audit_packet_pack", "workspace_secret_environment_gate_pack"], "disabled provider, secret, and network guard status", "Support future auditability of blocked provider paths.", "Provider secrets must never be persisted.", False, False, True),
+    ]
+    storage_candidate_cards = [
+        {
+            "storage_candidate_id": f"phase2_storage_candidate_{candidate_id}",
+            "storage_label": label,
+            "storage_type": storage_type,
+            "source_pack_refs": refs,
+            "candidate_data_shape": data_shape,
+            "why_persist": why_persist,
+            "why_not_persist_yet": why_not,
+            "contains_user_content": contains_user,
+            "contains_generated_content": contains_generated,
+            "contains_sensitive_data": contains_sensitive,
+            "requires_retention_policy": True,
+            "requires_deletion_policy": True,
+            "real_database_write_allowed": False,
+            "risk_note": "Future storage candidate only; no database write, file write, or external call occurs.",
+        }
+        for (
+            candidate_id,
+            label,
+            storage_type,
+            refs,
+            data_shape,
+            why_persist,
+            why_not,
+            contains_user,
+            contains_generated,
+            contains_sensitive,
+        ) in storage_specs
+    ]
+
+    migration_readiness_cards = [
+        {
+            "migration_readiness_id": "phase2_migration_workspace_snapshot",
+            "migration_label": "Workspace snapshot schema migration",
+            "migration_scope": "workspace state snapshot tables",
+            "required_schema_refs": ["workspace_snapshot", "state_snapshot_contract_cards"],
+            "required_backfill_plan": "Define preview-to-persistent backfill rules without writing data.",
+            "required_rollback_plan": "Rollback migration dry-run must restore prior schema and reject partial writes.",
+            "required_test_refs": ["migration dry-run tests", "rollback dry-run tests", "permission boundary tests"],
+            "ready_for_migration": False,
+            "real_database_write_allowed": False,
+            "risk_note": "No real migration is created or executed.",
+        },
+        {
+            "migration_readiness_id": "phase2_migration_audit_events",
+            "migration_label": "Audit event schema migration",
+            "migration_scope": "future audit event sink",
+            "required_schema_refs": ["audit_event_contract_cards"],
+            "required_backfill_plan": "No backfill until audit retention and redaction policy exist.",
+            "required_rollback_plan": "Rollback audit sink writes and preserve preview-only receipts.",
+            "required_test_refs": ["audit event tests", "redaction tests", "contract tests"],
+            "ready_for_migration": False,
+            "real_database_write_allowed": False,
+            "risk_note": "Audit migration readiness is descriptive only.",
+        },
+    ]
+
+    data_sensitivity_cards = [
+        {
+            "data_sensitivity_id": "provider_secret",
+            "data_label": "Provider secret",
+            "data_group": "secret",
+            "source_pack_refs": ["workspace_secret_environment_gate_pack"],
+            "sensitivity_level": "restricted_secret_never_persist",
+            "contains_customer_data": False,
+            "contains_review_text": False,
+            "contains_generated_copy": False,
+            "contains_provider_secret": True,
+            "allowed_in_mvp_preview": False,
+            "allowed_for_real_persistence": False,
+            "required_redaction_note": "Provider secrets must not be read, logged, exported, or persisted.",
+            "risk_note": "Secret read remains disabled.",
+        },
+        {
+            "data_sensitivity_id": "customer_data",
+            "data_label": "Customer data",
+            "data_group": "user_content",
+            "source_pack_refs": ["review_import_pack", "workspace_product_navigation_pack"],
+            "sensitivity_level": "sensitive_user_content",
+            "contains_customer_data": True,
+            "contains_review_text": True,
+            "contains_generated_copy": False,
+            "contains_provider_secret": False,
+            "allowed_in_mvp_preview": True,
+            "allowed_for_real_persistence": False,
+            "required_redaction_note": "Real customer data requires consent, redaction, retention, and deletion policy before persistence.",
+            "risk_note": "No real customer data is persisted.",
+        },
+        {
+            "data_sensitivity_id": "review_text",
+            "data_label": "Review text",
+            "data_group": "evidence",
+            "source_pack_refs": ["review_evidence_quality_pack"],
+            "sensitivity_level": "user_content_requires_redaction",
+            "contains_customer_data": True,
+            "contains_review_text": True,
+            "contains_generated_copy": False,
+            "contains_provider_secret": False,
+            "allowed_in_mvp_preview": True,
+            "allowed_for_real_persistence": False,
+            "required_redaction_note": "Persist only quote refs or redacted snippets after policy approval.",
+            "risk_note": "Unredacted review text is excluded from real persistence.",
+        },
+        {
+            "data_sensitivity_id": "generated_copy",
+            "data_label": "Generated copy",
+            "data_group": "generated_content",
+            "source_pack_refs": ["campaign_creative_dossier_pack", "final_claim_safe_export_packet_pack"],
+            "sensitivity_level": "generated_content_requires_claim_review",
+            "contains_customer_data": False,
+            "contains_review_text": False,
+            "contains_generated_copy": True,
+            "contains_provider_secret": False,
+            "allowed_in_mvp_preview": True,
+            "allowed_for_real_persistence": False,
+            "required_redaction_note": "Persist only claim-safe reviewed copy after approval.",
+            "risk_note": "Generated copy persistence is blocked until claim safety and deletion controls are complete.",
+        },
+    ]
+
+    audit_event_contract_cards = [
+        {
+            "audit_event_contract_id": "phase2_db_gate_preview_event",
+            "event_label": "Database gate preview event",
+            "event_shape": ["event_id", "workspace_id", "source_pack_refs", "gate_status", "created_at"],
+            "source_pack_refs": source_pack_ids,
+            "real_audit_event_created": False,
+            "database_write_allowed": False,
+            "real_log_read_allowed": False,
+            "risk_note": "Defines future audit event shape only; no audit event is created.",
+        },
+        {
+            "audit_event_contract_id": "phase2_persistence_block_event",
+            "event_label": "Persistence blocked event",
+            "event_shape": ["event_id", "capability_id", "blocked_reason", "operator_action"],
+            "source_pack_refs": ["workspace_capability_permission_matrix_pack", "workspace_secret_environment_gate_pack"],
+            "real_audit_event_created": False,
+            "database_write_allowed": False,
+            "real_log_read_allowed": False,
+            "risk_note": "Blocked-event contract is preview-only and does not write an audit sink.",
+        },
+    ]
+
+    rollback_recovery_contract_cards = [
+        {
+            "rollback_recovery_contract_id": "db_write_failure_recovery_preview",
+            "failure_mode": "DB write failure",
+            "recovery_preview": "Reject write, keep request-scoped state, surface operator-visible failure.",
+            "real_rollback_executed": False,
+            "database_write_allowed": False,
+            "risk_note": "No real DB write or rollback is executed.",
+        },
+        {
+            "rollback_recovery_contract_id": "migration_failure_recovery_preview",
+            "failure_mode": "migration failure",
+            "recovery_preview": "Abort migration, restore previous schema in dry-run, require operator approval.",
+            "real_rollback_executed": False,
+            "database_write_allowed": False,
+            "risk_note": "No migration is created or rolled back.",
+        },
+        {
+            "rollback_recovery_contract_id": "schema_mismatch_recovery_preview",
+            "failure_mode": "schema mismatch",
+            "recovery_preview": "Block persistence and require contract migration review.",
+            "real_rollback_executed": False,
+            "database_write_allowed": False,
+            "risk_note": "Schema mismatch recovery is descriptive only.",
+        },
+        {
+            "rollback_recovery_contract_id": "partial_write_recovery_preview",
+            "failure_mode": "partial write",
+            "recovery_preview": "Require idempotency key and transaction rollback before future persistence unlock.",
+            "real_rollback_executed": False,
+            "database_write_allowed": False,
+            "risk_note": "Partial write cannot occur in this preview because writes are disabled.",
+        },
+    ]
+
+    test_specs = [
+        ("unit", "unit tests"),
+        ("contract", "contract tests"),
+        ("migration_dry_run", "migration dry-run tests"),
+        ("rollback_dry_run", "rollback dry-run tests"),
+        ("redaction", "redaction tests"),
+        ("permission_boundary", "permission boundary tests"),
+        ("audit_event", "audit event tests"),
+    ]
+    persistence_test_plan_cards = [
+        {
+            "test_plan_id": f"phase2_db_gate_{test_id}_test_plan",
+            "test_type": test_id,
+            "test_label": label,
+            "required_before_unlock": True,
+            "current_status": "not_implemented_for_real_persistence",
+            "real_database_write_allowed": False,
+            "risk_note": f"{label} must pass before real database persistence can be enabled.",
+        }
+        for test_id, label in test_specs
+    ]
+
+    operator_approval_gate_cards = [
+        {
+            "operator_approval_gate_id": "phase2_database_persistence_approval",
+            "approval_label": "Real database persistence approval",
+            "required_approvals": ["product owner", "data owner", "security owner", "operator"],
+            "approval_created": False,
+            "real_approval_created": False,
+            "database_write_allowed": False,
+            "risk_note": "Future real DB persistence requires explicit human approval; no approval is created now.",
+        }
+    ]
+
+    phase2_unlock_blockers = [
+        "no schema migration",
+        "no DB connection config",
+        "no retention policy",
+        "no deletion policy",
+        "no redaction policy",
+        "no audit sink",
+        "no rollback plan implemented",
+        "no production approval",
+    ]
+
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "secret_read": False,
+        "secret_read_enabled": False,
+        "external_call": False,
+        "external_call_enabled": False,
+        "token_issue": False,
+        "token_issue_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_phase2_database_persistence_gate_pack_v1",
+        "database_persistence_gate_summary": {
+            "mode": "phase2_database_persistence_gate_preview_deterministic_storage_contract_dry_run_only",
+            "source_packs": source_pack_ids,
+            "source_pack_presence": {pack_id: bool(packs.get(pack_id)) for pack_id in source_pack_ids},
+            "state_snapshot_contract_count": len(state_snapshot_contract_cards),
+            "persistence_boundary_lock_count": len(persistence_boundary_lock_cards),
+            "storage_candidate_count": len(storage_candidate_cards),
+            "migration_readiness_count": len(migration_readiness_cards),
+            "data_sensitivity_count": len(data_sensitivity_cards),
+            "phase2_unlock_blocker_count": len(phase2_unlock_blockers),
+            "real_database_write_allowed": False,
+            "real_file_write_allowed": False,
+            "real_execution_allowed": False,
+            "external_call_allowed": False,
+            "secret_read_allowed": False,
+            "risk_note": "Database persistence gate is deterministic preview only; it creates no schema migration, writes no DB, writes no files, reads no secrets, reads no logs, and makes no external calls.",
+        },
+        "state_snapshot_contract_cards": state_snapshot_contract_cards,
+        "persistence_boundary_lock_cards": persistence_boundary_lock_cards,
+        "storage_candidate_cards": storage_candidate_cards,
+        "migration_readiness_cards": migration_readiness_cards,
+        "data_sensitivity_cards": data_sensitivity_cards,
+        "audit_event_contract_cards": audit_event_contract_cards,
+        "rollback_recovery_contract_cards": rollback_recovery_contract_cards,
+        "persistence_test_plan_cards": persistence_test_plan_cards,
+        "operator_approval_gate_cards": operator_approval_gate_cards,
+        "phase2_unlock_blockers": phase2_unlock_blockers,
+        "database_gate_quality_checks": {
+            "state_snapshot_contract_covered": bool(state_snapshot_contract_cards),
+            "boundary_locks_covered": bool(persistence_boundary_lock_cards),
+            "storage_candidates_covered": bool(storage_candidate_cards),
+            "migration_readiness_covered": bool(migration_readiness_cards),
+            "data_sensitivity_covered": bool(data_sensitivity_cards),
+            "audit_contract_covered": bool(audit_event_contract_cards),
+            "rollback_contract_covered": bool(rollback_recovery_contract_cards),
+            "test_plan_covered": bool(persistence_test_plan_cards),
+            "operator_approval_covered": bool(operator_approval_gate_cards),
+            "unlock_blockers_covered": bool(phase2_unlock_blockers),
+            "safety_boundary_covered": True,
+            "real_database_write_performed": False,
+            "real_file_write_performed": False,
+            "real_execution_performed": False,
+            "secret_read_performed": False,
+            "external_call_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "workspace_phase2_database_persistence_gate_preview",
+            "source": "creative_decision_pack.workspace_phase2_database_persistence_gate_pack",
+            "audit_record_created": False,
+            "real_audit_event_created": False,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_file_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit preview is display-only and does not write databases, read real logs, or create real audit events.",
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -44864,6 +45389,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_mvp_readiness_dossier_pack"] = (
         _rw_workspace_mvp_readiness_dossier_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_phase2_database_persistence_gate_pack"] = (
+        _rw_workspace_phase2_database_persistence_gate_pack(
+            creative_decision_pack
+        )
     )
 
     return ReviewWorkspaceResponse(
