@@ -44180,6 +44180,448 @@ def _rw_workspace_demo_campaign_walkthrough_pack(creative_decision_pack: dict) -
     }
 
 
+def _rw_workspace_mvp_readiness_dossier_pack(creative_decision_pack: dict) -> dict:
+    source_pack_ids = [
+        "workspace_demo_campaign_walkthrough_pack",
+        "workspace_mvp_consolidation_pack",
+        "workspace_final_system_health_pack",
+        "workspace_scenario_presets_pack",
+        "workspace_product_navigation_pack",
+        "campaign_creative_dossier_pack",
+        "final_claim_safe_export_packet_pack",
+        "claim_safe_remediation_verification_pack",
+        "claim_safe_delivery_remediation_pack",
+        "claim_safe_delivery_qa_pack",
+        "claim_safe_platform_delivery_pack",
+        "claim_safe_creative_output_pack",
+        "claim_safe_creative_brief_pack",
+        "claim_risk_guard_pack",
+        "review_evidence_quality_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_real_execution_approval_token_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_capability_permission_matrix_pack",
+        "campaign_export_pack",
+        "review_import_pack",
+        "competitor_review_comparison_pack",
+    ]
+    packs = {pack_id: dict(creative_decision_pack.get(pack_id) or {}) for pack_id in source_pack_ids}
+
+    def pack_status(pack_id: str) -> str:
+        pack = packs.get(pack_id) or {}
+        if not pack:
+            return "missing"
+        if pack.get("pack_version"):
+            return "present"
+        return "preview_available"
+
+    capability_specs = [
+        ("review_import", "Review import", "review_ingestion", ["review_import_pack"], True, True, True),
+        ("competitor_comparison", "Competitor comparison", "review_ingestion", ["competitor_review_comparison_pack"], True, True, True),
+        ("evidence_quality", "Evidence quality", "claim_safe_campaign", ["review_evidence_quality_pack"], True, True, True),
+        ("claim_risk_guard", "Claim risk guard", "claim_safe_campaign", ["claim_risk_guard_pack"], True, True, True),
+        ("claim_safe_brief", "Claim-safe creative brief", "claim_safe_campaign", ["claim_safe_creative_brief_pack"], True, True, True),
+        ("claim_safe_output", "Claim-safe creative output", "claim_safe_campaign", ["claim_safe_creative_output_pack"], True, True, True),
+        ("platform_delivery", "Claim-safe platform delivery", "delivery_preview", ["claim_safe_platform_delivery_pack"], True, True, True),
+        ("delivery_qa", "Claim-safe delivery QA", "delivery_preview", ["claim_safe_delivery_qa_pack"], True, True, True),
+        ("remediation", "Claim-safe remediation", "delivery_preview", ["claim_safe_delivery_remediation_pack"], True, True, True),
+        ("remediation_verification", "Remediation verification", "delivery_preview", ["claim_safe_remediation_verification_pack"], True, True, True),
+        ("final_export_packet", "Final export packet", "final_handoff", ["final_claim_safe_export_packet_pack"], True, True, True),
+        ("campaign_dossier", "Campaign dossier", "final_handoff", ["campaign_creative_dossier_pack"], True, True, True),
+        ("product_navigation", "Product navigation", "workspace_index", ["workspace_product_navigation_pack"], True, True, True),
+        ("scenario_presets", "Scenario presets", "workspace_index", ["workspace_scenario_presets_pack"], True, True, True),
+        ("final_system_health", "Final system health", "mvp_health", ["workspace_final_system_health_pack"], True, True, True),
+        ("mvp_consolidation", "MVP consolidation", "mvp_home", ["workspace_mvp_consolidation_pack"], True, True, True),
+        ("demo_walkthrough", "Demo campaign walkthrough", "demo_storyline", ["workspace_demo_campaign_walkthrough_pack"], True, True, True),
+        ("provider_safety_controls", "Provider safety controls", "safety_controls", ["workspace_provider_invocation_audit_packet_pack", "workspace_real_execution_approval_token_pack", "workspace_network_external_call_block_guard_pack", "workspace_secret_environment_gate_pack", "workspace_capability_permission_matrix_pack"], False, True, False),
+    ]
+    mvp_capability_inventory_cards = [
+        {
+            "capability_inventory_id": f"mvp_capability_{capability_id}",
+            "capability_label": label,
+            "capability_group": group,
+            "source_pack_refs": refs,
+            "current_mvp_status": "preview_ready" if all(pack_status(ref) != "missing" for ref in refs) else "needs_pack_review",
+            "demo_ready": demo_ready,
+            "operator_visible": operator_visible,
+            "copy_export_preview_supported": copy_supported,
+            "requires_real_provider": False,
+            "requires_real_database": False,
+            "requires_real_file_write": False,
+            "real_execution_allowed": False,
+            "risk_note": "MVP capability inventory is deterministic preview only and does not execute production readiness jobs.",
+        }
+        for capability_id, label, group, refs, demo_ready, operator_visible, copy_supported in capability_specs
+    ]
+
+    boundary_specs = [
+        ("llm", "Real LLM"),
+        ("provider", "Provider"),
+        ("media", "Media"),
+        ("external_scraping", "External scraping"),
+        ("database_persistence", "Database persistence"),
+        ("real_execution", "Real execution"),
+        ("real_policy_check", "Real policy check"),
+        ("platform_upload", "Platform upload"),
+        ("task_creation", "Task creation"),
+        ("real_export", "Real export"),
+        ("file_write", "File write"),
+        ("secret_read", "Secret read"),
+        ("external_call", "External call"),
+        ("token_issue", "Token issue"),
+    ]
+    mvp_disabled_boundary_lock_cards = [
+        {
+            "boundary_lock_id": f"mvp_disabled_boundary_lock_{capability_id}",
+            "capability_id": capability_id,
+            "capability_label": label,
+            "expected_disabled": True,
+            "observed_allowed": False,
+            "must_remain_disabled_for_mvp": True,
+            "source_guard_refs": [
+                "workspace_capability_permission_matrix_pack",
+                "workspace_secret_environment_gate_pack",
+                "workspace_network_external_call_block_guard_pack",
+                "workspace_real_execution_approval_token_pack",
+                "workspace_provider_invocation_audit_packet_pack",
+            ],
+            "unlock_requires": [
+                "post_mvp_security_review",
+                "explicit_operator_approval",
+                "dedicated integration tests",
+                "audit controls",
+            ],
+            "unlock_not_allowed_in_this_phase": True,
+            "risk_note": f"{label} remains disabled for MVP final freeze preview.",
+        }
+        for capability_id, label in boundary_specs
+    ]
+
+    freeze_specs = [
+        ("batch_gate", "batch-gate", "test_validation", "passed_in_last_known_local_gate", True, True),
+        ("en_zh_browser_validation", "EN-ZH browser validation", "browser_validation", "passed_in_95B", True, False),
+        ("no_naked_i18n_key", "no naked i18n key", "i18n", "passed_in_95B", False, False),
+        ("no_question_mark_placeholder", "no ???? placeholder", "i18n", "passed_in_95B", False, False),
+        ("panel_rendering", "panel rendering", "workspace_ui", "passed_in_95B", False, False),
+        ("copy_feedback", "copy feedback", "workspace_ui", "covered_by_frontend_probe", False, False),
+        ("json_export_preview", "JSON export preview", "copy_export_preview", "covered_by_frontend_probe", False, False),
+        ("markdown_export_preview", "Markdown export preview", "copy_export_preview", "covered_by_frontend_probe", False, False),
+        ("disabled_boundary", "disabled boundary", "safety_boundary", "locked_disabled", False, False),
+        ("git_clean", "git clean", "source_control", "requires_operator_confirmation_after_commit", False, False),
+        ("origin_main_sync", "origin main sync", "source_control", "requires_operator_confirmation_after_push", False, False),
+    ]
+    mvp_final_freeze_checklist = [
+        {
+            "freeze_check_id": f"mvp_freeze_{check_id}",
+            "check_label": label,
+            "check_group": group,
+            "source_pack_refs": [
+                "workspace_demo_campaign_walkthrough_pack",
+                "workspace_mvp_consolidation_pack",
+                "workspace_final_system_health_pack",
+            ],
+            "expected_status": "ready_or_confirmed_preview",
+            "observed_status": observed_status,
+            "blocks_mvp_freeze": False,
+            "recommended_operator_action": "Verify this preview checkpoint manually before announcing MVP freeze readiness.",
+            "requires_browser_verification": requires_browser,
+            "requires_batch_gate": requires_batch_gate,
+            "real_execution_allowed": False,
+            "risk_note": "Final freeze checklist is a deterministic preview and does not run real production readiness jobs.",
+        }
+        for check_id, label, group, observed_status, requires_browser, requires_batch_gate in freeze_specs
+    ]
+
+    mvp_release_candidate_cards = [
+        {
+            "release_candidate_id": "mvp_preview_release_candidate",
+            "release_label": "MVP preview release candidate",
+            "release_scope": "Project Workspace deterministic preview surface only",
+            "included_stage_refs": [
+                "review_import",
+                "evidence_quality",
+                "claim_risk_guard",
+                "claim_safe_output",
+                "final_export_packet",
+                "campaign_dossier",
+                "product_navigation",
+                "scenario_presets",
+                "final_system_health",
+                "mvp_consolidation",
+                "demo_walkthrough",
+            ],
+            "included_pack_refs": source_pack_ids,
+            "excluded_real_capabilities": [capability_id for capability_id, _ in boundary_specs],
+            "readiness_status": "release_candidate_preview_only_not_real_release",
+            "release_tag_created": False,
+            "real_release_created": False,
+            "real_execution_allowed": False,
+            "risk_note": "Release candidate is descriptive preview only; no release tag, release object, file write, or export is created.",
+        }
+    ]
+
+    post_mvp_unlock_gate_cards = [
+        {
+            "unlock_gate_id": "future_real_llm_gate",
+            "future_capability_label": "future real LLM",
+            "future_capability_group": "generation_provider",
+            "currently_disabled": True,
+            "required_preconditions": ["approved prompt policy", "model budget guard", "claim safety fallback"],
+            "required_tests": ["LLM integration contract tests", "claim hallucination regression tests"],
+            "required_operator_approvals": ["product owner approval", "safety owner approval"],
+            "required_audit_controls": ["prompt audit trail", "response provenance"],
+            "not_allowed_in_mvp": True,
+            "risk_note": "Real LLM unlock is post-MVP only.",
+        },
+        {
+            "unlock_gate_id": "future_real_provider_gate",
+            "future_capability_label": "provider",
+            "future_capability_group": "provider_execution",
+            "currently_disabled": True,
+            "required_preconditions": ["provider credentials", "quota guard", "provider rollback plan"],
+            "required_tests": ["provider contract tests", "failure taxonomy tests"],
+            "required_operator_approvals": ["provider owner approval"],
+            "required_audit_controls": ["provider invocation audit packet"],
+            "not_allowed_in_mvp": True,
+            "risk_note": "Real provider calls remain blocked until post-MVP controls are complete.",
+        },
+        {
+            "unlock_gate_id": "future_real_database_gate",
+            "future_capability_label": "database",
+            "future_capability_group": "persistence",
+            "currently_disabled": True,
+            "required_preconditions": ["schema migration plan", "data retention policy"],
+            "required_tests": ["migration tests", "rollback tests", "PII safety tests"],
+            "required_operator_approvals": ["data owner approval"],
+            "required_audit_controls": ["write audit trail", "retention audit"],
+            "not_allowed_in_mvp": True,
+            "risk_note": "Database persistence is not part of the MVP preview freeze.",
+        },
+        {
+            "unlock_gate_id": "future_file_export_gate",
+            "future_capability_label": "file export",
+            "future_capability_group": "file_io",
+            "currently_disabled": True,
+            "required_preconditions": ["export format contract", "download permission model"],
+            "required_tests": ["file generation tests", "download safety tests"],
+            "required_operator_approvals": ["release owner approval"],
+            "required_audit_controls": ["file write audit", "export checksum audit"],
+            "not_allowed_in_mvp": True,
+            "risk_note": "File export remains preview-only for MVP.",
+        },
+        {
+            "unlock_gate_id": "future_platform_upload_gate",
+            "future_capability_label": "platform upload",
+            "future_capability_group": "platform_delivery",
+            "currently_disabled": True,
+            "required_preconditions": ["platform API contract", "policy review process", "manual approval gate"],
+            "required_tests": ["platform upload dry-run tests", "policy boundary tests"],
+            "required_operator_approvals": ["platform owner approval", "legal/safety review approval"],
+            "required_audit_controls": ["upload audit log", "approval ledger"],
+            "not_allowed_in_mvp": True,
+            "risk_note": "Platform upload is not enabled and no real platform pass rate is implied.",
+        },
+        {
+            "unlock_gate_id": "future_task_creation_gate",
+            "future_capability_label": "task creation",
+            "future_capability_group": "operator_workflow",
+            "currently_disabled": True,
+            "required_preconditions": ["task schema contract", "operator queue ownership"],
+            "required_tests": ["task creation contract tests", "idempotency tests"],
+            "required_operator_approvals": ["operator workflow owner approval"],
+            "required_audit_controls": ["task creation audit event", "approval trace"],
+            "not_allowed_in_mvp": True,
+            "risk_note": "Operator task creation remains preview-only in MVP.",
+        },
+    ]
+
+    mvp_handoff_dossier_cards = [
+        {
+            "handoff_dossier_id": "demo_storyline_handoff",
+            "handoff_label": "Demo storyline handoff",
+            "handoff_group": "demo",
+            "source_pack_refs": ["workspace_demo_campaign_walkthrough_pack", "workspace_scenario_presets_pack"],
+            "what_to_show": "Show the deterministic walkthrough from review evidence to MVP home.",
+            "what_to_explain": "Explain that scenarios, presenter notes, and copy/export controls are preview-only.",
+            "what_not_to_claim": "Do not claim legal advice, real platform compliance, real platform pass rate, or real demo execution.",
+            "operator_note": "Keep real LLM, provider, export, upload, task creation, and release actions disabled.",
+            "ready_for_demo": True,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Demo handoff uses existing deterministic packs only.",
+        },
+        {
+            "handoff_dossier_id": "final_freeze_handoff",
+            "handoff_label": "Final freeze handoff",
+            "handoff_group": "mvp_freeze",
+            "source_pack_refs": ["workspace_mvp_consolidation_pack", "workspace_final_system_health_pack", "campaign_creative_dossier_pack"],
+            "what_to_show": "Show MVP readiness status, top blockers, final export packet preview, and known limitations.",
+            "what_to_explain": "Explain that final freeze is a readiness preview, not a real release tag or release object.",
+            "what_not_to_claim": "Do not claim production readiness, real legal conclusion, real policy API result, or real platform approval.",
+            "operator_note": "Use the validation matrix and risk register as manual handoff notes.",
+            "ready_for_demo": True,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Final freeze handoff does not write files, export, or create a release.",
+        },
+    ]
+
+    final_validation_matrix = [
+        {"validation_id": "backend_tests", "validation_label": "backend tests", "validation_status": "covered_by_review_workspace_and_agent_runs", "real_execution_allowed": False},
+        {"validation_id": "frontend_tests", "validation_label": "frontend tests", "validation_status": "covered_by_frontend_probe_boundary", "real_execution_allowed": False},
+        {"validation_id": "browser_en_zh", "validation_label": "browser EN/ZH", "validation_status": "passed_in_95B", "real_execution_allowed": False},
+        {"validation_id": "i18n", "validation_label": "i18n", "validation_status": "no_naked_key_or_question_mark_placeholder_in_95B", "real_execution_allowed": False},
+        {"validation_id": "copy_export_preview", "validation_label": "copy/export preview", "validation_status": "preview_only_no_file_write", "real_execution_allowed": False},
+        {"validation_id": "disabled_boundary", "validation_label": "disabled boundary", "validation_status": "locked_disabled", "real_execution_allowed": False},
+        {"validation_id": "git_status", "validation_label": "git status", "validation_status": "operator_confirms_after_commit", "real_execution_allowed": False},
+        {"validation_id": "push_status", "validation_label": "push status", "validation_status": "operator_confirms_after_push", "real_execution_allowed": False},
+    ]
+
+    final_known_limitations = [
+        {"limitation_id": "no_real_llm", "limitation_label": "no real LLM", "risk_note": "LLM remains disabled."},
+        {"limitation_id": "no_real_provider", "limitation_label": "no real provider", "risk_note": "Provider calls remain disabled."},
+        {"limitation_id": "no_real_media", "limitation_label": "no real media", "risk_note": "Media upload/download remains disabled."},
+        {"limitation_id": "no_real_export", "limitation_label": "no real export", "risk_note": "Export is preview-only."},
+        {"limitation_id": "no_db_persistence", "limitation_label": "no DB persistence", "risk_note": "No database writes occur."},
+        {"limitation_id": "no_platform_upload", "limitation_label": "no platform upload", "risk_note": "No platform upload or publishing occurs."},
+        {"limitation_id": "no_policy_api", "limitation_label": "no policy API", "risk_note": "No real policy API is queried and this is not legal advice."},
+        {"limitation_id": "no_real_task_creation", "limitation_label": "no real task creation", "risk_note": "Operator tasks are preview-only."},
+        {"limitation_id": "no_real_file_write", "limitation_label": "no real file write", "risk_note": "No files are written."},
+        {"limitation_id": "no_real_release_tag", "limitation_label": "no real release tag", "risk_note": "No tag or release is created."},
+    ]
+
+    risk_specs = [
+        ("claim_risk", "claim risk", "Claims must remain evidence-grounded."),
+        ("unsupported_claim", "unsupported claim", "Unsupported claims remain blocked."),
+        ("missing_quote", "missing quote", "Missing quote blockers require manual review."),
+        ("provider_disabled", "provider disabled", "Provider calls are disabled."),
+        ("policy_check_disabled", "policy check disabled", "No real policy API or compliance conclusion is produced."),
+        ("platform_upload_disabled", "platform upload disabled", "No platform upload or publishing occurs."),
+        ("file_write_disabled", "file write disabled", "No real file write or export occurs."),
+        ("real_execution_disabled", "real execution disabled", "No real execution job runs."),
+        ("demo_only_limitation", "demo-only limitation", "MVP dossier is deterministic preview only."),
+    ]
+    final_risk_register_cards = [
+        {
+            "risk_register_id": f"mvp_risk_{risk_id}",
+            "risk_label": label,
+            "risk_group": "mvp_final_freeze",
+            "source_pack_refs": source_pack_ids,
+            "risk_status": "visible_preview_only",
+            "recommended_operator_action": note,
+            "real_execution_allowed": False,
+            "risk_note": note,
+        }
+        for risk_id, label, note in risk_specs
+    ]
+
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "secret_read": False,
+        "secret_read_enabled": False,
+        "external_call": False,
+        "external_call_enabled": False,
+        "token_issue": False,
+        "token_issue_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_mvp_readiness_dossier_pack_v1",
+        "mvp_readiness_dossier_summary": {
+            "mode": "mvp_readiness_dossier_preview_deterministic_final_freeze_dry_run_only",
+            "source_packs": source_pack_ids,
+            "capability_inventory_count": len(mvp_capability_inventory_cards),
+            "disabled_boundary_lock_count": len(mvp_disabled_boundary_lock_cards),
+            "final_freeze_check_count": len(mvp_final_freeze_checklist),
+            "release_candidate_count": len(mvp_release_candidate_cards),
+            "post_mvp_unlock_gate_count": len(post_mvp_unlock_gate_cards),
+            "handoff_dossier_count": len(mvp_handoff_dossier_cards),
+            "release_tag_created": False,
+            "real_release_created": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_platform_upload_allowed": False,
+            "real_provider_allowed": False,
+            "llm_generation_allowed": False,
+            "database_persistence_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Deterministic MVP readiness and final freeze preview only; no real release, tag, file write, export, upload, provider, LLM, database, log read, or production readiness job is performed.",
+        },
+        "mvp_capability_inventory_cards": mvp_capability_inventory_cards,
+        "mvp_disabled_boundary_lock_cards": mvp_disabled_boundary_lock_cards,
+        "mvp_final_freeze_checklist": mvp_final_freeze_checklist,
+        "mvp_release_candidate_cards": mvp_release_candidate_cards,
+        "post_mvp_unlock_gate_cards": post_mvp_unlock_gate_cards,
+        "mvp_handoff_dossier_cards": mvp_handoff_dossier_cards,
+        "final_validation_matrix": final_validation_matrix,
+        "final_known_limitations": final_known_limitations,
+        "final_risk_register_cards": final_risk_register_cards,
+        "mvp_readiness_quality_checks": {
+            "capability_inventory_covered": bool(mvp_capability_inventory_cards),
+            "disabled_boundary_locks_covered": bool(mvp_disabled_boundary_lock_cards),
+            "freeze_checklist_covered": bool(mvp_final_freeze_checklist),
+            "release_candidate_preview_covered": bool(mvp_release_candidate_cards),
+            "post_mvp_unlock_gates_covered": bool(post_mvp_unlock_gate_cards),
+            "handoff_dossier_covered": bool(mvp_handoff_dossier_cards),
+            "validation_matrix_covered": bool(final_validation_matrix),
+            "known_limitations_covered": bool(final_known_limitations),
+            "risk_register_covered": bool(final_risk_register_cards),
+            "safety_boundary_covered": True,
+            "real_execution_performed": False,
+            "database_write_performed": False,
+            "file_write_performed": False,
+            "real_export_performed": False,
+            "provider_called": False,
+            "llm_called": False,
+            "real_scraping_performed": False,
+            "real_release_created": False,
+            "release_tag_created": False,
+            "production_readiness_job_executed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "workspace_mvp_readiness_dossier_preview",
+            "source": "creative_decision_pack.workspace_mvp_readiness_dossier_pack",
+            "audit_record_created": False,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_audit_event_created": False,
+            "release_tag_created": False,
+            "real_release_created": False,
+            "real_file_write_allowed": False,
+            "real_export_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit preview is display-only; it does not write databases, read real logs, or create real audit events.",
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -44419,6 +44861,9 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_demo_campaign_walkthrough_pack"] = (
         _rw_workspace_demo_campaign_walkthrough_pack(creative_decision_pack)
+    )
+    creative_decision_pack["workspace_mvp_readiness_dossier_pack"] = (
+        _rw_workspace_mvp_readiness_dossier_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(

@@ -11429,6 +11429,412 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
                 self.assertIn(key, boundaries)
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_mvp_readiness_dossier_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-mvp-readiness-dossier-preview",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "MVPREADY001",
+                "title": "Compact Travel Mug",
+                "reviews": [
+                    {
+                        "rating": 2,
+                        "title": "Leaks during commute",
+                        "text": (
+                            "Leaks during commute and the lid seal drips "
+                            "into my bag every morning."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 5,
+                        "title": "Easy to clean",
+                        "text": (
+                            "The cup is easy to clean after coffee and fits "
+                            "my office bag."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 1,
+                        "title": "Competitor seal problem",
+                        "text": (
+                            "Competitor lid also leaks in a work bag, so I "
+                            "would not trust it for travel."
+                        ),
+                        "source_section": "competitor_review",
+                        "metadata": {"source_type": "competitor"},
+                    },
+                ],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        self.assertIn("workspace_mvp_readiness_dossier_pack", creative_pack)
+        for existing_pack in [
+            "workspace_demo_campaign_walkthrough_pack",
+            "workspace_mvp_consolidation_pack",
+            "workspace_final_system_health_pack",
+            "workspace_scenario_presets_pack",
+            "workspace_product_navigation_pack",
+            "campaign_creative_dossier_pack",
+            "final_claim_safe_export_packet_pack",
+            "claim_safe_remediation_verification_pack",
+            "claim_safe_delivery_remediation_pack",
+            "claim_safe_delivery_qa_pack",
+            "claim_safe_platform_delivery_pack",
+            "claim_safe_creative_output_pack",
+            "claim_safe_creative_brief_pack",
+            "claim_risk_guard_pack",
+            "review_evidence_quality_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "workspace_real_execution_approval_token_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_capability_permission_matrix_pack",
+            "campaign_export_pack",
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_mvp_readiness_dossier_pack"]
+        self.assertEqual(
+            pack["pack_version"], "workspace_mvp_readiness_dossier_pack_v1"
+        )
+        for required_key in [
+            "mvp_readiness_dossier_summary",
+            "mvp_capability_inventory_cards",
+            "mvp_disabled_boundary_lock_cards",
+            "mvp_final_freeze_checklist",
+            "mvp_release_candidate_cards",
+            "post_mvp_unlock_gate_cards",
+            "mvp_handoff_dossier_cards",
+            "final_validation_matrix",
+            "final_known_limitations",
+            "final_risk_register_cards",
+            "mvp_readiness_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+        ]:
+            with self.subTest(required_key=required_key):
+                self.assertIn(required_key, pack)
+                self.assertTrue(pack[required_key])
+
+        summary = pack["mvp_readiness_dossier_summary"]
+        self.assertIn("mvp_readiness_dossier_preview", summary["mode"])
+        self.assertIn("deterministic_final_freeze", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        for source_pack in [
+            "workspace_demo_campaign_walkthrough_pack",
+            "workspace_mvp_consolidation_pack",
+            "workspace_final_system_health_pack",
+            "workspace_scenario_presets_pack",
+            "workspace_product_navigation_pack",
+            "campaign_creative_dossier_pack",
+            "final_claim_safe_export_packet_pack",
+            "claim_safe_remediation_verification_pack",
+            "claim_safe_delivery_remediation_pack",
+            "claim_safe_delivery_qa_pack",
+            "claim_safe_platform_delivery_pack",
+            "claim_safe_creative_output_pack",
+            "claim_safe_creative_brief_pack",
+            "claim_risk_guard_pack",
+            "review_evidence_quality_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "workspace_real_execution_approval_token_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_capability_permission_matrix_pack",
+            "campaign_export_pack",
+            "review_import_pack",
+            "competitor_review_comparison_pack",
+        ]:
+            self.assertIn(source_pack, summary["source_packs"])
+        for disabled_key in [
+            "release_tag_created",
+            "real_release_created",
+            "real_file_write_allowed",
+            "real_export_allowed",
+            "real_platform_upload_allowed",
+            "real_provider_allowed",
+            "llm_generation_allowed",
+            "database_persistence_allowed",
+            "real_execution_allowed",
+        ]:
+            self.assertFalse(summary[disabled_key])
+
+        capability_ids = {
+            card["capability_inventory_id"].replace("mvp_capability_", "")
+            for card in pack["mvp_capability_inventory_cards"]
+        }
+        for capability_id in [
+            "review_import",
+            "competitor_comparison",
+            "evidence_quality",
+            "claim_risk_guard",
+            "claim_safe_brief",
+            "claim_safe_output",
+            "platform_delivery",
+            "delivery_qa",
+            "remediation",
+            "remediation_verification",
+            "final_export_packet",
+            "campaign_dossier",
+            "product_navigation",
+            "scenario_presets",
+            "final_system_health",
+            "mvp_consolidation",
+            "demo_walkthrough",
+            "provider_safety_controls",
+        ]:
+            with self.subTest(capability_id=capability_id):
+                self.assertIn(capability_id, capability_ids)
+        for card in pack["mvp_capability_inventory_cards"]:
+            for field in [
+                "capability_inventory_id",
+                "capability_label",
+                "capability_group",
+                "source_pack_refs",
+                "current_mvp_status",
+                "demo_ready",
+                "operator_visible",
+                "copy_export_preview_supported",
+                "requires_real_provider",
+                "requires_real_database",
+                "requires_real_file_write",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(capability=card["capability_inventory_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["requires_real_provider"])
+            self.assertFalse(card["requires_real_database"])
+            self.assertFalse(card["requires_real_file_write"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        boundary_ids = {
+            card["capability_id"]
+            for card in pack["mvp_disabled_boundary_lock_cards"]
+        }
+        for capability_id in [
+            "provider",
+            "llm",
+            "media",
+            "external_scraping",
+            "database_persistence",
+            "real_execution",
+            "real_policy_check",
+            "platform_upload",
+            "task_creation",
+            "real_export",
+            "file_write",
+            "secret_read",
+            "external_call",
+            "token_issue",
+        ]:
+            with self.subTest(boundary_id=capability_id):
+                self.assertIn(capability_id, boundary_ids)
+        for card in pack["mvp_disabled_boundary_lock_cards"]:
+            for field in [
+                "boundary_lock_id",
+                "capability_id",
+                "capability_label",
+                "expected_disabled",
+                "observed_allowed",
+                "must_remain_disabled_for_mvp",
+                "source_guard_refs",
+                "unlock_requires",
+                "unlock_not_allowed_in_this_phase",
+                "risk_note",
+            ]:
+                with self.subTest(boundary=card["boundary_lock_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertTrue(card["expected_disabled"])
+            self.assertFalse(card["observed_allowed"])
+            self.assertTrue(card["must_remain_disabled_for_mvp"])
+            self.assertTrue(card["unlock_not_allowed_in_this_phase"])
+
+        freeze_text = " ".join(
+            f"{card['freeze_check_id']} {card['check_label']}"
+            for card in pack["mvp_final_freeze_checklist"]
+        )
+        for expected in [
+            "batch-gate",
+            "EN-ZH browser validation",
+            "no naked i18n key",
+            "no ???? placeholder",
+            "panel rendering",
+            "copy feedback",
+            "JSON export preview",
+            "Markdown export preview",
+            "disabled boundary",
+            "git clean",
+            "origin main sync",
+        ]:
+            with self.subTest(freeze_check=expected):
+                self.assertIn(expected, freeze_text)
+        for card in pack["mvp_final_freeze_checklist"]:
+            self.assertFalse(card["blocks_mvp_freeze"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        for card in pack["mvp_release_candidate_cards"]:
+            self.assertFalse(card["release_tag_created"])
+            self.assertFalse(card["real_release_created"])
+            self.assertFalse(card["real_execution_allowed"])
+            self.assertIn("preview", card["readiness_status"])
+
+        unlock_text = " ".join(
+            f"{card['unlock_gate_id']} {card['future_capability_label']}"
+            for card in pack["post_mvp_unlock_gate_cards"]
+        )
+        for expected in [
+            "future real LLM",
+            "provider",
+            "database",
+            "file export",
+            "platform upload",
+            "task creation",
+        ]:
+            with self.subTest(unlock_gate=expected):
+                self.assertIn(expected, unlock_text)
+        for card in pack["post_mvp_unlock_gate_cards"]:
+            self.assertTrue(card["currently_disabled"])
+            self.assertTrue(card["not_allowed_in_mvp"])
+            self.assertTrue(card["required_preconditions"])
+            self.assertTrue(card["required_tests"])
+            self.assertTrue(card["required_operator_approvals"])
+            self.assertTrue(card["required_audit_controls"])
+
+        handoff_text = " ".join(
+            f"{card['what_to_show']} {card['what_to_explain']} {card['what_not_to_claim']}"
+            for card in pack["mvp_handoff_dossier_cards"]
+        )
+        self.assertIn("Show", handoff_text)
+        self.assertIn("Do not claim", handoff_text)
+        self.assertIn("legal advice", handoff_text)
+        self.assertIn("platform pass rate", handoff_text)
+        for card in pack["mvp_handoff_dossier_cards"]:
+            self.assertTrue(card["ready_for_demo"])
+            self.assertFalse(card["real_file_write_allowed"])
+            self.assertFalse(card["real_export_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        validation_text = " ".join(
+            card["validation_label"] for card in pack["final_validation_matrix"]
+        )
+        for expected in [
+            "backend tests",
+            "frontend tests",
+            "browser EN/ZH",
+            "i18n",
+            "copy/export preview",
+            "disabled boundary",
+            "git status",
+            "push status",
+        ]:
+            self.assertIn(expected, validation_text)
+
+        limitations_text = " ".join(
+            card["limitation_label"] for card in pack["final_known_limitations"]
+        )
+        for expected in [
+            "no real LLM",
+            "no real provider",
+            "no real media",
+            "no real export",
+            "no DB persistence",
+            "no platform upload",
+            "no policy API",
+            "no real task creation",
+            "no real file write",
+            "no real release tag",
+        ]:
+            with self.subTest(limitation=expected):
+                self.assertIn(expected, limitations_text)
+
+        risk_text = " ".join(
+            card["risk_label"] for card in pack["final_risk_register_cards"]
+        )
+        for expected in [
+            "unsupported claim",
+            "missing quote",
+            "provider disabled",
+            "policy check disabled",
+            "platform upload disabled",
+            "file write disabled",
+            "real execution disabled",
+            "demo-only limitation",
+        ]:
+            with self.subTest(risk=expected):
+                self.assertIn(expected, risk_text)
+
+        checks = pack["mvp_readiness_quality_checks"]
+        for key in [
+            "capability_inventory_covered",
+            "disabled_boundary_locks_covered",
+            "freeze_checklist_covered",
+            "release_candidate_preview_covered",
+            "post_mvp_unlock_gates_covered",
+            "handoff_dossier_covered",
+            "validation_matrix_covered",
+            "known_limitations_covered",
+            "risk_register_covered",
+            "safety_boundary_covered",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "real_execution_performed",
+            "database_write_performed",
+            "file_write_performed",
+            "real_export_performed",
+            "provider_called",
+            "llm_called",
+            "real_scraping_performed",
+            "real_release_created",
+            "release_tag_created",
+            "production_readiness_job_executed",
+        ]:
+            self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["audit_record_created"])
+        self.assertFalse(audit["database_write_allowed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["real_audit_event_created"])
+        self.assertFalse(audit["release_tag_created"])
+        self.assertFalse(audit["real_release_created"])
+        self.assertFalse(audit["real_file_write_allowed"])
+        self.assertFalse(audit["real_export_allowed"])
+        self.assertFalse(audit["real_execution_allowed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider", "provider_enabled", "llm", "llm_enabled",
+            "media", "media_enabled", "external_scraping",
+            "external_scraping_enabled", "database_persistence",
+            "database_persistence_enabled", "real_execution",
+            "real_execution_enabled", "real_policy_check",
+            "real_policy_check_enabled", "platform_upload",
+            "platform_upload_enabled", "task_creation",
+            "task_creation_enabled", "real_export", "real_export_enabled",
+            "file_write", "file_write_enabled", "secret_read",
+            "secret_read_enabled", "external_call", "external_call_enabled",
+            "token_issue", "token_issue_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertIn(key, boundaries)
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
