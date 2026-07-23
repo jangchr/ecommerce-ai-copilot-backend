@@ -36,6 +36,11 @@ Current Product Mode actions include stable slug generation, **Product Descripti
 - [Commercial MVP Planning Final Audit](docs/commercial_mvp_planning_final_audit.md) ? L12.0-G Commercial MVP ???????
 - [Commercial MVP User Workflow](docs/commercial_mvp_user_workflow.md) — L12.0-B user workflow from public demo entry to generation, translation, copy actions, and feedback.
 
+## MVP Preview Freeze
+
+- [MVP Preview Freeze](docs/mvp-preview-freeze.md): final CrossGrowth MVP Preview Freeze status, gate results, scope, limitations, and safety boundaries.
+- [Post-MVP Unlock Plan](docs/post-mvp-unlock-plan.md): Phase 2 capability gates for future real LLM, provider, persistence, export, upload, policy, task, token, external call, and audit work.
+
 ## Runtime
 
 - Verified local development environment: **Python 3.12**.
