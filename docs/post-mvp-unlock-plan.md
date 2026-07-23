@@ -2,6 +2,12 @@
 
 This is a future Phase 2 plan. None of these capabilities are unlocked in the current MVP Preview Freeze. Phase 2 cannot directly enable real capabilities until the required tests, approvals, audit controls, cost guards, quota guards, and rollback plans exist and pass.
 
+Related handoff docs:
+
+- [Repo Handoff](repo-handoff.md)
+- [Demo Guide](demo-guide.md)
+- [MVP Preview Freeze](mvp-preview-freeze.md)
+
 ## Unlock Principles
 
 - Every real capability starts disabled.

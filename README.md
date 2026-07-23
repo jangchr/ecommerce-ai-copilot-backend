@@ -38,8 +38,17 @@ Current Product Mode actions include stable slug generation, **Product Descripti
 
 ## MVP Preview Freeze
 
-- [MVP Preview Freeze](docs/mvp-preview-freeze.md): final CrossGrowth MVP Preview Freeze status, gate results, scope, limitations, and safety boundaries.
-- [Post-MVP Unlock Plan](docs/post-mvp-unlock-plan.md): Phase 2 capability gates for future real LLM, provider, persistence, export, upload, policy, task, token, external call, and audit work.
+CrossGrowth is currently in **MVP Preview Freeze**.
+
+- Freeze baseline: `a508fbb21330b350adaaeb681c0902194d3230c1`
+- Handoff docs commit: `450b6c1d638d2f1c6ac8c3cae1105ca0d76e2932`
+- Latest freeze gate: batch-gate `626 tests`, `1 skipped`, PASS
+- Handoff entry: [Repo Handoff](docs/repo-handoff.md)
+- Demo guide: [Demo Guide](docs/demo-guide.md)
+- Freeze notes: [MVP Preview Freeze](docs/mvp-preview-freeze.md)
+- Phase 2 gates: [Post-MVP Unlock Plan](docs/post-mvp-unlock-plan.md)
+
+Current scope is a demo-ready preview for a claim-safe ecommerce creative workflow: deterministic scenario presets, demo campaign walkthrough, MVP readiness dossier, and provider / execution safety boundaries. It is not production: real LLM, provider, database persistence, real export, platform upload, and real execution remain disabled.
 
 ## Runtime
 

@@ -106,3 +106,9 @@ The MVP Preview Freeze keeps all real capabilities disabled:
 ## Handoff Notes
 
 The MVP is ready to demo as a preview product surface. The correct operator framing is: CrossGrowth can show a deterministic evidence-to-readiness workflow, copy/export previews, claim-safety boundaries, and a post-MVP unlock roadmap. It must remain clear that this is not a live production advertising system and not a real compliance decision engine.
+
+Related handoff docs:
+
+- [Repo Handoff](repo-handoff.md)
+- [Demo Guide](demo-guide.md)
+- [Post-MVP Unlock Plan](post-mvp-unlock-plan.md)
