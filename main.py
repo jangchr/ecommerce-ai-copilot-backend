@@ -46431,6 +46431,394 @@ def _rw_workspace_phase2_provider_unlock_review_pack(
     }
 
 
+def _rw_workspace_phase2_readiness_review_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_ids = [
+        "workspace_phase2_provider_unlock_review_pack",
+        "workspace_phase2_llm_provider_gate_pack",
+        "workspace_phase2_persistence_mock_harness_pack",
+        "workspace_phase2_database_persistence_gate_pack",
+        "workspace_mvp_readiness_dossier_pack",
+        "workspace_final_system_health_pack",
+        "workspace_demo_campaign_walkthrough_pack",
+        "workspace_mvp_consolidation_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_real_execution_approval_token_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_provider_cost_quota_risk_guard_pack",
+        "workspace_capability_permission_matrix_pack",
+    ]
+    packs = {pack_id: dict(creative_decision_pack.get(pack_id) or {}) for pack_id in source_pack_ids}
+
+    gate_specs = [
+        ("database_persistence_gate", "Database persistence gate", "persistence", "database persistence state and schema boundary", ["workspace_phase2_database_persistence_gate_pack"], ["storage contract", "sensitive data boundary"], ["real DB config", "schema migration"]),
+        ("persistence_mock_harness", "Persistence mock harness", "persistence", "mock snapshot replay and rollback rehearsal", ["workspace_phase2_persistence_mock_harness_pack"], ["mock replay", "redaction validation"], ["real rollback implementation", "audit sink"]),
+        ("llm_provider_gate", "LLM provider gate", "provider", "prompt invocation and provider boundary", ["workspace_phase2_llm_provider_gate_pack"], ["prompt contract", "redaction privacy"], ["LLM key approval", "provider sandbox test"]),
+        ("provider_unlock_review", "Provider unlock review", "provider", "approval, cost, audit, and provider unlock governance", ["workspace_phase2_provider_unlock_review_pack"], ["candidate providers", "unlock blockers"], ["production approval", "provider-specific legal review"]),
+        ("secret_environment_gate", "Secret environment gate", "security", "secret requirements and environment gate", ["workspace_secret_environment_gate_pack"], ["secret requirement preview"], ["secret access approval", "secret storage approval"]),
+        ("network_external_call_guard", "Network external call guard", "security", "external network call boundary", ["workspace_network_external_call_block_guard_pack"], ["external call disabled guard"], ["external call approval", "network allowlist"]),
+        ("approval_token_gate", "Approval token gate", "governance", "approval token preview boundary", ["workspace_real_execution_approval_token_pack"], ["approval preview"], ["approval token issuing implementation"]),
+        ("cost_quota_guard", "Cost quota guard", "finance", "provider cost and quota preview", ["workspace_provider_cost_quota_risk_guard_pack"], ["cost guard", "quota guard"], ["paid operation approval", "rate limit approval"]),
+        ("audit_packet_preview", "Audit packet preview", "audit", "audit packet shape and trace preview", ["workspace_provider_invocation_audit_packet_pack"], ["audit packet preview"], ["real audit sink", "retention policy"]),
+        ("final_mvp_readiness_boundary", "Final MVP readiness boundary", "release", "MVP readiness and final system health boundary", ["workspace_mvp_readiness_dossier_pack", "workspace_final_system_health_pack"], ["MVP preview freeze", "final health map"], ["production release owner", "real monitoring"]),
+    ]
+    phase2_gate_status_cards = [
+        {
+            "gate_status_id": gate_id,
+            "gate_label": label,
+            "gate_group": group,
+            "source_pack_refs": refs,
+            "gate_scope": scope,
+            "current_status": "preview_defined" if any(packs.get(ref) for ref in refs) else "missing_preview",
+            "readiness_status": "not_ready_for_real_unlock",
+            "covered_controls": covered,
+            "missing_controls": missing,
+            "recommended_operator_action": "Keep this gate in preview and resolve missing controls before any real unlock.",
+            "real_execution_allowed": False,
+            "risk_note": "Gate status is deterministic preview only and does not unlock real execution.",
+        }
+        for gate_id, label, group, scope, refs, covered, missing in gate_specs
+    ]
+
+    capability_specs = [
+        ("real_database_persistence", "Real database persistence", "persistence"),
+        ("real_llm_generation", "Real LLM generation", "llm"),
+        ("real_provider_call", "Real provider call", "provider"),
+        ("real_file_export", "Real file export", "export"),
+        ("real_platform_upload", "Real platform upload", "platform"),
+        ("real_task_creation", "Real task creation", "task"),
+        ("real_approval_token_issue", "Real approval token issue", "approval"),
+        ("real_external_call", "Real external call", "network"),
+        ("real_policy_check", "Real policy check", "policy"),
+        ("real_audit_logging", "Real audit logging", "audit"),
+    ]
+    real_capability_unlock_readiness_cards = [
+        {
+            "unlock_readiness_id": f"unlock_readiness_{capability_id}",
+            "capability_label": label,
+            "capability_group": group,
+            "source_gate_refs": [
+                "workspace_phase2_provider_unlock_review_pack",
+                "workspace_phase2_llm_provider_gate_pack",
+                "workspace_phase2_database_persistence_gate_pack",
+            ],
+            "current_unlock_status": "blocked_preview_only",
+            "required_preconditions": ["production approval", "approved owner", "real audit sink", "rollback plan"],
+            "required_tests": ["unit tests", "contract tests", "sandbox tests", "rollback tests", "cost quota tests"],
+            "required_approvals": ["secret access approval", "external call approval", "paid operation approval", "production approval"],
+            "required_audit_controls": ["durable audit sink", "retention policy", "trace ids", "operator review ledger"],
+            "recommended_decision": "blocked",
+            "real_capability_enabled": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} remains disabled until all Phase 2 gates, tests, approvals, audit controls, and rollback controls exist.",
+        }
+        for capability_id, label, group in capability_specs
+    ]
+
+    minimum_real_integration_candidate_cards = [
+        {
+            "candidate_id": "minimum_candidate_database_persistence",
+            "candidate_label": "Database persistence minimal adapter candidate",
+            "candidate_group": "persistence",
+            "candidate_scope": "minimal state snapshot persistence contract preview",
+            "source_gate_refs": ["workspace_phase2_database_persistence_gate_pack", "workspace_phase2_persistence_mock_harness_pack"],
+            "why_candidate": "Database persistence has the clearest minimal adapter boundary after mock harness coverage.",
+            "why_not_ready_yet": "No real DB config, no schema migration, no audit sink, no rollback implementation, and no production approval.",
+            "required_next_gate": ["Real DB Minimal Adapter Contract Preview", "schema migration preview", "audit sink preview", "rollback preview"],
+            "recommended_sequence_rank": 1,
+            "ready_for_real_integration": False,
+            "real_execution_allowed": False,
+            "risk_note": "Database persistence is the smallest candidate, but it is still not ready for real integration.",
+        },
+        {
+            "candidate_id": "minimum_candidate_llm_provider_upload_blocked",
+            "candidate_label": "LLM, provider, upload, and task capabilities remain blocked",
+            "candidate_group": "provider",
+            "candidate_scope": "LLM/provider/platform upload/task creation unlock candidates",
+            "source_gate_refs": ["workspace_phase2_llm_provider_gate_pack", "workspace_phase2_provider_unlock_review_pack"],
+            "why_candidate": "These capabilities are visible in the gate map for future sequencing.",
+            "why_not_ready_yet": "Provider key approval, secret access approval, sandbox tests, paid operation approval, policy/legal review, and production approval are missing.",
+            "required_next_gate": ["Phase 2 Closeout Review", "provider sandbox contract preview", "approval token preview"],
+            "recommended_sequence_rank": 2,
+            "ready_for_real_integration": False,
+            "real_execution_allowed": False,
+            "risk_note": "LLM, provider, upload, and task creation must remain blocked.",
+        },
+    ]
+
+    validation_specs = [
+        ("unit_tests", "unit tests", "unit", "unit tests", ["tests.test_review_workspace_endpoint"], []),
+        ("contract_tests", "contract tests", "contract", "contract tests", ["provider adapter contract tests"], ["provider-specific contract test"]),
+        ("mock_harness_tests", "mock harness tests", "mock", "mock harness tests", ["persistence mock harness tests"], []),
+        ("redaction_tests", "redaction tests", "privacy", "redaction tests", ["prompt redaction tests", "snapshot redaction tests"], []),
+        ("permission_boundary_tests", "permission boundary tests", "permission", "permission boundary tests", ["permission boundary tests"], []),
+        ("audit_preview_tests", "audit preview tests", "audit", "audit preview tests", ["audit packet preview tests"], ["real audit sink test"]),
+        ("sandbox_tests", "sandbox tests", "sandbox", "sandbox tests", [], ["provider sandbox tests"]),
+        ("approval_tests", "approval tests", "approval", "approval tests", ["approval preview tests"], ["real approval token issue test"]),
+        ("rollback_tests", "rollback tests", "rollback", "rollback tests", ["rollback dry-run tests"], ["real rollback implementation test"]),
+        ("cost_quota_tests", "cost quota tests", "cost", "cost quota tests", ["cost quota preview tests"], ["paid operation billing test"]),
+    ]
+    phase2_validation_matrix_cards = [
+        {
+            "validation_matrix_id": f"phase2_validation_{validation_id}",
+            "validation_label": label,
+            "validation_group": group,
+            "source_gate_refs": ["workspace_phase2_provider_unlock_review_pack", "workspace_phase2_persistence_mock_harness_pack"],
+            "required_validation_type": required_type,
+            "current_validation_status": "preview_covered" if test_refs else "missing_real_validation",
+            "required_test_refs": test_refs,
+            "missing_test_refs": missing_refs,
+            "blocks_real_unlock": True,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} must be complete before real Phase 2 unlock.",
+        }
+        for validation_id, label, group, required_type, test_refs, missing_refs in validation_specs
+    ]
+
+    dependency_specs = [
+        ("db_gate_to_mock_harness", "DB gate -> mock harness", "workspace_phase2_database_persistence_gate_pack", "workspace_phase2_persistence_mock_harness_pack", "validation dependency", ["real DB config", "schema migration"]),
+        ("llm_gate_to_provider_unlock", "LLM gate -> provider unlock review", "workspace_phase2_llm_provider_gate_pack", "workspace_phase2_provider_unlock_review_pack", "provider dependency", ["provider sandbox tests", "provider key approval"]),
+        ("secret_network_to_provider_call", "secret/network -> provider call", "workspace_secret_environment_gate_pack", "workspace_phase2_provider_unlock_review_pack", "security dependency", ["secret access approval", "network allowlist"]),
+        ("approval_token_to_real_execution", "approval token -> real execution", "workspace_real_execution_approval_token_pack", "workspace_phase2_provider_unlock_review_pack", "governance dependency", ["approval token issue implementation"]),
+        ("audit_sink_to_production_readiness", "audit sink -> production readiness", "workspace_provider_invocation_audit_packet_pack", "workspace_final_system_health_pack", "audit dependency", ["real audit sink", "retention policy"]),
+        ("rollback_plan_to_unlock_decision", "rollback plan -> unlock decision", "workspace_phase2_persistence_mock_harness_pack", "workspace_phase2_provider_unlock_review_pack", "rollback dependency", ["real rollback implementation"]),
+    ]
+    cross_gate_dependency_cards = [
+        {
+            "dependency_id": dependency_id,
+            "dependency_label": label,
+            "source_gate_refs": [upstream, downstream],
+            "upstream_gate": upstream,
+            "downstream_gate": downstream,
+            "dependency_type": dependency_type,
+            "dependency_status": "blocked_missing_controls",
+            "missing_dependency_controls": missing_controls,
+            "recommended_operator_action": "Resolve missing dependency controls before promoting the downstream gate.",
+            "real_execution_allowed": False,
+            "risk_note": "Cross-gate dependency is preview-only and does not enable real execution.",
+        }
+        for dependency_id, label, upstream, downstream, dependency_type, missing_controls in dependency_specs
+    ]
+
+    operator_decision_review_cards = [
+        {
+            "operator_decision_review_id": "phase2_operator_decision_closeout_preview",
+            "decision_label": "Phase 2 closeout review before real unlock",
+            "source_gate_refs": source_pack_ids,
+            "recommended_decision": "continue_preview_gate_harness",
+            "recommended_operator_action": "Run Phase 2 Closeout Review or Real DB Minimal Adapter Contract Preview next.",
+            "real_task_created": False,
+            "real_approval_created": False,
+            "real_execution_allowed": False,
+            "risk_note": "Operator decision review gives recommendations only and does not create tasks or approvals.",
+        }
+    ]
+
+    production_readiness_gap_cards = [
+        {
+            "production_gap_id": f"production_gap_{idx}",
+            "gap_label": label,
+            "gap_group": group,
+            "source_gate_refs": source_pack_ids,
+            "blocks_real_unlock": True,
+            "recommended_operator_action": "Keep real capability disabled until this production readiness gap is closed.",
+            "real_execution_allowed": False,
+            "risk_note": f"{label} blocks Phase 2 real unlock.",
+        }
+        for idx, (label, group) in enumerate([
+            ("no real DB config", "database"),
+            ("no schema migration", "database"),
+            ("no audit sink", "audit"),
+            ("no provider key approval", "provider"),
+            ("no external call approval", "network"),
+            ("no production approval", "release"),
+            ("no rollback implementation", "rollback"),
+            ("no cost quota approval", "cost"),
+            ("no legal policy review", "policy"),
+            ("no real monitoring", "monitoring"),
+        ], start=1)
+    ]
+
+    phase2_risk_register_cards = [
+        {
+            "risk_register_id": f"phase2_risk_{idx}",
+            "risk_label": label,
+            "risk_group": group,
+            "source_gate_refs": source_pack_ids,
+            "current_risk_status": "open_preview_blocker",
+            "mitigation_preview": mitigation,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} remains open while real capabilities are disabled.",
+        }
+        for idx, (label, group, mitigation) in enumerate([
+            ("data persistence risk", "database", "require DB config, schema migration, redaction, retention, and rollback controls"),
+            ("secret exposure risk", "secret", "require approved secret storage and no plaintext prompt inclusion"),
+            ("external call risk", "network", "require allowlist, timeout, rate limit, and audit traces"),
+            ("provider cost risk", "cost", "require quota, cost guard, retry budget, and paid operation approval"),
+            ("unsafe claim output risk", "claim_safety", "require evidence grounding, do_not_claim, and policy-disabled checks"),
+            ("audit gap risk", "audit", "require durable audit sink, event shape, retention, and trace ids"),
+            ("rollback gap risk", "rollback", "require rollback owner, rollback implementation, and recovery tests"),
+            ("policy legal uncertainty", "policy", "require policy/legal review without claiming legal advice"),
+            ("platform upload risk", "platform", "require platform upload approval and monitoring"),
+        ], start=1)
+    ]
+
+    phase2_next_step_recommendation_cards = [
+        {
+            "next_step_recommendation_id": "phase2_closeout_review_next",
+            "recommendation_label": "Phase 2 Closeout Review",
+            "recommendation_group": "preview_gate",
+            "recommended_sequence_rank": 1,
+            "recommended_next_step": "Run a Phase 2 Closeout Review preview before any real unlock.",
+            "direct_real_unlock_recommended": False,
+            "real_execution_allowed": False,
+            "risk_note": "Next step remains preview/gate/harness and does not unlock real capability.",
+        },
+        {
+            "next_step_recommendation_id": "real_db_minimal_adapter_contract_preview_next",
+            "recommendation_label": "Real DB Minimal Adapter Contract Preview",
+            "recommendation_group": "adapter_contract_preview",
+            "recommended_sequence_rank": 2,
+            "recommended_next_step": "Draft a Real DB Minimal Adapter Contract Preview as the smallest possible future integration candidate.",
+            "direct_real_unlock_recommended": False,
+            "real_execution_allowed": False,
+            "risk_note": "This is a contract preview recommendation only, not a real database unlock.",
+        },
+    ]
+
+    phase2_final_blocker_cards = [
+        {
+            "final_blocker_id": f"phase2_final_blocker_{idx}",
+            "blocker_label": label,
+            "source_gate_refs": source_pack_ids,
+            "ready_for_real_execution": False,
+            "blocks_real_unlock": True,
+            "recommended_operator_action": "Resolve blocker in preview before any real execution.",
+            "real_execution_allowed": False,
+            "risk_note": f"{label} prevents ready_for_real_execution.",
+        }
+        for idx, label in enumerate([
+            "no real DB config",
+            "no schema migration",
+            "no audit sink",
+            "no provider key approval",
+            "no secret access approval",
+            "no external call approval",
+            "no paid operation approval",
+            "no sandbox contract test executed",
+            "no production approval",
+            "no rollback implementation",
+            "no legal policy review",
+            "no real monitoring",
+        ], start=1)
+    ]
+
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "secret_read": False,
+        "secret_read_enabled": False,
+        "external_call": False,
+        "external_call_enabled": False,
+        "token_issue": False,
+        "token_issue_enabled": False,
+        "paid_operation": False,
+        "paid_operation_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_phase2_readiness_review_pack_v1",
+        "phase2_readiness_review_summary": {
+            "mode": "phase2_readiness_review_preview_deterministic_unlock_gate_summary_dry_run_only",
+            "source_packs": source_pack_ids,
+            "source_pack_presence": {pack_id: bool(packs.get(pack_id)) for pack_id in source_pack_ids},
+            "gate_status_count": len(phase2_gate_status_cards),
+            "unlock_readiness_count": len(real_capability_unlock_readiness_cards),
+            "minimum_candidate_count": len(minimum_real_integration_candidate_cards),
+            "validation_matrix_count": len(phase2_validation_matrix_cards),
+            "cross_gate_dependency_count": len(cross_gate_dependency_cards),
+            "final_blocker_count": len(phase2_final_blocker_cards),
+            "real_database_persistence_allowed": False,
+            "real_llm_generation_allowed": False,
+            "real_provider_call_allowed": False,
+            "secret_read_allowed": False,
+            "external_call_allowed": False,
+            "token_issue_allowed": False,
+            "paid_operation_allowed": False,
+            "real_execution_allowed": False,
+            "real_file_write_allowed": False,
+            "risk_note": "Phase 2 readiness review is deterministic preview only; it does not unlock real databases, LLMs, providers, secrets, external calls, approval tokens, database writes, file writes, sandbox tests, production readiness jobs, retries, rollbacks, or paid operations.",
+        },
+        "phase2_gate_status_cards": phase2_gate_status_cards,
+        "real_capability_unlock_readiness_cards": real_capability_unlock_readiness_cards,
+        "minimum_real_integration_candidate_cards": minimum_real_integration_candidate_cards,
+        "phase2_validation_matrix_cards": phase2_validation_matrix_cards,
+        "cross_gate_dependency_cards": cross_gate_dependency_cards,
+        "operator_decision_review_cards": operator_decision_review_cards,
+        "production_readiness_gap_cards": production_readiness_gap_cards,
+        "phase2_risk_register_cards": phase2_risk_register_cards,
+        "phase2_next_step_recommendation_cards": phase2_next_step_recommendation_cards,
+        "phase2_final_blocker_cards": phase2_final_blocker_cards,
+        "phase2_readiness_quality_checks": {
+            "gate_status_covered": bool(phase2_gate_status_cards),
+            "unlock_readiness_covered": bool(real_capability_unlock_readiness_cards),
+            "minimum_candidate_covered": bool(minimum_real_integration_candidate_cards),
+            "validation_matrix_covered": bool(phase2_validation_matrix_cards),
+            "cross_gate_dependencies_covered": bool(cross_gate_dependency_cards),
+            "operator_decisions_covered": bool(operator_decision_review_cards),
+            "production_gaps_covered": bool(production_readiness_gap_cards),
+            "risk_register_covered": bool(phase2_risk_register_cards),
+            "next_step_recommendations_covered": bool(phase2_next_step_recommendation_cards),
+            "final_blockers_covered": bool(phase2_final_blocker_cards),
+            "safety_boundary_covered": True,
+            "real_database_persistence_performed": False,
+            "real_llm_generation_performed": False,
+            "real_provider_call_performed": False,
+            "secret_read_performed": False,
+            "external_call_performed": False,
+            "token_issue_performed": False,
+            "paid_operation_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "workspace_phase2_readiness_review_preview",
+            "source": "creative_decision_pack.workspace_phase2_readiness_review_pack",
+            "audit_record_created": False,
+            "real_audit_event_created": False,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_file_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit preview is display-only and does not write databases, read real logs, read history tables, or create real audit events.",
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -46691,6 +47079,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_phase2_provider_unlock_review_pack"] = (
         _rw_workspace_phase2_provider_unlock_review_pack(
+            creative_decision_pack
+        )
+    )
+    creative_decision_pack["workspace_phase2_readiness_review_pack"] = (
+        _rw_workspace_phase2_readiness_review_pack(
             creative_decision_pack
         )
     )

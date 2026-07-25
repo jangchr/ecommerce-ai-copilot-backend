@@ -13309,6 +13309,342 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
                 self.assertIn(key, boundaries)
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_phase2_readiness_review_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-phase2-readiness-review-preview",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "PHASE2READY001",
+                "title": "Adjustable Laptop Stand",
+                "reviews": [
+                    {
+                        "rating": 2,
+                        "title": "Slides on glass desk",
+                        "text": (
+                            "The stand slides on my glass desk and the hinge "
+                            "feels stiff when I adjust height."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 5,
+                        "title": "Helps my posture",
+                        "text": (
+                            "It lifts my laptop to eye level and my neck "
+                            "feels better during long calls."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 1,
+                        "title": "Competitor bent quickly",
+                        "text": (
+                            "The competitor bent quickly and the screws "
+                            "started rattling after a few days."
+                        ),
+                        "source_section": "competitor_review",
+                        "metadata": {"source_type": "competitor"},
+                    },
+                ],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        self.assertIn("workspace_phase2_readiness_review_pack", creative_pack)
+        for existing_pack in [
+            "workspace_phase2_provider_unlock_review_pack",
+            "workspace_phase2_llm_provider_gate_pack",
+            "workspace_phase2_persistence_mock_harness_pack",
+            "workspace_phase2_database_persistence_gate_pack",
+            "workspace_mvp_readiness_dossier_pack",
+            "workspace_final_system_health_pack",
+            "workspace_demo_campaign_walkthrough_pack",
+            "workspace_mvp_consolidation_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "workspace_real_execution_approval_token_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_provider_cost_quota_risk_guard_pack",
+            "workspace_capability_permission_matrix_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_phase2_readiness_review_pack"]
+        self.assertEqual(pack["pack_version"], "workspace_phase2_readiness_review_pack_v1")
+        for required_key in [
+            "phase2_readiness_review_summary",
+            "phase2_gate_status_cards",
+            "real_capability_unlock_readiness_cards",
+            "minimum_real_integration_candidate_cards",
+            "phase2_validation_matrix_cards",
+            "cross_gate_dependency_cards",
+            "operator_decision_review_cards",
+            "production_readiness_gap_cards",
+            "phase2_risk_register_cards",
+            "phase2_next_step_recommendation_cards",
+            "phase2_final_blocker_cards",
+            "phase2_readiness_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+        ]:
+            with self.subTest(required_key=required_key):
+                self.assertIn(required_key, pack)
+                self.assertTrue(pack[required_key])
+
+        summary = pack["phase2_readiness_review_summary"]
+        self.assertIn("phase2_readiness_review_preview", summary["mode"])
+        self.assertIn("deterministic_unlock_gate_summary", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        for source_pack in [
+            "workspace_phase2_provider_unlock_review_pack",
+            "workspace_phase2_llm_provider_gate_pack",
+            "workspace_phase2_persistence_mock_harness_pack",
+            "workspace_phase2_database_persistence_gate_pack",
+            "workspace_mvp_readiness_dossier_pack",
+            "workspace_final_system_health_pack",
+            "workspace_demo_campaign_walkthrough_pack",
+            "workspace_mvp_consolidation_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "workspace_real_execution_approval_token_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_provider_cost_quota_risk_guard_pack",
+            "workspace_capability_permission_matrix_pack",
+        ]:
+            self.assertIn(source_pack, summary["source_packs"])
+        for disabled_key in [
+            "real_database_persistence_allowed",
+            "real_llm_generation_allowed",
+            "real_provider_call_allowed",
+            "secret_read_allowed",
+            "external_call_allowed",
+            "token_issue_allowed",
+            "paid_operation_allowed",
+            "real_execution_allowed",
+            "real_file_write_allowed",
+        ]:
+            self.assertFalse(summary[disabled_key])
+
+        gate_ids = {card["gate_status_id"] for card in pack["phase2_gate_status_cards"]}
+        for gate_id in [
+            "database_persistence_gate",
+            "persistence_mock_harness",
+            "llm_provider_gate",
+            "provider_unlock_review",
+            "secret_environment_gate",
+            "network_external_call_guard",
+            "approval_token_gate",
+            "cost_quota_guard",
+            "audit_packet_preview",
+            "final_mvp_readiness_boundary",
+        ]:
+            with self.subTest(gate_id=gate_id):
+                self.assertIn(gate_id, gate_ids)
+        for card in pack["phase2_gate_status_cards"]:
+            for field in [
+                "gate_status_id",
+                "gate_label",
+                "gate_group",
+                "source_pack_refs",
+                "gate_scope",
+                "current_status",
+                "readiness_status",
+                "covered_controls",
+                "missing_controls",
+                "recommended_operator_action",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(gate=card["gate_status_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["real_execution_allowed"])
+
+        capability_ids = {
+            card["unlock_readiness_id"].replace("unlock_readiness_", "")
+            for card in pack["real_capability_unlock_readiness_cards"]
+        }
+        for capability_id in [
+            "real_database_persistence",
+            "real_llm_generation",
+            "real_provider_call",
+            "real_file_export",
+            "real_platform_upload",
+            "real_task_creation",
+            "real_approval_token_issue",
+            "real_external_call",
+            "real_policy_check",
+            "real_audit_logging",
+        ]:
+            with self.subTest(capability_id=capability_id):
+                self.assertIn(capability_id, capability_ids)
+        for card in pack["real_capability_unlock_readiness_cards"]:
+            self.assertFalse(card["real_capability_enabled"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        candidate_text = " ".join(
+            " ".join(str(value) for value in card.values())
+            for card in pack["minimum_real_integration_candidate_cards"]
+        )
+        self.assertIn("Database persistence minimal adapter candidate", candidate_text)
+        self.assertIn("not ready", candidate_text)
+        self.assertIn("LLM, provider, upload, and task capabilities remain blocked", candidate_text)
+        for card in pack["minimum_real_integration_candidate_cards"]:
+            self.assertFalse(card["ready_for_real_integration"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        validation_text = " ".join(
+            " ".join(str(value) for value in card.values())
+            for card in pack["phase2_validation_matrix_cards"]
+        )
+        for expected in [
+            "unit tests",
+            "contract tests",
+            "mock harness tests",
+            "redaction tests",
+            "permission boundary tests",
+            "audit preview tests",
+            "sandbox tests",
+            "approval tests",
+            "rollback tests",
+            "cost quota tests",
+        ]:
+            with self.subTest(validation=expected):
+                self.assertIn(expected, validation_text)
+        for card in pack["phase2_validation_matrix_cards"]:
+            self.assertTrue(card["blocks_real_unlock"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        dependency_text = " ".join(
+            " ".join(str(value) for value in card.values())
+            for card in pack["cross_gate_dependency_cards"]
+        )
+        for expected in [
+            "DB gate -> mock harness",
+            "LLM gate -> provider unlock review",
+            "secret/network -> provider call",
+            "approval token -> real execution",
+            "audit sink -> production readiness",
+            "rollback plan -> unlock decision",
+        ]:
+            with self.subTest(dependency=expected):
+                self.assertIn(expected, dependency_text)
+        for card in pack["cross_gate_dependency_cards"]:
+            self.assertFalse(card["real_execution_allowed"])
+
+        for card in pack["operator_decision_review_cards"]:
+            self.assertFalse(card["real_task_created"])
+            self.assertFalse(card["real_approval_created"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        gaps_text = " ".join(card["gap_label"] for card in pack["production_readiness_gap_cards"])
+        for gap in [
+            "no real DB config",
+            "no schema migration",
+            "no audit sink",
+            "no provider key approval",
+            "no external call approval",
+            "no production approval",
+            "no rollback implementation",
+            "no cost quota approval",
+            "no legal policy review",
+            "no real monitoring",
+        ]:
+            with self.subTest(gap=gap):
+                self.assertIn(gap, gaps_text)
+
+        risk_text = " ".join(card["risk_label"] for card in pack["phase2_risk_register_cards"])
+        for risk in [
+            "data persistence risk",
+            "secret exposure risk",
+            "external call risk",
+            "provider cost risk",
+            "unsafe claim output risk",
+            "audit gap risk",
+            "rollback gap risk",
+            "policy legal uncertainty",
+            "platform upload risk",
+        ]:
+            with self.subTest(risk=risk):
+                self.assertIn(risk, risk_text)
+
+        for card in pack["phase2_next_step_recommendation_cards"]:
+            self.assertFalse(card["direct_real_unlock_recommended"])
+            self.assertFalse(card["real_execution_allowed"])
+        next_step_text = " ".join(
+            card["recommendation_label"]
+            for card in pack["phase2_next_step_recommendation_cards"]
+        )
+        self.assertIn("Phase 2 Closeout Review", next_step_text)
+        self.assertIn("Real DB Minimal Adapter Contract Preview", next_step_text)
+
+        for card in pack["phase2_final_blocker_cards"]:
+            self.assertFalse(card["ready_for_real_execution"])
+            self.assertTrue(card["blocks_real_unlock"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        checks = pack["phase2_readiness_quality_checks"]
+        for key in [
+            "gate_status_covered",
+            "unlock_readiness_covered",
+            "minimum_candidate_covered",
+            "validation_matrix_covered",
+            "cross_gate_dependencies_covered",
+            "operator_decisions_covered",
+            "production_gaps_covered",
+            "risk_register_covered",
+            "next_step_recommendations_covered",
+            "final_blockers_covered",
+            "safety_boundary_covered",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "real_database_persistence_performed",
+            "real_llm_generation_performed",
+            "real_provider_call_performed",
+            "secret_read_performed",
+            "external_call_performed",
+            "token_issue_performed",
+            "paid_operation_performed",
+            "real_execution_performed",
+        ]:
+            self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["audit_record_created"])
+        self.assertFalse(audit["real_audit_event_created"])
+        self.assertFalse(audit["database_write_allowed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["real_file_write_allowed"])
+        self.assertFalse(audit["real_execution_allowed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider", "provider_enabled", "llm", "llm_enabled",
+            "media", "media_enabled", "external_scraping",
+            "external_scraping_enabled", "database_persistence",
+            "database_persistence_enabled", "real_execution",
+            "real_execution_enabled", "real_policy_check",
+            "real_policy_check_enabled", "platform_upload",
+            "platform_upload_enabled", "task_creation",
+            "task_creation_enabled", "real_export", "real_export_enabled",
+            "file_write", "file_write_enabled", "secret_read",
+            "secret_read_enabled", "external_call", "external_call_enabled",
+            "token_issue", "token_issue_enabled", "paid_operation",
+            "paid_operation_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertIn(key, boundaries)
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
