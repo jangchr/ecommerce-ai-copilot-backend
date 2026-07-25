@@ -46819,6 +46819,459 @@ def _rw_workspace_phase2_readiness_review_pack(
     }
 
 
+def _rw_workspace_phase2_real_db_minimal_adapter_contract_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_ids = [
+        "workspace_phase2_readiness_review_pack",
+        "workspace_phase2_persistence_mock_harness_pack",
+        "workspace_phase2_database_persistence_gate_pack",
+        "workspace_mvp_readiness_dossier_pack",
+        "workspace_final_system_health_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_capability_permission_matrix_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "review_evidence_quality_pack",
+        "claim_risk_guard_pack",
+        "final_claim_safe_export_packet_pack",
+        "campaign_creative_dossier_pack",
+    ]
+    packs = {
+        pack_id: dict(creative_decision_pack.get(pack_id) or {})
+        for pack_id in source_pack_ids
+    }
+    phase2_refs = [
+        "workspace_phase2_database_persistence_gate_pack",
+        "workspace_phase2_persistence_mock_harness_pack",
+        "workspace_phase2_readiness_review_pack",
+    ]
+
+    interface_specs = [
+        ("save_workspace_session_snapshot", "Workspace session snapshot writer", "workspace", "save preview workspace session snapshot"),
+        ("save_review_import_snapshot", "Review import snapshot writer", "review_import", "save preview review import snapshot"),
+        ("save_evidence_quality_snapshot", "Evidence quality snapshot writer", "evidence_quality", "save preview evidence quality snapshot"),
+        ("save_claim_risk_snapshot", "Claim risk snapshot writer", "claim_risk", "save preview claim risk snapshot"),
+        ("save_final_export_packet_snapshot", "Final export packet snapshot writer", "final_export", "save preview final export packet snapshot"),
+        ("save_campaign_dossier_snapshot", "Campaign dossier snapshot writer", "campaign_dossier", "save preview campaign dossier snapshot"),
+        ("read_workspace_session_snapshot", "Workspace session snapshot reader", "workspace", "read mock workspace session snapshot"),
+        ("list_workspace_run_snapshots", "Workspace run snapshot lister", "workspace", "list mock workspace run snapshots"),
+    ]
+    db_adapter_interface_contract_cards = [
+        {
+            "db_adapter_contract_id": operation,
+            "adapter_label": label,
+            "adapter_group": group,
+            "source_gate_refs": phase2_refs,
+            "intended_operation": intended_operation,
+            "input_contract_shape": {
+                "workspace_id": "string",
+                "snapshot_id": "string",
+                "payload": "redacted deterministic preview object",
+            },
+            "output_contract_shape": {
+                "operation_ref": operation,
+                "status": "mock_contract_preview",
+                "persisted": False,
+            },
+            "required_identifiers": ["workspace_id", "snapshot_id", "operation_ref"],
+            "required_timestamps": ["created_at_preview", "updated_at_preview"],
+            "required_status_fields": ["status", "persisted", "blocked_reason"],
+            "idempotency_requirement": "operation_ref plus workspace_id plus snapshot_id must be idempotent before any future DB write.",
+            "transaction_boundary_note": "Future transaction boundary is one snapshot operation; current preview opens no transaction.",
+            "real_database_connection_allowed": False,
+            "real_database_write_allowed": False,
+            "real_file_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Interface contract is preview-only and must not create a DB client, connect to DB, write files, or run real execution.",
+        }
+        for operation, label, group, intended_operation in interface_specs
+    ]
+
+    schema_specs = [
+        ("workspace_sessions", "workspace_session_id", ["workspace_id", "updated_at_preview"], ["workspace_id", "session_id", "status", "created_at_preview", "updated_at_preview"]),
+        ("review_import_snapshots", "review_import_snapshot_id", ["workspace_id", "source", "created_at_preview"], ["workspace_id", "review_count", "source_breakdown", "created_at_preview"]),
+        ("evidence_quality_snapshots", "evidence_quality_snapshot_id", ["workspace_id", "quality_status"], ["workspace_id", "quality_summary", "evidence_refs", "quality_status"]),
+        ("claim_risk_snapshots", "claim_risk_snapshot_id", ["workspace_id", "risk_level"], ["workspace_id", "claim_refs", "risk_level", "do_not_claim_refs"]),
+        ("final_export_packets", "final_export_packet_id", ["workspace_id", "export_status"], ["workspace_id", "packet_refs", "export_status", "blocked_reason"]),
+        ("campaign_dossiers", "campaign_dossier_id", ["workspace_id", "handoff_status"], ["workspace_id", "dossier_refs", "handoff_status", "operator_notes"]),
+        ("audit_events", "audit_event_id", ["workspace_id", "operation_ref", "created_at_preview"], ["workspace_id", "actor_ref", "operation_ref", "event_status", "trace_id"]),
+        ("operator_decisions", "operator_decision_id", ["workspace_id", "decision_status"], ["workspace_id", "decision_label", "decision_status", "operator_ref"]),
+    ]
+    db_schema_mapping_preview_cards = [
+        {
+            "schema_mapping_id": f"schema_mapping_{table}",
+            "mapping_label": table,
+            "mapping_group": table.split("_")[0],
+            "source_snapshot_refs": source_pack_ids,
+            "candidate_table_or_collection": table,
+            "candidate_primary_key": primary_key,
+            "candidate_index_fields": indexes,
+            "required_columns_or_fields": required_fields,
+            "excluded_fields": ["provider_secret", "api_key", "raw_hidden_prompt", "unredacted_customer_identifier"],
+            "sensitive_fields": ["customer data", "review text", "generated copy", "operator note"],
+            "retention_requirement": "retention policy required before real persistence",
+            "deletion_requirement": "deletion policy required before real persistence",
+            "schema_migration_required": True,
+            "real_database_write_allowed": False,
+            "risk_note": "Schema mapping is a preview only; no table, collection, migration, index, or real DB write is created.",
+        }
+        for table, primary_key, indexes, required_fields in schema_specs
+    ]
+
+    forbidden_real_operations = [
+        "create table",
+        "migrate",
+        "insert",
+        "update",
+        "delete",
+        "select real DB",
+        "export file",
+        "read secret",
+    ]
+    db_operation_boundary_cards = [
+        {
+            "operation_boundary_id": f"db_operation_boundary_{idx}",
+            "operation_label": label,
+            "operation_group": group,
+            "allowed_preview_operation": allowed,
+            "forbidden_real_operations": forbidden_real_operations,
+            "requires_schema_migration": True,
+            "requires_db_connection_config": True,
+            "requires_secret_access": True,
+            "requires_audit_sink": True,
+            "requires_operator_approval": True,
+            "real_database_connection_allowed": False,
+            "real_database_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Only preview contract, mock invocation, and schema mapping discussion are allowed.",
+        }
+        for idx, (label, group, allowed) in enumerate([
+            ("Adapter contract discussion", "contract", "preview contract"),
+            ("Mock invocation rehearsal", "mock", "mock invocation"),
+            ("Schema mapping review", "schema", "schema mapping discussion"),
+        ], start=1)
+    ]
+
+    db_mock_invocation_contract_cards = [
+        {
+            "mock_invocation_id": f"mock_{operation}",
+            "mock_invocation_label": label,
+            "source_contract_refs": [operation],
+            "simulated_operation": "save" if operation.startswith("save_") else "read" if operation.startswith("read_") else "list" if operation.startswith("list_") else "validation",
+            "mock_input_shape": {"workspace_id": "mock_workspace", "payload_ref": operation},
+            "mock_output_shape": {"status": "mock_success", "operation_ref": operation, "persisted": False},
+            "expected_mock_status": "mock_success_preview",
+            "writes_real_database": False,
+            "reads_real_database": False,
+            "writes_real_file": False,
+            "uses_external_call": False,
+            "reads_secret": False,
+            "real_execution_allowed": False,
+            "risk_note": "Mock invocation does not write real DB, read real DB, write files, make external calls, read secrets, or execute real operations.",
+        }
+        for operation, label, _group, _intended in interface_specs
+    ] + [
+        {
+            "mock_invocation_id": "mock_validate_schema_mapping",
+            "mock_invocation_label": "Schema mapping validation mock",
+            "source_contract_refs": ["db_schema_mapping_preview_cards"],
+            "simulated_operation": "validation",
+            "mock_input_shape": {"schema_mapping_refs": "preview only"},
+            "mock_output_shape": {"status": "mock_validation_passed", "persisted": False},
+            "expected_mock_status": "mock_validation_passed",
+            "writes_real_database": False,
+            "reads_real_database": False,
+            "writes_real_file": False,
+            "uses_external_call": False,
+            "reads_secret": False,
+            "real_execution_allowed": False,
+            "risk_note": "Validation is deterministic preview only.",
+        }
+    ]
+
+    error_specs = [
+        ("connection_missing", "connection missing", "connection", "database connection config missing"),
+        ("schema_missing", "schema missing", "schema", "candidate table or collection missing"),
+        ("migration_required", "migration required", "migration", "schema migration required before write"),
+        ("permission_denied", "permission denied", "permission", "database permission denied"),
+        ("redaction_failed", "redaction failed", "privacy", "redaction failed before persistence"),
+        ("duplicate_id", "duplicate id", "idempotency", "duplicate snapshot id"),
+        ("stale_version", "stale version", "versioning", "stale snapshot version"),
+        ("partial_write", "partial write", "transaction", "partial write detected"),
+        ("audit_sink_missing", "audit sink missing", "audit", "real audit sink missing"),
+        ("rollback_unavailable", "rollback unavailable", "rollback", "rollback unavailable"),
+    ]
+    db_error_taxonomy_cards = [
+        {
+            "db_error_id": f"db_error_{error_id}",
+            "error_label": label,
+            "error_group": group,
+            "simulated_failure_type": failure_type,
+            "expected_operator_message": f"{label}: keep DB adapter in preview and resolve {group} control before unlock.",
+            "expected_recovery_preview": "Stop at preview boundary, preserve mock status, and route to operator review.",
+            "retry_allowed_in_preview": error_id in {"duplicate_id", "stale_version"},
+            "requires_real_rollback": False,
+            "real_database_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Error taxonomy is simulated only and must not trigger real retry, rollback, DB write, or execution.",
+        }
+        for error_id, label, group, failure_type in error_specs
+    ]
+
+    db_audit_trace_contract_cards = [
+        {
+            "audit_trace_contract_id": "future_db_adapter_audit_event_shape",
+            "audit_trace_label": "Future DB adapter audit event shape",
+            "source_gate_refs": ["workspace_provider_invocation_audit_packet_pack", "workspace_phase2_readiness_review_pack"],
+            "future_audit_event_shape": {
+                "trace_id": "required",
+                "actor_ref": "required",
+                "operation_ref": "required",
+                "before_summary": "redacted preview",
+                "after_summary": "redacted preview",
+            },
+            "trace_ids_required": ["trace_id", "workspace_id", "operation_ref"],
+            "actor_refs_required": ["operator_ref", "system_ref"],
+            "operation_refs_required": [spec[0] for spec in interface_specs],
+            "before_after_summary_required": True,
+            "database_write_allowed": False,
+            "real_audit_event_created": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit trace contract previews event shape only and does not write databases or create real audit events.",
+        }
+    ]
+
+    permission_ids = [
+        "database_persistence",
+        "database_read",
+        "database_write",
+        "file_write",
+        "secret_read",
+        "external_call",
+        "real_execution",
+    ]
+    db_permission_boundary_cards = [
+        {
+            "permission_boundary_id": permission_id,
+            "permission_label": permission_id,
+            "permission_group": "database" if "database" in permission_id else "execution",
+            "current_status": "disabled",
+            "allowed_in_preview": False,
+            "real_capability_enabled": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{permission_id} remains disabled for real DB adapter preview.",
+        }
+        for permission_id in permission_ids
+    ]
+
+    redaction_specs = [
+        ("provider secret", False, False, "provider secret must never enter DB and secret read is not allowed"),
+        ("customer data", False, False, "customer data requires redaction, retention, and deletion policy before DB persistence"),
+        ("review text", False, False, "review text requires retention and deletion controls before DB persistence"),
+        ("generated copy", False, False, "generated copy requires claim-safety and retention controls before DB persistence"),
+        ("operator note", False, False, "operator note requires access policy and retention controls before DB persistence"),
+    ]
+    db_redaction_retention_contract_cards = [
+        {
+            "redaction_retention_contract_id": f"redaction_{idx}",
+            "data_label": label,
+            "redaction_group": label,
+            "db_persistence_allowed": db_allowed,
+            "secret_read_allowed": secret_allowed,
+            "retention_requirement": "retention policy not implemented",
+            "deletion_requirement": "deletion policy not implemented",
+            "redaction_required": True,
+            "real_database_write_allowed": False,
+            "risk_note": risk_note,
+        }
+        for idx, (label, db_allowed, secret_allowed, risk_note) in enumerate(redaction_specs, start=1)
+    ]
+
+    migration_dependency_labels = [
+        "schema migration",
+        "rollback plan",
+        "backfill plan",
+        "retention policy",
+        "deletion policy",
+        "audit sink",
+        "monitoring",
+    ]
+    db_migration_dependency_cards = [
+        {
+            "migration_dependency_id": f"migration_dependency_{idx}",
+            "dependency_label": label,
+            "dependency_group": "migration",
+            "implemented": False,
+            "real_implementation_status": "not implemented",
+            "blocks_real_db_unlock": True,
+            "real_database_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} is not implemented and blocks real DB adapter unlock.",
+        }
+        for idx, label in enumerate(migration_dependency_labels, start=1)
+    ]
+
+    test_specs = [
+        "unit tests",
+        "contract tests",
+        "mock invocation tests",
+        "schema mapping tests",
+        "redaction tests",
+        "retention tests",
+        "permission boundary tests",
+        "error taxonomy tests",
+        "audit preview tests",
+        "migration dry-run tests",
+    ]
+    db_adapter_test_plan_cards = [
+        {
+            "test_plan_id": f"db_adapter_{idx}",
+            "test_label": label,
+            "test_group": label.split()[0],
+            "required_before_unlock": True,
+            "current_status": "preview_defined",
+            "real_database_required": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} must pass in preview before any real DB adapter unlock.",
+        }
+        for idx, label in enumerate(test_specs, start=1)
+    ]
+
+    blocker_labels = [
+        "no real DB connection config",
+        "no schema migration",
+        "no migration dry-run",
+        "no rollback implementation",
+        "no retention policy",
+        "no deletion policy",
+        "no redaction enforcement",
+        "no real audit sink",
+        "no production approval",
+        "no monitoring",
+    ]
+    phase2_real_db_adapter_unlock_blockers = [
+        {
+            "unlock_blocker_id": f"real_db_adapter_blocker_{idx}",
+            "blocker_label": label,
+            "blocks_real_db_unlock": True,
+            "recommended_operator_action": "Keep the DB adapter in preview until this blocker is resolved.",
+            "real_database_connection_allowed": False,
+            "real_database_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} blocks real DB minimal adapter unlock.",
+        }
+        for idx, label in enumerate(blocker_labels, start=1)
+    ]
+
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "database_read": False,
+        "database_read_enabled": False,
+        "database_write": False,
+        "database_write_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "secret_read": False,
+        "secret_read_enabled": False,
+        "external_call": False,
+        "external_call_enabled": False,
+        "token_issue": False,
+        "token_issue_enabled": False,
+        "paid_operation": False,
+        "paid_operation_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_phase2_real_db_minimal_adapter_contract_pack_v1",
+        "real_db_adapter_contract_summary": {
+            "mode": "phase2_real_db_minimal_adapter_contract_preview_deterministic_db_adapter_contract_dry_run_only",
+            "source_packs": source_pack_ids,
+            "source_pack_presence": {
+                pack_id: bool(packs.get(pack_id)) for pack_id in source_pack_ids
+            },
+            "adapter_interface_contract_count": len(db_adapter_interface_contract_cards),
+            "schema_mapping_preview_count": len(db_schema_mapping_preview_cards),
+            "operation_boundary_count": len(db_operation_boundary_cards),
+            "mock_invocation_contract_count": len(db_mock_invocation_contract_cards),
+            "error_taxonomy_count": len(db_error_taxonomy_cards),
+            "unlock_blocker_count": len(phase2_real_db_adapter_unlock_blockers),
+            "real_database_connection_allowed": False,
+            "real_database_write_allowed": False,
+            "real_database_read_allowed": False,
+            "real_file_write_allowed": False,
+            "secret_read_allowed": False,
+            "external_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Real DB minimal adapter contract is deterministic preview only; it creates no DB client, reads no config or secrets, connects to no DB, writes no DB, writes no files, and performs no real rollback.",
+        },
+        "db_adapter_interface_contract_cards": db_adapter_interface_contract_cards,
+        "db_schema_mapping_preview_cards": db_schema_mapping_preview_cards,
+        "db_operation_boundary_cards": db_operation_boundary_cards,
+        "db_mock_invocation_contract_cards": db_mock_invocation_contract_cards,
+        "db_error_taxonomy_cards": db_error_taxonomy_cards,
+        "db_audit_trace_contract_cards": db_audit_trace_contract_cards,
+        "db_permission_boundary_cards": db_permission_boundary_cards,
+        "db_redaction_retention_contract_cards": db_redaction_retention_contract_cards,
+        "db_migration_dependency_cards": db_migration_dependency_cards,
+        "db_adapter_test_plan_cards": db_adapter_test_plan_cards,
+        "phase2_real_db_adapter_unlock_blockers": phase2_real_db_adapter_unlock_blockers,
+        "real_db_adapter_quality_checks": {
+            "adapter_interface_covered": bool(db_adapter_interface_contract_cards),
+            "schema_mapping_covered": bool(db_schema_mapping_preview_cards),
+            "operation_boundary_covered": bool(db_operation_boundary_cards),
+            "mock_invocation_covered": bool(db_mock_invocation_contract_cards),
+            "error_taxonomy_covered": bool(db_error_taxonomy_cards),
+            "audit_trace_covered": bool(db_audit_trace_contract_cards),
+            "permission_boundary_covered": bool(db_permission_boundary_cards),
+            "redaction_retention_covered": bool(db_redaction_retention_contract_cards),
+            "migration_dependency_covered": bool(db_migration_dependency_cards),
+            "test_plan_covered": bool(db_adapter_test_plan_cards),
+            "unlock_blockers_covered": bool(phase2_real_db_adapter_unlock_blockers),
+            "safety_boundary_covered": True,
+            "real_database_connection_performed": False,
+            "real_database_read_performed": False,
+            "real_database_write_performed": False,
+            "real_file_write_performed": False,
+            "secret_read_performed": False,
+            "external_call_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "real_db_minimal_adapter_contract_audit_preview",
+            "source": "creative_decision_pack.workspace_phase2_real_db_minimal_adapter_contract_pack",
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "audit_record_created": False,
+            "real_audit_event_created": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit preview is display-only; it does not write databases, read real logs, read history tables, or create real audit events.",
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -47086,6 +47539,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         _rw_workspace_phase2_readiness_review_pack(
             creative_decision_pack
         )
+    )
+    creative_decision_pack[
+        "workspace_phase2_real_db_minimal_adapter_contract_pack"
+    ] = _rw_workspace_phase2_real_db_minimal_adapter_contract_pack(
+        creative_decision_pack
     )
 
     return ReviewWorkspaceResponse(

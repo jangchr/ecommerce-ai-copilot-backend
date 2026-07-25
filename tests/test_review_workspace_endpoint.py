@@ -13645,6 +13645,415 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
                 self.assertIn(key, boundaries)
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_phase2_real_db_minimal_adapter_contract_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-phase2-real-db-adapter-contract-preview",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "REALDBPREVIEW001",
+                "title": "Adjustable Laptop Stand",
+                "reviews": [
+                    {
+                        "rating": 2,
+                        "title": "Slides on glass desk",
+                        "text": (
+                            "The stand slides on my glass desk and the hinge "
+                            "feels stiff when I adjust height."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 5,
+                        "title": "Helps my posture",
+                        "text": (
+                            "It lifts my laptop to eye level and my neck "
+                            "feels better during long calls."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 1,
+                        "title": "Competitor bent quickly",
+                        "text": (
+                            "The competitor bent quickly and the screws "
+                            "started rattling after a few days."
+                        ),
+                        "source_section": "competitor_review",
+                        "metadata": {"source_type": "competitor"},
+                    },
+                ],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        self.assertIn(
+            "workspace_phase2_real_db_minimal_adapter_contract_pack",
+            creative_pack,
+        )
+        for existing_pack in [
+            "workspace_phase2_readiness_review_pack",
+            "workspace_phase2_persistence_mock_harness_pack",
+            "workspace_phase2_database_persistence_gate_pack",
+            "workspace_mvp_readiness_dossier_pack",
+            "workspace_final_system_health_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "review_evidence_quality_pack",
+            "claim_risk_guard_pack",
+            "final_claim_safe_export_packet_pack",
+            "campaign_creative_dossier_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack[
+            "workspace_phase2_real_db_minimal_adapter_contract_pack"
+        ]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_phase2_real_db_minimal_adapter_contract_pack_v1",
+        )
+        for required_key in [
+            "real_db_adapter_contract_summary",
+            "db_adapter_interface_contract_cards",
+            "db_schema_mapping_preview_cards",
+            "db_operation_boundary_cards",
+            "db_mock_invocation_contract_cards",
+            "db_error_taxonomy_cards",
+            "db_audit_trace_contract_cards",
+            "db_permission_boundary_cards",
+            "db_redaction_retention_contract_cards",
+            "db_migration_dependency_cards",
+            "db_adapter_test_plan_cards",
+            "phase2_real_db_adapter_unlock_blockers",
+            "real_db_adapter_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+        ]:
+            with self.subTest(required_key=required_key):
+                self.assertIn(required_key, pack)
+                self.assertTrue(pack[required_key])
+
+        summary = pack["real_db_adapter_contract_summary"]
+        self.assertIn("phase2_real_db_minimal_adapter_contract_preview", summary["mode"])
+        self.assertIn("deterministic_db_adapter_contract", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        for source_pack in [
+            "workspace_phase2_readiness_review_pack",
+            "workspace_phase2_persistence_mock_harness_pack",
+            "workspace_phase2_database_persistence_gate_pack",
+            "workspace_mvp_readiness_dossier_pack",
+            "workspace_final_system_health_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "review_evidence_quality_pack",
+            "claim_risk_guard_pack",
+            "final_claim_safe_export_packet_pack",
+            "campaign_creative_dossier_pack",
+        ]:
+            self.assertIn(source_pack, summary["source_packs"])
+        for disabled_key in [
+            "real_database_connection_allowed",
+            "real_database_write_allowed",
+            "real_database_read_allowed",
+            "real_file_write_allowed",
+            "secret_read_allowed",
+            "external_call_allowed",
+            "real_execution_allowed",
+        ]:
+            self.assertFalse(summary[disabled_key])
+
+        interface_ids = {
+            card["db_adapter_contract_id"]
+            for card in pack["db_adapter_interface_contract_cards"]
+        }
+        for expected in [
+            "save_workspace_session_snapshot",
+            "save_review_import_snapshot",
+            "save_evidence_quality_snapshot",
+            "save_claim_risk_snapshot",
+            "save_final_export_packet_snapshot",
+            "save_campaign_dossier_snapshot",
+            "read_workspace_session_snapshot",
+            "list_workspace_run_snapshots",
+        ]:
+            with self.subTest(interface=expected):
+                self.assertIn(expected, interface_ids)
+        for card in pack["db_adapter_interface_contract_cards"]:
+            for field in [
+                "db_adapter_contract_id",
+                "adapter_label",
+                "adapter_group",
+                "source_gate_refs",
+                "intended_operation",
+                "input_contract_shape",
+                "output_contract_shape",
+                "required_identifiers",
+                "required_timestamps",
+                "required_status_fields",
+                "idempotency_requirement",
+                "transaction_boundary_note",
+                "risk_note",
+            ]:
+                with self.subTest(interface=card["db_adapter_contract_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["real_database_connection_allowed"])
+            self.assertFalse(card["real_database_write_allowed"])
+            self.assertFalse(card["real_file_write_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        schema_tables = {
+            card["candidate_table_or_collection"]
+            for card in pack["db_schema_mapping_preview_cards"]
+        }
+        for table in [
+            "workspace_sessions",
+            "review_import_snapshots",
+            "evidence_quality_snapshots",
+            "claim_risk_snapshots",
+            "final_export_packets",
+            "campaign_dossiers",
+            "audit_events",
+            "operator_decisions",
+        ]:
+            with self.subTest(table=table):
+                self.assertIn(table, schema_tables)
+        for card in pack["db_schema_mapping_preview_cards"]:
+            self.assertTrue(card["schema_migration_required"])
+            self.assertFalse(card["real_database_write_allowed"])
+            self.assertIn("provider_secret", card["excluded_fields"])
+
+        boundary_text = " ".join(
+            " ".join(str(value) for value in card.values())
+            for card in pack["db_operation_boundary_cards"]
+        )
+        for forbidden in [
+            "create table",
+            "migrate",
+            "insert",
+            "update",
+            "delete",
+            "select real DB",
+            "export file",
+            "read secret",
+        ]:
+            with self.subTest(forbidden=forbidden):
+                self.assertIn(forbidden, boundary_text)
+        for card in pack["db_operation_boundary_cards"]:
+            self.assertFalse(card["real_database_connection_allowed"])
+            self.assertFalse(card["real_database_write_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        mock_text = " ".join(
+            card["simulated_operation"]
+            for card in pack["db_mock_invocation_contract_cards"]
+        )
+        for operation in ["save", "read", "list", "validation"]:
+            self.assertIn(operation, mock_text)
+        for card in pack["db_mock_invocation_contract_cards"]:
+            self.assertFalse(card["writes_real_database"])
+            self.assertFalse(card["reads_real_database"])
+            self.assertFalse(card["writes_real_file"])
+            self.assertFalse(card["uses_external_call"])
+            self.assertFalse(card["reads_secret"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        error_text = " ".join(
+            card["error_label"] for card in pack["db_error_taxonomy_cards"]
+        )
+        for error in [
+            "connection missing",
+            "schema missing",
+            "migration required",
+            "permission denied",
+            "redaction failed",
+            "duplicate id",
+            "stale version",
+            "partial write",
+            "audit sink missing",
+            "rollback unavailable",
+        ]:
+            with self.subTest(error=error):
+                self.assertIn(error, error_text)
+        for card in pack["db_error_taxonomy_cards"]:
+            self.assertFalse(card["requires_real_rollback"])
+            self.assertFalse(card["real_database_write_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        for card in pack["db_audit_trace_contract_cards"]:
+            self.assertIn("future_audit_event_shape", card)
+            self.assertIn("trace_ids_required", card)
+            self.assertIn("actor_refs_required", card)
+            self.assertIn("operation_refs_required", card)
+            self.assertFalse(card["database_write_allowed"])
+            self.assertFalse(card["real_audit_event_created"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        permission_ids = {
+            card["permission_boundary_id"]
+            for card in pack["db_permission_boundary_cards"]
+        }
+        for permission_id in [
+            "database_persistence",
+            "database_read",
+            "database_write",
+            "file_write",
+            "secret_read",
+            "external_call",
+            "real_execution",
+        ]:
+            with self.subTest(permission=permission_id):
+                self.assertIn(permission_id, permission_ids)
+        for card in pack["db_permission_boundary_cards"]:
+            self.assertEqual(card["current_status"], "disabled")
+            self.assertFalse(card["allowed_in_preview"])
+            self.assertFalse(card["real_capability_enabled"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        redaction_text = " ".join(
+            " ".join(str(value) for value in card.values())
+            for card in pack["db_redaction_retention_contract_cards"]
+        )
+        for label in [
+            "provider secret",
+            "customer data",
+            "review text",
+            "generated copy",
+            "operator note",
+        ]:
+            self.assertIn(label, redaction_text)
+        provider_secret_cards = [
+            card for card in pack["db_redaction_retention_contract_cards"]
+            if card["data_label"] == "provider secret"
+        ]
+        self.assertTrue(provider_secret_cards)
+        for card in provider_secret_cards:
+            self.assertFalse(card["db_persistence_allowed"])
+            self.assertFalse(card["secret_read_allowed"])
+            self.assertFalse(card["real_database_write_allowed"])
+
+        migration_text = " ".join(
+            card["dependency_label"]
+            for card in pack["db_migration_dependency_cards"]
+        )
+        for dependency in [
+            "schema migration",
+            "rollback plan",
+            "backfill plan",
+            "retention policy",
+            "deletion policy",
+            "audit sink",
+            "monitoring",
+        ]:
+            with self.subTest(dependency=dependency):
+                self.assertIn(dependency, migration_text)
+        for card in pack["db_migration_dependency_cards"]:
+            self.assertFalse(card["implemented"])
+            self.assertTrue(card["blocks_real_db_unlock"])
+
+        test_plan_text = " ".join(
+            card["test_label"] for card in pack["db_adapter_test_plan_cards"]
+        )
+        for test_label in [
+            "unit tests",
+            "contract tests",
+            "mock invocation tests",
+            "schema mapping tests",
+            "redaction tests",
+            "retention tests",
+            "permission boundary tests",
+            "error taxonomy tests",
+            "audit preview tests",
+            "migration dry-run tests",
+        ]:
+            with self.subTest(test_label=test_label):
+                self.assertIn(test_label, test_plan_text)
+
+        blocker_text = " ".join(
+            card["blocker_label"]
+            for card in pack["phase2_real_db_adapter_unlock_blockers"]
+        )
+        for blocker in [
+            "no real DB connection config",
+            "no schema migration",
+            "no migration dry-run",
+            "no rollback implementation",
+            "no retention policy",
+            "no deletion policy",
+            "no redaction enforcement",
+            "no real audit sink",
+            "no production approval",
+            "no monitoring",
+        ]:
+            with self.subTest(blocker=blocker):
+                self.assertIn(blocker, blocker_text)
+
+        checks = pack["real_db_adapter_quality_checks"]
+        for key in [
+            "adapter_interface_covered",
+            "schema_mapping_covered",
+            "operation_boundary_covered",
+            "mock_invocation_covered",
+            "error_taxonomy_covered",
+            "audit_trace_covered",
+            "permission_boundary_covered",
+            "redaction_retention_covered",
+            "migration_dependency_covered",
+            "test_plan_covered",
+            "unlock_blockers_covered",
+            "safety_boundary_covered",
+        ]:
+            self.assertTrue(checks[key])
+        for key in [
+            "real_database_connection_performed",
+            "real_database_read_performed",
+            "real_database_write_performed",
+            "real_file_write_performed",
+            "secret_read_performed",
+            "external_call_performed",
+            "real_execution_performed",
+        ]:
+            self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["database_write_allowed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["audit_record_created"])
+        self.assertFalse(audit["real_audit_event_created"])
+        self.assertFalse(audit["real_execution_allowed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider", "provider_enabled", "llm", "llm_enabled",
+            "media", "media_enabled", "external_scraping",
+            "external_scraping_enabled", "database_persistence",
+            "database_persistence_enabled", "database_read",
+            "database_read_enabled", "database_write",
+            "database_write_enabled", "real_execution",
+            "real_execution_enabled", "real_policy_check",
+            "real_policy_check_enabled", "platform_upload",
+            "platform_upload_enabled", "task_creation",
+            "task_creation_enabled", "real_export", "real_export_enabled",
+            "file_write", "file_write_enabled", "secret_read",
+            "secret_read_enabled", "external_call", "external_call_enabled",
+            "token_issue", "token_issue_enabled", "paid_operation",
+            "paid_operation_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertIn(key, boundaries)
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
