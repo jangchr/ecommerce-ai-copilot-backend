@@ -12595,6 +12595,282 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_phase2_real_db_adapter_contract_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace phase2 real DB adapter contract bundle",
+            "PROJECT_WORKSPACE_PHASE2_REAL_DB_ADAPTER_CONTRACT_MARKER",
+            "latestProjectWorkspacePhase2RealDbAdapterContractPack",
+            "projectWorkspacePhase2RealDbAdapterContractPackFromWorkspace",
+            "projectWorkspaceExportPhase2RealDbAdapterContractSnapshot",
+            "projectWorkspaceExportPhase2RealDbAdapterContractMarkdown",
+            "renderProjectWorkspacePhase2RealDbAdapterContractSummaryPanel",
+            "renderProjectWorkspacePhase2RealDbAdapterInterfaceSchemaPanel",
+            "renderProjectWorkspacePhase2RealDbAdapterBoundaryMockErrorPanel",
+            "renderProjectWorkspacePhase2RealDbAdapterAuditPermissionRedactionPanel",
+            "renderProjectWorkspacePhase2RealDbAdapterMigrationTestQualitySafetyPanel",
+            "copyProjectWorkspacePhase2RealDbAdapterContractSummary",
+            "copyProjectWorkspaceDbAdapterInterfaceContractCards",
+            "copyProjectWorkspaceDbSchemaMappingPreviewCards",
+            "copyProjectWorkspaceDbOperationBoundaryCards",
+            "copyProjectWorkspaceDbMockInvocationContractCards",
+            "copyProjectWorkspaceDbErrorTaxonomyCards",
+            "copyProjectWorkspaceDbAuditTraceContractCards",
+            "copyProjectWorkspaceDbPermissionBoundaryCards",
+            "copyProjectWorkspaceDbRedactionRetentionContractCards",
+            "copyProjectWorkspaceDbMigrationDependencyCards",
+            "copyProjectWorkspaceDbAdapterTestPlanCards",
+            "copyProjectWorkspacePhase2RealDbAdapterUnlockBlockers",
+            "copyProjectWorkspaceFullPhase2RealDbAdapterContractPack",
+            "workspace_phase2_real_db_minimal_adapter_contract_pack: projectWorkspaceExportPhase2RealDbAdapterContractSnapshot(workspace)",
+            "projectWorkspaceExportPhase2RealDbAdapterContractMarkdown(workspace)",
+            "project_workspace_phase2_real_db_adapter_contract_marker",
+            "Real DB Minimal Adapter Contract Preview",
+            "Real DB Adapter Contract Summary",
+            "DB Adapter Interface Contract Cards",
+            "DB Schema Mapping Preview Cards",
+            "DB Operation Boundary Cards",
+            "DB Mock Invocation Contract Cards",
+            "DB Error Taxonomy Cards",
+            "DB Audit Trace Contract Cards",
+            "DB Permission Boundary Cards",
+            "DB Redaction Retention Contract Cards",
+            "DB Migration Dependency Cards",
+            "DB Adapter Test Plan Cards",
+            "Phase 2 Real DB Adapter Unlock Blockers",
+            "Real DB Adapter Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "pack.real_db_adapter_contract_summary",
+            "pack.db_adapter_interface_contract_cards",
+            "pack.db_schema_mapping_preview_cards",
+            "pack.db_operation_boundary_cards",
+            "pack.db_mock_invocation_contract_cards",
+            "pack.db_error_taxonomy_cards",
+            "pack.db_audit_trace_contract_cards",
+            "pack.db_permission_boundary_cards",
+            "pack.db_redaction_retention_contract_cards",
+            "pack.db_migration_dependency_cards",
+            "pack.db_adapter_test_plan_cards",
+            "pack.phase2_real_db_adapter_unlock_blockers",
+            "pack.real_db_adapter_quality_checks",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.adapter_interface_contract_count",
+            "summary.schema_mapping_preview_count",
+            "summary.operation_boundary_count",
+            "summary.mock_invocation_contract_count",
+            "summary.error_taxonomy_count",
+            "summary.unlock_blocker_count",
+            "summary.real_database_connection_allowed",
+            "summary.real_database_write_allowed",
+            "summary.real_database_read_allowed",
+            "summary.real_file_write_allowed",
+            "summary.secret_read_allowed",
+            "summary.external_call_allowed",
+            "summary.real_execution_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for coverage in [
+            "save_workspace_session_snapshot",
+            "save_review_import_snapshot",
+            "save_evidence_quality_snapshot",
+            "save_claim_risk_snapshot",
+            "save_final_export_packet_snapshot",
+            "save_campaign_dossier_snapshot",
+            "read_workspace_session_snapshot",
+            "list_workspace_run_snapshots",
+            "workspace_sessions",
+            "review_import_snapshots",
+            "evidence_quality_snapshots",
+            "claim_risk_snapshots",
+            "final_export_packets",
+            "campaign_dossiers",
+            "audit_events",
+            "operator_decisions",
+            "create table",
+            "migrate",
+            "insert",
+            "update",
+            "delete",
+            "select real DB",
+            "export file",
+            "read secret",
+            "simulated save",
+            "simulated read",
+            "simulated list",
+            "validation only",
+            "connection missing",
+            "schema missing",
+            "migration required",
+            "permission denied",
+            "redaction failed",
+            "duplicate id",
+            "stale version",
+            "partial write",
+            "audit sink missing",
+            "rollback unavailable",
+            "future audit event shape",
+            "trace ids",
+            "actor refs",
+            "operation refs",
+            "before after summary",
+            "database_persistence",
+            "database_read",
+            "database_write",
+            "file_write",
+            "secret_read",
+            "external_call",
+            "real_execution",
+            "provider secret",
+            "customer data",
+            "review text",
+            "generated copy",
+            "operator note",
+            "schema migration",
+            "rollback plan",
+            "backfill plan",
+            "retention policy",
+            "deletion policy",
+            "audit sink",
+            "monitoring",
+            "unit / contract / mock invocation / schema mapping / redaction / retention / permission boundary / error taxonomy / audit preview / migration dry-run tests",
+            "no real DB connection config",
+            "no production approval",
+        ]:
+            with self.subTest(coverage=coverage):
+                self.assertIn(coverage, html)
+        previous = html.index("${renderProjectWorkspacePhase2ReadinessReviewNextBlockerQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspacePhase2RealDbAdapterContractSummaryPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspacePhase2RealDbAdapterMigrationTestQualitySafetyPanel(workspace)}")
+        creative = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, creative)
+        rendered_panel_ids = [
+            'id="projectWorkspacePhase2RealDbAdapterContractSummaryPanel"',
+            'id="projectWorkspacePhase2RealDbAdapterInterfaceSchemaPanel"',
+            'id="projectWorkspacePhase2RealDbAdapterBoundaryMockErrorPanel"',
+            'id="projectWorkspacePhase2RealDbAdapterAuditPermissionRedactionPanel"',
+            'id="projectWorkspacePhase2RealDbAdapterMigrationTestQualitySafetyPanel"',
+        ]
+        for panel_id in rendered_panel_ids:
+            with self.subTest(panel_id=panel_id):
+                self.assertEqual(html.count(panel_id), 1)
+
+    def test_workspace_phase2_real_db_adapter_contract_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "phase2RealDbAdapterPackTitle",
+            "phase2RealDbAdapterPackHelper",
+            "phase2RealDbAdapterSummaryTitle",
+            "phase2RealDbAdapterInterfaceTitle",
+            "phase2RealDbAdapterSchemaTitle",
+            "phase2RealDbAdapterOperationBoundaryTitle",
+            "phase2RealDbAdapterMockInvocationTitle",
+            "phase2RealDbAdapterErrorTaxonomyTitle",
+            "phase2RealDbAdapterAuditTraceTitle",
+            "phase2RealDbAdapterPermissionTitle",
+            "phase2RealDbAdapterRedactionRetentionTitle",
+            "phase2RealDbAdapterMigrationDependencyTitle",
+            "phase2RealDbAdapterTestPlanTitle",
+            "phase2RealDbAdapterUnlockBlockerTitle",
+            "phase2RealDbAdapterQualityTitle",
+            "phase2RealDbAdapterAuditPreviewTitle",
+            "phase2RealDbAdapterSafetyTitle",
+            "phase2RealDbAdapterCopySummary",
+            "phase2RealDbAdapterCopyInterface",
+            "phase2RealDbAdapterCopySchema",
+            "phase2RealDbAdapterCopyBoundary",
+            "phase2RealDbAdapterCopyMock",
+            "phase2RealDbAdapterCopyError",
+            "phase2RealDbAdapterCopyAudit",
+            "phase2RealDbAdapterCopyPermission",
+            "phase2RealDbAdapterCopyRedaction",
+            "phase2RealDbAdapterCopyMigration",
+            "phase2RealDbAdapterCopyTestPlan",
+            "phase2RealDbAdapterCopyBlockers",
+            "phase2RealDbAdapterCopyFull",
+            "phase2RealDbAdapterCopied",
+            "phase2RealDbAdapterCopyFailed",
+            "phase2RealDbAdapterCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace phase2 real DB adapter contract bundle", script)
+            self.assertIn("project_workspace_phase2_real_db_adapter_contract_marker", script)
+        markdown = html[
+            html.index("function projectWorkspacePhase2RealDbAdapterContractSummaryText"):
+            html.index("async function copyProjectWorkspacePhase2RealDbAdapterContractText")
+        ]
+        for key in [
+            "phase2RealDbAdapterPackTitle",
+            "phase2RealDbAdapterSummaryTitle",
+            "phase2RealDbAdapterInterfaceTitle",
+            "phase2RealDbAdapterSchemaTitle",
+            "phase2RealDbAdapterOperationBoundaryTitle",
+            "phase2RealDbAdapterMockInvocationTitle",
+            "phase2RealDbAdapterErrorTaxonomyTitle",
+            "phase2RealDbAdapterAuditTraceTitle",
+            "phase2RealDbAdapterPermissionTitle",
+            "phase2RealDbAdapterRedactionRetentionTitle",
+            "phase2RealDbAdapterMigrationDependencyTitle",
+            "phase2RealDbAdapterTestPlanTitle",
+            "phase2RealDbAdapterUnlockBlockerTitle",
+            "phase2RealDbAdapterQualityTitle",
+            "phase2RealDbAdapterAuditPreviewTitle",
+            "phase2RealDbAdapterSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PHASE2_REAL_DB_ADAPTER_CONTRACT_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic real DB minimal adapter contract preview only",
+            "not a real database integration",
+            "does not connect to a database",
+            "does not read or write databases",
+            "does not read DB config or secrets",
+            "does not migrate schemas",
+            "does not write files",
+            "does not create real audit events",
+            "does not unlock persistence",
+            "not legal advice",
+            "not a real policy API result",
+            "not a real platform compliance conclusion",
+            "not a platform pass-rate prediction",
+            "provider",
+            "LLM",
+            "media",
+            "external scraping",
+            "database persistence",
+            "database read",
+            "database write",
+            "real policy check",
+            "platform upload",
+            "task creation",
+            "real export",
+            "file write",
+            "secret read",
+            "external call",
+            "token issue",
+            "paid operation",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_provider_cost_quota_risk_guard_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [

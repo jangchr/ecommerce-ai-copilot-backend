@@ -3656,6 +3656,7 @@
         let latestProjectWorkspacePhase2LlmProviderGatePack = {};
         let latestProjectWorkspacePhase2ProviderUnlockReviewPack = {};
         let latestProjectWorkspacePhase2ReadinessReviewPack = {};
+        let latestProjectWorkspacePhase2RealDbAdapterContractPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7659,7 +7660,60 @@
             phase2ReadinessReviewValidationNote: 'Validation matrix and dependencies are preview-only. They cover unit tests, contract tests, mock harness tests, redaction tests, permission boundary tests, audit preview tests, sandbox tests, approval tests, rollback tests, and cost quota tests, but do not execute real sandbox tests or real rollback.',
             phase2ReadinessReviewRiskPolicyNote: 'Operator decisions are human-review advice only and create no real tasks or approvals. Production readiness gaps and risk register entries are not legal advice, do not query a real policy API, are not real platform compliance conclusions, and do not represent a real platform pass rate.',
             phase2ReadinessReviewQualityAuditNote: 'Quality and audit preview are display-only. They cover gate status, unlock readiness, minimum candidate, validation matrix, cross-gate dependencies, operator decisions, production gaps, risk register, next steps, final blockers, and safety boundary, but do not write databases, read real logs or history tables, or create real audit events.',
-            phase2ReadinessReviewSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, and paid operation remain disabled.'
+            phase2ReadinessReviewSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, and paid operation remain disabled.',
+            phase2RealDbAdapterPackTitle: 'Real DB Minimal Adapter Contract Preview',
+            phase2RealDbAdapterPackHelper: 'Project Workspace phase2 real DB adapter contract bundle. Deterministic adapter contract preview only; it does not connect to a real database, does not read or write a database, does not read DB config or secrets, does not migrate schemas, does not write files, does not make external calls, does not issue tokens, does not run real execution, and does not unlock production persistence.',
+            phase2RealDbAdapterSummaryPanelTitle: 'Real DB Adapter Contract Summary',
+            phase2RealDbAdapterSummaryTitle: 'Real DB Adapter Contract Summary',
+            phase2RealDbAdapterInterfaceSchemaTitle: 'Adapter Interface / Schema Mapping',
+            phase2RealDbAdapterInterfaceTitle: 'DB Adapter Interface Contract Cards',
+            phase2RealDbAdapterSchemaTitle: 'DB Schema Mapping Preview Cards',
+            phase2RealDbAdapterBoundaryMockErrorTitle: 'Operation Boundary / Mock Invocation / Error Taxonomy',
+            phase2RealDbAdapterOperationBoundaryTitle: 'DB Operation Boundary Cards',
+            phase2RealDbAdapterMockInvocationTitle: 'DB Mock Invocation Contract Cards',
+            phase2RealDbAdapterErrorTaxonomyTitle: 'DB Error Taxonomy Cards',
+            phase2RealDbAdapterAuditPermissionRedactionTitle: 'Audit Trace / Permission Boundary / Redaction Retention',
+            phase2RealDbAdapterAuditTraceTitle: 'DB Audit Trace Contract Cards',
+            phase2RealDbAdapterPermissionTitle: 'DB Permission Boundary Cards',
+            phase2RealDbAdapterRedactionRetentionTitle: 'DB Redaction Retention Contract Cards',
+            phase2RealDbAdapterMigrationTestQualitySafetyTitle: 'Migration Dependencies / Test Plan / Unlock Blockers / Safety',
+            phase2RealDbAdapterMigrationDependencyTitle: 'DB Migration Dependency Cards',
+            phase2RealDbAdapterTestPlanTitle: 'DB Adapter Test Plan Cards',
+            phase2RealDbAdapterUnlockBlockerTitle: 'Phase 2 Real DB Adapter Unlock Blockers',
+            phase2RealDbAdapterQualityTitle: 'Real DB Adapter Quality Checks',
+            phase2RealDbAdapterAuditPreviewTitle: 'Audit Preview',
+            phase2RealDbAdapterSafetyTitle: 'Safety Boundaries',
+            phase2RealDbAdapterMode: 'Mode',
+            phase2RealDbAdapterInterfaceCount: 'Adapter interface count',
+            phase2RealDbAdapterSchemaCount: 'Schema mapping count',
+            phase2RealDbAdapterBoundaryCount: 'Operation boundary count',
+            phase2RealDbAdapterMockCount: 'Mock invocation count',
+            phase2RealDbAdapterErrorCount: 'Error taxonomy count',
+            phase2RealDbAdapterUnlockBlockerCount: 'Unlock blocker count',
+            phase2RealDbAdapterRecommendedAction: 'Recommended operator action',
+            phase2RealDbAdapterDisabled: 'disabled',
+            phase2RealDbAdapterNoData: 'No real DB adapter contract preview data is available.',
+            phase2RealDbAdapterCopyNoData: 'No real DB adapter contract preview content is available to copy.',
+            phase2RealDbAdapterCopyFailed: 'Unable to copy real DB adapter contract preview content.',
+            phase2RealDbAdapterCopied: 'Real DB adapter contract preview content copied.',
+            phase2RealDbAdapterCopySummary: 'Copy real DB adapter contract summary',
+            phase2RealDbAdapterCopyInterface: 'Copy adapter interface cards',
+            phase2RealDbAdapterCopySchema: 'Copy schema mapping cards',
+            phase2RealDbAdapterCopyBoundary: 'Copy operation boundary cards',
+            phase2RealDbAdapterCopyMock: 'Copy mock invocation cards',
+            phase2RealDbAdapterCopyError: 'Copy error taxonomy cards',
+            phase2RealDbAdapterCopyAudit: 'Copy audit trace cards',
+            phase2RealDbAdapterCopyPermission: 'Copy permission boundary cards',
+            phase2RealDbAdapterCopyRedaction: 'Copy redaction retention cards',
+            phase2RealDbAdapterCopyMigration: 'Copy migration dependency cards',
+            phase2RealDbAdapterCopyTestPlan: 'Copy adapter test plan cards',
+            phase2RealDbAdapterCopyBlockers: 'Copy real DB adapter unlock blockers',
+            phase2RealDbAdapterCopyFull: 'Copy full real DB adapter contract pack',
+            phase2RealDbAdapterPreviewNote: 'Deterministic real DB minimal adapter contract preview only. This is not a real database integration, does not connect to a database, does not read or write databases, does not read DB config or secrets, does not migrate schemas, does not write files, does not create real audit events, does not execute rollback, does not unlock persistence, and does not perform real execution. Policy, claim safety, and platform wording here is not legal advice, not a real policy API result, not a real platform compliance conclusion, and not a platform pass-rate prediction.',
+            phase2RealDbAdapterInterfaceSchemaNote: 'Interface and schema mapping are contract previews only. They cover save/read/list adapter shapes and future tables, but do not create tables, run migrations, read secrets, select from a real database, insert, update, delete, export files, or write storage.',
+            phase2RealDbAdapterBoundaryMockNote: 'Operation boundaries and mock invocations are dry-run only. Mock save/read/list/validation cards simulate behavior without real database reads, real database writes, file writes, external calls, secret reads, provider calls, paid operations, or real execution.',
+            phase2RealDbAdapterAuditPermissionNote: 'Audit trace, permission boundary, and redaction retention cards are previews. They describe future trace IDs, actor refs, operation refs, before/after summaries, permission gates, and retention expectations without writing databases, reading real logs, creating tasks, or creating real audit events.',
+            phase2RealDbAdapterMigrationTestSafetyNote: 'Migration dependencies, test plan, blockers, quality checks, audit preview, and safety boundaries remain blocked previews. Schema migration, rollback, backfill, retention, deletion, audit sink, monitoring, production approval, provider, LLM, media, external scraping, database persistence, database read, database write, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, and paid operation remain disabled.'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
@@ -8854,7 +8908,60 @@
             phase2ReadinessReviewValidationNote: 'Validation matrix 和 dependency 均为 preview。覆盖 unit tests、contract tests、mock harness tests、redaction tests、permission boundary tests、audit preview tests、sandbox tests、approval tests、rollback tests 和 cost quota tests，但不执行真实 sandbox test 或真实 rollback。',
             phase2ReadinessReviewRiskPolicyNote: 'Operator decisions 只是人工评审建议，不创建真实 task 或 approval。Production readiness gaps 和 risk register 不是法律意见，不查询真实 policy API，不代表真实平台合规结论，也不代表真实平台通过率。',
             phase2ReadinessReviewQualityAuditNote: 'Quality 和 audit preview 仅用于展示。覆盖 gate status、unlock readiness、minimum candidate、validation matrix、cross-gate dependencies、operator decisions、production gaps、risk register、next steps、final blockers 和 safety boundary，但不写数据库，不读取真实日志或历史表，也不创建真实 audit event。',
-            phase2ReadinessReviewSafetyNote: 'Provider、LLM、media、external scraping、database persistence、real execution、real policy check、platform upload、task creation、real export、file write、secret read、external call、token issue 和 paid operation 全部保持禁用。'
+            phase2ReadinessReviewSafetyNote: 'Provider、LLM、media、external scraping、database persistence、real execution、real policy check、platform upload、task creation、real export、file write、secret read、external call、token issue 和 paid operation 全部保持禁用。',
+            phase2RealDbAdapterPackTitle: 'Real DB Minimal Adapter Contract Preview',
+            phase2RealDbAdapterPackHelper: 'Project Workspace phase2 real DB adapter contract bundle。仅为 deterministic adapter contract preview；不连接真实数据库，不读写数据库，不读取 DB config 或 secret，不执行 schema migration，不写文件，不发外部请求，不签发 token，不执行真实操作，也不解锁 production persistence。',
+            phase2RealDbAdapterSummaryPanelTitle: 'Real DB Adapter Contract Summary',
+            phase2RealDbAdapterSummaryTitle: 'Real DB Adapter Contract Summary',
+            phase2RealDbAdapterInterfaceSchemaTitle: 'Adapter Interface / Schema Mapping',
+            phase2RealDbAdapterInterfaceTitle: 'DB Adapter Interface Contract Cards',
+            phase2RealDbAdapterSchemaTitle: 'DB Schema Mapping Preview Cards',
+            phase2RealDbAdapterBoundaryMockErrorTitle: 'Operation Boundary / Mock Invocation / Error Taxonomy',
+            phase2RealDbAdapterOperationBoundaryTitle: 'DB Operation Boundary Cards',
+            phase2RealDbAdapterMockInvocationTitle: 'DB Mock Invocation Contract Cards',
+            phase2RealDbAdapterErrorTaxonomyTitle: 'DB Error Taxonomy Cards',
+            phase2RealDbAdapterAuditPermissionRedactionTitle: 'Audit Trace / Permission Boundary / Redaction Retention',
+            phase2RealDbAdapterAuditTraceTitle: 'DB Audit Trace Contract Cards',
+            phase2RealDbAdapterPermissionTitle: 'DB Permission Boundary Cards',
+            phase2RealDbAdapterRedactionRetentionTitle: 'DB Redaction Retention Contract Cards',
+            phase2RealDbAdapterMigrationTestQualitySafetyTitle: 'Migration Dependencies / Test Plan / Unlock Blockers / Safety',
+            phase2RealDbAdapterMigrationDependencyTitle: 'DB Migration Dependency Cards',
+            phase2RealDbAdapterTestPlanTitle: 'DB Adapter Test Plan Cards',
+            phase2RealDbAdapterUnlockBlockerTitle: 'Phase 2 Real DB Adapter Unlock Blockers',
+            phase2RealDbAdapterQualityTitle: 'Real DB Adapter Quality Checks',
+            phase2RealDbAdapterAuditPreviewTitle: 'Audit Preview',
+            phase2RealDbAdapterSafetyTitle: 'Safety Boundaries',
+            phase2RealDbAdapterMode: 'Mode',
+            phase2RealDbAdapterInterfaceCount: 'Adapter interface 数量',
+            phase2RealDbAdapterSchemaCount: 'Schema mapping 数量',
+            phase2RealDbAdapterBoundaryCount: 'Operation boundary 数量',
+            phase2RealDbAdapterMockCount: 'Mock invocation 数量',
+            phase2RealDbAdapterErrorCount: 'Error taxonomy 数量',
+            phase2RealDbAdapterUnlockBlockerCount: 'Unlock blocker 数量',
+            phase2RealDbAdapterRecommendedAction: 'Recommended operator action',
+            phase2RealDbAdapterDisabled: 'disabled',
+            phase2RealDbAdapterNoData: '暂无 real DB adapter contract preview 数据。',
+            phase2RealDbAdapterCopyNoData: '暂无可复制的 real DB adapter contract preview 内容。',
+            phase2RealDbAdapterCopyFailed: '无法复制 real DB adapter contract preview 内容。',
+            phase2RealDbAdapterCopied: 'Real DB adapter contract preview 内容已复制。',
+            phase2RealDbAdapterCopySummary: '复制 real DB adapter contract summary',
+            phase2RealDbAdapterCopyInterface: '复制 adapter interface cards',
+            phase2RealDbAdapterCopySchema: '复制 schema mapping cards',
+            phase2RealDbAdapterCopyBoundary: '复制 operation boundary cards',
+            phase2RealDbAdapterCopyMock: '复制 mock invocation cards',
+            phase2RealDbAdapterCopyError: '复制 error taxonomy cards',
+            phase2RealDbAdapterCopyAudit: '复制 audit trace cards',
+            phase2RealDbAdapterCopyPermission: '复制 permission boundary cards',
+            phase2RealDbAdapterCopyRedaction: '复制 redaction retention cards',
+            phase2RealDbAdapterCopyMigration: '复制 migration dependency cards',
+            phase2RealDbAdapterCopyTestPlan: '复制 adapter test plan cards',
+            phase2RealDbAdapterCopyBlockers: '复制 real DB adapter unlock blockers',
+            phase2RealDbAdapterCopyFull: '复制完整 real DB adapter contract pack',
+            phase2RealDbAdapterPreviewNote: '仅为 deterministic real DB minimal adapter contract preview。这不是真实数据库集成，不连接数据库，不读写数据库，不读取 DB config 或 secret，不执行 schema migration，不写文件，不创建真实 audit event，不执行 rollback，不解锁 persistence，也不执行真实操作。这里的 policy、claim safety 和平台相关文案不是法律意见，不是真实 policy API 结果，不是真实平台合规结论，也不代表平台通过率预测。',
+            phase2RealDbAdapterInterfaceSchemaNote: 'Interface 和 schema mapping 只是 contract preview。它们覆盖 save/read/list adapter shape 和未来 table，但不 create table，不运行 migration，不读取 secret，不 select 真实数据库，不 insert、update、delete，不 export file，也不写 storage。',
+            phase2RealDbAdapterBoundaryMockNote: 'Operation boundary 和 mock invocation 仅为 dry-run。Mock save/read/list/validation cards 只模拟行为，不进行真实 database read、database write、file write、external call、secret read、provider call、paid operation 或 real execution。',
+            phase2RealDbAdapterAuditPermissionNote: 'Audit trace、permission boundary 和 redaction retention cards 都是 preview。它们描述未来 trace ID、actor ref、operation ref、before/after summary、permission gate 和 retention 预期，但不写数据库，不读取真实日志，不创建 task，也不创建真实 audit event。',
+            phase2RealDbAdapterMigrationTestSafetyNote: 'Migration dependencies、test plan、blockers、quality checks、audit preview 和 safety boundaries 都保持 blocked preview。Schema migration、rollback、backfill、retention、deletion、audit sink、monitoring、production approval、provider、LLM、media、external scraping、database persistence、database read、database write、real policy check、platform upload、task creation、real export、file write、secret read、external call、token issue 和 paid operation 全部保持禁用。'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -12365,6 +12472,7 @@
                 latestProjectWorkspacePhase2LlmProviderGatePack = latestProjectCreativeDecisionPack.workspace_phase2_llm_provider_gate_pack || {};
                 latestProjectWorkspacePhase2ProviderUnlockReviewPack = latestProjectCreativeDecisionPack.workspace_phase2_provider_unlock_review_pack || {};
                 latestProjectWorkspacePhase2ReadinessReviewPack = latestProjectCreativeDecisionPack.workspace_phase2_readiness_review_pack || {};
+                latestProjectWorkspacePhase2RealDbAdapterContractPack = latestProjectCreativeDecisionPack.workspace_phase2_real_db_minimal_adapter_contract_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -18257,6 +18365,7 @@
         const PROJECT_WORKSPACE_PHASE2_LLM_PROVIDER_GATE_MARKER = 'Project Workspace phase2 LLM provider gate bundle';
         const PROJECT_WORKSPACE_PHASE2_PROVIDER_UNLOCK_REVIEW_MARKER = 'Project Workspace phase2 provider unlock review bundle';
         const PROJECT_WORKSPACE_PHASE2_READINESS_REVIEW_MARKER = 'Project Workspace phase2 readiness review bundle';
+        const PROJECT_WORKSPACE_PHASE2_REAL_DB_ADAPTER_CONTRACT_MARKER = 'Project Workspace phase2 real DB adapter contract bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -26536,6 +26645,145 @@
         function copyProjectWorkspacePhase2FinalBlockerCards() { return copyProjectWorkspacePhase2ReadinessReviewText('blocker'); }
         function copyProjectWorkspaceFullPhase2ReadinessReviewPack() { return copyProjectWorkspacePhase2ReadinessReviewText('full'); }
 
+        function projectWorkspacePhase2RealDbAdapterContractPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspacePhase2RealDbAdapterContractPack && Object.keys(latestProjectWorkspacePhase2RealDbAdapterContractPack).length) return latestProjectWorkspacePhase2RealDbAdapterContractPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_phase2_real_db_minimal_adapter_contract_pack || {};
+        }
+
+        function projectWorkspacePhase2RealDbAdapterContractHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspacePhase2RealDbAdapterContractJsonText(value) {
+            if (!projectWorkspacePhase2RealDbAdapterContractHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspacePhase2RealDbAdapterContractDisabledText(value) {
+            return value === false || value == null ? t('phase2RealDbAdapterDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportPhase2RealDbAdapterContractSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspacePhase2RealDbAdapterContractPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PHASE2_REAL_DB_ADAPTER_CONTRACT_MARKER,
+                has_workspace_phase2_real_db_minimal_adapter_contract_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                real_db_adapter_contract_summary: pack.real_db_adapter_contract_summary || {},
+                db_adapter_interface_contract_cards: Array.isArray(pack.db_adapter_interface_contract_cards) ? pack.db_adapter_interface_contract_cards : [],
+                db_schema_mapping_preview_cards: Array.isArray(pack.db_schema_mapping_preview_cards) ? pack.db_schema_mapping_preview_cards : [],
+                db_operation_boundary_cards: Array.isArray(pack.db_operation_boundary_cards) ? pack.db_operation_boundary_cards : [],
+                db_mock_invocation_contract_cards: Array.isArray(pack.db_mock_invocation_contract_cards) ? pack.db_mock_invocation_contract_cards : [],
+                db_error_taxonomy_cards: Array.isArray(pack.db_error_taxonomy_cards) ? pack.db_error_taxonomy_cards : [],
+                db_audit_trace_contract_cards: Array.isArray(pack.db_audit_trace_contract_cards) ? pack.db_audit_trace_contract_cards : [],
+                db_permission_boundary_cards: Array.isArray(pack.db_permission_boundary_cards) ? pack.db_permission_boundary_cards : [],
+                db_redaction_retention_contract_cards: Array.isArray(pack.db_redaction_retention_contract_cards) ? pack.db_redaction_retention_contract_cards : [],
+                db_migration_dependency_cards: Array.isArray(pack.db_migration_dependency_cards) ? pack.db_migration_dependency_cards : [],
+                db_adapter_test_plan_cards: Array.isArray(pack.db_adapter_test_plan_cards) ? pack.db_adapter_test_plan_cards : [],
+                phase2_real_db_adapter_unlock_blockers: Array.isArray(pack.phase2_real_db_adapter_unlock_blockers) ? pack.phase2_real_db_adapter_unlock_blockers : [],
+                real_db_adapter_quality_checks: pack.real_db_adapter_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspacePhase2RealDbAdapterContractSummaryText(pack = projectWorkspaceExportPhase2RealDbAdapterContractSnapshot()) {
+            if (!pack.has_workspace_phase2_real_db_minimal_adapter_contract_pack) return '';
+            const summary = pack.real_db_adapter_contract_summary || {};
+            return [
+                t('phase2RealDbAdapterSummaryTitle'),
+                `${t('phase2RealDbAdapterMode')}: ${summary.mode || t('none')}`,
+                `${t('phase2RealDbAdapterInterfaceCount')}: ${summary.adapter_interface_contract_count ?? pack.db_adapter_interface_contract_cards.length}`,
+                `${t('phase2RealDbAdapterSchemaCount')}: ${summary.schema_mapping_preview_count ?? pack.db_schema_mapping_preview_cards.length}`,
+                `${t('phase2RealDbAdapterBoundaryCount')}: ${summary.operation_boundary_count ?? pack.db_operation_boundary_cards.length}`,
+                `${t('phase2RealDbAdapterMockCount')}: ${summary.mock_invocation_contract_count ?? pack.db_mock_invocation_contract_cards.length}`,
+                `${t('phase2RealDbAdapterErrorCount')}: ${summary.error_taxonomy_count ?? pack.db_error_taxonomy_cards.length}`,
+                `${t('phase2RealDbAdapterUnlockBlockerCount')}: ${summary.unlock_blocker_count ?? pack.phase2_real_db_adapter_unlock_blockers.length}`,
+                `${t('phase2RealDbAdapterRecommendedAction')}: ${summary.recommended_operator_action || summary.risk_note || t('phase2RealDbAdapterPreviewNote')}`,
+                `real_database_connection_allowed: ${projectWorkspacePhase2RealDbAdapterContractDisabledText(summary.real_database_connection_allowed)}`,
+                `real_database_write_allowed: ${projectWorkspacePhase2RealDbAdapterContractDisabledText(summary.real_database_write_allowed)}`,
+                `real_database_read_allowed: ${projectWorkspacePhase2RealDbAdapterContractDisabledText(summary.real_database_read_allowed)}`,
+                `real_file_write_allowed: ${projectWorkspacePhase2RealDbAdapterContractDisabledText(summary.real_file_write_allowed)}`,
+                `secret_read_allowed: ${projectWorkspacePhase2RealDbAdapterContractDisabledText(summary.secret_read_allowed)}`,
+                `external_call_allowed: ${projectWorkspacePhase2RealDbAdapterContractDisabledText(summary.external_call_allowed)}`,
+                `real_execution_allowed: ${projectWorkspacePhase2RealDbAdapterContractDisabledText(summary.real_execution_allowed)}`,
+                t('phase2RealDbAdapterPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspacePhase2RealDbAdapterContractSectionText(titleKey, value) {
+            const body = projectWorkspacePhase2RealDbAdapterContractJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportPhase2RealDbAdapterContractMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2RealDbAdapterContractSnapshot(workspace);
+            if (!pack.has_workspace_phase2_real_db_minimal_adapter_contract_pack) return '';
+            return [
+                `## ${t('phase2RealDbAdapterPackTitle')}`,
+                projectWorkspacePhase2RealDbAdapterContractSummaryText(pack), '',
+                projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterSummaryTitle', pack.real_db_adapter_contract_summary), '',
+                projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterInterfaceTitle', pack.db_adapter_interface_contract_cards), '',
+                projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterSchemaTitle', pack.db_schema_mapping_preview_cards), '',
+                projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterOperationBoundaryTitle', pack.db_operation_boundary_cards), '',
+                projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterMockInvocationTitle', pack.db_mock_invocation_contract_cards), '',
+                projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterErrorTaxonomyTitle', pack.db_error_taxonomy_cards), '',
+                projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterAuditTraceTitle', pack.db_audit_trace_contract_cards), '',
+                projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterPermissionTitle', pack.db_permission_boundary_cards), '',
+                projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterRedactionRetentionTitle', pack.db_redaction_retention_contract_cards), '',
+                projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterMigrationDependencyTitle', pack.db_migration_dependency_cards), '',
+                projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterTestPlanTitle', pack.db_adapter_test_plan_cards), '',
+                projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterUnlockBlockerTitle', pack.phase2_real_db_adapter_unlock_blockers), '',
+                projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterQualityTitle', pack.real_db_adapter_quality_checks), '',
+                projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterAuditPreviewTitle', pack.audit_preview), '',
+                projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterSafetyTitle', pack.safety_boundaries),
+                t('phase2RealDbAdapterPreviewNote'),
+                t('phase2RealDbAdapterInterfaceSchemaNote'),
+                t('phase2RealDbAdapterBoundaryMockNote'),
+                t('phase2RealDbAdapterAuditPermissionNote'),
+                t('phase2RealDbAdapterMigrationTestSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspacePhase2RealDbAdapterContractText(kind = 'full') {
+            const status = document.getElementById('projectWorkspacePhase2RealDbAdapterContractStatus');
+            const pack = projectWorkspaceExportPhase2RealDbAdapterContractSnapshot();
+            const text = kind === 'summary' ? projectWorkspacePhase2RealDbAdapterContractSummaryText(pack)
+                : kind === 'interface' ? projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterInterfaceTitle', pack.db_adapter_interface_contract_cards)
+                : kind === 'schema' ? projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterSchemaTitle', pack.db_schema_mapping_preview_cards)
+                : kind === 'boundary' ? projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterOperationBoundaryTitle', pack.db_operation_boundary_cards)
+                : kind === 'mock' ? projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterMockInvocationTitle', pack.db_mock_invocation_contract_cards)
+                : kind === 'error' ? projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterErrorTaxonomyTitle', pack.db_error_taxonomy_cards)
+                : kind === 'audit' ? projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterAuditTraceTitle', pack.db_audit_trace_contract_cards)
+                : kind === 'permission' ? projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterPermissionTitle', pack.db_permission_boundary_cards)
+                : kind === 'redaction' ? projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterRedactionRetentionTitle', pack.db_redaction_retention_contract_cards)
+                : kind === 'migration' ? projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterMigrationDependencyTitle', pack.db_migration_dependency_cards)
+                : kind === 'test' ? projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterTestPlanTitle', pack.db_adapter_test_plan_cards)
+                : kind === 'blocker' ? projectWorkspacePhase2RealDbAdapterContractSectionText('phase2RealDbAdapterUnlockBlockerTitle', pack.phase2_real_db_adapter_unlock_blockers)
+                : projectWorkspaceExportPhase2RealDbAdapterContractMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('phase2RealDbAdapterCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('phase2RealDbAdapterCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('phase2RealDbAdapterCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('phase2RealDbAdapterCopyFailed'); }
+        }
+
+        function copyProjectWorkspacePhase2RealDbAdapterContractSummary() { return copyProjectWorkspacePhase2RealDbAdapterContractText('summary'); }
+        function copyProjectWorkspaceDbAdapterInterfaceContractCards() { return copyProjectWorkspacePhase2RealDbAdapterContractText('interface'); }
+        function copyProjectWorkspaceDbSchemaMappingPreviewCards() { return copyProjectWorkspacePhase2RealDbAdapterContractText('schema'); }
+        function copyProjectWorkspaceDbOperationBoundaryCards() { return copyProjectWorkspacePhase2RealDbAdapterContractText('boundary'); }
+        function copyProjectWorkspaceDbMockInvocationContractCards() { return copyProjectWorkspacePhase2RealDbAdapterContractText('mock'); }
+        function copyProjectWorkspaceDbErrorTaxonomyCards() { return copyProjectWorkspacePhase2RealDbAdapterContractText('error'); }
+        function copyProjectWorkspaceDbAuditTraceContractCards() { return copyProjectWorkspacePhase2RealDbAdapterContractText('audit'); }
+        function copyProjectWorkspaceDbPermissionBoundaryCards() { return copyProjectWorkspacePhase2RealDbAdapterContractText('permission'); }
+        function copyProjectWorkspaceDbRedactionRetentionContractCards() { return copyProjectWorkspacePhase2RealDbAdapterContractText('redaction'); }
+        function copyProjectWorkspaceDbMigrationDependencyCards() { return copyProjectWorkspacePhase2RealDbAdapterContractText('migration'); }
+        function copyProjectWorkspaceDbAdapterTestPlanCards() { return copyProjectWorkspacePhase2RealDbAdapterContractText('test'); }
+        function copyProjectWorkspacePhase2RealDbAdapterUnlockBlockers() { return copyProjectWorkspacePhase2RealDbAdapterContractText('blocker'); }
+        function copyProjectWorkspaceFullPhase2RealDbAdapterContractPack() { return copyProjectWorkspacePhase2RealDbAdapterContractText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -31314,6 +31562,46 @@
             return `<div class="section-block" id="projectWorkspacePhase2ReadinessReviewNextBlockerQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ReadinessReviewNextBlockerQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ReadinessReviewQualityAuditNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2FinalBlockerCards()">${escapeHTML(t('phase2ReadinessReviewCopyBlockers'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2ReadinessReviewPack()">${escapeHTML(t('phase2ReadinessReviewCopyFull'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2ReadinessReviewNextStepTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(next || t('phase2ReadinessReviewNoData'))}</pre><div class="field-helper">preview / gate / harness only / no direct real unlock / Phase 2 Closeout Review / Real DB Minimal Adapter Contract Preview</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ReadinessReviewFinalBlockerTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2ReadinessReviewNoData'))}</pre><div class="field-helper">ready_for_real_execution=false / blocks_real_unlock=true / no real execution allowed</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ReadinessReviewQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2ReadinessReviewNoData'))}</pre><div class="field-helper">gate status / unlock readiness / minimum candidate / validation matrix / cross gate dependencies / operator decisions / production gaps / risk register / next step recommendations / final blockers / safety boundary</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ReadinessReviewAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2ReadinessReviewNoData'))}</pre><div class="field-helper">no database write / no real log read / no real history table read / no real audit event</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2ReadinessReviewSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled / paid_operation disabled</div><div class="field-helper">${escapeHTML(t('phase2ReadinessReviewSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspacePhase2RealDbAdapterContractSummaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2RealDbAdapterContractSnapshot(workspace); if (!pack.has_workspace_phase2_real_db_minimal_adapter_contract_pack) return '';
+            const summary = pack.real_db_adapter_contract_summary || {};
+            return `<div class="section-block" id="projectWorkspacePhase2RealDbAdapterContractSummaryPanel" data-marker="project_workspace_phase2_real_db_adapter_contract_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2RealDbAdapterPackTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2RealDbAdapterSummaryPanelTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2RealDbAdapterPackHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2RealDbAdapterContractSummary()">${escapeHTML(t('phase2RealDbAdapterCopySummary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2RealDbAdapterContractPack()">${escapeHTML(t('phase2RealDbAdapterCopyFull'))}</button></div></div><div class="metric-strip">${metricPill(t('phase2RealDbAdapterMode'), summary.mode || t('none'))}${metricPill(t('phase2RealDbAdapterInterfaceCount'), String(summary.adapter_interface_contract_count ?? pack.db_adapter_interface_contract_cards.length))}${metricPill(t('phase2RealDbAdapterSchemaCount'), String(summary.schema_mapping_preview_count ?? pack.db_schema_mapping_preview_cards.length))}${metricPill(t('phase2RealDbAdapterBoundaryCount'), String(summary.operation_boundary_count ?? pack.db_operation_boundary_cards.length))}${metricPill(t('phase2RealDbAdapterMockCount'), String(summary.mock_invocation_contract_count ?? pack.db_mock_invocation_contract_cards.length))}${metricPill(t('phase2RealDbAdapterErrorCount'), String(summary.error_taxonomy_count ?? pack.db_error_taxonomy_cards.length))}${metricPill(t('phase2RealDbAdapterUnlockBlockerCount'), String(summary.unlock_blocker_count ?? pack.phase2_real_db_adapter_unlock_blockers.length))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspacePhase2RealDbAdapterContractSummaryText(pack) || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">phase2_real_db_minimal_adapter_contract_preview / deterministic_db_adapter_contract / dry_run_only / save_workspace_session_snapshot / read_workspace_session_snapshot / list_workspace_run_snapshots</div><div class="demo-warning">${escapeHTML(t('phase2RealDbAdapterPreviewNote'))}</div><div id="projectWorkspacePhase2RealDbAdapterContractStatus" class="field-helper" aria-live="polite"></div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2RealDbAdapterInterfaceSchemaPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2RealDbAdapterContractSnapshot(workspace); if (!pack.has_workspace_phase2_real_db_minimal_adapter_contract_pack) return '';
+            const interfaces = projectWorkspacePhase2RealDbAdapterContractJsonText(pack.db_adapter_interface_contract_cards);
+            const schemas = projectWorkspacePhase2RealDbAdapterContractJsonText(pack.db_schema_mapping_preview_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2RealDbAdapterInterfaceSchemaPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2RealDbAdapterInterfaceSchemaTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2RealDbAdapterInterfaceSchemaNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDbAdapterInterfaceContractCards()">${escapeHTML(t('phase2RealDbAdapterCopyInterface'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDbSchemaMappingPreviewCards()">${escapeHTML(t('phase2RealDbAdapterCopySchema'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterInterfaceTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(interfaces || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">save_workspace_session_snapshot / save_review_import_snapshot / save_evidence_quality_snapshot / save_claim_risk_snapshot / save_final_export_packet_snapshot / save_campaign_dossier_snapshot / read_workspace_session_snapshot / list_workspace_run_snapshots</div><div class="field-helper">real_database_connection_allowed=false / real_database_write_allowed=false / real_file_write_allowed=false / real_execution_allowed=false</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterSchemaTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(schemas || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">workspace_sessions / review_import_snapshots / evidence_quality_snapshots / claim_risk_snapshots / final_export_packets / campaign_dossiers / audit_events / operator_decisions</div><div class="field-helper">provider_secret / api_key / raw_hidden_prompt / unredacted_customer_identifier excluded; no migration and no DB write.</div></div></div><div class="demo-warning">${escapeHTML(t('phase2RealDbAdapterInterfaceSchemaNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2RealDbAdapterBoundaryMockErrorPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2RealDbAdapterContractSnapshot(workspace); if (!pack.has_workspace_phase2_real_db_minimal_adapter_contract_pack) return '';
+            const boundaries = projectWorkspacePhase2RealDbAdapterContractJsonText(pack.db_operation_boundary_cards);
+            const mocks = projectWorkspacePhase2RealDbAdapterContractJsonText(pack.db_mock_invocation_contract_cards);
+            const errors = projectWorkspacePhase2RealDbAdapterContractJsonText(pack.db_error_taxonomy_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2RealDbAdapterBoundaryMockErrorPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2RealDbAdapterBoundaryMockErrorTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2RealDbAdapterBoundaryMockNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDbOperationBoundaryCards()">${escapeHTML(t('phase2RealDbAdapterCopyBoundary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDbMockInvocationContractCards()">${escapeHTML(t('phase2RealDbAdapterCopyMock'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDbErrorTaxonomyCards()">${escapeHTML(t('phase2RealDbAdapterCopyError'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterOperationBoundaryTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(boundaries || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">forbidden: create table / migrate / insert / update / delete / select real DB / export file / read secret</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterMockInvocationTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(mocks || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">simulated save / simulated read / simulated list / validation only; writes_real_database=false / reads_real_database=false / writes_real_file=false / uses_external_call=false / reads_secret=false / real_execution_allowed=false</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterErrorTaxonomyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(errors || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">connection missing / schema missing / migration required / permission denied / redaction failed / duplicate id / stale version / partial write / audit sink missing / rollback unavailable</div></div></div><div class="demo-warning">${escapeHTML(t('phase2RealDbAdapterBoundaryMockNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2RealDbAdapterAuditPermissionRedactionPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2RealDbAdapterContractSnapshot(workspace); if (!pack.has_workspace_phase2_real_db_minimal_adapter_contract_pack) return '';
+            const audit = projectWorkspacePhase2RealDbAdapterContractJsonText(pack.db_audit_trace_contract_cards);
+            const permissions = projectWorkspacePhase2RealDbAdapterContractJsonText(pack.db_permission_boundary_cards);
+            const redaction = projectWorkspacePhase2RealDbAdapterContractJsonText(pack.db_redaction_retention_contract_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2RealDbAdapterAuditPermissionRedactionPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2RealDbAdapterAuditPermissionRedactionTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2RealDbAdapterAuditPermissionNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDbAuditTraceContractCards()">${escapeHTML(t('phase2RealDbAdapterCopyAudit'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDbPermissionBoundaryCards()">${escapeHTML(t('phase2RealDbAdapterCopyPermission'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDbRedactionRetentionContractCards()">${escapeHTML(t('phase2RealDbAdapterCopyRedaction'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterAuditTraceTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">future audit event shape / trace ids / actor refs / operation refs / before after summary / no DB write / no real audit event</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterPermissionTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(permissions || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">database_persistence / database_read / database_write / file_write / secret_read / external_call / real_execution all disabled</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterRedactionRetentionTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(redaction || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">provider secret / customer data / review text / generated copy / operator note; provider secret not allowed in DB and no secret read</div></div></div><div class="demo-warning">${escapeHTML(t('phase2RealDbAdapterAuditPermissionNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2RealDbAdapterMigrationTestQualitySafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2RealDbAdapterContractSnapshot(workspace); if (!pack.has_workspace_phase2_real_db_minimal_adapter_contract_pack) return '';
+            const migration = projectWorkspacePhase2RealDbAdapterContractJsonText(pack.db_migration_dependency_cards);
+            const tests = projectWorkspacePhase2RealDbAdapterContractJsonText(pack.db_adapter_test_plan_cards);
+            const blockers = projectWorkspacePhase2RealDbAdapterContractJsonText(pack.phase2_real_db_adapter_unlock_blockers);
+            const quality = projectWorkspacePhase2RealDbAdapterContractJsonText(pack.real_db_adapter_quality_checks);
+            const audit = projectWorkspacePhase2RealDbAdapterContractJsonText(pack.audit_preview);
+            const safety = projectWorkspacePhase2RealDbAdapterContractJsonText(pack.safety_boundaries);
+            return `<div class="section-block" id="projectWorkspacePhase2RealDbAdapterMigrationTestQualitySafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2RealDbAdapterMigrationTestQualitySafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2RealDbAdapterMigrationTestSafetyNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDbMigrationDependencyCards()">${escapeHTML(t('phase2RealDbAdapterCopyMigration'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDbAdapterTestPlanCards()">${escapeHTML(t('phase2RealDbAdapterCopyTestPlan'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2RealDbAdapterUnlockBlockers()">${escapeHTML(t('phase2RealDbAdapterCopyBlockers'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterMigrationDependencyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(migration || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">schema migration / rollback plan / backfill plan / retention policy / deletion policy / audit sink / monitoring all not implemented</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterTestPlanTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(tests || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">unit / contract / mock invocation / schema mapping / redaction / retention / permission boundary / error taxonomy / audit preview / migration dry-run tests</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterUnlockBlockerTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">no real DB connection config / no schema migration / no migration dry-run / no rollback implementation / no retention policy / no deletion policy / no redaction enforcement / no real audit sink / no production approval / no monitoring</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">adapter interface / schema mapping / operation boundary / mock invocation / error taxonomy / audit trace / permission boundary / redaction retention / migration dependency / test plan / unlock blockers / safety boundary</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterAuditPreviewTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">audit preview only; no database write / no real audit event / no file write</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2RealDbAdapterSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / database_read disabled / database_write disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled / paid_operation disabled</div><div class="field-helper">${escapeHTML(t('phase2RealDbAdapterMigrationTestSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -31786,6 +32074,8 @@
                 '',
                 projectWorkspaceExportPhase2ReadinessReviewMarkdown(workspace),
                 '',
+                projectWorkspaceExportPhase2RealDbAdapterContractMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -31923,6 +32213,7 @@
                 workspace_phase2_llm_provider_gate_pack: projectWorkspaceExportPhase2LlmProviderGateSnapshot(workspace),
                 workspace_phase2_provider_unlock_review_pack: projectWorkspaceExportPhase2ProviderUnlockReviewSnapshot(workspace),
                 workspace_phase2_readiness_review_pack: projectWorkspaceExportPhase2ReadinessReviewSnapshot(workspace),
+                workspace_phase2_real_db_minimal_adapter_contract_pack: projectWorkspaceExportPhase2RealDbAdapterContractSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -44599,6 +44890,11 @@
                     ${renderProjectWorkspacePhase2ReadinessReviewValidationDependencyPanel(workspace)}
                     ${renderProjectWorkspacePhase2ReadinessReviewOperatorGapRiskPanel(workspace)}
                     ${renderProjectWorkspacePhase2ReadinessReviewNextBlockerQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspacePhase2RealDbAdapterContractSummaryPanel(workspace)}
+                    ${renderProjectWorkspacePhase2RealDbAdapterInterfaceSchemaPanel(workspace)}
+                    ${renderProjectWorkspacePhase2RealDbAdapterBoundaryMockErrorPanel(workspace)}
+                    ${renderProjectWorkspacePhase2RealDbAdapterAuditPermissionRedactionPanel(workspace)}
+                    ${renderProjectWorkspacePhase2RealDbAdapterMigrationTestQualitySafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}

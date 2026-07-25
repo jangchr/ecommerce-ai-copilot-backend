@@ -197,6 +197,7 @@ Add-Check "project_workspace_phase2_persistence_mock_harness_marker" ($page.Cont
 Add-Check "project_workspace_phase2_llm_provider_gate_marker" ($page.Content -match "Project Workspace phase2 LLM provider gate bundle")
 Add-Check "project_workspace_phase2_provider_unlock_review_marker" ($page.Content -match "Project Workspace phase2 provider unlock review bundle")
 Add-Check "project_workspace_phase2_readiness_review_marker" ($page.Content -match "Project Workspace phase2 readiness review bundle")
+Add-Check "project_workspace_phase2_real_db_adapter_contract_marker" ($page.Content -match "Project Workspace phase2 real DB adapter contract bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")
