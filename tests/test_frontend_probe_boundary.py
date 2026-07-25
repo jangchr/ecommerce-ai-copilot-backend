@@ -17724,6 +17724,220 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_phase2_llm_provider_gate_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace phase2 LLM provider gate bundle",
+            "project_workspace_phase2_llm_provider_gate_marker",
+            "PROJECT_WORKSPACE_PHASE2_LLM_PROVIDER_GATE_MARKER",
+            "latestProjectWorkspacePhase2LlmProviderGatePack",
+            "workspace_phase2_llm_provider_gate_pack",
+            "projectWorkspacePhase2LlmProviderGatePackFromWorkspace",
+            "projectWorkspaceExportPhase2LlmProviderGateSnapshot",
+            "projectWorkspaceExportPhase2LlmProviderGateMarkdown",
+            "renderProjectWorkspacePhase2LlmProviderGateSummaryPromptPanel",
+            "renderProjectWorkspacePhase2LlmProviderGateEvidenceClaimPanel",
+            "renderProjectWorkspacePhase2LlmProviderGateSchemaBoundaryRedactionPanel",
+            "renderProjectWorkspacePhase2LlmProviderGateCostApprovalFailureAuditPanel",
+            "renderProjectWorkspacePhase2LlmProviderGateTestBlockersQualityAuditSafetyPanel",
+            "copyProjectWorkspacePhase2LlmProviderGateSummary",
+            "copyProjectWorkspacePromptInvocationContractCards",
+            "copyProjectWorkspaceEvidenceGroundingRequirementCards",
+            "copyProjectWorkspaceClaimSafetyPromptGuardCards",
+            "copyProjectWorkspaceLlmOutputSchemaContractCards",
+            "copyProjectWorkspaceProviderBoundaryLockCards",
+            "copyProjectWorkspacePromptRedactionPrivacyCards",
+            "copyProjectWorkspaceCostQuotaTimeoutGuardCards",
+            "copyProjectWorkspaceLlmFailureHandlingCards",
+            "copyProjectWorkspaceFullPhase2LlmProviderGatePack",
+            "workspace_phase2_llm_provider_gate_pack: projectWorkspaceExportPhase2LlmProviderGateSnapshot(workspace)",
+            "Phase 2 Real LLM Provider Gate",
+            "LLM Provider Gate Summary",
+            "Prompt Invocation Contract Cards",
+            "Evidence Grounding Requirement Cards",
+            "Claim Safety Prompt Guard Cards",
+            "LLM Output Schema Contract Cards",
+            "Provider Boundary Lock Cards",
+            "Prompt Redaction Privacy Cards",
+            "Cost Quota Timeout Guard Cards",
+            "Human Approval Requirement Cards",
+            "LLM Failure Handling Cards",
+            "LLM Audit Packet Preview Cards",
+            "LLM Provider Test Plan Cards",
+            "Phase 2 LLM Unlock Blockers",
+            "LLM Gate Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "llm_provider_gate_summary",
+            "prompt_invocation_contract_cards",
+            "evidence_grounding_requirement_cards",
+            "claim_safety_prompt_guard_cards",
+            "llm_output_schema_contract_cards",
+            "provider_boundary_lock_cards",
+            "prompt_redaction_privacy_cards",
+            "cost_quota_timeout_guard_cards",
+            "human_approval_requirement_cards",
+            "llm_failure_handling_cards",
+            "llm_audit_packet_preview_cards",
+            "llm_provider_test_plan_cards",
+            "phase2_llm_unlock_blockers",
+            "llm_gate_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+            "card.prompt_contract_id",
+            "card.prompt_label",
+            "card.prompt_group",
+            "card.input_context_shape",
+            "card.required_evidence_refs",
+            "card.required_claim_safety_refs",
+            "card.allowed_prompt_purpose",
+            "card.forbidden_prompt_purpose",
+            "card.expected_output_shape",
+            "card.requires_human_approval",
+            "card.llm_generation_allowed",
+            "card.real_provider_call_allowed",
+            "card.external_call_allowed",
+            "card.real_execution_allowed",
+            "card.grounding_requirement_id",
+            "card.grounding_label",
+            "card.required_quote_refs",
+            "card.required_claim_refs",
+            "card.minimum_support_status",
+            "card.unsupported_claim_behavior",
+            "card.missing_quote_behavior",
+            "card.do_not_claim_behavior",
+            "card.allowed_generation_scope",
+            "card.prompt_guard_id",
+            "card.guard_label",
+            "card.guard_group",
+            "card.blocked_claim_refs",
+            "card.restricted_claim_refs",
+            "card.do_not_claim_refs",
+            "card.required_disclaimer_note",
+            "card.operator_review_required",
+            "card.real_policy_check_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for coverage in [
+            "claim_safe_brief_generation_prompt / creative_output_generation_prompt / platform_delivery_adaptation_prompt / delivery_qa_assist_prompt / remediation_suggestion_prompt / final_export_summary_prompt / campaign_dossier_summary_prompt / demo_walkthrough_presenter_prompt",
+            "unsupported claim / missing quote / do_not_claim / restricted claim / platform policy disabled / operator review required",
+            "expected_fields / required_trace_refs / forbidden_output_fields / claim_trace_required / evidence_trace_required / schema_validation_required / provider_secret / raw_hidden_prompt / untraced_claim",
+            "llm / provider / secret_read / external_call / real_execution / real_policy_check / database_persistence / file_write",
+            "provider secret / customer data / review text / generated copy / operator note / prompt_inclusion_allowed=false / secret_read_allowed=false",
+            "max tokens / timeout / quota / cost estimate / rate limit / retry cap / no real billing / no request",
+            "timeout / rate limit / provider unavailable / schema invalid / unsafe claim output / missing evidence trace / cost quota exceeded / secret missing / no real retry",
+            "unit tests / contract tests / prompt snapshot tests / schema validation tests / claim safety guard tests / redaction tests / cost quota tests / timeout tests / audit preview tests / permission boundary tests",
+            "no provider key approval / no secret access approval / no external call approval / no cost quota approval / no provider sandbox contract test / no real audit sink / no production approval / no rollback failure recovery implementation",
+            "prompt contract / evidence grounding / claim guard / output schema / provider boundary lock / redaction privacy / cost/quota/timeout / human approval / failure handling / audit preview / test plan / unlock blockers / safety boundary",
+            "provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled",
+        ]:
+            with self.subTest(coverage=coverage):
+                self.assertIn(coverage, html)
+        previous = html.index("renderProjectWorkspacePhase2PersistenceMockHarnessBlockersQualityAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspacePhase2LlmProviderGateSummaryPromptPanel(workspace)")
+        evidence = html.index("renderProjectWorkspacePhase2LlmProviderGateEvidenceClaimPanel(workspace)")
+        schema = html.index("renderProjectWorkspacePhase2LlmProviderGateSchemaBoundaryRedactionPanel(workspace)")
+        cost = html.index("renderProjectWorkspacePhase2LlmProviderGateCostApprovalFailureAuditPanel(workspace)")
+        test_plan = html.index("renderProjectWorkspacePhase2LlmProviderGateTestBlockersQualityAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, evidence)
+        self.assertLess(evidence, schema)
+        self.assertLess(schema, cost)
+        self.assertLess(cost, test_plan)
+        self.assertLess(test_plan, core)
+
+    def test_workspace_phase2_llm_provider_gate_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "phase2LlmGatePackTitle",
+            "phase2LlmGatePackHelper",
+            "phase2LlmGateSummaryPromptTitle",
+            "phase2LlmGateEvidenceClaimTitle",
+            "phase2LlmGateSchemaBoundaryRedactionTitle",
+            "phase2LlmGateCostApprovalFailureAuditTitle",
+            "phase2LlmGateTestBlockersQualityAuditSafetyTitle",
+            "phase2LlmGateCopySummary",
+            "phase2LlmGateCopyPrompt",
+            "phase2LlmGateCopyEvidence",
+            "phase2LlmGateCopyClaimGuard",
+            "phase2LlmGateCopySchema",
+            "phase2LlmGateCopyBoundary",
+            "phase2LlmGateCopyRedaction",
+            "phase2LlmGateCopyCost",
+            "phase2LlmGateCopyFailure",
+            "phase2LlmGateCopyFull",
+            "phase2LlmGateCopied",
+            "phase2LlmGateCopyFailed",
+            "phase2LlmGateCopyNoData",
+            "phase2LlmGatePreviewNote",
+            "phase2LlmGateSafetyNote",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace phase2 LLM provider gate bundle", script)
+            self.assertIn("project_workspace_phase2_llm_provider_gate_marker", script)
+        markdown = html[
+            html.index("function projectWorkspacePhase2LlmProviderGateSummaryText"):
+            html.index("async function copyProjectWorkspacePhase2LlmProviderGateText")
+        ]
+        for key in [
+            "phase2LlmGatePackTitle",
+            "phase2LlmGateSummaryTitle",
+            "phase2LlmGatePromptTitle",
+            "phase2LlmGateEvidenceTitle",
+            "phase2LlmGateClaimGuardTitle",
+            "phase2LlmGateSchemaTitle",
+            "phase2LlmGateBoundaryTitle",
+            "phase2LlmGateRedactionTitle",
+            "phase2LlmGateCostTitle",
+            "phase2LlmGateApprovalTitle",
+            "phase2LlmGateFailureTitle",
+            "phase2LlmGateAuditPacketTitle",
+            "phase2LlmGateTestPlanTitle",
+            "phase2LlmGateBlockersTitle",
+            "phase2LlmGateQualityTitle",
+            "phase2LlmGateAuditTitle",
+            "phase2LlmGateSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PHASE2_LLM_PROVIDER_GATE_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic prompt invocation contract preview only",
+            "not a real LLM call",
+            "does not call a real LLM",
+            "does not read API keys",
+            "does not read secrets",
+            "does not make external requests",
+            "does not create a provider client",
+            "does not create real audit events",
+            "does not create tasks",
+            "does not export files",
+            "does not write files or databases",
+            "does not create approval tokens",
+            "does not execute retries",
+            "not legal advice",
+            "not claim a real policy API",
+            "platform compliance conclusion",
+            "platform pass rate",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [

@@ -3653,6 +3653,7 @@
         let latestProjectWorkspaceMvpReadinessDossierPack = {};
         let latestProjectWorkspacePhase2DatabasePersistenceGatePack = {};
         let latestProjectWorkspacePhase2PersistenceMockHarnessPack = {};
+        let latestProjectWorkspacePhase2LlmProviderGatePack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7494,6 +7495,62 @@
             phase2MockHarnessQualityNote: 'Quality checks cover snapshot replay, deterministic contract, redaction validation, mock run, rollback dry-run, integrity checks, permission boundary, audit preview, test plan, unlock blockers, and safety boundary.',
             phase2MockHarnessSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspacePhase2LlmProviderGateMarker: 'Project Workspace phase2 LLM provider gate bundle',
+            phase2LlmGatePackTitle: 'Phase 2 Real LLM Provider Gate',
+            phase2LlmGatePackHelper: 'Project Workspace phase2 LLM provider gate bundle. Deterministic prompt invocation contract preview only; it is not a real LLM call, does not read API keys, does not read secrets, does not make external calls, does not create a provider client, does not create real audit events, and does not execute real generation.',
+            phase2LlmGateSummaryPromptTitle: 'LLM Provider Gate Summary / Prompt Invocation Contracts',
+            phase2LlmGateSummaryTitle: 'LLM Provider Gate Summary',
+            phase2LlmGatePromptTitle: 'Prompt Invocation Contract Cards',
+            phase2LlmGateEvidenceClaimTitle: 'Evidence Grounding / Claim Safety Prompt Guards',
+            phase2LlmGateEvidenceTitle: 'Evidence Grounding Requirement Cards',
+            phase2LlmGateClaimGuardTitle: 'Claim Safety Prompt Guard Cards',
+            phase2LlmGateSchemaBoundaryRedactionTitle: 'Output Schema / Provider Boundary / Redaction Privacy',
+            phase2LlmGateSchemaTitle: 'LLM Output Schema Contract Cards',
+            phase2LlmGateBoundaryTitle: 'Provider Boundary Lock Cards',
+            phase2LlmGateRedactionTitle: 'Prompt Redaction Privacy Cards',
+            phase2LlmGateCostApprovalFailureAuditTitle: 'Cost Quota Timeout / Human Approval / Failure Handling / Audit Packet',
+            phase2LlmGateCostTitle: 'Cost Quota Timeout Guard Cards',
+            phase2LlmGateApprovalTitle: 'Human Approval Requirement Cards',
+            phase2LlmGateFailureTitle: 'LLM Failure Handling Cards',
+            phase2LlmGateAuditPacketTitle: 'LLM Audit Packet Preview Cards',
+            phase2LlmGateTestBlockersQualityAuditSafetyTitle: 'LLM Provider Test Plan / Unlock Blockers / Quality / Audit / Safety',
+            phase2LlmGateTestPlanTitle: 'LLM Provider Test Plan Cards',
+            phase2LlmGateBlockersTitle: 'Phase 2 LLM Unlock Blockers',
+            phase2LlmGateQualityTitle: 'LLM Gate Quality Checks',
+            phase2LlmGateAuditTitle: 'Audit Preview',
+            phase2LlmGateSafetyTitle: 'Safety Boundaries',
+            phase2LlmGateMode: 'Mode',
+            phase2LlmGatePromptCount: 'Prompt contract count',
+            phase2LlmGateEvidenceCount: 'Evidence grounding count',
+            phase2LlmGateClaimGuardCount: 'Claim guard count',
+            phase2LlmGateSchemaCount: 'Output schema contract count',
+            phase2LlmGateBoundaryCount: 'Provider boundary lock count',
+            phase2LlmGateBlockerCount: 'Unlock blocker count',
+            phase2LlmGateRecommendedAction: 'Recommended operator action',
+            phase2LlmGateDisabled: 'disabled',
+            phase2LlmGateNoData: 'No LLM provider gate data is available.',
+            phase2LlmGateCopyNoData: 'No LLM provider gate content is available to copy.',
+            phase2LlmGateCopyFailed: 'Unable to copy LLM provider gate content.',
+            phase2LlmGateCopied: 'LLM provider gate content copied.',
+            phase2LlmGateCopySummary: 'Copy LLM provider gate summary',
+            phase2LlmGateCopyPrompt: 'Copy prompt invocation contract cards',
+            phase2LlmGateCopyEvidence: 'Copy evidence grounding requirement cards',
+            phase2LlmGateCopyClaimGuard: 'Copy claim safety prompt guard cards',
+            phase2LlmGateCopySchema: 'Copy LLM output schema contract cards',
+            phase2LlmGateCopyBoundary: 'Copy provider boundary lock cards',
+            phase2LlmGateCopyRedaction: 'Copy prompt redaction privacy cards',
+            phase2LlmGateCopyCost: 'Copy cost quota timeout guard cards',
+            phase2LlmGateCopyFailure: 'Copy LLM failure handling cards',
+            phase2LlmGateCopyFull: 'Copy full LLM provider gate pack',
+            phase2LlmGatePreviewNote: 'Deterministic prompt invocation contract preview only. It does not call a real LLM, does not read API keys, does not read secrets, does not make external requests, does not create a provider client, does not create real audit events, does not create tasks, does not export files, does not write files or databases, does not create approval tokens, does not execute retries, and does not execute real operations.',
+            phase2LlmGateGroundingNote: 'Future LLM output may only use existing evidence, quote, and claim refs. It must not invent real quotes or real buyer evidence, is not legal advice, and must not claim a real policy API, platform compliance conclusion, or platform pass rate.',
+            phase2LlmGateSchemaBoundaryNote: 'Output schema requires evidence trace, claim trace, usage status, and risk note. Provider secrets, raw hidden prompts, and untraced claims are forbidden. LLM, provider, secret_read, external_call, real_execution, real_policy_check, database_persistence, and file_write remain disabled.',
+            phase2LlmGateCostApprovalNote: 'Cost, quota, timeout, rate limit, retry cap, approval, failure handling, and audit packets are preview-only. No billing, request, provider retry, approval token, database write, real audit event, or production operation is executed.',
+            phase2LlmGateAuditNote: 'Audit preview is display-only; it does not write databases, does not read real logs or real history tables, and does not create real audit events.',
+            phase2LlmGateQualityNote: 'Quality checks cover prompt contract, evidence grounding, claim guard, output schema, provider boundary lock, redaction privacy, cost/quota/timeout, human approval, failure handling, audit preview, test plan, unlock blockers, and safety boundary.',
+            phase2LlmGateSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
             claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
@@ -8524,6 +8581,62 @@
             phase2MockHarnessAuditNote: 'Audit preview 只用于展示；不写数据库，不读取真实日志或真实历史表，不创建真实 audit event。',
             phase2MockHarnessQualityNote: 'Quality checks 覆盖 snapshot replay、deterministic contract、redaction validation、mock run、rollback dry-run、integrity checks、permission boundary、audit preview、test plan、unlock blockers 和 safety boundary。',
             phase2MockHarnessSafetyNote: 'Provider、LLM、media、external scraping、database persistence、real execution、real policy check、platform upload、task creation、real export、file write、secret read、external call 和 token issue 全部保持禁用。'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspacePhase2LlmProviderGateMarker: 'Project Workspace phase2 LLM provider gate bundle',
+            phase2LlmGatePackTitle: 'Phase 2 Real LLM Provider Gate',
+            phase2LlmGatePackHelper: '查看 Project Workspace phase2 LLM provider gate bundle。这只是 deterministic prompt invocation contract preview，不是真实 LLM 调用，不读取 API key，不读取 secret，不发送外部请求，不创建 provider client，不创建真实 audit event，也不执行真实生成。',
+            phase2LlmGateSummaryPromptTitle: 'LLM Provider Gate Summary / Prompt Invocation Contracts',
+            phase2LlmGateSummaryTitle: 'LLM Provider Gate Summary',
+            phase2LlmGatePromptTitle: 'Prompt Invocation Contract Cards',
+            phase2LlmGateEvidenceClaimTitle: 'Evidence Grounding / Claim Safety Prompt Guards',
+            phase2LlmGateEvidenceTitle: 'Evidence Grounding Requirement Cards',
+            phase2LlmGateClaimGuardTitle: 'Claim Safety Prompt Guard Cards',
+            phase2LlmGateSchemaBoundaryRedactionTitle: 'Output Schema / Provider Boundary / Redaction Privacy',
+            phase2LlmGateSchemaTitle: 'LLM Output Schema Contract Cards',
+            phase2LlmGateBoundaryTitle: 'Provider Boundary Lock Cards',
+            phase2LlmGateRedactionTitle: 'Prompt Redaction Privacy Cards',
+            phase2LlmGateCostApprovalFailureAuditTitle: 'Cost Quota Timeout / Human Approval / Failure Handling / Audit Packet',
+            phase2LlmGateCostTitle: 'Cost Quota Timeout Guard Cards',
+            phase2LlmGateApprovalTitle: 'Human Approval Requirement Cards',
+            phase2LlmGateFailureTitle: 'LLM Failure Handling Cards',
+            phase2LlmGateAuditPacketTitle: 'LLM Audit Packet Preview Cards',
+            phase2LlmGateTestBlockersQualityAuditSafetyTitle: 'LLM Provider Test Plan / Unlock Blockers / Quality / Audit / Safety',
+            phase2LlmGateTestPlanTitle: 'LLM Provider Test Plan Cards',
+            phase2LlmGateBlockersTitle: 'Phase 2 LLM Unlock Blockers',
+            phase2LlmGateQualityTitle: 'LLM Gate Quality Checks',
+            phase2LlmGateAuditTitle: 'Audit Preview',
+            phase2LlmGateSafetyTitle: '安全边界',
+            phase2LlmGateMode: '模式',
+            phase2LlmGatePromptCount: 'Prompt contract 数量',
+            phase2LlmGateEvidenceCount: 'Evidence grounding 数量',
+            phase2LlmGateClaimGuardCount: 'Claim guard 数量',
+            phase2LlmGateSchemaCount: 'Output schema contract 数量',
+            phase2LlmGateBoundaryCount: 'Provider boundary lock 数量',
+            phase2LlmGateBlockerCount: 'Unlock blocker 数量',
+            phase2LlmGateRecommendedAction: '推荐 operator action',
+            phase2LlmGateDisabled: '已禁用',
+            phase2LlmGateNoData: '暂无 LLM provider gate 数据。',
+            phase2LlmGateCopyNoData: '暂无可复制的 LLM provider gate 内容。',
+            phase2LlmGateCopyFailed: '无法复制 LLM provider gate 内容。',
+            phase2LlmGateCopied: 'LLM provider gate 内容已复制。',
+            phase2LlmGateCopySummary: '复制 LLM provider gate summary',
+            phase2LlmGateCopyPrompt: '复制 prompt invocation contract cards',
+            phase2LlmGateCopyEvidence: '复制 evidence grounding requirement cards',
+            phase2LlmGateCopyClaimGuard: '复制 claim safety prompt guard cards',
+            phase2LlmGateCopySchema: '复制 LLM output schema contract cards',
+            phase2LlmGateCopyBoundary: '复制 provider boundary lock cards',
+            phase2LlmGateCopyRedaction: '复制 prompt redaction privacy cards',
+            phase2LlmGateCopyCost: '复制 cost quota timeout guard cards',
+            phase2LlmGateCopyFailure: '复制 LLM failure handling cards',
+            phase2LlmGateCopyFull: '复制完整 LLM provider gate pack',
+            phase2LlmGatePreviewNote: '仅为 deterministic prompt invocation contract preview。不调用真实 LLM，不读取 API key，不读取 secret，不发送外部请求，不创建 provider client，不创建真实 audit event，不创建 task，不真实导出，不写文件或数据库，不创建 approval token，不执行真实 retry，也不执行真实操作。',
+            phase2LlmGateGroundingNote: '未来 LLM output 只能基于已有 evidence、quote 和 claim refs。不允许凭空生成真实 quote 或真实买家证据，不输出法律意见，也不声称真实 policy API、平台合规结论或平台通过率。',
+            phase2LlmGateSchemaBoundaryNote: 'Output schema 必须包含 evidence trace、claim trace、usage status 和 risk note。禁止输出 provider secret、raw hidden prompt 和 untraced claim。LLM、provider、secret_read、external_call、real_execution、real_policy_check、database_persistence 和 file_write 全部保持禁用。',
+            phase2LlmGateCostApprovalNote: 'Cost、quota、timeout、rate limit、retry cap、approval、failure handling 和 audit packets 都只是 preview。不执行真实计费、不发请求、不执行 provider retry、不创建 approval token、不写数据库、不创建真实 audit event、不执行 production operation。',
+            phase2LlmGateAuditNote: 'Audit preview 只用于展示；不写数据库，不读取真实日志或真实历史表，不创建真实 audit event。',
+            phase2LlmGateQualityNote: 'Quality checks 覆盖 prompt contract、evidence grounding、claim guard、output schema、provider boundary lock、redaction privacy、cost/quota/timeout、human approval、failure handling、audit preview、test plan、unlock blockers 和 safety boundary。',
+            phase2LlmGateSafetyNote: 'Provider、LLM、media、external scraping、database persistence、real execution、real policy check、platform upload、task creation、real export、file write、secret read、external call 和 token issue 全部保持禁用。'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -12031,6 +12144,7 @@
                 latestProjectWorkspaceMvpReadinessDossierPack = latestProjectCreativeDecisionPack.workspace_mvp_readiness_dossier_pack || {};
                 latestProjectWorkspacePhase2DatabasePersistenceGatePack = latestProjectCreativeDecisionPack.workspace_phase2_database_persistence_gate_pack || {};
                 latestProjectWorkspacePhase2PersistenceMockHarnessPack = latestProjectCreativeDecisionPack.workspace_phase2_persistence_mock_harness_pack || {};
+                latestProjectWorkspacePhase2LlmProviderGatePack = latestProjectCreativeDecisionPack.workspace_phase2_llm_provider_gate_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -17920,6 +18034,7 @@
         const PROJECT_WORKSPACE_MVP_READINESS_DOSSIER_MARKER = 'Project Workspace MVP readiness dossier bundle';
         const PROJECT_WORKSPACE_PHASE2_DATABASE_PERSISTENCE_GATE_MARKER = 'Project Workspace phase2 database persistence gate bundle';
         const PROJECT_WORKSPACE_PHASE2_PERSISTENCE_MOCK_HARNESS_MARKER = 'Project Workspace phase2 persistence mock harness bundle';
+        const PROJECT_WORKSPACE_PHASE2_LLM_PROVIDER_GATE_MARKER = 'Project Workspace phase2 LLM provider gate bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -25797,6 +25912,140 @@
         function copyProjectWorkspacePermissionBoundaryAssertionCards() { return copyProjectWorkspacePhase2PersistenceMockHarnessText('permission'); }
         function copyProjectWorkspaceMockAuditEventPreviewCards() { return copyProjectWorkspacePhase2PersistenceMockHarnessText('audit_event'); }
         function copyProjectWorkspaceFullPhase2PersistenceMockHarnessPack() { return copyProjectWorkspacePhase2PersistenceMockHarnessText('full'); }
+
+        function projectWorkspacePhase2LlmProviderGatePackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspacePhase2LlmProviderGatePack && Object.keys(latestProjectWorkspacePhase2LlmProviderGatePack).length) return latestProjectWorkspacePhase2LlmProviderGatePack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_phase2_llm_provider_gate_pack || {};
+        }
+
+        function projectWorkspacePhase2LlmProviderGateHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspacePhase2LlmProviderGateJsonText(value) {
+            if (!projectWorkspacePhase2LlmProviderGateHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspacePhase2LlmProviderGateDisabledText(value) {
+            return value === false || value == null ? t('phase2LlmGateDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportPhase2LlmProviderGateSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspacePhase2LlmProviderGatePackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PHASE2_LLM_PROVIDER_GATE_MARKER,
+                has_workspace_phase2_llm_provider_gate_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                llm_provider_gate_summary: pack.llm_provider_gate_summary || {},
+                prompt_invocation_contract_cards: Array.isArray(pack.prompt_invocation_contract_cards) ? pack.prompt_invocation_contract_cards : [],
+                evidence_grounding_requirement_cards: Array.isArray(pack.evidence_grounding_requirement_cards) ? pack.evidence_grounding_requirement_cards : [],
+                claim_safety_prompt_guard_cards: Array.isArray(pack.claim_safety_prompt_guard_cards) ? pack.claim_safety_prompt_guard_cards : [],
+                llm_output_schema_contract_cards: Array.isArray(pack.llm_output_schema_contract_cards) ? pack.llm_output_schema_contract_cards : [],
+                provider_boundary_lock_cards: Array.isArray(pack.provider_boundary_lock_cards) ? pack.provider_boundary_lock_cards : [],
+                prompt_redaction_privacy_cards: Array.isArray(pack.prompt_redaction_privacy_cards) ? pack.prompt_redaction_privacy_cards : [],
+                cost_quota_timeout_guard_cards: Array.isArray(pack.cost_quota_timeout_guard_cards) ? pack.cost_quota_timeout_guard_cards : [],
+                human_approval_requirement_cards: Array.isArray(pack.human_approval_requirement_cards) ? pack.human_approval_requirement_cards : [],
+                llm_failure_handling_cards: Array.isArray(pack.llm_failure_handling_cards) ? pack.llm_failure_handling_cards : [],
+                llm_audit_packet_preview_cards: Array.isArray(pack.llm_audit_packet_preview_cards) ? pack.llm_audit_packet_preview_cards : [],
+                llm_provider_test_plan_cards: Array.isArray(pack.llm_provider_test_plan_cards) ? pack.llm_provider_test_plan_cards : [],
+                phase2_llm_unlock_blockers: Array.isArray(pack.phase2_llm_unlock_blockers) ? pack.phase2_llm_unlock_blockers : [],
+                llm_gate_quality_checks: pack.llm_gate_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspacePhase2LlmProviderGateSummaryText(pack = projectWorkspaceExportPhase2LlmProviderGateSnapshot()) {
+            if (!pack.has_workspace_phase2_llm_provider_gate_pack) return '';
+            const summary = pack.llm_provider_gate_summary || {};
+            return [
+                t('phase2LlmGateSummaryTitle'),
+                `${t('phase2LlmGateMode')}: ${summary.mode || t('none')}`,
+                `${t('phase2LlmGatePromptCount')}: ${summary.prompt_invocation_contract_count ?? pack.prompt_invocation_contract_cards.length}`,
+                `${t('phase2LlmGateEvidenceCount')}: ${summary.evidence_grounding_requirement_count ?? pack.evidence_grounding_requirement_cards.length}`,
+                `${t('phase2LlmGateClaimGuardCount')}: ${summary.claim_safety_prompt_guard_count ?? pack.claim_safety_prompt_guard_cards.length}`,
+                `${t('phase2LlmGateSchemaCount')}: ${summary.llm_output_schema_contract_count ?? pack.llm_output_schema_contract_cards.length}`,
+                `${t('phase2LlmGateBoundaryCount')}: ${summary.provider_boundary_lock_count ?? pack.provider_boundary_lock_cards.length}`,
+                `${t('phase2LlmGateBlockerCount')}: ${summary.phase2_llm_unlock_blocker_count ?? pack.phase2_llm_unlock_blockers.length}`,
+                `${t('phase2LlmGateRecommendedAction')}: ${summary.risk_note || t('phase2LlmGatePreviewNote')}`,
+                `llm_generation_allowed: ${projectWorkspacePhase2LlmProviderGateDisabledText(summary.llm_generation_allowed)}`,
+                `real_provider_call_allowed: ${projectWorkspacePhase2LlmProviderGateDisabledText(summary.real_provider_call_allowed)}`,
+                `external_call_allowed: ${projectWorkspacePhase2LlmProviderGateDisabledText(summary.external_call_allowed)}`,
+                `secret_read_allowed: ${projectWorkspacePhase2LlmProviderGateDisabledText(summary.secret_read_allowed)}`,
+                `real_execution_allowed: ${projectWorkspacePhase2LlmProviderGateDisabledText(summary.real_execution_allowed)}`,
+                t('phase2LlmGatePreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspacePhase2LlmProviderGateSectionText(titleKey, value) {
+            const body = projectWorkspacePhase2LlmProviderGateJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportPhase2LlmProviderGateMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2LlmProviderGateSnapshot(workspace);
+            if (!pack.has_workspace_phase2_llm_provider_gate_pack) return '';
+            return [
+                `## ${t('phase2LlmGatePackTitle')}`,
+                projectWorkspacePhase2LlmProviderGateSummaryText(pack), '',
+                projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGatePromptTitle', pack.prompt_invocation_contract_cards), '',
+                projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateEvidenceTitle', pack.evidence_grounding_requirement_cards), '',
+                projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateClaimGuardTitle', pack.claim_safety_prompt_guard_cards), '',
+                projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateSchemaTitle', pack.llm_output_schema_contract_cards), '',
+                projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateBoundaryTitle', pack.provider_boundary_lock_cards), '',
+                projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateRedactionTitle', pack.prompt_redaction_privacy_cards), '',
+                projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateCostTitle', pack.cost_quota_timeout_guard_cards), '',
+                projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateApprovalTitle', pack.human_approval_requirement_cards), '',
+                projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateFailureTitle', pack.llm_failure_handling_cards), '',
+                projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateAuditPacketTitle', pack.llm_audit_packet_preview_cards), '',
+                projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateTestPlanTitle', pack.llm_provider_test_plan_cards), '',
+                projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateBlockersTitle', pack.phase2_llm_unlock_blockers), '',
+                projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateQualityTitle', pack.llm_gate_quality_checks), '',
+                projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateAuditTitle', pack.audit_preview), '',
+                projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateSafetyTitle', pack.safety_boundaries),
+                t('phase2LlmGatePreviewNote'),
+                t('phase2LlmGateGroundingNote'),
+                t('phase2LlmGateSchemaBoundaryNote'),
+                t('phase2LlmGateCostApprovalNote'),
+                t('phase2LlmGateAuditNote'),
+                t('phase2LlmGateQualityNote'),
+                t('phase2LlmGateSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspacePhase2LlmProviderGateText(kind = 'full') {
+            const status = document.getElementById('projectWorkspacePhase2LlmProviderGateStatus');
+            const pack = projectWorkspaceExportPhase2LlmProviderGateSnapshot();
+            const text = kind === 'summary' ? projectWorkspacePhase2LlmProviderGateSummaryText(pack)
+                : kind === 'prompt' ? projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGatePromptTitle', pack.prompt_invocation_contract_cards)
+                : kind === 'evidence' ? projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateEvidenceTitle', pack.evidence_grounding_requirement_cards)
+                : kind === 'claim_guard' ? projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateClaimGuardTitle', pack.claim_safety_prompt_guard_cards)
+                : kind === 'schema' ? projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateSchemaTitle', pack.llm_output_schema_contract_cards)
+                : kind === 'boundary' ? projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateBoundaryTitle', pack.provider_boundary_lock_cards)
+                : kind === 'redaction' ? projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateRedactionTitle', pack.prompt_redaction_privacy_cards)
+                : kind === 'cost' ? projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateCostTitle', pack.cost_quota_timeout_guard_cards)
+                : kind === 'failure' ? projectWorkspacePhase2LlmProviderGateSectionText('phase2LlmGateFailureTitle', pack.llm_failure_handling_cards)
+                : projectWorkspaceExportPhase2LlmProviderGateMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('phase2LlmGateCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('phase2LlmGateCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('phase2LlmGateCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('phase2LlmGateCopyFailed'); }
+        }
+
+        function copyProjectWorkspacePhase2LlmProviderGateSummary() { return copyProjectWorkspacePhase2LlmProviderGateText('summary'); }
+        function copyProjectWorkspacePromptInvocationContractCards() { return copyProjectWorkspacePhase2LlmProviderGateText('prompt'); }
+        function copyProjectWorkspaceEvidenceGroundingRequirementCards() { return copyProjectWorkspacePhase2LlmProviderGateText('evidence'); }
+        function copyProjectWorkspaceClaimSafetyPromptGuardCards() { return copyProjectWorkspacePhase2LlmProviderGateText('claim_guard'); }
+        function copyProjectWorkspaceLlmOutputSchemaContractCards() { return copyProjectWorkspacePhase2LlmProviderGateText('schema'); }
+        function copyProjectWorkspaceProviderBoundaryLockCards() { return copyProjectWorkspacePhase2LlmProviderGateText('boundary'); }
+        function copyProjectWorkspacePromptRedactionPrivacyCards() { return copyProjectWorkspacePhase2LlmProviderGateText('redaction'); }
+        function copyProjectWorkspaceCostQuotaTimeoutGuardCards() { return copyProjectWorkspacePhase2LlmProviderGateText('cost'); }
+        function copyProjectWorkspaceLlmFailureHandlingCards() { return copyProjectWorkspacePhase2LlmProviderGateText('failure'); }
+        function copyProjectWorkspaceFullPhase2LlmProviderGatePack() { return copyProjectWorkspacePhase2LlmProviderGateText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -30455,6 +30704,47 @@
             return `<div class="section-block" id="projectWorkspacePhase2PersistenceMockHarnessBlockersQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2MockHarnessBlockersQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2MockHarnessSafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2PersistenceMockHarnessPack()">${escapeHTML(t('phase2MockHarnessCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2MockHarnessBlockersTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2MockHarnessNoData'))}</pre><div class="field-helper">no DB connection config / no schema migration / no audit sink / no retention policy / no deletion policy / no production approval / no real rollback implementation / no secret access approval</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2MockHarnessQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2MockHarnessNoData'))}</pre><div class="field-helper">snapshot replay / deterministic contract / redaction validation / mock run / rollback dry-run / integrity checks / permission boundary / audit preview / test plan / unlock blockers / safety boundary</div><div class="field-helper">${escapeHTML(t('phase2MockHarnessQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2MockHarnessAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2MockHarnessNoData'))}</pre><div class="field-helper">${escapeHTML(t('phase2MockHarnessAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2MockHarnessSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled</div><div class="field-helper">${escapeHTML(t('phase2MockHarnessSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspacePhase2LlmProviderGateSummaryPromptPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2LlmProviderGateSnapshot(workspace); if (!pack.has_workspace_phase2_llm_provider_gate_pack) return '';
+            const summary = pack.llm_provider_gate_summary || {};
+            const prompts = pack.prompt_invocation_contract_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.prompt_label || card.prompt_contract_id || t('none'))}</strong><div class="field-helper">prompt_contract_id: ${escapeHTML(card.prompt_contract_id || '')} / prompt_group: ${escapeHTML(card.prompt_group || '')}</div><div class="field-helper">source_pack_refs: ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div><strong>input_context_shape:</strong> ${escapeHTML(card.input_context_shape || '')}</div><div class="field-helper">required_evidence_refs: ${escapeHTML((card.required_evidence_refs || []).join(', ') || t('none'))}</div><div class="field-helper">required_claim_safety_refs: ${escapeHTML((card.required_claim_safety_refs || []).join(', ') || t('none'))}</div><div><strong>allowed_prompt_purpose:</strong> ${escapeHTML(card.allowed_prompt_purpose || '')}</div><div class="field-helper">forbidden_prompt_purpose: ${escapeHTML((card.forbidden_prompt_purpose || []).join(', ') || t('none'))}</div><div><strong>expected_output_shape:</strong> ${escapeHTML(projectWorkspacePhase2LlmProviderGateJsonText(card.expected_output_shape) || t('none'))}</div><div class="field-helper">requires_human_approval: ${escapeHTML(String(card.requires_human_approval))} / llm_generation_allowed: ${escapeHTML(projectWorkspacePhase2LlmProviderGateDisabledText(card.llm_generation_allowed))} / real_provider_call_allowed: ${escapeHTML(projectWorkspacePhase2LlmProviderGateDisabledText(card.real_provider_call_allowed))} / external_call_allowed: ${escapeHTML(projectWorkspacePhase2LlmProviderGateDisabledText(card.external_call_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspacePhase2LlmProviderGateDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspacePhase2LlmProviderGateSummaryPromptPanel" data-marker="project_workspace_phase2_llm_provider_gate_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2LlmGatePackTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2LlmGateSummaryPromptTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2LlmGatePackHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2LlmProviderGateSummary()">${escapeHTML(t('phase2LlmGateCopySummary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePromptInvocationContractCards()">${escapeHTML(t('phase2LlmGateCopyPrompt'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2LlmProviderGatePack()">${escapeHTML(t('phase2LlmGateCopyFull'))}</button></div></div><div class="metric-strip">${metricPill(t('phase2LlmGateMode'), summary.mode || t('none'))}${metricPill(t('phase2LlmGatePromptCount'), String(summary.prompt_invocation_contract_count ?? pack.prompt_invocation_contract_cards.length))}${metricPill(t('phase2LlmGateEvidenceCount'), String(summary.evidence_grounding_requirement_count ?? pack.evidence_grounding_requirement_cards.length))}${metricPill(t('phase2LlmGateClaimGuardCount'), String(summary.claim_safety_prompt_guard_count ?? pack.claim_safety_prompt_guard_cards.length))}${metricPill(t('phase2LlmGateSchemaCount'), String(summary.llm_output_schema_contract_count ?? pack.llm_output_schema_contract_cards.length))}${metricPill(t('phase2LlmGateBoundaryCount'), String(summary.provider_boundary_lock_count ?? pack.provider_boundary_lock_cards.length))}${metricPill(t('phase2LlmGateBlockerCount'), String(summary.phase2_llm_unlock_blocker_count ?? pack.phase2_llm_unlock_blockers.length))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspacePhase2LlmProviderGateSummaryText(pack) || t('phase2LlmGateNoData'))}</pre><div class="json-key">${escapeHTML(t('phase2LlmGatePromptTitle'))}</div><div class="graph-os-compact-grid">${prompts || `<div class="empty-state">${escapeHTML(t('phase2LlmGateNoData'))}</div>`}</div><div class="field-helper">claim_safe_brief_generation_prompt / creative_output_generation_prompt / platform_delivery_adaptation_prompt / delivery_qa_assist_prompt / remediation_suggestion_prompt / final_export_summary_prompt / campaign_dossier_summary_prompt / demo_walkthrough_presenter_prompt</div><div class="demo-warning">${escapeHTML(t('phase2LlmGatePreviewNote'))}</div><div id="projectWorkspacePhase2LlmProviderGateStatus" class="field-helper" aria-live="polite"></div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2LlmProviderGateEvidenceClaimPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2LlmProviderGateSnapshot(workspace); if (!pack.has_workspace_phase2_llm_provider_gate_pack) return '';
+            const grounding = pack.evidence_grounding_requirement_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.grounding_label || card.grounding_requirement_id || t('none'))}</strong><div class="field-helper">grounding_requirement_id: ${escapeHTML(card.grounding_requirement_id || '')}</div><div class="field-helper">required_quote_refs: ${escapeHTML((card.required_quote_refs || []).join(', ') || t('none'))}</div><div class="field-helper">required_claim_refs: ${escapeHTML((card.required_claim_refs || []).join(', ') || t('none'))}</div><div><strong>minimum_support_status:</strong> ${escapeHTML(card.minimum_support_status || '')}</div><div>${escapeHTML(card.unsupported_claim_behavior || '')}</div><div>${escapeHTML(card.missing_quote_behavior || '')}</div><div>${escapeHTML(card.do_not_claim_behavior || '')}</div><div>${escapeHTML(card.allowed_generation_scope || '')}</div><div class="field-helper">llm_generation_allowed: ${escapeHTML(projectWorkspacePhase2LlmProviderGateDisabledText(card.llm_generation_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspacePhase2LlmProviderGateDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            const guards = pack.claim_safety_prompt_guard_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.guard_label || card.prompt_guard_id || t('none'))}</strong><div class="field-helper">prompt_guard_id: ${escapeHTML(card.prompt_guard_id || '')} / guard_group: ${escapeHTML(card.guard_group || '')}</div><div class="field-helper">blocked_claim_refs: ${escapeHTML((card.blocked_claim_refs || []).join(', ') || t('none'))}</div><div class="field-helper">restricted_claim_refs: ${escapeHTML((card.restricted_claim_refs || []).join(', ') || t('none'))}</div><div class="field-helper">do_not_claim_refs: ${escapeHTML((card.do_not_claim_refs || []).join(', ') || t('none'))}</div><div>${escapeHTML(card.required_disclaimer_note || '')}</div><div class="field-helper">operator_review_required: ${escapeHTML(String(card.operator_review_required))} / real_policy_check_allowed: ${escapeHTML(projectWorkspacePhase2LlmProviderGateDisabledText(card.real_policy_check_allowed))} / llm_generation_allowed: ${escapeHTML(projectWorkspacePhase2LlmProviderGateDisabledText(card.llm_generation_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspacePhase2LlmProviderGateDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspacePhase2LlmProviderGateEvidenceClaimPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2LlmGateEvidenceClaimTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2LlmGateGroundingNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceEvidenceGroundingRequirementCards()">${escapeHTML(t('phase2LlmGateCopyEvidence'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceClaimSafetyPromptGuardCards()">${escapeHTML(t('phase2LlmGateCopyClaimGuard'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateEvidenceTitle'))}</strong><div class="graph-os-compact-grid">${grounding || `<div class="empty-state">${escapeHTML(t('phase2LlmGateNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateClaimGuardTitle'))}</strong><div class="graph-os-compact-grid">${guards || `<div class="empty-state">${escapeHTML(t('phase2LlmGateNoData'))}</div><div class="field-helper">unsupported claim / missing quote / do_not_claim / restricted claim / platform policy disabled / operator review required</div>`}</div><div class="field-helper">unsupported claim / missing quote / do_not_claim / restricted claim / platform policy disabled / operator review required</div></div></div><div class="demo-warning">${escapeHTML(t('phase2LlmGateGroundingNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2LlmProviderGateSchemaBoundaryRedactionPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2LlmProviderGateSnapshot(workspace); if (!pack.has_workspace_phase2_llm_provider_gate_pack) return '';
+            const schemas = projectWorkspacePhase2LlmProviderGateJsonText(pack.llm_output_schema_contract_cards);
+            const boundaries = projectWorkspacePhase2LlmProviderGateJsonText(pack.provider_boundary_lock_cards);
+            const redactions = projectWorkspacePhase2LlmProviderGateJsonText(pack.prompt_redaction_privacy_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2LlmProviderGateSchemaBoundaryRedactionPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2LlmGateSchemaBoundaryRedactionTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2LlmGateSchemaBoundaryNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceLlmOutputSchemaContractCards()">${escapeHTML(t('phase2LlmGateCopySchema'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderBoundaryLockCards()">${escapeHTML(t('phase2LlmGateCopyBoundary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePromptRedactionPrivacyCards()">${escapeHTML(t('phase2LlmGateCopyRedaction'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateSchemaTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(schemas || t('phase2LlmGateNoData'))}</pre><div class="field-helper">expected_fields / required_trace_refs / forbidden_output_fields / claim_trace_required / evidence_trace_required / schema_validation_required / provider_secret / raw_hidden_prompt / untraced_claim</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateBoundaryTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(boundaries || t('phase2LlmGateNoData'))}</pre><div class="field-helper">llm / provider / secret_read / external_call / real_execution / real_policy_check / database_persistence / file_write</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateRedactionTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(redactions || t('phase2LlmGateNoData'))}</pre><div class="field-helper">provider secret / customer data / review text / generated copy / operator note / prompt_inclusion_allowed=false / secret_read_allowed=false</div></div></div><div class="demo-warning">${escapeHTML(t('phase2LlmGateSchemaBoundaryNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2LlmProviderGateCostApprovalFailureAuditPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2LlmProviderGateSnapshot(workspace); if (!pack.has_workspace_phase2_llm_provider_gate_pack) return '';
+            const cost = projectWorkspacePhase2LlmProviderGateJsonText(pack.cost_quota_timeout_guard_cards);
+            const approval = projectWorkspacePhase2LlmProviderGateJsonText(pack.human_approval_requirement_cards);
+            const failure = projectWorkspacePhase2LlmProviderGateJsonText(pack.llm_failure_handling_cards);
+            const auditPackets = projectWorkspacePhase2LlmProviderGateJsonText(pack.llm_audit_packet_preview_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2LlmProviderGateCostApprovalFailureAuditPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2LlmGateCostApprovalFailureAuditTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2LlmGateCostApprovalNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCostQuotaTimeoutGuardCards()">${escapeHTML(t('phase2LlmGateCopyCost'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceLlmFailureHandlingCards()">${escapeHTML(t('phase2LlmGateCopyFailure'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateCostTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(cost || t('phase2LlmGateNoData'))}</pre><div class="field-helper">max tokens / timeout / quota / cost estimate / rate limit / retry cap / no real billing / no request</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateApprovalTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(approval || t('phase2LlmGateNoData'))}</pre><div class="field-helper">future human approval required / no real approval token created</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateFailureTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(failure || t('phase2LlmGateNoData'))}</pre><div class="field-helper">timeout / rate limit / provider unavailable / schema invalid / unsafe claim output / missing evidence trace / cost quota exceeded / secret missing / no real retry</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateAuditPacketTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(auditPackets || t('phase2LlmGateNoData'))}</pre><div class="field-helper">${escapeHTML(t('phase2LlmGateAuditNote'))}</div></div></div><div class="demo-warning">${escapeHTML(t('phase2LlmGateCostApprovalNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2LlmProviderGateTestBlockersQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2LlmProviderGateSnapshot(workspace); if (!pack.has_workspace_phase2_llm_provider_gate_pack) return '';
+            const tests = projectWorkspacePhase2LlmProviderGateJsonText(pack.llm_provider_test_plan_cards);
+            const blockers = projectWorkspacePhase2LlmProviderGateJsonText(pack.phase2_llm_unlock_blockers);
+            const quality = projectWorkspacePhase2LlmProviderGateJsonText(pack.llm_gate_quality_checks);
+            const audit = projectWorkspacePhase2LlmProviderGateJsonText(pack.audit_preview);
+            const safety = projectWorkspacePhase2LlmProviderGateJsonText(pack.safety_boundaries);
+            return `<div class="section-block" id="projectWorkspacePhase2LlmProviderGateTestBlockersQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2LlmGateTestBlockersQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2LlmGateSafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2LlmProviderGatePack()">${escapeHTML(t('phase2LlmGateCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateTestPlanTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(tests || t('phase2LlmGateNoData'))}</pre><div class="field-helper">unit tests / contract tests / prompt snapshot tests / schema validation tests / claim safety guard tests / redaction tests / cost quota tests / timeout tests / audit preview tests / permission boundary tests</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateBlockersTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2LlmGateNoData'))}</pre><div class="field-helper">no provider key approval / no secret access approval / no external call approval / no cost quota approval / no provider sandbox contract test / no real audit sink / no production approval / no rollback failure recovery implementation</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2LlmGateNoData'))}</pre><div class="field-helper">prompt contract / evidence grounding / claim guard / output schema / provider boundary lock / redaction privacy / cost/quota/timeout / human approval / failure handling / audit preview / test plan / unlock blockers / safety boundary</div><div class="field-helper">${escapeHTML(t('phase2LlmGateQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2LlmGateNoData'))}</pre><div class="field-helper">${escapeHTML(t('phase2LlmGateAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2LlmGateSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled</div><div class="field-helper">${escapeHTML(t('phase2LlmGateSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -30921,6 +31211,8 @@
                 '',
                 projectWorkspaceExportPhase2PersistenceMockHarnessMarkdown(workspace),
                 '',
+                projectWorkspaceExportPhase2LlmProviderGateMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -31055,6 +31347,7 @@
                 workspace_mvp_readiness_dossier_pack: projectWorkspaceExportMvpReadinessDossierSnapshot(workspace),
                 workspace_phase2_database_persistence_gate_pack: projectWorkspaceExportPhase2DatabasePersistenceGateSnapshot(workspace),
                 workspace_phase2_persistence_mock_harness_pack: projectWorkspaceExportPhase2PersistenceMockHarnessSnapshot(workspace),
+                workspace_phase2_llm_provider_gate_pack: projectWorkspaceExportPhase2LlmProviderGateSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -43716,6 +44009,11 @@
                     ${renderProjectWorkspacePhase2PersistenceMockHarnessRunsRollbackPanel(workspace)}
                     ${renderProjectWorkspacePhase2PersistenceMockHarnessIntegrityPermissionAuditTestPanel(workspace)}
                     ${renderProjectWorkspacePhase2PersistenceMockHarnessBlockersQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspacePhase2LlmProviderGateSummaryPromptPanel(workspace)}
+                    ${renderProjectWorkspacePhase2LlmProviderGateEvidenceClaimPanel(workspace)}
+                    ${renderProjectWorkspacePhase2LlmProviderGateSchemaBoundaryRedactionPanel(workspace)}
+                    ${renderProjectWorkspacePhase2LlmProviderGateCostApprovalFailureAuditPanel(workspace)}
+                    ${renderProjectWorkspacePhase2LlmProviderGateTestBlockersQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
