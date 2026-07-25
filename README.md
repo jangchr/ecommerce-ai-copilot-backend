@@ -47,6 +47,7 @@ CrossGrowth is currently in **MVP Preview Freeze**.
 - Demo guide: [Demo Guide](docs/demo-guide.md)
 - Freeze notes: [MVP Preview Freeze](docs/mvp-preview-freeze.md)
 - Phase 2 gates: [Post-MVP Unlock Plan](docs/post-mvp-unlock-plan.md)
+- Phase 2 closeout docs: [Gate Closeout](docs/phase2-gate-closeout.md), [Next Unlock Plan](docs/phase2-next-unlock-plan.md), and [Readiness Handoff](docs/phase2-readiness-handoff.md). Phase 2 gate / harness / readiness previews are complete, but they do not unlock real database, LLM, provider, export, upload, task creation, or real execution capabilities.
 
 Current scope is a demo-ready preview for a claim-safe ecommerce creative workflow: deterministic scenario presets, demo campaign walkthrough, MVP readiness dossier, and provider / execution safety boundaries. It is not production: real LLM, provider, database persistence, real export, platform upload, and real execution remain disabled.
 
