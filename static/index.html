@@ -3654,6 +3654,7 @@
         let latestProjectWorkspacePhase2DatabasePersistenceGatePack = {};
         let latestProjectWorkspacePhase2PersistenceMockHarnessPack = {};
         let latestProjectWorkspacePhase2LlmProviderGatePack = {};
+        let latestProjectWorkspacePhase2ProviderUnlockReviewPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7551,6 +7552,61 @@
             phase2LlmGateQualityNote: 'Quality checks cover prompt contract, evidence grounding, claim guard, output schema, provider boundary lock, redaction privacy, cost/quota/timeout, human approval, failure handling, audit preview, test plan, unlock blockers, and safety boundary.',
             phase2LlmGateSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspacePhase2ProviderUnlockReviewMarker: 'Project Workspace phase2 provider unlock review bundle',
+            phase2ProviderUnlockPackTitle: 'Phase 2 Provider Unlock Approval / Cost / Audit Review',
+            phase2ProviderUnlockPackHelper: 'Project Workspace phase2 provider unlock review bundle. Deterministic provider unlock review preview only; it is not a real provider integration, does not read API keys, does not read secrets, does not make external requests, does not execute real sandbox tests, does not create real audit events, and does not execute paid operations.',
+            phase2ProviderUnlockSummaryCandidateTitle: 'Provider Unlock Review Summary / Candidate Providers',
+            phase2ProviderUnlockSummaryTitle: 'Provider Unlock Review Summary',
+            phase2ProviderUnlockCandidateTitle: 'Provider Unlock Candidate Cards',
+            phase2ProviderUnlockApprovalSecretTitle: 'Approval Requirements / Secret Network Requirements',
+            phase2ProviderUnlockApprovalTitle: 'Approval Requirement Review Cards',
+            phase2ProviderUnlockSecretTitle: 'Secret Network Requirement Cards',
+            phase2ProviderUnlockCostSandboxAuditTitle: 'Cost Quota / Sandbox Contract Tests / Audit Logging',
+            phase2ProviderUnlockCostTitle: 'Cost Quota Review Cards',
+            phase2ProviderUnlockSandboxTitle: 'Sandbox Contract Test Review Cards',
+            phase2ProviderUnlockAuditLoggingTitle: 'Audit Logging Requirement Cards',
+            phase2ProviderUnlockFailurePolicyGovernanceDecisionTitle: 'Failure Recovery / Policy Claim Safety / Human Governance / Unlock Decisions',
+            phase2ProviderUnlockFailureTitle: 'Failure Recovery Review Cards',
+            phase2ProviderUnlockPolicyTitle: 'Policy Claim Safety Dependency Cards',
+            phase2ProviderUnlockGovernanceTitle: 'Human Governance Review Cards',
+            phase2ProviderUnlockDecisionTitle: 'Provider Unlock Decision Cards',
+            phase2ProviderUnlockBlockersQualityAuditSafetyTitle: 'Phase 2 Provider Unlock Blockers / Quality / Audit / Safety',
+            phase2ProviderUnlockBlockersTitle: 'Phase 2 Provider Unlock Blockers',
+            phase2ProviderUnlockQualityTitle: 'Provider Unlock Quality Checks',
+            phase2ProviderUnlockAuditTitle: 'Audit Preview',
+            phase2ProviderUnlockSafetyTitle: 'Safety Boundaries',
+            phase2ProviderUnlockMode: 'Mode',
+            phase2ProviderUnlockCandidateCount: 'Provider candidate count',
+            phase2ProviderUnlockApprovalCount: 'Approval review count',
+            phase2ProviderUnlockSecretCount: 'Secret/network requirement count',
+            phase2ProviderUnlockCostCount: 'Cost/quota review count',
+            phase2ProviderUnlockSandboxCount: 'Sandbox contract test review count',
+            phase2ProviderUnlockBlockerCount: 'Unlock blocker count',
+            phase2ProviderUnlockRecommendedAction: 'Recommended operator action',
+            phase2ProviderUnlockDisabled: 'disabled',
+            phase2ProviderUnlockNoData: 'No provider unlock review data is available.',
+            phase2ProviderUnlockCopyNoData: 'No provider unlock review content is available to copy.',
+            phase2ProviderUnlockCopyFailed: 'Unable to copy provider unlock review content.',
+            phase2ProviderUnlockCopied: 'Provider unlock review content copied.',
+            phase2ProviderUnlockCopySummary: 'Copy provider unlock review summary',
+            phase2ProviderUnlockCopyCandidates: 'Copy provider unlock candidate cards',
+            phase2ProviderUnlockCopyApproval: 'Copy approval requirement review cards',
+            phase2ProviderUnlockCopySecret: 'Copy secret network requirement cards',
+            phase2ProviderUnlockCopyCost: 'Copy cost quota review cards',
+            phase2ProviderUnlockCopySandbox: 'Copy sandbox contract test review cards',
+            phase2ProviderUnlockCopyAuditLogging: 'Copy audit logging requirement cards',
+            phase2ProviderUnlockCopyFailure: 'Copy failure recovery review cards',
+            phase2ProviderUnlockCopyDecision: 'Copy provider unlock decision cards',
+            phase2ProviderUnlockCopyFull: 'Copy full provider unlock review pack',
+            phase2ProviderUnlockPreviewNote: 'Deterministic provider unlock review preview only. It does not connect providers, does not read API keys, does not read secrets, does not make external requests, does not execute real sandbox tests, does not create real audit events, does not create approval tokens, does not create tasks, does not execute paid operations, does not execute real retry or rollback, and does not execute real operations.',
+            phase2ProviderUnlockApprovalSecretNote: 'Approval, secret, and network gates are required before any future unlock, but this preview does not create real approvals, does not issue tokens, does not read secrets, and does not make external requests.',
+            phase2ProviderUnlockCostSandboxAuditNote: 'Cost, quota, sandbox contract tests, and audit logging are preview-only. No billing, paid operation, provider sandbox test, real audit event, database write, file write, or provider call is executed.',
+            phase2ProviderUnlockFailurePolicyGovernanceNote: 'Failure recovery, policy claim safety, human governance, and unlock decisions are preview-only. It does not execute retries or rollback, does not query a real policy API, does not create real tasks, is not legal advice, and is not a real platform compliance conclusion or pass rate.',
+            phase2ProviderUnlockQualityNote: 'Quality checks cover candidate providers, approval requirement, secret/network, cost/quota, sandbox tests, audit logging, failure recovery, policy/claim safety, human governance, decision cards, unlock blockers, and safety boundary.',
+            phase2ProviderUnlockAuditNote: 'Audit preview is display-only; it does not write databases, does not read real logs or real history tables, and does not create real audit events.',
+            phase2ProviderUnlockSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, and paid operation remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
             claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
@@ -8637,6 +8693,61 @@
             phase2LlmGateAuditNote: 'Audit preview 只用于展示；不写数据库，不读取真实日志或真实历史表，不创建真实 audit event。',
             phase2LlmGateQualityNote: 'Quality checks 覆盖 prompt contract、evidence grounding、claim guard、output schema、provider boundary lock、redaction privacy、cost/quota/timeout、human approval、failure handling、audit preview、test plan、unlock blockers 和 safety boundary。',
             phase2LlmGateSafetyNote: 'Provider、LLM、media、external scraping、database persistence、real execution、real policy check、platform upload、task creation、real export、file write、secret read、external call 和 token issue 全部保持禁用。'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspacePhase2ProviderUnlockReviewMarker: 'Project Workspace phase2 provider unlock review bundle',
+            phase2ProviderUnlockPackTitle: 'Phase 2 Provider Unlock Approval / Cost / Audit Review',
+            phase2ProviderUnlockPackHelper: '查看 Project Workspace phase2 provider unlock review bundle。这只是 deterministic provider unlock review preview，不是真实 provider 接入，不读取 API key，不读取 secret，不发送外部请求，不执行真实 sandbox test，不创建真实 audit event，也不执行 paid operation。',
+            phase2ProviderUnlockSummaryCandidateTitle: 'Provider Unlock Review Summary / Candidate Providers',
+            phase2ProviderUnlockSummaryTitle: 'Provider Unlock Review Summary',
+            phase2ProviderUnlockCandidateTitle: 'Provider Unlock Candidate Cards',
+            phase2ProviderUnlockApprovalSecretTitle: 'Approval Requirements / Secret Network Requirements',
+            phase2ProviderUnlockApprovalTitle: 'Approval Requirement Review Cards',
+            phase2ProviderUnlockSecretTitle: 'Secret Network Requirement Cards',
+            phase2ProviderUnlockCostSandboxAuditTitle: 'Cost Quota / Sandbox Contract Tests / Audit Logging',
+            phase2ProviderUnlockCostTitle: 'Cost Quota Review Cards',
+            phase2ProviderUnlockSandboxTitle: 'Sandbox Contract Test Review Cards',
+            phase2ProviderUnlockAuditLoggingTitle: 'Audit Logging Requirement Cards',
+            phase2ProviderUnlockFailurePolicyGovernanceDecisionTitle: 'Failure Recovery / Policy Claim Safety / Human Governance / Unlock Decisions',
+            phase2ProviderUnlockFailureTitle: 'Failure Recovery Review Cards',
+            phase2ProviderUnlockPolicyTitle: 'Policy Claim Safety Dependency Cards',
+            phase2ProviderUnlockGovernanceTitle: 'Human Governance Review Cards',
+            phase2ProviderUnlockDecisionTitle: 'Provider Unlock Decision Cards',
+            phase2ProviderUnlockBlockersQualityAuditSafetyTitle: 'Phase 2 Provider Unlock Blockers / Quality / Audit / Safety',
+            phase2ProviderUnlockBlockersTitle: 'Phase 2 Provider Unlock Blockers',
+            phase2ProviderUnlockQualityTitle: 'Provider Unlock Quality Checks',
+            phase2ProviderUnlockAuditTitle: 'Audit Preview',
+            phase2ProviderUnlockSafetyTitle: '安全边界',
+            phase2ProviderUnlockMode: '模式',
+            phase2ProviderUnlockCandidateCount: 'Provider candidate 数量',
+            phase2ProviderUnlockApprovalCount: 'Approval review 数量',
+            phase2ProviderUnlockSecretCount: 'Secret/network requirement 数量',
+            phase2ProviderUnlockCostCount: 'Cost/quota review 数量',
+            phase2ProviderUnlockSandboxCount: 'Sandbox contract test review 数量',
+            phase2ProviderUnlockBlockerCount: 'Unlock blocker 数量',
+            phase2ProviderUnlockRecommendedAction: '推荐 operator action',
+            phase2ProviderUnlockDisabled: '已禁用',
+            phase2ProviderUnlockNoData: '暂无 provider unlock review 数据。',
+            phase2ProviderUnlockCopyNoData: '暂无可复制的 provider unlock review 内容。',
+            phase2ProviderUnlockCopyFailed: '无法复制 provider unlock review 内容。',
+            phase2ProviderUnlockCopied: 'Provider unlock review 内容已复制。',
+            phase2ProviderUnlockCopySummary: '复制 provider unlock review summary',
+            phase2ProviderUnlockCopyCandidates: '复制 provider unlock candidate cards',
+            phase2ProviderUnlockCopyApproval: '复制 approval requirement review cards',
+            phase2ProviderUnlockCopySecret: '复制 secret network requirement cards',
+            phase2ProviderUnlockCopyCost: '复制 cost quota review cards',
+            phase2ProviderUnlockCopySandbox: '复制 sandbox contract test review cards',
+            phase2ProviderUnlockCopyAuditLogging: '复制 audit logging requirement cards',
+            phase2ProviderUnlockCopyFailure: '复制 failure recovery review cards',
+            phase2ProviderUnlockCopyDecision: '复制 provider unlock decision cards',
+            phase2ProviderUnlockCopyFull: '复制完整 provider unlock review pack',
+            phase2ProviderUnlockPreviewNote: '仅为 deterministic provider unlock review preview。不连接 provider，不读取 API key，不读取 secret，不发送外部请求，不执行真实 sandbox test，不创建真实 audit event，不创建 approval token，不创建 task，不执行 paid operation，不执行真实 retry 或 rollback，也不执行真实操作。',
+            phase2ProviderUnlockApprovalSecretNote: '未来解锁需要 approval、secret 和 network gate，但当前 preview 不创建真实审批、不签发 token、不读取 secret、不发送外部请求。',
+            phase2ProviderUnlockCostSandboxAuditNote: 'Cost、quota、sandbox contract tests 和 audit logging 都只是 preview。不执行真实计费、paid operation、provider sandbox test、真实 audit event、数据库写入、文件写入或 provider call。',
+            phase2ProviderUnlockFailurePolicyGovernanceNote: 'Failure recovery、policy claim safety、human governance 和 unlock decisions 都只是 preview。不执行真实 retry 或 rollback，不查询真实 policy API，不创建真实 task，不构成法律意见，也不代表真实平台合规结论或通过率。',
+            phase2ProviderUnlockQualityNote: 'Quality checks 覆盖 candidate providers、approval requirement、secret/network、cost/quota、sandbox tests、audit logging、failure recovery、policy/claim safety、human governance、decision cards、unlock blockers 和 safety boundary。',
+            phase2ProviderUnlockAuditNote: 'Audit preview 只用于展示；不写数据库，不读取真实日志或真实历史表，不创建真实 audit event。',
+            phase2ProviderUnlockSafetyNote: 'Provider、LLM、media、external scraping、database persistence、real execution、real policy check、platform upload、task creation、real export、file write、secret read、external call、token issue 和 paid operation 全部保持禁用。'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -12145,6 +12256,7 @@
                 latestProjectWorkspacePhase2DatabasePersistenceGatePack = latestProjectCreativeDecisionPack.workspace_phase2_database_persistence_gate_pack || {};
                 latestProjectWorkspacePhase2PersistenceMockHarnessPack = latestProjectCreativeDecisionPack.workspace_phase2_persistence_mock_harness_pack || {};
                 latestProjectWorkspacePhase2LlmProviderGatePack = latestProjectCreativeDecisionPack.workspace_phase2_llm_provider_gate_pack || {};
+                latestProjectWorkspacePhase2ProviderUnlockReviewPack = latestProjectCreativeDecisionPack.workspace_phase2_provider_unlock_review_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -18035,6 +18147,7 @@
         const PROJECT_WORKSPACE_PHASE2_DATABASE_PERSISTENCE_GATE_MARKER = 'Project Workspace phase2 database persistence gate bundle';
         const PROJECT_WORKSPACE_PHASE2_PERSISTENCE_MOCK_HARNESS_MARKER = 'Project Workspace phase2 persistence mock harness bundle';
         const PROJECT_WORKSPACE_PHASE2_LLM_PROVIDER_GATE_MARKER = 'Project Workspace phase2 LLM provider gate bundle';
+        const PROJECT_WORKSPACE_PHASE2_PROVIDER_UNLOCK_REVIEW_MARKER = 'Project Workspace phase2 provider unlock review bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -26046,6 +26159,139 @@
         function copyProjectWorkspaceCostQuotaTimeoutGuardCards() { return copyProjectWorkspacePhase2LlmProviderGateText('cost'); }
         function copyProjectWorkspaceLlmFailureHandlingCards() { return copyProjectWorkspacePhase2LlmProviderGateText('failure'); }
         function copyProjectWorkspaceFullPhase2LlmProviderGatePack() { return copyProjectWorkspacePhase2LlmProviderGateText('full'); }
+
+        function projectWorkspacePhase2ProviderUnlockReviewPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspacePhase2ProviderUnlockReviewPack && Object.keys(latestProjectWorkspacePhase2ProviderUnlockReviewPack).length) return latestProjectWorkspacePhase2ProviderUnlockReviewPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_phase2_provider_unlock_review_pack || {};
+        }
+
+        function projectWorkspacePhase2ProviderUnlockReviewHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspacePhase2ProviderUnlockReviewJsonText(value) {
+            if (!projectWorkspacePhase2ProviderUnlockReviewHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspacePhase2ProviderUnlockReviewDisabledText(value) {
+            return value === false || value == null ? t('phase2ProviderUnlockDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportPhase2ProviderUnlockReviewSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspacePhase2ProviderUnlockReviewPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PHASE2_PROVIDER_UNLOCK_REVIEW_MARKER,
+                has_workspace_phase2_provider_unlock_review_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                provider_unlock_review_summary: pack.provider_unlock_review_summary || {},
+                provider_unlock_candidate_cards: Array.isArray(pack.provider_unlock_candidate_cards) ? pack.provider_unlock_candidate_cards : [],
+                approval_requirement_review_cards: Array.isArray(pack.approval_requirement_review_cards) ? pack.approval_requirement_review_cards : [],
+                secret_network_requirement_cards: Array.isArray(pack.secret_network_requirement_cards) ? pack.secret_network_requirement_cards : [],
+                cost_quota_review_cards: Array.isArray(pack.cost_quota_review_cards) ? pack.cost_quota_review_cards : [],
+                sandbox_contract_test_review_cards: Array.isArray(pack.sandbox_contract_test_review_cards) ? pack.sandbox_contract_test_review_cards : [],
+                audit_logging_requirement_cards: Array.isArray(pack.audit_logging_requirement_cards) ? pack.audit_logging_requirement_cards : [],
+                failure_recovery_review_cards: Array.isArray(pack.failure_recovery_review_cards) ? pack.failure_recovery_review_cards : [],
+                policy_claim_safety_dependency_cards: Array.isArray(pack.policy_claim_safety_dependency_cards) ? pack.policy_claim_safety_dependency_cards : [],
+                human_governance_review_cards: Array.isArray(pack.human_governance_review_cards) ? pack.human_governance_review_cards : [],
+                provider_unlock_decision_cards: Array.isArray(pack.provider_unlock_decision_cards) ? pack.provider_unlock_decision_cards : [],
+                phase2_provider_unlock_blockers: Array.isArray(pack.phase2_provider_unlock_blockers) ? pack.phase2_provider_unlock_blockers : [],
+                provider_unlock_quality_checks: pack.provider_unlock_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspacePhase2ProviderUnlockReviewSummaryText(pack = projectWorkspaceExportPhase2ProviderUnlockReviewSnapshot()) {
+            if (!pack.has_workspace_phase2_provider_unlock_review_pack) return '';
+            const summary = pack.provider_unlock_review_summary || {};
+            return [
+                t('phase2ProviderUnlockSummaryTitle'),
+                `${t('phase2ProviderUnlockMode')}: ${summary.mode || t('none')}`,
+                `${t('phase2ProviderUnlockCandidateCount')}: ${summary.provider_unlock_candidate_count ?? pack.provider_unlock_candidate_cards.length}`,
+                `${t('phase2ProviderUnlockApprovalCount')}: ${summary.approval_requirement_review_count ?? pack.approval_requirement_review_cards.length}`,
+                `${t('phase2ProviderUnlockSecretCount')}: ${summary.secret_network_requirement_count ?? pack.secret_network_requirement_cards.length}`,
+                `${t('phase2ProviderUnlockCostCount')}: ${summary.cost_quota_review_count ?? pack.cost_quota_review_cards.length}`,
+                `${t('phase2ProviderUnlockSandboxCount')}: ${summary.sandbox_contract_test_review_count ?? pack.sandbox_contract_test_review_cards.length}`,
+                `${t('phase2ProviderUnlockBlockerCount')}: ${summary.provider_unlock_blocker_count ?? pack.phase2_provider_unlock_blockers.length}`,
+                `${t('phase2ProviderUnlockRecommendedAction')}: ${summary.risk_note || t('phase2ProviderUnlockPreviewNote')}`,
+                `real_provider_call_allowed: ${projectWorkspacePhase2ProviderUnlockReviewDisabledText(summary.real_provider_call_allowed)}`,
+                `secret_read_allowed: ${projectWorkspacePhase2ProviderUnlockReviewDisabledText(summary.secret_read_allowed)}`,
+                `external_call_allowed: ${projectWorkspacePhase2ProviderUnlockReviewDisabledText(summary.external_call_allowed)}`,
+                `token_issue_allowed: ${projectWorkspacePhase2ProviderUnlockReviewDisabledText(summary.token_issue_allowed)}`,
+                `paid_operation_allowed: ${projectWorkspacePhase2ProviderUnlockReviewDisabledText(summary.paid_operation_allowed)}`,
+                `real_execution_allowed: ${projectWorkspacePhase2ProviderUnlockReviewDisabledText(summary.real_execution_allowed)}`,
+                t('phase2ProviderUnlockPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspacePhase2ProviderUnlockReviewSectionText(titleKey, value) {
+            const body = projectWorkspacePhase2ProviderUnlockReviewJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportPhase2ProviderUnlockReviewMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ProviderUnlockReviewSnapshot(workspace);
+            if (!pack.has_workspace_phase2_provider_unlock_review_pack) return '';
+            return [
+                `## ${t('phase2ProviderUnlockPackTitle')}`,
+                projectWorkspacePhase2ProviderUnlockReviewSummaryText(pack), '',
+                projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockCandidateTitle', pack.provider_unlock_candidate_cards), '',
+                projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockApprovalTitle', pack.approval_requirement_review_cards), '',
+                projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockSecretTitle', pack.secret_network_requirement_cards), '',
+                projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockCostTitle', pack.cost_quota_review_cards), '',
+                projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockSandboxTitle', pack.sandbox_contract_test_review_cards), '',
+                projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockAuditLoggingTitle', pack.audit_logging_requirement_cards), '',
+                projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockFailureTitle', pack.failure_recovery_review_cards), '',
+                projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockPolicyTitle', pack.policy_claim_safety_dependency_cards), '',
+                projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockGovernanceTitle', pack.human_governance_review_cards), '',
+                projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockDecisionTitle', pack.provider_unlock_decision_cards), '',
+                projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockBlockersTitle', pack.phase2_provider_unlock_blockers), '',
+                projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockQualityTitle', pack.provider_unlock_quality_checks), '',
+                projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockAuditTitle', pack.audit_preview), '',
+                projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockSafetyTitle', pack.safety_boundaries),
+                t('phase2ProviderUnlockPreviewNote'),
+                t('phase2ProviderUnlockApprovalSecretNote'),
+                t('phase2ProviderUnlockCostSandboxAuditNote'),
+                t('phase2ProviderUnlockFailurePolicyGovernanceNote'),
+                t('phase2ProviderUnlockQualityNote'),
+                t('phase2ProviderUnlockAuditNote'),
+                t('phase2ProviderUnlockSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspacePhase2ProviderUnlockReviewText(kind = 'full') {
+            const status = document.getElementById('projectWorkspacePhase2ProviderUnlockReviewStatus');
+            const pack = projectWorkspaceExportPhase2ProviderUnlockReviewSnapshot();
+            const text = kind === 'summary' ? projectWorkspacePhase2ProviderUnlockReviewSummaryText(pack)
+                : kind === 'candidates' ? projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockCandidateTitle', pack.provider_unlock_candidate_cards)
+                : kind === 'approval' ? projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockApprovalTitle', pack.approval_requirement_review_cards)
+                : kind === 'secret' ? projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockSecretTitle', pack.secret_network_requirement_cards)
+                : kind === 'cost' ? projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockCostTitle', pack.cost_quota_review_cards)
+                : kind === 'sandbox' ? projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockSandboxTitle', pack.sandbox_contract_test_review_cards)
+                : kind === 'audit_logging' ? projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockAuditLoggingTitle', pack.audit_logging_requirement_cards)
+                : kind === 'failure' ? projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockFailureTitle', pack.failure_recovery_review_cards)
+                : kind === 'decision' ? projectWorkspacePhase2ProviderUnlockReviewSectionText('phase2ProviderUnlockDecisionTitle', pack.provider_unlock_decision_cards)
+                : projectWorkspaceExportPhase2ProviderUnlockReviewMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('phase2ProviderUnlockCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('phase2ProviderUnlockCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('phase2ProviderUnlockCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('phase2ProviderUnlockCopyFailed'); }
+        }
+
+        function copyProjectWorkspacePhase2ProviderUnlockReviewSummary() { return copyProjectWorkspacePhase2ProviderUnlockReviewText('summary'); }
+        function copyProjectWorkspaceProviderUnlockCandidateCards() { return copyProjectWorkspacePhase2ProviderUnlockReviewText('candidates'); }
+        function copyProjectWorkspaceApprovalRequirementReviewCards() { return copyProjectWorkspacePhase2ProviderUnlockReviewText('approval'); }
+        function copyProjectWorkspaceSecretNetworkRequirementCards() { return copyProjectWorkspacePhase2ProviderUnlockReviewText('secret'); }
+        function copyProjectWorkspaceCostQuotaReviewCards() { return copyProjectWorkspacePhase2ProviderUnlockReviewText('cost'); }
+        function copyProjectWorkspaceSandboxContractTestReviewCards() { return copyProjectWorkspacePhase2ProviderUnlockReviewText('sandbox'); }
+        function copyProjectWorkspaceAuditLoggingRequirementCards() { return copyProjectWorkspacePhase2ProviderUnlockReviewText('audit_logging'); }
+        function copyProjectWorkspaceFailureRecoveryReviewCards() { return copyProjectWorkspacePhase2ProviderUnlockReviewText('failure'); }
+        function copyProjectWorkspaceProviderUnlockDecisionCards() { return copyProjectWorkspacePhase2ProviderUnlockReviewText('decision'); }
+        function copyProjectWorkspaceFullPhase2ProviderUnlockReviewPack() { return copyProjectWorkspacePhase2ProviderUnlockReviewText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -30745,6 +30991,46 @@
             return `<div class="section-block" id="projectWorkspacePhase2LlmProviderGateTestBlockersQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2LlmGateTestBlockersQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2LlmGateSafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2LlmProviderGatePack()">${escapeHTML(t('phase2LlmGateCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateTestPlanTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(tests || t('phase2LlmGateNoData'))}</pre><div class="field-helper">unit tests / contract tests / prompt snapshot tests / schema validation tests / claim safety guard tests / redaction tests / cost quota tests / timeout tests / audit preview tests / permission boundary tests</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateBlockersTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2LlmGateNoData'))}</pre><div class="field-helper">no provider key approval / no secret access approval / no external call approval / no cost quota approval / no provider sandbox contract test / no real audit sink / no production approval / no rollback failure recovery implementation</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2LlmGateNoData'))}</pre><div class="field-helper">prompt contract / evidence grounding / claim guard / output schema / provider boundary lock / redaction privacy / cost/quota/timeout / human approval / failure handling / audit preview / test plan / unlock blockers / safety boundary</div><div class="field-helper">${escapeHTML(t('phase2LlmGateQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmGateAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2LlmGateNoData'))}</pre><div class="field-helper">${escapeHTML(t('phase2LlmGateAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2LlmGateSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled</div><div class="field-helper">${escapeHTML(t('phase2LlmGateSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspacePhase2ProviderUnlockReviewSummaryCandidatePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ProviderUnlockReviewSnapshot(workspace); if (!pack.has_workspace_phase2_provider_unlock_review_pack) return '';
+            const summary = pack.provider_unlock_review_summary || {};
+            const candidates = pack.provider_unlock_candidate_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.provider_label || card.provider_unlock_candidate_id || t('none'))}</strong><div class="field-helper">provider_unlock_candidate_id: ${escapeHTML(card.provider_unlock_candidate_id || '')} / provider_group: ${escapeHTML(card.provider_group || '')}</div><div><strong>provider_capability_type:</strong> ${escapeHTML(card.provider_capability_type || '')}</div><div><strong>intended_use_case:</strong> ${escapeHTML(card.intended_use_case || '')}</div><div class="field-helper">required_input_contract_refs: ${escapeHTML((card.required_input_contract_refs || []).join(', ') || t('none'))}</div><div class="field-helper">required_output_contract_refs: ${escapeHTML((card.required_output_contract_refs || []).join(', ') || t('none'))}</div><div class="field-helper">current_unlock_status: ${escapeHTML(card.current_unlock_status || '')} / recommended_decision: ${escapeHTML(card.recommended_decision || '')}</div><div class="field-helper">real_provider_call_allowed: ${escapeHTML(projectWorkspacePhase2ProviderUnlockReviewDisabledText(card.real_provider_call_allowed))} / secret_read_allowed: ${escapeHTML(projectWorkspacePhase2ProviderUnlockReviewDisabledText(card.secret_read_allowed))} / external_call_allowed: ${escapeHTML(projectWorkspacePhase2ProviderUnlockReviewDisabledText(card.external_call_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspacePhase2ProviderUnlockReviewDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspacePhase2ProviderUnlockReviewSummaryCandidatePanel" data-marker="project_workspace_phase2_provider_unlock_review_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ProviderUnlockPackTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ProviderUnlockSummaryCandidateTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ProviderUnlockPackHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2ProviderUnlockReviewSummary()">${escapeHTML(t('phase2ProviderUnlockCopySummary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderUnlockCandidateCards()">${escapeHTML(t('phase2ProviderUnlockCopyCandidates'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2ProviderUnlockReviewPack()">${escapeHTML(t('phase2ProviderUnlockCopyFull'))}</button></div></div><div class="metric-strip">${metricPill(t('phase2ProviderUnlockMode'), summary.mode || t('none'))}${metricPill(t('phase2ProviderUnlockCandidateCount'), String(summary.provider_unlock_candidate_count ?? pack.provider_unlock_candidate_cards.length))}${metricPill(t('phase2ProviderUnlockApprovalCount'), String(summary.approval_requirement_review_count ?? pack.approval_requirement_review_cards.length))}${metricPill(t('phase2ProviderUnlockSecretCount'), String(summary.secret_network_requirement_count ?? pack.secret_network_requirement_cards.length))}${metricPill(t('phase2ProviderUnlockCostCount'), String(summary.cost_quota_review_count ?? pack.cost_quota_review_cards.length))}${metricPill(t('phase2ProviderUnlockSandboxCount'), String(summary.sandbox_contract_test_review_count ?? pack.sandbox_contract_test_review_cards.length))}${metricPill(t('phase2ProviderUnlockBlockerCount'), String(summary.provider_unlock_blocker_count ?? pack.phase2_provider_unlock_blockers.length))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspacePhase2ProviderUnlockReviewSummaryText(pack) || t('phase2ProviderUnlockNoData'))}</pre><div class="graph-os-compact-grid">${candidates || `<div class="empty-state">${escapeHTML(t('phase2ProviderUnlockNoData'))}</div>`}</div><div class="field-helper">llm_text_generation / image_generation_provider / video_generation_provider / media_storage_provider / analytics_or_tracking_provider / translation_provider / approval_or_ticket_provider / database_persistence_provider / external_scraping_provider / rollback_restore_provider</div><div class="demo-warning">${escapeHTML(t('phase2ProviderUnlockPreviewNote'))}</div><div id="projectWorkspacePhase2ProviderUnlockReviewStatus" class="field-helper" aria-live="polite"></div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2ProviderUnlockReviewApprovalSecretPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ProviderUnlockReviewSnapshot(workspace); if (!pack.has_workspace_phase2_provider_unlock_review_pack) return '';
+            const approval = projectWorkspacePhase2ProviderUnlockReviewJsonText(pack.approval_requirement_review_cards);
+            const secret = projectWorkspacePhase2ProviderUnlockReviewJsonText(pack.secret_network_requirement_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2ProviderUnlockReviewApprovalSecretPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ProviderUnlockApprovalSecretTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ProviderUnlockApprovalSecretNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceApprovalRequirementReviewCards()">${escapeHTML(t('phase2ProviderUnlockCopyApproval'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSecretNetworkRequirementCards()">${escapeHTML(t('phase2ProviderUnlockCopySecret'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderUnlockApprovalTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(approval || t('phase2ProviderUnlockNoData'))}</pre><div class="field-helper">approval_review_id / approval_label / approval_scope / required_approver_role / required_approval_artifacts / approval_token_required=true / approval_token_issued=false / real_task_creation_allowed=false / token_issue_allowed=false / real_execution_allowed=false</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderUnlockSecretTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(secret || t('phase2ProviderUnlockNoData'))}</pre><div class="field-helper">secret_network_review_id / requirement_label / provider_capability_type / required_secret_refs / required_network_scope / secret_storage_requirement / secret_rotation_requirement / network_allowlist_requirement / secret_read_allowed=false / external_call_allowed=false / real_provider_call_allowed=false</div></div></div><div class="demo-warning">${escapeHTML(t('phase2ProviderUnlockApprovalSecretNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2ProviderUnlockReviewCostSandboxAuditPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ProviderUnlockReviewSnapshot(workspace); if (!pack.has_workspace_phase2_provider_unlock_review_pack) return '';
+            const cost = projectWorkspacePhase2ProviderUnlockReviewJsonText(pack.cost_quota_review_cards);
+            const sandbox = projectWorkspacePhase2ProviderUnlockReviewJsonText(pack.sandbox_contract_test_review_cards);
+            const auditLogging = projectWorkspacePhase2ProviderUnlockReviewJsonText(pack.audit_logging_requirement_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2ProviderUnlockReviewCostSandboxAuditPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ProviderUnlockCostSandboxAuditTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ProviderUnlockCostSandboxAuditNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCostQuotaReviewCards()">${escapeHTML(t('phase2ProviderUnlockCopyCost'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSandboxContractTestReviewCards()">${escapeHTML(t('phase2ProviderUnlockCopySandbox'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAuditLoggingRequirementCards()">${escapeHTML(t('phase2ProviderUnlockCopyAuditLogging'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderUnlockCostTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(cost || t('phase2ProviderUnlockNoData'))}</pre><div class="field-helper">cost_quota_review_id / provider_capability_type / estimated_cost_unit / quota_scope / rate_limit_requirement / retry_budget / timeout_requirement / cost_guard_required / paid_operation_allowed=false / real_provider_call_allowed=false</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderUnlockSandboxTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(sandbox || t('phase2ProviderUnlockNoData'))}</pre><div class="field-helper">sandbox_test_review_id / required_contract_tests / required_mock_tests / required_sandbox_tests / schema_validation_required / claim_safety_validation_required / redaction_validation_required / sandbox_test_executed=false</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderUnlockAuditLoggingTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(auditLogging || t('phase2ProviderUnlockNoData'))}</pre><div class="field-helper">future audit sink / event shape / retention / trace ids / no real audit event / no database write</div></div></div><div class="demo-warning">${escapeHTML(t('phase2ProviderUnlockCostSandboxAuditNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2ProviderUnlockReviewFailurePolicyGovernanceDecisionPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ProviderUnlockReviewSnapshot(workspace); if (!pack.has_workspace_phase2_provider_unlock_review_pack) return '';
+            const failure = projectWorkspacePhase2ProviderUnlockReviewJsonText(pack.failure_recovery_review_cards);
+            const policy = projectWorkspacePhase2ProviderUnlockReviewJsonText(pack.policy_claim_safety_dependency_cards);
+            const governance = projectWorkspacePhase2ProviderUnlockReviewJsonText(pack.human_governance_review_cards);
+            const decisions = projectWorkspacePhase2ProviderUnlockReviewJsonText(pack.provider_unlock_decision_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2ProviderUnlockReviewFailurePolicyGovernanceDecisionPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ProviderUnlockFailurePolicyGovernanceDecisionTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ProviderUnlockFailurePolicyGovernanceNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFailureRecoveryReviewCards()">${escapeHTML(t('phase2ProviderUnlockCopyFailure'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderUnlockDecisionCards()">${escapeHTML(t('phase2ProviderUnlockCopyDecision'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderUnlockFailureTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(failure || t('phase2ProviderUnlockNoData'))}</pre><div class="field-helper">timeout / rate limit / provider unavailable / schema invalid / unsafe output / missing evidence trace / cost quota exceeded / secret missing / partial execution / rollback needed / no real retry / no real rollback</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderUnlockPolicyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(policy || t('phase2ProviderUnlockNoData'))}</pre><div class="field-helper">claim safety / evidence grounding / do_not_claim / policy disabled checks / no real policy API / not legal advice / not platform compliance conclusion</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderUnlockGovernanceTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(governance || t('phase2ProviderUnlockNoData'))}</pre><div class="field-helper">operator approval / escalation / manual review / release owner / rollback owner / no real task creation</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderUnlockDecisionTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(decisions || t('phase2ProviderUnlockNoData'))}</pre><div class="field-helper">blocked / not_ready / preview_only / ready_for_real_provider=false</div></div></div><div class="demo-warning">${escapeHTML(t('phase2ProviderUnlockFailurePolicyGovernanceNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2ProviderUnlockReviewBlockersQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ProviderUnlockReviewSnapshot(workspace); if (!pack.has_workspace_phase2_provider_unlock_review_pack) return '';
+            const blockers = projectWorkspacePhase2ProviderUnlockReviewJsonText(pack.phase2_provider_unlock_blockers);
+            const quality = projectWorkspacePhase2ProviderUnlockReviewJsonText(pack.provider_unlock_quality_checks);
+            const audit = projectWorkspacePhase2ProviderUnlockReviewJsonText(pack.audit_preview);
+            const safety = projectWorkspacePhase2ProviderUnlockReviewJsonText(pack.safety_boundaries);
+            return `<div class="section-block" id="projectWorkspacePhase2ProviderUnlockReviewBlockersQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ProviderUnlockBlockersQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ProviderUnlockSafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2ProviderUnlockReviewPack()">${escapeHTML(t('phase2ProviderUnlockCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderUnlockBlockersTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2ProviderUnlockNoData'))}</pre><div class="field-helper">no provider key approval / no secret access approval / no external call approval / no paid operation approval / no sandbox contract test executed / no real audit sink / no production approval / no rollback implementation / no provider-specific legal review</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderUnlockQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2ProviderUnlockNoData'))}</pre><div class="field-helper">candidate providers / approval requirement / secret/network / cost/quota / sandbox tests / audit logging / failure recovery / policy/claim safety / human governance / decision cards / unlock blockers / safety boundary</div><div class="field-helper">${escapeHTML(t('phase2ProviderUnlockQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderUnlockAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2ProviderUnlockNoData'))}</pre><div class="field-helper">${escapeHTML(t('phase2ProviderUnlockAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2ProviderUnlockSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled / paid_operation disabled</div><div class="field-helper">${escapeHTML(t('phase2ProviderUnlockSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -31213,6 +31499,8 @@
                 '',
                 projectWorkspaceExportPhase2LlmProviderGateMarkdown(workspace),
                 '',
+                projectWorkspaceExportPhase2ProviderUnlockReviewMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -31348,6 +31636,7 @@
                 workspace_phase2_database_persistence_gate_pack: projectWorkspaceExportPhase2DatabasePersistenceGateSnapshot(workspace),
                 workspace_phase2_persistence_mock_harness_pack: projectWorkspaceExportPhase2PersistenceMockHarnessSnapshot(workspace),
                 workspace_phase2_llm_provider_gate_pack: projectWorkspaceExportPhase2LlmProviderGateSnapshot(workspace),
+                workspace_phase2_provider_unlock_review_pack: projectWorkspaceExportPhase2ProviderUnlockReviewSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -44014,6 +44303,11 @@
                     ${renderProjectWorkspacePhase2LlmProviderGateSchemaBoundaryRedactionPanel(workspace)}
                     ${renderProjectWorkspacePhase2LlmProviderGateCostApprovalFailureAuditPanel(workspace)}
                     ${renderProjectWorkspacePhase2LlmProviderGateTestBlockersQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspacePhase2ProviderUnlockReviewSummaryCandidatePanel(workspace)}
+                    ${renderProjectWorkspacePhase2ProviderUnlockReviewApprovalSecretPanel(workspace)}
+                    ${renderProjectWorkspacePhase2ProviderUnlockReviewCostSandboxAuditPanel(workspace)}
+                    ${renderProjectWorkspacePhase2ProviderUnlockReviewFailurePolicyGovernanceDecisionPanel(workspace)}
+                    ${renderProjectWorkspacePhase2ProviderUnlockReviewBlockersQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}

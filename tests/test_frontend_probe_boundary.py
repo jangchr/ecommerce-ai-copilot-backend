@@ -17938,6 +17938,199 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_phase2_provider_unlock_review_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace phase2 provider unlock review bundle",
+            "project_workspace_phase2_provider_unlock_review_marker",
+            "PROJECT_WORKSPACE_PHASE2_PROVIDER_UNLOCK_REVIEW_MARKER",
+            "latestProjectWorkspacePhase2ProviderUnlockReviewPack",
+            "workspace_phase2_provider_unlock_review_pack",
+            "projectWorkspacePhase2ProviderUnlockReviewPackFromWorkspace",
+            "projectWorkspaceExportPhase2ProviderUnlockReviewSnapshot",
+            "projectWorkspaceExportPhase2ProviderUnlockReviewMarkdown",
+            "renderProjectWorkspacePhase2ProviderUnlockReviewSummaryCandidatePanel",
+            "renderProjectWorkspacePhase2ProviderUnlockReviewApprovalSecretPanel",
+            "renderProjectWorkspacePhase2ProviderUnlockReviewCostSandboxAuditPanel",
+            "renderProjectWorkspacePhase2ProviderUnlockReviewFailurePolicyGovernanceDecisionPanel",
+            "renderProjectWorkspacePhase2ProviderUnlockReviewBlockersQualityAuditSafetyPanel",
+            "copyProjectWorkspacePhase2ProviderUnlockReviewSummary",
+            "copyProjectWorkspaceProviderUnlockCandidateCards",
+            "copyProjectWorkspaceApprovalRequirementReviewCards",
+            "copyProjectWorkspaceSecretNetworkRequirementCards",
+            "copyProjectWorkspaceCostQuotaReviewCards",
+            "copyProjectWorkspaceSandboxContractTestReviewCards",
+            "copyProjectWorkspaceAuditLoggingRequirementCards",
+            "copyProjectWorkspaceFailureRecoveryReviewCards",
+            "copyProjectWorkspaceProviderUnlockDecisionCards",
+            "copyProjectWorkspaceFullPhase2ProviderUnlockReviewPack",
+            "workspace_phase2_provider_unlock_review_pack: projectWorkspaceExportPhase2ProviderUnlockReviewSnapshot(workspace)",
+            "Phase 2 Provider Unlock Approval / Cost / Audit Review",
+            "Provider Unlock Review Summary",
+            "Provider Unlock Candidate Cards",
+            "Approval Requirement Review Cards",
+            "Secret Network Requirement Cards",
+            "Cost Quota Review Cards",
+            "Sandbox Contract Test Review Cards",
+            "Audit Logging Requirement Cards",
+            "Failure Recovery Review Cards",
+            "Policy Claim Safety Dependency Cards",
+            "Human Governance Review Cards",
+            "Provider Unlock Decision Cards",
+            "Phase 2 Provider Unlock Blockers",
+            "Provider Unlock Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "provider_unlock_review_summary",
+            "provider_unlock_candidate_cards",
+            "approval_requirement_review_cards",
+            "secret_network_requirement_cards",
+            "cost_quota_review_cards",
+            "sandbox_contract_test_review_cards",
+            "audit_logging_requirement_cards",
+            "failure_recovery_review_cards",
+            "policy_claim_safety_dependency_cards",
+            "human_governance_review_cards",
+            "provider_unlock_decision_cards",
+            "phase2_provider_unlock_blockers",
+            "provider_unlock_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+            "card.provider_unlock_candidate_id",
+            "card.provider_label",
+            "card.provider_group",
+            "card.provider_capability_type",
+            "card.intended_use_case",
+            "card.required_input_contract_refs",
+            "card.required_output_contract_refs",
+            "card.current_unlock_status",
+            "card.recommended_decision",
+            "card.real_provider_call_allowed",
+            "card.secret_read_allowed",
+            "card.external_call_allowed",
+            "card.real_execution_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for coverage in [
+            "llm_text_generation / image_generation_provider / video_generation_provider / media_storage_provider / analytics_or_tracking_provider / translation_provider / approval_or_ticket_provider / database_persistence_provider / external_scraping_provider / rollback_restore_provider",
+            "approval_review_id / approval_label / approval_scope / required_approver_role / required_approval_artifacts / approval_token_required=true / approval_token_issued=false / real_task_creation_allowed=false / token_issue_allowed=false / real_execution_allowed=false",
+            "secret_network_review_id / requirement_label / provider_capability_type / required_secret_refs / required_network_scope / secret_storage_requirement / secret_rotation_requirement / network_allowlist_requirement / secret_read_allowed=false / external_call_allowed=false / real_provider_call_allowed=false",
+            "cost_quota_review_id / provider_capability_type / estimated_cost_unit / quota_scope / rate_limit_requirement / retry_budget / timeout_requirement / cost_guard_required / paid_operation_allowed=false / real_provider_call_allowed=false",
+            "sandbox_test_review_id / required_contract_tests / required_mock_tests / required_sandbox_tests / schema_validation_required / claim_safety_validation_required / redaction_validation_required / sandbox_test_executed=false",
+            "future audit sink / event shape / retention / trace ids / no real audit event / no database write",
+            "timeout / rate limit / provider unavailable / schema invalid / unsafe output / missing evidence trace / cost quota exceeded / secret missing / partial execution / rollback needed / no real retry / no real rollback",
+            "claim safety / evidence grounding / do_not_claim / policy disabled checks / no real policy API / not legal advice / not platform compliance conclusion",
+            "operator approval / escalation / manual review / release owner / rollback owner / no real task creation",
+            "blocked / not_ready / preview_only / ready_for_real_provider=false",
+            "no provider key approval / no secret access approval / no external call approval / no paid operation approval / no sandbox contract test executed / no real audit sink / no production approval / no rollback implementation / no provider-specific legal review",
+            "candidate providers / approval requirement / secret/network / cost/quota / sandbox tests / audit logging / failure recovery / policy/claim safety / human governance / decision cards / unlock blockers / safety boundary",
+            "provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled / paid_operation disabled",
+        ]:
+            with self.subTest(coverage=coverage):
+                self.assertIn(coverage, html)
+        previous = html.index("renderProjectWorkspacePhase2LlmProviderGateTestBlockersQualityAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspacePhase2ProviderUnlockReviewSummaryCandidatePanel(workspace)")
+        approval = html.index("renderProjectWorkspacePhase2ProviderUnlockReviewApprovalSecretPanel(workspace)")
+        cost = html.index("renderProjectWorkspacePhase2ProviderUnlockReviewCostSandboxAuditPanel(workspace)")
+        failure = html.index("renderProjectWorkspacePhase2ProviderUnlockReviewFailurePolicyGovernanceDecisionPanel(workspace)")
+        blockers = html.index("renderProjectWorkspacePhase2ProviderUnlockReviewBlockersQualityAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, approval)
+        self.assertLess(approval, cost)
+        self.assertLess(cost, failure)
+        self.assertLess(failure, blockers)
+        self.assertLess(blockers, core)
+
+    def test_workspace_phase2_provider_unlock_review_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "phase2ProviderUnlockPackTitle",
+            "phase2ProviderUnlockPackHelper",
+            "phase2ProviderUnlockSummaryCandidateTitle",
+            "phase2ProviderUnlockApprovalSecretTitle",
+            "phase2ProviderUnlockCostSandboxAuditTitle",
+            "phase2ProviderUnlockFailurePolicyGovernanceDecisionTitle",
+            "phase2ProviderUnlockBlockersQualityAuditSafetyTitle",
+            "phase2ProviderUnlockCopySummary",
+            "phase2ProviderUnlockCopyCandidates",
+            "phase2ProviderUnlockCopyApproval",
+            "phase2ProviderUnlockCopySecret",
+            "phase2ProviderUnlockCopyCost",
+            "phase2ProviderUnlockCopySandbox",
+            "phase2ProviderUnlockCopyAuditLogging",
+            "phase2ProviderUnlockCopyFailure",
+            "phase2ProviderUnlockCopyDecision",
+            "phase2ProviderUnlockCopyFull",
+            "phase2ProviderUnlockCopied",
+            "phase2ProviderUnlockCopyFailed",
+            "phase2ProviderUnlockCopyNoData",
+            "phase2ProviderUnlockPreviewNote",
+            "phase2ProviderUnlockSafetyNote",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace phase2 provider unlock review bundle", script)
+            self.assertIn("project_workspace_phase2_provider_unlock_review_marker", script)
+        markdown = html[
+            html.index("function projectWorkspacePhase2ProviderUnlockReviewSummaryText"):
+            html.index("async function copyProjectWorkspacePhase2ProviderUnlockReviewText")
+        ]
+        for key in [
+            "phase2ProviderUnlockPackTitle",
+            "phase2ProviderUnlockSummaryTitle",
+            "phase2ProviderUnlockCandidateTitle",
+            "phase2ProviderUnlockApprovalTitle",
+            "phase2ProviderUnlockSecretTitle",
+            "phase2ProviderUnlockCostTitle",
+            "phase2ProviderUnlockSandboxTitle",
+            "phase2ProviderUnlockAuditLoggingTitle",
+            "phase2ProviderUnlockFailureTitle",
+            "phase2ProviderUnlockPolicyTitle",
+            "phase2ProviderUnlockGovernanceTitle",
+            "phase2ProviderUnlockDecisionTitle",
+            "phase2ProviderUnlockBlockersTitle",
+            "phase2ProviderUnlockQualityTitle",
+            "phase2ProviderUnlockAuditTitle",
+            "phase2ProviderUnlockSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PHASE2_PROVIDER_UNLOCK_REVIEW_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic provider unlock review preview only",
+            "not a real provider integration",
+            "does not read API keys",
+            "does not read secrets",
+            "does not make external requests",
+            "does not execute real sandbox tests",
+            "does not create real audit events",
+            "does not create approval tokens",
+            "does not create tasks",
+            "does not execute paid operations",
+            "does not execute real retry or rollback",
+            "not legal advice",
+            "not a real platform compliance conclusion",
+            "pass rate",
+            "does not write databases",
+            "does not read real logs or real history tables",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, and paid operation remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [
