@@ -18131,6 +18131,197 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_phase2_readiness_review_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace phase2 readiness review bundle",
+            "project_workspace_phase2_readiness_review_marker",
+            "PROJECT_WORKSPACE_PHASE2_READINESS_REVIEW_MARKER",
+            "latestProjectWorkspacePhase2ReadinessReviewPack",
+            "workspace_phase2_readiness_review_pack",
+            "projectWorkspacePhase2ReadinessReviewPackFromWorkspace",
+            "projectWorkspaceExportPhase2ReadinessReviewSnapshot",
+            "projectWorkspaceExportPhase2ReadinessReviewMarkdown",
+            "renderProjectWorkspacePhase2ReadinessReviewSummaryGatePanel",
+            "renderProjectWorkspacePhase2ReadinessReviewCapabilityCandidatePanel",
+            "renderProjectWorkspacePhase2ReadinessReviewValidationDependencyPanel",
+            "renderProjectWorkspacePhase2ReadinessReviewOperatorGapRiskPanel",
+            "renderProjectWorkspacePhase2ReadinessReviewNextBlockerQualityAuditSafetyPanel",
+            "copyProjectWorkspacePhase2ReadinessReviewSummary",
+            "copyProjectWorkspacePhase2GateStatusCards",
+            "copyProjectWorkspaceRealCapabilityUnlockReadinessCards",
+            "copyProjectWorkspaceMinimumRealIntegrationCandidateCards",
+            "copyProjectWorkspacePhase2ValidationMatrixCards",
+            "copyProjectWorkspaceCrossGateDependencyCards",
+            "copyProjectWorkspaceProductionReadinessGapCards",
+            "copyProjectWorkspacePhase2RiskRegisterCards",
+            "copyProjectWorkspacePhase2FinalBlockerCards",
+            "copyProjectWorkspaceFullPhase2ReadinessReviewPack",
+            "workspace_phase2_readiness_review_pack: projectWorkspaceExportPhase2ReadinessReviewSnapshot(workspace)",
+            "Phase 2 Readiness Review / Unlock Gate Summary",
+            "Phase 2 Readiness Review Summary",
+            "Phase 2 Gate Status Cards",
+            "Real Capability Unlock Readiness Cards",
+            "Minimum Real Integration Candidate Cards",
+            "Phase 2 Validation Matrix Cards",
+            "Cross-Gate Dependency Cards",
+            "Operator Decision Review Cards",
+            "Production Readiness Gap Cards",
+            "Phase 2 Risk Register Cards",
+            "Phase 2 Next Step Recommendation Cards",
+            "Phase 2 Final Blocker Cards",
+            "Phase 2 Readiness Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "phase2_readiness_review_summary",
+            "phase2_gate_status_cards",
+            "real_capability_unlock_readiness_cards",
+            "minimum_real_integration_candidate_cards",
+            "phase2_validation_matrix_cards",
+            "cross_gate_dependency_cards",
+            "operator_decision_review_cards",
+            "production_readiness_gap_cards",
+            "phase2_risk_register_cards",
+            "phase2_next_step_recommendation_cards",
+            "phase2_final_blocker_cards",
+            "phase2_readiness_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+            "card.gate_status_id",
+            "card.gate_label",
+            "card.gate_group",
+            "card.gate_scope",
+            "card.current_status",
+            "card.readiness_status",
+            "card.covered_controls",
+            "card.missing_controls",
+            "card.recommended_operator_action",
+            "card.real_execution_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for coverage in [
+            "database_persistence_gate / persistence_mock_harness / llm_provider_gate / provider_unlock_review / secret_environment_gate / network_external_call_guard / approval_token_gate / cost_quota_guard / audit_packet_preview / final_mvp_readiness_boundary",
+            "unlock_readiness_id / capability_label / capability_group / current_unlock_status / required_preconditions / required_tests / required_approvals / required_audit_controls / recommended_decision / real_capability_enabled=false / real_execution_allowed=false",
+            "real_database_persistence / real_llm_generation / real_provider_call / real_file_export / real_platform_upload / real_task_creation / real_approval_token_issue / real_external_call / real_policy_check / real_audit_logging",
+            "database persistence minimal adapter candidate is the smallest candidate but still not ready; LLM / provider / upload remain blocked. No real capability enabled.",
+            "unit tests / contract tests / mock harness tests / redaction tests / permission boundary tests / audit preview tests / sandbox tests / approval tests / rollback tests / cost quota tests",
+            "DB gate -> mock harness / LLM gate -> provider unlock review / secret/network -> provider call / approval token -> real execution / audit sink -> production readiness / rollback plan -> unlock decision",
+            "no real DB config / no schema migration / no audit sink / no provider key approval / no external call approval / no production approval / no rollback implementation / no cost quota approval / no legal/policy review / no real monitoring",
+            "data persistence risk / secret exposure risk / external call risk / provider cost risk / unsafe claim output risk / audit gap risk / rollback gap risk / policy/legal uncertainty / platform upload risk",
+            "ready_for_real_execution=false / blocks_real_unlock=true / no real execution allowed",
+            "provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled / paid_operation disabled",
+        ]:
+            with self.subTest(coverage=coverage):
+                self.assertIn(coverage, html)
+        previous = html.index("renderProjectWorkspacePhase2ProviderUnlockReviewBlockersQualityAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspacePhase2ReadinessReviewSummaryGatePanel(workspace)")
+        capability = html.index("renderProjectWorkspacePhase2ReadinessReviewCapabilityCandidatePanel(workspace)")
+        validation = html.index("renderProjectWorkspacePhase2ReadinessReviewValidationDependencyPanel(workspace)")
+        operator = html.index("renderProjectWorkspacePhase2ReadinessReviewOperatorGapRiskPanel(workspace)")
+        final = html.index("renderProjectWorkspacePhase2ReadinessReviewNextBlockerQualityAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, capability)
+        self.assertLess(capability, validation)
+        self.assertLess(validation, operator)
+        self.assertLess(operator, final)
+        self.assertLess(final, core)
+
+    def test_workspace_phase2_readiness_review_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "phase2ReadinessReviewPackTitle",
+            "phase2ReadinessReviewPackHelper",
+            "phase2ReadinessReviewSummaryGateTitle",
+            "phase2ReadinessReviewCapabilityCandidateTitle",
+            "phase2ReadinessReviewValidationDependencyTitle",
+            "phase2ReadinessReviewOperatorGapRiskTitle",
+            "phase2ReadinessReviewNextBlockerQualityAuditSafetyTitle",
+            "phase2ReadinessReviewCopySummary",
+            "phase2ReadinessReviewCopyGates",
+            "phase2ReadinessReviewCopyUnlock",
+            "phase2ReadinessReviewCopyCandidates",
+            "phase2ReadinessReviewCopyValidation",
+            "phase2ReadinessReviewCopyDependencies",
+            "phase2ReadinessReviewCopyGaps",
+            "phase2ReadinessReviewCopyRisks",
+            "phase2ReadinessReviewCopyBlockers",
+            "phase2ReadinessReviewCopyFull",
+            "phase2ReadinessReviewCopied",
+            "phase2ReadinessReviewCopyFailed",
+            "phase2ReadinessReviewCopyNoData",
+            "phase2ReadinessReviewPreviewNote",
+            "phase2ReadinessReviewSafetyNote",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace phase2 readiness review bundle", script)
+            self.assertIn("project_workspace_phase2_readiness_review_marker", script)
+        markdown = html[
+            html.index("function projectWorkspacePhase2ReadinessReviewSummaryText"):
+            html.index("async function copyProjectWorkspacePhase2ReadinessReviewText")
+        ]
+        for key in [
+            "phase2ReadinessReviewPackTitle",
+            "phase2ReadinessReviewSummaryTitle",
+            "phase2ReadinessReviewGateStatusTitle",
+            "phase2ReadinessReviewUnlockCardsTitle",
+            "phase2ReadinessReviewCandidateCardsTitle",
+            "phase2ReadinessReviewValidationTitle",
+            "phase2ReadinessReviewDependencyTitle",
+            "phase2ReadinessReviewOperatorTitle",
+            "phase2ReadinessReviewGapTitle",
+            "phase2ReadinessReviewRiskTitle",
+            "phase2ReadinessReviewNextStepTitle",
+            "phase2ReadinessReviewFinalBlockerTitle",
+            "phase2ReadinessReviewQualityTitle",
+            "phase2ReadinessReviewAuditTitle",
+            "phase2ReadinessReviewSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PHASE2_READINESS_REVIEW_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic unlock gate summary preview only",
+            "not real production readiness",
+            "does not unlock real capabilities",
+            "does not execute a real production readiness job",
+            "does not write DB",
+            "call an LLM",
+            "connect providers",
+            "read secrets",
+            "make external calls",
+            "create approval tokens",
+            "execute paid operations",
+            "write files",
+            "perform real export",
+            "upload files",
+            "execute rollback",
+            "create real audit events",
+            "No real database persistence, LLM generation, provider call, file export, platform upload, task creation, approval token issue, external call, policy check, or audit logging capability is enabled.",
+            "not legal advice",
+            "do not query a real policy API",
+            "not real platform compliance conclusions",
+            "real platform pass rate",
+            "do not write databases",
+            "read real logs or history tables",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, and paid operation remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [

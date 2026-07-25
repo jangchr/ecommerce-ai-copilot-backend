@@ -3655,6 +3655,7 @@
         let latestProjectWorkspacePhase2PersistenceMockHarnessPack = {};
         let latestProjectWorkspacePhase2LlmProviderGatePack = {};
         let latestProjectWorkspacePhase2ProviderUnlockReviewPack = {};
+        let latestProjectWorkspacePhase2ReadinessReviewPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7607,6 +7608,59 @@
             phase2ProviderUnlockAuditNote: 'Audit preview is display-only; it does not write databases, does not read real logs or real history tables, and does not create real audit events.',
             phase2ProviderUnlockSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, and paid operation remain disabled.'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspacePhase2ReadinessReviewMarker: 'Project Workspace phase2 readiness review bundle',
+            phase2ReadinessReviewPackTitle: 'Phase 2 Readiness Review / Unlock Gate Summary',
+            phase2ReadinessReviewPackHelper: 'Project Workspace phase2 readiness review bundle. Deterministic unlock gate summary preview only; it is not real production readiness, does not unlock real capabilities, does not run a production readiness job, does not write DB, does not call an LLM, does not call providers, does not read secrets, does not make external calls, does not create approval tokens, does not execute paid operations, does not write files, and does not export or upload.',
+            phase2ReadinessReviewSummaryGateTitle: 'Phase 2 Readiness Review Summary / Gate Status',
+            phase2ReadinessReviewSummaryTitle: 'Phase 2 Readiness Review Summary',
+            phase2ReadinessReviewGateStatusTitle: 'Phase 2 Gate Status Cards',
+            phase2ReadinessReviewCapabilityCandidateTitle: 'Real Capability Unlock Readiness / Minimum Real Integration Candidates',
+            phase2ReadinessReviewUnlockCardsTitle: 'Real Capability Unlock Readiness Cards',
+            phase2ReadinessReviewCandidateCardsTitle: 'Minimum Real Integration Candidate Cards',
+            phase2ReadinessReviewValidationDependencyTitle: 'Validation Matrix / Cross-Gate Dependencies',
+            phase2ReadinessReviewValidationTitle: 'Phase 2 Validation Matrix Cards',
+            phase2ReadinessReviewDependencyTitle: 'Cross-Gate Dependency Cards',
+            phase2ReadinessReviewOperatorGapRiskTitle: 'Operator Decisions / Production Readiness Gaps / Risk Register',
+            phase2ReadinessReviewOperatorTitle: 'Operator Decision Review Cards',
+            phase2ReadinessReviewGapTitle: 'Production Readiness Gap Cards',
+            phase2ReadinessReviewRiskTitle: 'Phase 2 Risk Register Cards',
+            phase2ReadinessReviewNextBlockerQualityAuditSafetyTitle: 'Next Step Recommendations / Final Blockers / Quality / Audit / Safety',
+            phase2ReadinessReviewNextStepTitle: 'Phase 2 Next Step Recommendation Cards',
+            phase2ReadinessReviewFinalBlockerTitle: 'Phase 2 Final Blocker Cards',
+            phase2ReadinessReviewQualityTitle: 'Phase 2 Readiness Quality Checks',
+            phase2ReadinessReviewAuditTitle: 'Audit Preview',
+            phase2ReadinessReviewSafetyTitle: 'Safety Boundaries',
+            phase2ReadinessReviewMode: 'Mode',
+            phase2ReadinessReviewGateCount: 'Gate status count',
+            phase2ReadinessReviewUnlockCount: 'Unlock readiness count',
+            phase2ReadinessReviewCandidateCount: 'Minimum integration candidate count',
+            phase2ReadinessReviewValidationCount: 'Validation matrix count',
+            phase2ReadinessReviewProductionGapCount: 'Production gap count',
+            phase2ReadinessReviewFinalBlockerCount: 'Final blocker count',
+            phase2ReadinessReviewRecommendedAction: 'Recommended operator action',
+            phase2ReadinessReviewDisabled: 'disabled',
+            phase2ReadinessReviewNoData: 'No Phase 2 readiness review data is available.',
+            phase2ReadinessReviewCopyNoData: 'No Phase 2 readiness review content is available to copy.',
+            phase2ReadinessReviewCopyFailed: 'Unable to copy Phase 2 readiness review content.',
+            phase2ReadinessReviewCopied: 'Phase 2 readiness review content copied.',
+            phase2ReadinessReviewCopySummary: 'Copy Phase 2 readiness review summary',
+            phase2ReadinessReviewCopyGates: 'Copy Phase 2 gate status cards',
+            phase2ReadinessReviewCopyUnlock: 'Copy real capability unlock readiness cards',
+            phase2ReadinessReviewCopyCandidates: 'Copy minimum real integration candidate cards',
+            phase2ReadinessReviewCopyValidation: 'Copy Phase 2 validation matrix cards',
+            phase2ReadinessReviewCopyDependencies: 'Copy cross-gate dependency cards',
+            phase2ReadinessReviewCopyGaps: 'Copy production readiness gap cards',
+            phase2ReadinessReviewCopyRisks: 'Copy Phase 2 risk register cards',
+            phase2ReadinessReviewCopyBlockers: 'Copy Phase 2 final blocker cards',
+            phase2ReadinessReviewCopyFull: 'Copy full Phase 2 readiness review pack',
+            phase2ReadinessReviewPreviewNote: 'Deterministic unlock gate summary preview only. This is not real production readiness, does not unlock real capabilities, and does not execute a real production readiness job. It does not write DB, call an LLM, connect providers, read secrets, make external calls, create approval tokens, execute paid operations, write files, perform real export, upload files, execute rollback, create tasks, or create real audit events.',
+            phase2ReadinessReviewCapabilityNote: 'Real capability unlock readiness is preview-only. No real database persistence, LLM generation, provider call, file export, platform upload, task creation, approval token issue, external call, policy check, or audit logging capability is enabled. Database persistence is the smallest future candidate but remains not ready; LLM, provider, and upload stay blocked.',
+            phase2ReadinessReviewValidationNote: 'Validation matrix and dependencies are preview-only. They cover unit tests, contract tests, mock harness tests, redaction tests, permission boundary tests, audit preview tests, sandbox tests, approval tests, rollback tests, and cost quota tests, but do not execute real sandbox tests or real rollback.',
+            phase2ReadinessReviewRiskPolicyNote: 'Operator decisions are human-review advice only and create no real tasks or approvals. Production readiness gaps and risk register entries are not legal advice, do not query a real policy API, are not real platform compliance conclusions, and do not represent a real platform pass rate.',
+            phase2ReadinessReviewQualityAuditNote: 'Quality and audit preview are display-only. They cover gate status, unlock readiness, minimum candidate, validation matrix, cross-gate dependencies, operator decisions, production gaps, risk register, next steps, final blockers, and safety boundary, but do not write databases, read real logs or history tables, or create real audit events.',
+            phase2ReadinessReviewSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, and paid operation remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
             claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
@@ -8748,6 +8802,59 @@
             phase2ProviderUnlockQualityNote: 'Quality checks 覆盖 candidate providers、approval requirement、secret/network、cost/quota、sandbox tests、audit logging、failure recovery、policy/claim safety、human governance、decision cards、unlock blockers 和 safety boundary。',
             phase2ProviderUnlockAuditNote: 'Audit preview 只用于展示；不写数据库，不读取真实日志或真实历史表，不创建真实 audit event。',
             phase2ProviderUnlockSafetyNote: 'Provider、LLM、media、external scraping、database persistence、real execution、real policy check、platform upload、task creation、real export、file write、secret read、external call、token issue 和 paid operation 全部保持禁用。'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspacePhase2ReadinessReviewMarker: 'Project Workspace phase2 readiness review bundle',
+            phase2ReadinessReviewPackTitle: 'Phase 2 Readiness Review / Unlock Gate Summary',
+            phase2ReadinessReviewPackHelper: 'Project Workspace phase2 readiness review bundle。仅为 deterministic unlock gate summary preview；不是真实 production readiness，不解锁真实能力，不运行真实 production readiness job，不写 DB，不调用 LLM，不接 provider，不读取 secret，不发外部请求，不创建 approval token，不执行 paid operation，不写文件，也不真实 export 或 upload。',
+            phase2ReadinessReviewSummaryGateTitle: 'Phase 2 Readiness Review Summary / Gate Status',
+            phase2ReadinessReviewSummaryTitle: 'Phase 2 Readiness Review Summary',
+            phase2ReadinessReviewGateStatusTitle: 'Phase 2 Gate Status Cards',
+            phase2ReadinessReviewCapabilityCandidateTitle: 'Real Capability Unlock Readiness / Minimum Real Integration Candidates',
+            phase2ReadinessReviewUnlockCardsTitle: 'Real Capability Unlock Readiness Cards',
+            phase2ReadinessReviewCandidateCardsTitle: 'Minimum Real Integration Candidate Cards',
+            phase2ReadinessReviewValidationDependencyTitle: 'Validation Matrix / Cross-Gate Dependencies',
+            phase2ReadinessReviewValidationTitle: 'Phase 2 Validation Matrix Cards',
+            phase2ReadinessReviewDependencyTitle: 'Cross-Gate Dependency Cards',
+            phase2ReadinessReviewOperatorGapRiskTitle: 'Operator Decisions / Production Readiness Gaps / Risk Register',
+            phase2ReadinessReviewOperatorTitle: 'Operator Decision Review Cards',
+            phase2ReadinessReviewGapTitle: 'Production Readiness Gap Cards',
+            phase2ReadinessReviewRiskTitle: 'Phase 2 Risk Register Cards',
+            phase2ReadinessReviewNextBlockerQualityAuditSafetyTitle: 'Next Step Recommendations / Final Blockers / Quality / Audit / Safety',
+            phase2ReadinessReviewNextStepTitle: 'Phase 2 Next Step Recommendation Cards',
+            phase2ReadinessReviewFinalBlockerTitle: 'Phase 2 Final Blocker Cards',
+            phase2ReadinessReviewQualityTitle: 'Phase 2 Readiness Quality Checks',
+            phase2ReadinessReviewAuditTitle: 'Audit Preview',
+            phase2ReadinessReviewSafetyTitle: 'Safety Boundaries',
+            phase2ReadinessReviewMode: 'Mode',
+            phase2ReadinessReviewGateCount: 'Gate status 数量',
+            phase2ReadinessReviewUnlockCount: 'Unlock readiness 数量',
+            phase2ReadinessReviewCandidateCount: 'Minimum integration candidate 数量',
+            phase2ReadinessReviewValidationCount: 'Validation matrix 数量',
+            phase2ReadinessReviewProductionGapCount: 'Production gap 数量',
+            phase2ReadinessReviewFinalBlockerCount: 'Final blocker 数量',
+            phase2ReadinessReviewRecommendedAction: 'Recommended operator action',
+            phase2ReadinessReviewDisabled: 'disabled',
+            phase2ReadinessReviewNoData: '暂无 Phase 2 readiness review 数据。',
+            phase2ReadinessReviewCopyNoData: '暂无可复制的 Phase 2 readiness review 内容。',
+            phase2ReadinessReviewCopyFailed: '无法复制 Phase 2 readiness review 内容。',
+            phase2ReadinessReviewCopied: 'Phase 2 readiness review 内容已复制。',
+            phase2ReadinessReviewCopySummary: '复制 Phase 2 readiness review summary',
+            phase2ReadinessReviewCopyGates: '复制 Phase 2 gate status cards',
+            phase2ReadinessReviewCopyUnlock: '复制 real capability unlock readiness cards',
+            phase2ReadinessReviewCopyCandidates: '复制 minimum real integration candidate cards',
+            phase2ReadinessReviewCopyValidation: '复制 Phase 2 validation matrix cards',
+            phase2ReadinessReviewCopyDependencies: '复制 cross-gate dependency cards',
+            phase2ReadinessReviewCopyGaps: '复制 production readiness gap cards',
+            phase2ReadinessReviewCopyRisks: '复制 Phase 2 risk register cards',
+            phase2ReadinessReviewCopyBlockers: '复制 Phase 2 final blocker cards',
+            phase2ReadinessReviewCopyFull: '复制完整 Phase 2 readiness review pack',
+            phase2ReadinessReviewPreviewNote: '仅为 deterministic unlock gate summary preview。这不是真实 production readiness，不解锁真实能力，也不执行真实 production readiness job。不写 DB，不调用 LLM，不连接 provider，不读取 secret，不发外部请求，不创建 approval token，不执行 paid operation，不写文件，不真实 export，不上传文件，不执行 rollback，不创建 task，也不创建真实 audit event。',
+            phase2ReadinessReviewCapabilityNote: 'Real capability unlock readiness 仅为 preview。当前没有任何真实 database persistence、LLM generation、provider call、file export、platform upload、task creation、approval token issue、external call、policy check 或 audit logging 能力被启用。Database persistence 是最小未来候选但仍 not ready；LLM、provider 和 upload 继续 blocked。',
+            phase2ReadinessReviewValidationNote: 'Validation matrix 和 dependency 均为 preview。覆盖 unit tests、contract tests、mock harness tests、redaction tests、permission boundary tests、audit preview tests、sandbox tests、approval tests、rollback tests 和 cost quota tests，但不执行真实 sandbox test 或真实 rollback。',
+            phase2ReadinessReviewRiskPolicyNote: 'Operator decisions 只是人工评审建议，不创建真实 task 或 approval。Production readiness gaps 和 risk register 不是法律意见，不查询真实 policy API，不代表真实平台合规结论，也不代表真实平台通过率。',
+            phase2ReadinessReviewQualityAuditNote: 'Quality 和 audit preview 仅用于展示。覆盖 gate status、unlock readiness、minimum candidate、validation matrix、cross-gate dependencies、operator decisions、production gaps、risk register、next steps、final blockers 和 safety boundary，但不写数据库，不读取真实日志或历史表，也不创建真实 audit event。',
+            phase2ReadinessReviewSafetyNote: 'Provider、LLM、media、external scraping、database persistence、real execution、real policy check、platform upload、task creation、real export、file write、secret read、external call、token issue 和 paid operation 全部保持禁用。'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -12257,6 +12364,7 @@
                 latestProjectWorkspacePhase2PersistenceMockHarnessPack = latestProjectCreativeDecisionPack.workspace_phase2_persistence_mock_harness_pack || {};
                 latestProjectWorkspacePhase2LlmProviderGatePack = latestProjectCreativeDecisionPack.workspace_phase2_llm_provider_gate_pack || {};
                 latestProjectWorkspacePhase2ProviderUnlockReviewPack = latestProjectCreativeDecisionPack.workspace_phase2_provider_unlock_review_pack || {};
+                latestProjectWorkspacePhase2ReadinessReviewPack = latestProjectCreativeDecisionPack.workspace_phase2_readiness_review_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -18148,6 +18256,7 @@
         const PROJECT_WORKSPACE_PHASE2_PERSISTENCE_MOCK_HARNESS_MARKER = 'Project Workspace phase2 persistence mock harness bundle';
         const PROJECT_WORKSPACE_PHASE2_LLM_PROVIDER_GATE_MARKER = 'Project Workspace phase2 LLM provider gate bundle';
         const PROJECT_WORKSPACE_PHASE2_PROVIDER_UNLOCK_REVIEW_MARKER = 'Project Workspace phase2 provider unlock review bundle';
+        const PROJECT_WORKSPACE_PHASE2_READINESS_REVIEW_MARKER = 'Project Workspace phase2 readiness review bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -26292,6 +26401,141 @@
         function copyProjectWorkspaceFailureRecoveryReviewCards() { return copyProjectWorkspacePhase2ProviderUnlockReviewText('failure'); }
         function copyProjectWorkspaceProviderUnlockDecisionCards() { return copyProjectWorkspacePhase2ProviderUnlockReviewText('decision'); }
         function copyProjectWorkspaceFullPhase2ProviderUnlockReviewPack() { return copyProjectWorkspacePhase2ProviderUnlockReviewText('full'); }
+
+        function projectWorkspacePhase2ReadinessReviewPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspacePhase2ReadinessReviewPack && Object.keys(latestProjectWorkspacePhase2ReadinessReviewPack).length) return latestProjectWorkspacePhase2ReadinessReviewPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_phase2_readiness_review_pack || {};
+        }
+
+        function projectWorkspacePhase2ReadinessReviewHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspacePhase2ReadinessReviewJsonText(value) {
+            if (!projectWorkspacePhase2ReadinessReviewHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspacePhase2ReadinessReviewDisabledText(value) {
+            return value === false || value == null ? t('phase2ReadinessReviewDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportPhase2ReadinessReviewSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspacePhase2ReadinessReviewPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PHASE2_READINESS_REVIEW_MARKER,
+                has_workspace_phase2_readiness_review_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                phase2_readiness_review_summary: pack.phase2_readiness_review_summary || {},
+                phase2_gate_status_cards: Array.isArray(pack.phase2_gate_status_cards) ? pack.phase2_gate_status_cards : [],
+                real_capability_unlock_readiness_cards: Array.isArray(pack.real_capability_unlock_readiness_cards) ? pack.real_capability_unlock_readiness_cards : [],
+                minimum_real_integration_candidate_cards: Array.isArray(pack.minimum_real_integration_candidate_cards) ? pack.minimum_real_integration_candidate_cards : [],
+                phase2_validation_matrix_cards: Array.isArray(pack.phase2_validation_matrix_cards) ? pack.phase2_validation_matrix_cards : [],
+                cross_gate_dependency_cards: Array.isArray(pack.cross_gate_dependency_cards) ? pack.cross_gate_dependency_cards : [],
+                operator_decision_review_cards: Array.isArray(pack.operator_decision_review_cards) ? pack.operator_decision_review_cards : [],
+                production_readiness_gap_cards: Array.isArray(pack.production_readiness_gap_cards) ? pack.production_readiness_gap_cards : [],
+                phase2_risk_register_cards: Array.isArray(pack.phase2_risk_register_cards) ? pack.phase2_risk_register_cards : [],
+                phase2_next_step_recommendation_cards: Array.isArray(pack.phase2_next_step_recommendation_cards) ? pack.phase2_next_step_recommendation_cards : [],
+                phase2_final_blocker_cards: Array.isArray(pack.phase2_final_blocker_cards) ? pack.phase2_final_blocker_cards : [],
+                phase2_readiness_quality_checks: pack.phase2_readiness_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspacePhase2ReadinessReviewSummaryText(pack = projectWorkspaceExportPhase2ReadinessReviewSnapshot()) {
+            if (!pack.has_workspace_phase2_readiness_review_pack) return '';
+            const summary = pack.phase2_readiness_review_summary || {};
+            return [
+                t('phase2ReadinessReviewSummaryTitle'),
+                `${t('phase2ReadinessReviewMode')}: ${summary.mode || t('none')}`,
+                `${t('phase2ReadinessReviewGateCount')}: ${summary.gate_status_count ?? pack.phase2_gate_status_cards.length}`,
+                `${t('phase2ReadinessReviewUnlockCount')}: ${summary.unlock_readiness_count ?? pack.real_capability_unlock_readiness_cards.length}`,
+                `${t('phase2ReadinessReviewCandidateCount')}: ${summary.minimum_candidate_count ?? pack.minimum_real_integration_candidate_cards.length}`,
+                `${t('phase2ReadinessReviewValidationCount')}: ${summary.validation_matrix_count ?? pack.phase2_validation_matrix_cards.length}`,
+                `${t('phase2ReadinessReviewProductionGapCount')}: ${pack.production_readiness_gap_cards.length}`,
+                `${t('phase2ReadinessReviewFinalBlockerCount')}: ${summary.final_blocker_count ?? pack.phase2_final_blocker_cards.length}`,
+                `${t('phase2ReadinessReviewRecommendedAction')}: ${summary.risk_note || t('phase2ReadinessReviewPreviewNote')}`,
+                `real_database_persistence_allowed: ${projectWorkspacePhase2ReadinessReviewDisabledText(summary.real_database_persistence_allowed)}`,
+                `real_llm_generation_allowed: ${projectWorkspacePhase2ReadinessReviewDisabledText(summary.real_llm_generation_allowed)}`,
+                `real_provider_call_allowed: ${projectWorkspacePhase2ReadinessReviewDisabledText(summary.real_provider_call_allowed)}`,
+                `secret_read_allowed: ${projectWorkspacePhase2ReadinessReviewDisabledText(summary.secret_read_allowed)}`,
+                `external_call_allowed: ${projectWorkspacePhase2ReadinessReviewDisabledText(summary.external_call_allowed)}`,
+                `token_issue_allowed: ${projectWorkspacePhase2ReadinessReviewDisabledText(summary.token_issue_allowed)}`,
+                `paid_operation_allowed: ${projectWorkspacePhase2ReadinessReviewDisabledText(summary.paid_operation_allowed)}`,
+                `real_execution_allowed: ${projectWorkspacePhase2ReadinessReviewDisabledText(summary.real_execution_allowed)}`,
+                `real_file_write_allowed: ${projectWorkspacePhase2ReadinessReviewDisabledText(summary.real_file_write_allowed)}`,
+                t('phase2ReadinessReviewPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspacePhase2ReadinessReviewSectionText(titleKey, value) {
+            const body = projectWorkspacePhase2ReadinessReviewJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportPhase2ReadinessReviewMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ReadinessReviewSnapshot(workspace);
+            if (!pack.has_workspace_phase2_readiness_review_pack) return '';
+            return [
+                `## ${t('phase2ReadinessReviewPackTitle')}`,
+                projectWorkspacePhase2ReadinessReviewSummaryText(pack), '',
+                projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewSummaryTitle', pack.phase2_readiness_review_summary), '',
+                projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewGateStatusTitle', pack.phase2_gate_status_cards), '',
+                projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewUnlockCardsTitle', pack.real_capability_unlock_readiness_cards), '',
+                projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewCandidateCardsTitle', pack.minimum_real_integration_candidate_cards), '',
+                projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewValidationTitle', pack.phase2_validation_matrix_cards), '',
+                projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewDependencyTitle', pack.cross_gate_dependency_cards), '',
+                projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewOperatorTitle', pack.operator_decision_review_cards), '',
+                projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewGapTitle', pack.production_readiness_gap_cards), '',
+                projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewRiskTitle', pack.phase2_risk_register_cards), '',
+                projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewNextStepTitle', pack.phase2_next_step_recommendation_cards), '',
+                projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewFinalBlockerTitle', pack.phase2_final_blocker_cards), '',
+                projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewQualityTitle', pack.phase2_readiness_quality_checks), '',
+                projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewAuditTitle', pack.audit_preview), '',
+                projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewSafetyTitle', pack.safety_boundaries),
+                t('phase2ReadinessReviewPreviewNote'),
+                t('phase2ReadinessReviewCapabilityNote'),
+                t('phase2ReadinessReviewValidationNote'),
+                t('phase2ReadinessReviewRiskPolicyNote'),
+                t('phase2ReadinessReviewQualityAuditNote'),
+                t('phase2ReadinessReviewSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspacePhase2ReadinessReviewText(kind = 'full') {
+            const status = document.getElementById('projectWorkspacePhase2ReadinessReviewStatus');
+            const pack = projectWorkspaceExportPhase2ReadinessReviewSnapshot();
+            const text = kind === 'summary' ? projectWorkspacePhase2ReadinessReviewSummaryText(pack)
+                : kind === 'gates' ? projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewGateStatusTitle', pack.phase2_gate_status_cards)
+                : kind === 'unlock' ? projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewUnlockCardsTitle', pack.real_capability_unlock_readiness_cards)
+                : kind === 'candidate' ? projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewCandidateCardsTitle', pack.minimum_real_integration_candidate_cards)
+                : kind === 'validation' ? projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewValidationTitle', pack.phase2_validation_matrix_cards)
+                : kind === 'dependency' ? projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewDependencyTitle', pack.cross_gate_dependency_cards)
+                : kind === 'gap' ? projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewGapTitle', pack.production_readiness_gap_cards)
+                : kind === 'risk' ? projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewRiskTitle', pack.phase2_risk_register_cards)
+                : kind === 'blocker' ? projectWorkspacePhase2ReadinessReviewSectionText('phase2ReadinessReviewFinalBlockerTitle', pack.phase2_final_blocker_cards)
+                : projectWorkspaceExportPhase2ReadinessReviewMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('phase2ReadinessReviewCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('phase2ReadinessReviewCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('phase2ReadinessReviewCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('phase2ReadinessReviewCopyFailed'); }
+        }
+
+        function copyProjectWorkspacePhase2ReadinessReviewSummary() { return copyProjectWorkspacePhase2ReadinessReviewText('summary'); }
+        function copyProjectWorkspacePhase2GateStatusCards() { return copyProjectWorkspacePhase2ReadinessReviewText('gates'); }
+        function copyProjectWorkspaceRealCapabilityUnlockReadinessCards() { return copyProjectWorkspacePhase2ReadinessReviewText('unlock'); }
+        function copyProjectWorkspaceMinimumRealIntegrationCandidateCards() { return copyProjectWorkspacePhase2ReadinessReviewText('candidate'); }
+        function copyProjectWorkspacePhase2ValidationMatrixCards() { return copyProjectWorkspacePhase2ReadinessReviewText('validation'); }
+        function copyProjectWorkspaceCrossGateDependencyCards() { return copyProjectWorkspacePhase2ReadinessReviewText('dependency'); }
+        function copyProjectWorkspaceProductionReadinessGapCards() { return copyProjectWorkspacePhase2ReadinessReviewText('gap'); }
+        function copyProjectWorkspacePhase2RiskRegisterCards() { return copyProjectWorkspacePhase2ReadinessReviewText('risk'); }
+        function copyProjectWorkspacePhase2FinalBlockerCards() { return copyProjectWorkspacePhase2ReadinessReviewText('blocker'); }
+        function copyProjectWorkspaceFullPhase2ReadinessReviewPack() { return copyProjectWorkspacePhase2ReadinessReviewText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -31031,6 +31275,45 @@
             return `<div class="section-block" id="projectWorkspacePhase2ProviderUnlockReviewBlockersQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ProviderUnlockBlockersQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ProviderUnlockSafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2ProviderUnlockReviewPack()">${escapeHTML(t('phase2ProviderUnlockCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderUnlockBlockersTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2ProviderUnlockNoData'))}</pre><div class="field-helper">no provider key approval / no secret access approval / no external call approval / no paid operation approval / no sandbox contract test executed / no real audit sink / no production approval / no rollback implementation / no provider-specific legal review</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderUnlockQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2ProviderUnlockNoData'))}</pre><div class="field-helper">candidate providers / approval requirement / secret/network / cost/quota / sandbox tests / audit logging / failure recovery / policy/claim safety / human governance / decision cards / unlock blockers / safety boundary</div><div class="field-helper">${escapeHTML(t('phase2ProviderUnlockQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderUnlockAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2ProviderUnlockNoData'))}</pre><div class="field-helper">${escapeHTML(t('phase2ProviderUnlockAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2ProviderUnlockSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled / paid_operation disabled</div><div class="field-helper">${escapeHTML(t('phase2ProviderUnlockSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspacePhase2ReadinessReviewSummaryGatePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ReadinessReviewSnapshot(workspace); if (!pack.has_workspace_phase2_readiness_review_pack) return '';
+            const summary = pack.phase2_readiness_review_summary || {};
+            const gates = pack.phase2_gate_status_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.gate_label || card.gate_status_id || t('none'))}</strong><div class="field-helper">gate_status_id: ${escapeHTML(card.gate_status_id || '')} / gate_group: ${escapeHTML(card.gate_group || '')}</div><div><strong>gate_scope:</strong> ${escapeHTML(card.gate_scope || '')}</div><div class="field-helper">current_status: ${escapeHTML(card.current_status || '')} / readiness_status: ${escapeHTML(card.readiness_status || '')}</div><div class="field-helper">covered_controls: ${escapeHTML((card.covered_controls || []).join(', ') || t('none'))}</div><div class="field-helper">missing_controls: ${escapeHTML((card.missing_controls || []).join(', ') || t('none'))}</div><div class="field-helper">recommended_operator_action: ${escapeHTML(card.recommended_operator_action || '')}</div><div class="field-helper">real_execution_allowed: ${escapeHTML(projectWorkspacePhase2ReadinessReviewDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspacePhase2ReadinessReviewSummaryGatePanel" data-marker="project_workspace_phase2_readiness_review_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ReadinessReviewPackTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ReadinessReviewSummaryGateTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ReadinessReviewPackHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2ReadinessReviewSummary()">${escapeHTML(t('phase2ReadinessReviewCopySummary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2GateStatusCards()">${escapeHTML(t('phase2ReadinessReviewCopyGates'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2ReadinessReviewPack()">${escapeHTML(t('phase2ReadinessReviewCopyFull'))}</button></div></div><div class="metric-strip">${metricPill(t('phase2ReadinessReviewMode'), summary.mode || t('none'))}${metricPill(t('phase2ReadinessReviewGateCount'), String(summary.gate_status_count ?? pack.phase2_gate_status_cards.length))}${metricPill(t('phase2ReadinessReviewUnlockCount'), String(summary.unlock_readiness_count ?? pack.real_capability_unlock_readiness_cards.length))}${metricPill(t('phase2ReadinessReviewCandidateCount'), String(summary.minimum_candidate_count ?? pack.minimum_real_integration_candidate_cards.length))}${metricPill(t('phase2ReadinessReviewValidationCount'), String(summary.validation_matrix_count ?? pack.phase2_validation_matrix_cards.length))}${metricPill(t('phase2ReadinessReviewProductionGapCount'), String(pack.production_readiness_gap_cards.length))}${metricPill(t('phase2ReadinessReviewFinalBlockerCount'), String(summary.final_blocker_count ?? pack.phase2_final_blocker_cards.length))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspacePhase2ReadinessReviewSummaryText(pack) || t('phase2ReadinessReviewNoData'))}</pre><div class="graph-os-compact-grid">${gates || `<div class="empty-state">${escapeHTML(t('phase2ReadinessReviewNoData'))}</div>`}</div><div class="field-helper">database_persistence_gate / persistence_mock_harness / llm_provider_gate / provider_unlock_review / secret_environment_gate / network_external_call_guard / approval_token_gate / cost_quota_guard / audit_packet_preview / final_mvp_readiness_boundary</div><div class="demo-warning">${escapeHTML(t('phase2ReadinessReviewPreviewNote'))}</div><div id="projectWorkspacePhase2ReadinessReviewStatus" class="field-helper" aria-live="polite"></div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2ReadinessReviewCapabilityCandidatePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ReadinessReviewSnapshot(workspace); if (!pack.has_workspace_phase2_readiness_review_pack) return '';
+            const unlocks = projectWorkspacePhase2ReadinessReviewJsonText(pack.real_capability_unlock_readiness_cards);
+            const candidates = projectWorkspacePhase2ReadinessReviewJsonText(pack.minimum_real_integration_candidate_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2ReadinessReviewCapabilityCandidatePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ReadinessReviewCapabilityCandidateTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ReadinessReviewCapabilityNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRealCapabilityUnlockReadinessCards()">${escapeHTML(t('phase2ReadinessReviewCopyUnlock'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMinimumRealIntegrationCandidateCards()">${escapeHTML(t('phase2ReadinessReviewCopyCandidates'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2ReadinessReviewUnlockCardsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(unlocks || t('phase2ReadinessReviewNoData'))}</pre><div class="field-helper">unlock_readiness_id / capability_label / capability_group / current_unlock_status / required_preconditions / required_tests / required_approvals / required_audit_controls / recommended_decision / real_capability_enabled=false / real_execution_allowed=false</div><div class="field-helper">real_database_persistence / real_llm_generation / real_provider_call / real_file_export / real_platform_upload / real_task_creation / real_approval_token_issue / real_external_call / real_policy_check / real_audit_logging</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ReadinessReviewCandidateCardsTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(candidates || t('phase2ReadinessReviewNoData'))}</pre><div class="field-helper">candidate_id / candidate_label / candidate_group / candidate_scope / why_candidate / why_not_ready_yet / required_next_gate / recommended_sequence_rank / ready_for_real_integration=false</div><div class="field-helper">database persistence minimal adapter candidate is the smallest candidate but still not ready; LLM / provider / upload remain blocked. No real capability enabled.</div></div></div><div class="demo-warning">${escapeHTML(t('phase2ReadinessReviewCapabilityNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2ReadinessReviewValidationDependencyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ReadinessReviewSnapshot(workspace); if (!pack.has_workspace_phase2_readiness_review_pack) return '';
+            const validations = projectWorkspacePhase2ReadinessReviewJsonText(pack.phase2_validation_matrix_cards);
+            const dependencies = projectWorkspacePhase2ReadinessReviewJsonText(pack.cross_gate_dependency_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2ReadinessReviewValidationDependencyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ReadinessReviewValidationDependencyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ReadinessReviewValidationNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2ValidationMatrixCards()">${escapeHTML(t('phase2ReadinessReviewCopyValidation'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceCrossGateDependencyCards()">${escapeHTML(t('phase2ReadinessReviewCopyDependencies'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2ReadinessReviewValidationTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(validations || t('phase2ReadinessReviewNoData'))}</pre><div class="field-helper">validation_matrix_id / validation_label / validation_group / required_validation_type / current_validation_status / required_test_refs / missing_test_refs / blocks_real_unlock / real_execution_allowed=false</div><div class="field-helper">unit tests / contract tests / mock harness tests / redaction tests / permission boundary tests / audit preview tests / sandbox tests / approval tests / rollback tests / cost quota tests</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ReadinessReviewDependencyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(dependencies || t('phase2ReadinessReviewNoData'))}</pre><div class="field-helper">dependency_id / dependency_label / upstream_gate / downstream_gate / dependency_type / dependency_status / missing_dependency_controls</div><div class="field-helper">DB gate -> mock harness / LLM gate -> provider unlock review / secret/network -> provider call / approval token -> real execution / audit sink -> production readiness / rollback plan -> unlock decision</div></div></div><div class="demo-warning">${escapeHTML(t('phase2ReadinessReviewValidationNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2ReadinessReviewOperatorGapRiskPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ReadinessReviewSnapshot(workspace); if (!pack.has_workspace_phase2_readiness_review_pack) return '';
+            const operator = projectWorkspacePhase2ReadinessReviewJsonText(pack.operator_decision_review_cards);
+            const gaps = projectWorkspacePhase2ReadinessReviewJsonText(pack.production_readiness_gap_cards);
+            const risks = projectWorkspacePhase2ReadinessReviewJsonText(pack.phase2_risk_register_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2ReadinessReviewOperatorGapRiskPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ReadinessReviewOperatorGapRiskTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ReadinessReviewRiskPolicyNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProductionReadinessGapCards()">${escapeHTML(t('phase2ReadinessReviewCopyGaps'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2RiskRegisterCards()">${escapeHTML(t('phase2ReadinessReviewCopyRisks'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2ReadinessReviewOperatorTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(operator || t('phase2ReadinessReviewNoData'))}</pre><div class="field-helper">operator decision review is manual advice only / no real task created / no approval created / no real execution</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ReadinessReviewGapTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(gaps || t('phase2ReadinessReviewNoData'))}</pre><div class="field-helper">no real DB config / no schema migration / no audit sink / no provider key approval / no external call approval / no production approval / no rollback implementation / no cost quota approval / no legal/policy review / no real monitoring</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ReadinessReviewRiskTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(risks || t('phase2ReadinessReviewNoData'))}</pre><div class="field-helper">data persistence risk / secret exposure risk / external call risk / provider cost risk / unsafe claim output risk / audit gap risk / rollback gap risk / policy/legal uncertainty / platform upload risk</div></div></div><div class="demo-warning">${escapeHTML(t('phase2ReadinessReviewRiskPolicyNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2ReadinessReviewNextBlockerQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ReadinessReviewSnapshot(workspace); if (!pack.has_workspace_phase2_readiness_review_pack) return '';
+            const next = projectWorkspacePhase2ReadinessReviewJsonText(pack.phase2_next_step_recommendation_cards);
+            const blockers = projectWorkspacePhase2ReadinessReviewJsonText(pack.phase2_final_blocker_cards);
+            const quality = projectWorkspacePhase2ReadinessReviewJsonText(pack.phase2_readiness_quality_checks);
+            const audit = projectWorkspacePhase2ReadinessReviewJsonText(pack.audit_preview);
+            const safety = projectWorkspacePhase2ReadinessReviewJsonText(pack.safety_boundaries);
+            return `<div class="section-block" id="projectWorkspacePhase2ReadinessReviewNextBlockerQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ReadinessReviewNextBlockerQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ReadinessReviewQualityAuditNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2FinalBlockerCards()">${escapeHTML(t('phase2ReadinessReviewCopyBlockers'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2ReadinessReviewPack()">${escapeHTML(t('phase2ReadinessReviewCopyFull'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2ReadinessReviewNextStepTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(next || t('phase2ReadinessReviewNoData'))}</pre><div class="field-helper">preview / gate / harness only / no direct real unlock / Phase 2 Closeout Review / Real DB Minimal Adapter Contract Preview</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ReadinessReviewFinalBlockerTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2ReadinessReviewNoData'))}</pre><div class="field-helper">ready_for_real_execution=false / blocks_real_unlock=true / no real execution allowed</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ReadinessReviewQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2ReadinessReviewNoData'))}</pre><div class="field-helper">gate status / unlock readiness / minimum candidate / validation matrix / cross gate dependencies / operator decisions / production gaps / risk register / next step recommendations / final blockers / safety boundary</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ReadinessReviewAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2ReadinessReviewNoData'))}</pre><div class="field-helper">no database write / no real log read / no real history table read / no real audit event</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2ReadinessReviewSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled / paid_operation disabled</div><div class="field-helper">${escapeHTML(t('phase2ReadinessReviewSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -31501,6 +31784,8 @@
                 '',
                 projectWorkspaceExportPhase2ProviderUnlockReviewMarkdown(workspace),
                 '',
+                projectWorkspaceExportPhase2ReadinessReviewMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -31637,6 +31922,7 @@
                 workspace_phase2_persistence_mock_harness_pack: projectWorkspaceExportPhase2PersistenceMockHarnessSnapshot(workspace),
                 workspace_phase2_llm_provider_gate_pack: projectWorkspaceExportPhase2LlmProviderGateSnapshot(workspace),
                 workspace_phase2_provider_unlock_review_pack: projectWorkspaceExportPhase2ProviderUnlockReviewSnapshot(workspace),
+                workspace_phase2_readiness_review_pack: projectWorkspaceExportPhase2ReadinessReviewSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -44308,6 +44594,11 @@
                     ${renderProjectWorkspacePhase2ProviderUnlockReviewCostSandboxAuditPanel(workspace)}
                     ${renderProjectWorkspacePhase2ProviderUnlockReviewFailurePolicyGovernanceDecisionPanel(workspace)}
                     ${renderProjectWorkspacePhase2ProviderUnlockReviewBlockersQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspacePhase2ReadinessReviewSummaryGatePanel(workspace)}
+                    ${renderProjectWorkspacePhase2ReadinessReviewCapabilityCandidatePanel(workspace)}
+                    ${renderProjectWorkspacePhase2ReadinessReviewValidationDependencyPanel(workspace)}
+                    ${renderProjectWorkspacePhase2ReadinessReviewOperatorGapRiskPanel(workspace)}
+                    ${renderProjectWorkspacePhase2ReadinessReviewNextBlockerQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
