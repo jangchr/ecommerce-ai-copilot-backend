@@ -46080,6 +46080,357 @@ def _rw_workspace_phase2_llm_provider_gate_pack(
     }
 
 
+def _rw_workspace_phase2_provider_unlock_review_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_ids = [
+        "workspace_phase2_llm_provider_gate_pack",
+        "workspace_phase2_persistence_mock_harness_pack",
+        "workspace_phase2_database_persistence_gate_pack",
+        "workspace_mvp_readiness_dossier_pack",
+        "workspace_final_system_health_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_real_execution_approval_token_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_provider_cost_quota_risk_guard_pack",
+        "workspace_provider_failure_taxonomy_pack",
+        "workspace_provider_contract_test_pack",
+        "workspace_provider_adapter_contract_pack",
+        "workspace_capability_permission_matrix_pack",
+        "claim_risk_guard_pack",
+        "review_evidence_quality_pack",
+        "final_claim_safe_export_packet_pack",
+    ]
+    packs = {pack_id: dict(creative_decision_pack.get(pack_id) or {}) for pack_id in source_pack_ids}
+
+    provider_specs = [
+        ("llm_text_generation", "LLM text generation provider", "generation", "claim-safe text drafting from approved prompt contracts"),
+        ("image_generation_provider", "Image generation provider", "media", "preview creative image generation after media and claim safety approval"),
+        ("video_generation_provider", "Video generation provider", "media", "preview video prompt generation after provider sandbox approval"),
+        ("media_storage_provider", "Media storage provider", "storage", "store approved media assets after upload and file write approval"),
+        ("analytics_or_tracking_provider", "Analytics or tracking provider", "analytics", "measure campaign preview performance after privacy and external call approval"),
+        ("translation_provider", "Translation provider", "localization", "translate claim-safe copy after evidence grounding review"),
+        ("approval_or_ticket_provider", "Approval or ticket provider", "governance", "create operator tickets after task creation approval"),
+        ("database_persistence_provider", "Database persistence provider", "persistence", "persist workspace snapshots after database gate approval"),
+        ("external_scraping_provider", "External scraping provider", "scraping", "collect external product signals after scraping and network approval"),
+        ("rollback_restore_provider", "Rollback restore provider", "recovery", "restore persisted state after rollback implementation approval"),
+    ]
+    provider_unlock_candidate_cards = [
+        {
+            "provider_unlock_candidate_id": f"provider_unlock_candidate_{capability_type}",
+            "provider_label": label,
+            "provider_group": group,
+            "provider_capability_type": capability_type,
+            "source_gate_refs": [
+                "workspace_phase2_llm_provider_gate_pack",
+                "workspace_phase2_database_persistence_gate_pack",
+                "workspace_phase2_persistence_mock_harness_pack",
+                "workspace_provider_adapter_contract_pack",
+                "workspace_provider_contract_test_pack",
+                "workspace_provider_cost_quota_risk_guard_pack",
+            ],
+            "intended_use_case": intended_use_case,
+            "required_input_contract_refs": [
+                "prompt_invocation_contract_cards",
+                "secret_network_requirement_cards",
+                "approval_requirement_review_cards",
+            ],
+            "required_output_contract_refs": [
+                "provider_unlock_decision_cards",
+                "audit_logging_requirement_cards",
+                "failure_recovery_review_cards",
+            ],
+            "current_unlock_status": "blocked_preview_only",
+            "recommended_decision": "blocked",
+            "real_provider_call_allowed": False,
+            "secret_read_allowed": False,
+            "external_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Provider unlock is a deterministic preview; no real provider client, secret read, external call, or real execution is allowed.",
+        }
+        for capability_type, label, group, intended_use_case in provider_specs
+    ]
+
+    approval_requirement_review_cards = [
+        {
+            "approval_review_id": f"approval_review_{scope}",
+            "approval_label": label,
+            "approval_scope": scope,
+            "source_gate_refs": [
+                "workspace_real_execution_approval_token_pack",
+                "workspace_capability_permission_matrix_pack",
+                "workspace_phase2_llm_provider_gate_pack",
+            ],
+            "required_approver_role": approver_role,
+            "required_approval_artifacts": artifacts,
+            "approval_token_required": True,
+            "approval_token_issued": False,
+            "real_task_creation_allowed": False,
+            "token_issue_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Approval token is required for future unlock, but this preview does not issue tokens or create real tasks.",
+        }
+        for scope, label, approver_role, artifacts in [
+            ("provider_key", "Provider key approval", "release_owner", ["provider key approval", "secret access approval"]),
+            ("external_call", "External call approval", "security_owner", ["network allowlist review", "external call approval"]),
+            ("paid_operation", "Paid operation approval", "finance_owner", ["cost guard", "quota approval", "paid operation approval"]),
+            ("production_release", "Production approval", "release_owner", ["sandbox contract test report", "real audit sink review", "rollback plan"]),
+        ]
+    ]
+
+    secret_network_requirement_cards = [
+        {
+            "secret_network_review_id": f"secret_network_review_{capability_type}",
+            "requirement_label": f"{label} secret and network requirement",
+            "provider_capability_type": capability_type,
+            "required_secret_refs": ["API key", "provider secret", "access token"],
+            "required_network_scope": "provider-specific outbound allowlist required before unlock",
+            "secret_storage_requirement": "approved secret manager storage with no plaintext export",
+            "secret_rotation_requirement": "rotation owner and rotation cadence required before unlock",
+            "network_allowlist_requirement": "explicit endpoint allowlist and timeout policy required",
+            "secret_read_allowed": False,
+            "external_call_allowed": False,
+            "real_provider_call_allowed": False,
+            "risk_note": "API key, secret storage, rotation, and network allowlist are requirements only; no secret is read and no external request is sent.",
+        }
+        for capability_type, label, _group, _use_case in provider_specs
+    ]
+
+    cost_quota_review_cards = [
+        {
+            "cost_quota_review_id": f"cost_quota_review_{capability_type}",
+            "provider_capability_type": capability_type,
+            "estimated_cost_unit": "preview estimate only; no real billing",
+            "quota_scope": "operator-approved quota required",
+            "rate_limit_requirement": "provider-specific rate limit and throttle policy required",
+            "retry_budget": "0 real retries in preview; future retry budget requires approval",
+            "timeout_requirement": "provider-specific timeout required before unlock",
+            "cost_guard_required": True,
+            "paid_operation_allowed": False,
+            "real_provider_call_allowed": False,
+            "risk_note": "cost guard, quota, retry budget, and timeout are reviewed while paid operation and provider calls remain disabled.",
+        }
+        for capability_type, _label, _group, _use_case in provider_specs
+    ]
+
+    sandbox_contract_test_review_cards = [
+        {
+            "sandbox_test_review_id": f"sandbox_test_review_{capability_type}",
+            "provider_capability_type": capability_type,
+            "required_contract_tests": ["input contract validation", "output schema validation", "claim safety validation", "idempotency contract"],
+            "required_mock_tests": ["mock success response", "mock timeout response", "mock unsafe output response"],
+            "required_sandbox_tests": ["provider sandbox credential test", "sandbox quota test", "sandbox audit trace test"],
+            "schema_validation_required": True,
+            "claim_safety_validation_required": True,
+            "redaction_validation_required": True,
+            "sandbox_test_executed": False,
+            "real_provider_call_allowed": False,
+            "risk_note": "Mock, sandbox, and contract tests are required, but no real provider sandbox test is executed in this preview.",
+        }
+        for capability_type, _label, _group, _use_case in provider_specs
+    ]
+
+    audit_logging_requirement_cards = [
+        {
+            "audit_logging_requirement_id": "provider_unlock_audit_sink_requirement",
+            "audit_label": "Provider unlock audit sink requirement",
+            "source_gate_refs": ["workspace_provider_invocation_audit_packet_pack", "workspace_phase2_llm_provider_gate_pack"],
+            "required_audit_sink": "future durable audit sink approval required",
+            "required_event_shape": ["event_id", "provider_capability_type", "decision", "source_gate_refs", "trace_ids", "risk_note"],
+            "retention_requirement": "retention owner and retention period required before unlock",
+            "trace_id_requirement": "request, approval, cost, provider, and rollback trace ids required",
+            "database_write_allowed": False,
+            "real_audit_event_created": False,
+            "real_log_read_allowed": False,
+            "risk_note": "Audit logging is a preview shape only; it does not write databases, read real logs, or create real audit events.",
+        }
+    ]
+
+    failure_recovery_review_cards = [
+        {
+            "failure_recovery_review_id": f"failure_recovery_{failure_id}",
+            "failure_type": failure_type,
+            "source_gate_refs": ["workspace_provider_failure_taxonomy_pack", "workspace_phase2_llm_provider_gate_pack"],
+            "expected_operator_response": response,
+            "real_retry_executed": False,
+            "real_rollback_executed": False,
+            "real_provider_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Failure recovery review is preview-only; no real retry or rollback is executed.",
+        }
+        for failure_id, failure_type, response in [
+            ("timeout", "timeout", "stop, report timeout, and require operator review"),
+            ("rate_limit", "rate limit", "stop and require quota/rate limit approval"),
+            ("provider_unavailable", "provider unavailable", "fallback to deterministic preview only"),
+            ("schema_invalid", "schema invalid", "reject response and require schema contract fix"),
+            ("unsafe_output", "unsafe output", "block output and require claim safety review"),
+            ("missing_evidence_trace", "missing evidence trace", "reject response until trace is present"),
+            ("cost_quota_exceeded", "cost quota exceeded", "block paid operation until approval"),
+            ("secret_missing", "secret missing", "block provider client creation"),
+            ("partial_execution", "partial execution", "mark incomplete and require manual reconciliation"),
+            ("rollback_needed", "rollback needed", "require rollback owner and implementation before unlock"),
+        ]
+    ]
+
+    policy_claim_safety_dependency_cards = [
+        {
+            "policy_claim_safety_dependency_id": "provider_unlock_claim_safety_dependency",
+            "dependency_label": "Claim safety and evidence grounding dependency",
+            "source_gate_refs": ["claim_risk_guard_pack", "review_evidence_quality_pack", "final_claim_safe_export_packet_pack"],
+            "required_dependencies": ["claim safety", "evidence grounding", "do_not_claim refs", "policy disabled checks"],
+            "real_policy_api_queried": False,
+            "real_policy_check_allowed": False,
+            "real_provider_call_allowed": False,
+            "risk_note": "Provider unlock depends on claim safety and evidence grounding, but no real policy API is queried and no platform compliance conclusion is produced.",
+        }
+    ]
+
+    human_governance_review_cards = [
+        {
+            "human_governance_review_id": "provider_unlock_human_governance",
+            "governance_label": "Operator approval, escalation, manual review, release owner, and rollback owner",
+            "source_gate_refs": ["workspace_mvp_readiness_dossier_pack", "workspace_final_system_health_pack"],
+            "required_operator_actions": ["operator approval", "escalation path", "manual review", "release owner assignment", "rollback owner assignment"],
+            "real_task_created": False,
+            "real_approval_created": False,
+            "real_execution_allowed": False,
+            "risk_note": "Human governance is preview-only and does not create real tasks or approvals.",
+        }
+    ]
+
+    provider_unlock_decision_cards = [
+        {
+            "provider_unlock_decision_id": f"provider_unlock_decision_{card['provider_capability_type']}",
+            "provider_capability_type": card["provider_capability_type"],
+            "source_candidate_ref": card["provider_unlock_candidate_id"],
+            "deterministic_decision": "blocked",
+            "decision_status": "not_ready",
+            "unlock_status": "preview_only",
+            "ready_for_real_provider": False,
+            "recommended_operator_action": "Resolve provider key, secret, network, paid operation, sandbox, audit, production, legal, and rollback blockers before unlock.",
+            "real_provider_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Decision is deterministic blocked/not_ready/preview_only and never ready_for_real_provider.",
+        }
+        for card in provider_unlock_candidate_cards
+    ]
+
+    phase2_provider_unlock_blockers = [
+        "no provider key approval",
+        "no secret access approval",
+        "no external call approval",
+        "no paid operation approval",
+        "no sandbox contract test executed",
+        "no real audit sink",
+        "no production approval",
+        "no rollback implementation",
+        "no provider-specific legal review",
+    ]
+
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "secret_read": False,
+        "secret_read_enabled": False,
+        "external_call": False,
+        "external_call_enabled": False,
+        "token_issue": False,
+        "token_issue_enabled": False,
+        "paid_operation": False,
+        "paid_operation_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_phase2_provider_unlock_review_pack_v1",
+        "provider_unlock_review_summary": {
+            "mode": "phase2_provider_unlock_review_preview_deterministic_unlock_governance_dry_run_only",
+            "source_packs": source_pack_ids,
+            "source_pack_presence": {pack_id: bool(packs.get(pack_id)) for pack_id in source_pack_ids},
+            "provider_unlock_candidate_count": len(provider_unlock_candidate_cards),
+            "approval_requirement_review_count": len(approval_requirement_review_cards),
+            "secret_network_requirement_count": len(secret_network_requirement_cards),
+            "cost_quota_review_count": len(cost_quota_review_cards),
+            "sandbox_contract_test_review_count": len(sandbox_contract_test_review_cards),
+            "provider_unlock_blocker_count": len(phase2_provider_unlock_blockers),
+            "real_provider_call_allowed": False,
+            "secret_read_allowed": False,
+            "external_call_allowed": False,
+            "token_issue_allowed": False,
+            "paid_operation_allowed": False,
+            "real_execution_allowed": False,
+            "real_database_write_allowed": False,
+            "real_file_write_allowed": False,
+            "risk_note": "Provider unlock review is deterministic preview only; it does not read API keys or secrets, call providers, call LLMs, make external requests, create approval tokens, write databases, write files, export, run sandbox tests, run production readiness jobs, retry, rollback, or execute paid operations.",
+        },
+        "provider_unlock_candidate_cards": provider_unlock_candidate_cards,
+        "approval_requirement_review_cards": approval_requirement_review_cards,
+        "secret_network_requirement_cards": secret_network_requirement_cards,
+        "cost_quota_review_cards": cost_quota_review_cards,
+        "sandbox_contract_test_review_cards": sandbox_contract_test_review_cards,
+        "audit_logging_requirement_cards": audit_logging_requirement_cards,
+        "failure_recovery_review_cards": failure_recovery_review_cards,
+        "policy_claim_safety_dependency_cards": policy_claim_safety_dependency_cards,
+        "human_governance_review_cards": human_governance_review_cards,
+        "provider_unlock_decision_cards": provider_unlock_decision_cards,
+        "phase2_provider_unlock_blockers": phase2_provider_unlock_blockers,
+        "provider_unlock_quality_checks": {
+            "candidate_providers_covered": bool(provider_unlock_candidate_cards),
+            "approval_requirement_covered": bool(approval_requirement_review_cards),
+            "secret_network_covered": bool(secret_network_requirement_cards),
+            "cost_quota_covered": bool(cost_quota_review_cards),
+            "sandbox_tests_covered": bool(sandbox_contract_test_review_cards),
+            "audit_logging_covered": bool(audit_logging_requirement_cards),
+            "failure_recovery_covered": bool(failure_recovery_review_cards),
+            "policy_claim_safety_covered": bool(policy_claim_safety_dependency_cards),
+            "human_governance_covered": bool(human_governance_review_cards),
+            "decision_cards_covered": bool(provider_unlock_decision_cards),
+            "unlock_blockers_covered": bool(phase2_provider_unlock_blockers),
+            "safety_boundary_covered": True,
+            "real_provider_call_performed": False,
+            "secret_read_performed": False,
+            "external_call_performed": False,
+            "token_issue_performed": False,
+            "paid_operation_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "workspace_phase2_provider_unlock_review_preview",
+            "source": "creative_decision_pack.workspace_phase2_provider_unlock_review_pack",
+            "audit_record_created": False,
+            "real_audit_event_created": False,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_file_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit preview is display-only and does not write databases, read real logs, read history tables, or create real audit events.",
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -46335,6 +46686,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_phase2_llm_provider_gate_pack"] = (
         _rw_workspace_phase2_llm_provider_gate_pack(
+            creative_decision_pack
+        )
+    )
+    creative_decision_pack["workspace_phase2_provider_unlock_review_pack"] = (
+        _rw_workspace_phase2_provider_unlock_review_pack(
             creative_decision_pack
         )
     )
