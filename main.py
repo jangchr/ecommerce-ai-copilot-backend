@@ -45576,6 +45576,510 @@ def _rw_workspace_phase2_persistence_mock_harness_pack(
     }
 
 
+def _rw_workspace_phase2_llm_provider_gate_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_ids = [
+        "workspace_phase2_persistence_mock_harness_pack",
+        "workspace_phase2_database_persistence_gate_pack",
+        "workspace_mvp_readiness_dossier_pack",
+        "workspace_demo_campaign_walkthrough_pack",
+        "workspace_mvp_consolidation_pack",
+        "workspace_final_system_health_pack",
+        "workspace_scenario_presets_pack",
+        "workspace_product_navigation_pack",
+        "campaign_creative_dossier_pack",
+        "final_claim_safe_export_packet_pack",
+        "claim_safe_remediation_verification_pack",
+        "claim_safe_delivery_remediation_pack",
+        "claim_safe_delivery_qa_pack",
+        "claim_safe_platform_delivery_pack",
+        "claim_safe_creative_output_pack",
+        "claim_safe_creative_brief_pack",
+        "claim_risk_guard_pack",
+        "review_evidence_quality_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_real_execution_approval_token_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_capability_permission_matrix_pack",
+    ]
+    packs = {pack_id: dict(creative_decision_pack.get(pack_id) or {}) for pack_id in source_pack_ids}
+
+    prompt_specs = [
+        ("claim_safe_brief_generation_prompt", "Claim-safe brief generation prompt", "brief", ["claim_safe_creative_brief_pack", "review_evidence_quality_pack", "claim_risk_guard_pack"], "claim-safe creative brief from existing evidence refs", ["quote_refs", "evidence_quality_refs"], ["claim_risk_guard_pack", "do_not_claim_refs"], "draft claim-safe brief preview"),
+        ("creative_output_generation_prompt", "Creative output generation prompt", "creative_output", ["claim_safe_creative_output_pack", "campaign_creative_dossier_pack"], "claim-safe copy and prompt pack from approved brief refs", ["supporting_quote_ids", "evidence_trace_refs"], ["claim_safety_refs", "restricted_claim_refs"], "draft claim-safe creative output preview"),
+        ("platform_delivery_adaptation_prompt", "Platform delivery adaptation prompt", "delivery", ["claim_safe_platform_delivery_pack", "claim_safe_delivery_qa_pack"], "platform delivery adaptation using existing safe copy refs", ["delivery_evidence_refs"], ["platform_restriction_refs"], "adapt copy for delivery preview"),
+        ("delivery_qa_assist_prompt", "Delivery QA assist prompt", "delivery_qa", ["claim_safe_delivery_qa_pack", "final_claim_safe_export_packet_pack"], "delivery QA explanation with existing blocker refs", ["qa_evidence_refs"], ["delivery_blocker_refs"], "summarize QA blockers"),
+        ("remediation_suggestion_prompt", "Remediation suggestion prompt", "remediation", ["claim_safe_delivery_remediation_pack", "claim_safe_remediation_verification_pack"], "suggest remediation preview from existing blocker refs", ["remediation_evidence_refs"], ["remaining_gap_refs"], "suggest safe remediation preview"),
+        ("final_export_summary_prompt", "Final export summary prompt", "export", ["final_claim_safe_export_packet_pack"], "final export summary from existing export readiness refs", ["export_evidence_refs"], ["export_safety_refs"], "summarize final export preview"),
+        ("campaign_dossier_summary_prompt", "Campaign dossier summary prompt", "dossier", ["campaign_creative_dossier_pack"], "operator campaign dossier summary from existing dossier refs", ["dossier_evidence_refs"], ["handoff_safety_refs"], "summarize campaign dossier preview"),
+        ("demo_walkthrough_presenter_prompt", "Demo walkthrough presenter prompt", "demo", ["workspace_demo_campaign_walkthrough_pack", "workspace_mvp_readiness_dossier_pack"], "presenter notes from existing demo walkthrough refs", ["demo_evidence_refs"], ["mvp_boundary_refs"], "draft demo presenter preview"),
+    ]
+    prompt_invocation_contract_cards = [
+        {
+            "prompt_contract_id": prompt_id,
+            "prompt_label": label,
+            "prompt_group": group,
+            "source_pack_refs": refs,
+            "input_context_shape": input_shape,
+            "required_evidence_refs": evidence_refs,
+            "required_claim_safety_refs": safety_refs,
+            "allowed_prompt_purpose": allowed_purpose,
+            "forbidden_prompt_purpose": [
+                "invent real quote",
+                "invent real buyer evidence",
+                "produce legal advice",
+                "query real policy API",
+                "generate live advertising campaign",
+                "read provider secret",
+            ],
+            "expected_output_shape": {
+                "draft_text": "preview_only",
+                "evidence_trace": "required",
+                "claim_trace": "required",
+                "usage_status": "preview_not_provider_usage",
+                "risk_note": "required",
+            },
+            "requires_human_approval": True,
+            "llm_generation_allowed": False,
+            "real_provider_call_allowed": False,
+            "external_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Prompt invocation contract is preview-only; no LLM generation, provider call, external call, or real execution occurs.",
+        }
+        for (
+            prompt_id,
+            label,
+            group,
+            refs,
+            input_shape,
+            evidence_refs,
+            safety_refs,
+            allowed_purpose,
+        ) in prompt_specs
+    ]
+
+    evidence_grounding_requirement_cards = [
+        {
+            "grounding_requirement_id": "existing_quote_claim_refs_only",
+            "grounding_label": "Existing evidence and quote refs only",
+            "source_pack_refs": ["review_evidence_quality_pack", "claim_risk_guard_pack"],
+            "required_quote_refs": ["supporting_quote_ids", "evidence_refs"],
+            "required_claim_refs": ["claim_id", "claim_risk_refs"],
+            "minimum_support_status": "supported_or_restricted_with_quote",
+            "unsupported_claim_behavior": "block generation and require operator review",
+            "missing_quote_behavior": "block quote-backed claim and show missing quote warning",
+            "do_not_claim_behavior": "remove do_not_claim refs from prompt context",
+            "allowed_generation_scope": "summarize only existing evidence, quote, and claim refs; never invent real quote or buyer evidence",
+            "llm_generation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Future LLM output must be grounded in existing evidence refs only.",
+        },
+        {
+            "grounding_requirement_id": "claim_safe_output_refs_only",
+            "grounding_label": "Claim-safe output refs only",
+            "source_pack_refs": ["claim_safe_creative_output_pack", "final_claim_safe_export_packet_pack"],
+            "required_quote_refs": ["supporting_quote_ids"],
+            "required_claim_refs": ["allowed_claim_refs", "restricted_claim_refs", "do_not_claim_refs"],
+            "minimum_support_status": "claim_safe_verified",
+            "unsupported_claim_behavior": "block unsupported claim from prompt",
+            "missing_quote_behavior": "downgrade to generic non-claim copy preview",
+            "do_not_claim_behavior": "exclude from output schema and risk note",
+            "allowed_generation_scope": "draft only claim-safe preview text with trace refs",
+            "llm_generation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "No real quote or buyer evidence is generated from thin air.",
+        },
+    ]
+
+    claim_safety_prompt_guard_cards = [
+        {
+            "prompt_guard_id": "unsupported_claim_guard",
+            "guard_label": "Unsupported claim guard",
+            "guard_group": "unsupported claim",
+            "source_pack_refs": ["claim_risk_guard_pack", "review_evidence_quality_pack"],
+            "blocked_claim_refs": ["unsupported_claim"],
+            "restricted_claim_refs": [],
+            "do_not_claim_refs": ["do_not_claim"],
+            "required_disclaimer_note": "Not legal advice; not a real platform policy result.",
+            "operator_review_required": True,
+            "real_policy_check_allowed": False,
+            "llm_generation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Unsupported claims are blocked before any future LLM call.",
+        },
+        {
+            "prompt_guard_id": "missing_quote_restricted_claim_guard",
+            "guard_label": "Missing quote and restricted claim guard",
+            "guard_group": "missing quote / restricted claim",
+            "source_pack_refs": ["claim_safe_delivery_qa_pack", "claim_safe_remediation_verification_pack"],
+            "blocked_claim_refs": ["missing_quote"],
+            "restricted_claim_refs": ["restricted_claim"],
+            "do_not_claim_refs": ["platform_policy_disabled", "operator_review_required"],
+            "required_disclaimer_note": "Policy checks are disabled and this is not a compliance conclusion.",
+            "operator_review_required": True,
+            "real_policy_check_allowed": False,
+            "llm_generation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Missing quote, do_not_claim, restricted claim, platform policy disabled, and operator review required are enforced as preview guards.",
+        },
+    ]
+
+    llm_output_schema_contract_cards = [
+        {
+            "output_schema_contract_id": "claim_safe_text_output_schema",
+            "output_label": "Claim-safe text output schema",
+            "output_group": "creative_text",
+            "source_pack_refs": ["claim_safe_creative_output_pack", "campaign_creative_dossier_pack"],
+            "expected_fields": ["draft_text", "evidence_trace", "claim_trace", "usage_status", "risk_note"],
+            "required_trace_refs": ["evidence_trace", "claim_trace"],
+            "forbidden_output_fields": ["provider_secret", "raw_hidden_prompt", "untraced_claim"],
+            "claim_trace_required": True,
+            "evidence_trace_required": True,
+            "schema_validation_required": True,
+            "real_provider_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Output must carry evidence trace, claim trace, usage status, and risk note.",
+        },
+        {
+            "output_schema_contract_id": "operator_handoff_output_schema",
+            "output_label": "Operator handoff output schema",
+            "output_group": "handoff",
+            "source_pack_refs": ["final_claim_safe_export_packet_pack", "workspace_demo_campaign_walkthrough_pack"],
+            "expected_fields": ["summary", "evidence_trace", "claim_trace", "operator_review_required", "usage_status", "risk_note"],
+            "required_trace_refs": ["source_pack_refs", "claim_trace", "evidence_trace"],
+            "forbidden_output_fields": ["provider_secret", "raw_hidden_prompt", "untraced_claim"],
+            "claim_trace_required": True,
+            "evidence_trace_required": True,
+            "schema_validation_required": True,
+            "real_provider_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Operator handoff schema is preview-only and cannot contain untraced claims.",
+        },
+    ]
+
+    boundary_specs = [
+        ("llm", "LLM"),
+        ("provider", "Provider"),
+        ("secret_read", "Secret read"),
+        ("external_call", "External call"),
+        ("real_execution", "Real execution"),
+        ("real_policy_check", "Real policy check"),
+        ("database_persistence", "Database persistence"),
+        ("file_write", "File write"),
+    ]
+    provider_boundary_lock_cards = [
+        {
+            "boundary_lock_id": f"phase2_llm_gate_boundary_{capability_id}",
+            "capability_id": capability_id,
+            "capability_label": label,
+            "expected_disabled": True,
+            "observed_allowed": False,
+            "must_remain_disabled_until_unlocked": True,
+            "unlock_requires": [
+                "provider key approval",
+                "secret access approval",
+                "external call approval",
+                "cost quota approval",
+                "provider sandbox contract test",
+                "real audit sink",
+                "production approval",
+            ],
+            "source_guard_refs": [
+                "workspace_secret_environment_gate_pack",
+                "workspace_network_external_call_block_guard_pack",
+                "workspace_provider_invocation_audit_packet_pack",
+                "workspace_capability_permission_matrix_pack",
+            ],
+            "risk_note": f"{label} remains disabled for the Phase 2 LLM provider gate preview.",
+        }
+        for capability_id, label in boundary_specs
+    ]
+
+    prompt_redaction_privacy_cards = [
+        {
+            "prompt_redaction_privacy_id": "llm_prompt_provider_secret",
+            "data_group": "provider secret",
+            "source_pack_refs": ["workspace_secret_environment_gate_pack"],
+            "sensitive_field_refs": ["provider_secret", "api_key", "access_token"],
+            "prompt_inclusion_allowed": False,
+            "secret_read_allowed": False,
+            "redaction_strategy": "forbid secret read and forbid prompt inclusion",
+            "contains_provider_secret": True,
+            "contains_customer_data": False,
+            "risk_note": "Provider secret is not allowed to be read or placed into a prompt.",
+        },
+        {
+            "prompt_redaction_privacy_id": "llm_prompt_customer_data",
+            "data_group": "customer data",
+            "source_pack_refs": ["workspace_product_navigation_pack", "review_evidence_quality_pack"],
+            "sensitive_field_refs": ["buyer_identifier", "customer_name", "external_account_id"],
+            "prompt_inclusion_allowed": False,
+            "secret_read_allowed": False,
+            "redaction_strategy": "use anonymized refs only",
+            "contains_provider_secret": False,
+            "contains_customer_data": True,
+            "risk_note": "Real customer data is not sent to any LLM provider.",
+        },
+        {
+            "prompt_redaction_privacy_id": "llm_prompt_review_text",
+            "data_group": "review text",
+            "source_pack_refs": ["review_evidence_quality_pack"],
+            "sensitive_field_refs": ["raw_unredacted_review_text", "reviewer_profile"],
+            "prompt_inclusion_allowed": False,
+            "secret_read_allowed": False,
+            "redaction_strategy": "use quote ids and redacted snippets only after approval",
+            "contains_provider_secret": False,
+            "contains_customer_data": True,
+            "risk_note": "Unredacted review text remains excluded.",
+        },
+        {
+            "prompt_redaction_privacy_id": "llm_prompt_generated_copy",
+            "data_group": "generated copy",
+            "source_pack_refs": ["claim_safe_creative_output_pack", "campaign_creative_dossier_pack"],
+            "sensitive_field_refs": ["unreviewed_generated_copy", "unsupported_claim_text"],
+            "prompt_inclusion_allowed": False,
+            "secret_read_allowed": False,
+            "redaction_strategy": "include only claim-safe traced output after approval",
+            "contains_provider_secret": False,
+            "contains_customer_data": False,
+            "risk_note": "Generated copy is not sent to real LLM providers in this preview.",
+        },
+        {
+            "prompt_redaction_privacy_id": "llm_prompt_operator_note",
+            "data_group": "operator note",
+            "source_pack_refs": ["campaign_creative_dossier_pack", "workspace_demo_campaign_walkthrough_pack"],
+            "sensitive_field_refs": ["private_operator_note", "internal_review_note"],
+            "prompt_inclusion_allowed": False,
+            "secret_read_allowed": False,
+            "redaction_strategy": "manual operator notes stay out of provider prompt context",
+            "contains_provider_secret": False,
+            "contains_customer_data": False,
+            "risk_note": "Private operator notes are excluded from future provider prompts.",
+        },
+    ]
+
+    cost_quota_timeout_guard_cards = [
+        {
+            "cost_quota_timeout_guard_id": "llm_cost_quota_timeout_guard",
+            "guard_label": "LLM cost, quota, timeout, rate limit, retry cap guard",
+            "max_tokens_preview": 1200,
+            "timeout_ms_preview": 30000,
+            "quota_policy_preview": "operator-approved quota required before provider call",
+            "cost_estimate_preview": "estimate only; no billing and no paid operation",
+            "rate_limit_policy_preview": "sandbox-tested rate limit required",
+            "retry_cap_preview": 0,
+            "real_billing_performed": False,
+            "external_call_allowed": False,
+            "real_provider_call_allowed": False,
+            "risk_note": "Cost, quota, timeout, rate limit, and retry caps are descriptive only; no request is sent.",
+        }
+    ]
+
+    human_approval_requirement_cards = [
+        {
+            "human_approval_requirement_id": "llm_provider_invocation_approval",
+            "approval_label": "Future real LLM invocation approval",
+            "required_approval_refs": [
+                "provider key approval",
+                "secret access approval",
+                "external call approval",
+                "cost quota approval",
+                "production approval",
+            ],
+            "approval_token_created": False,
+            "real_approval_created": False,
+            "llm_generation_allowed": False,
+            "real_provider_call_allowed": False,
+            "risk_note": "Future real LLM calls require human approval; no real approval token is created.",
+        }
+    ]
+
+    llm_failure_handling_cards = [
+        {
+            "failure_handling_id": f"llm_failure_{failure_id}",
+            "failure_type": failure_type,
+            "expected_handling": handling,
+            "real_retry_executed": False,
+            "real_provider_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Failure handling is preview-only; no real retry or provider request is executed.",
+        }
+        for failure_id, failure_type, handling in [
+            ("timeout", "timeout", "surface timeout and stop without retry"),
+            ("rate_limit", "rate limit", "surface rate limit and require quota review"),
+            ("provider_unavailable", "provider unavailable", "fallback to deterministic preview response only"),
+            ("schema_invalid", "schema invalid", "reject output and require schema contract review"),
+            ("unsafe_claim_output", "unsafe claim output", "block output and require claim safety review"),
+            ("missing_evidence_trace", "missing evidence trace", "reject output until evidence trace exists"),
+            ("cost_quota_exceeded", "cost quota exceeded", "block invocation until approval"),
+            ("secret_missing", "secret missing", "block provider client creation"),
+        ]
+    ]
+
+    llm_audit_packet_preview_cards = [
+        {
+            "llm_audit_packet_preview_id": "llm_prompt_invocation_audit_packet",
+            "audit_packet_label": "Prompt invocation audit packet preview",
+            "audit_packet_shape": ["event_id", "prompt_contract_id", "source_pack_refs", "evidence_trace", "claim_trace", "usage_status", "risk_note"],
+            "source_pack_refs": source_pack_ids,
+            "real_audit_event_created": False,
+            "database_write_allowed": False,
+            "real_log_read_allowed": False,
+            "risk_note": "Audit packet preview describes future shape only; no database write or audit event is created.",
+        },
+        {
+            "llm_audit_packet_preview_id": "llm_provider_block_audit_packet",
+            "audit_packet_label": "Provider blocked audit packet preview",
+            "audit_packet_shape": ["event_id", "boundary_lock_id", "blocked_reason", "operator_action"],
+            "source_pack_refs": ["workspace_provider_invocation_audit_packet_pack", "workspace_capability_permission_matrix_pack"],
+            "real_audit_event_created": False,
+            "database_write_allowed": False,
+            "real_log_read_allowed": False,
+            "risk_note": "Provider block audit is display-only and does not read real logs.",
+        },
+    ]
+
+    test_specs = [
+        ("unit", "unit tests"),
+        ("contract", "contract tests"),
+        ("prompt_snapshot", "prompt snapshot tests"),
+        ("schema_validation", "schema validation tests"),
+        ("claim_safety_guard", "claim safety guard tests"),
+        ("redaction", "redaction tests"),
+        ("cost_quota", "cost quota tests"),
+        ("timeout", "timeout tests"),
+        ("audit_preview", "audit preview tests"),
+        ("permission_boundary", "permission boundary tests"),
+    ]
+    llm_provider_test_plan_cards = [
+        {
+            "test_plan_id": f"phase2_llm_gate_{test_id}_test_plan",
+            "test_type": test_id,
+            "test_label": label,
+            "required_before_real_llm_unlock": True,
+            "current_status": "preview_contract_defined",
+            "llm_generation_allowed": False,
+            "real_provider_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} must pass before real LLM provider calls can be enabled.",
+        }
+        for test_id, label in test_specs
+    ]
+
+    phase2_llm_unlock_blockers = [
+        "no provider key approval",
+        "no secret access approval",
+        "no external call approval",
+        "no cost quota approval",
+        "no provider sandbox contract test",
+        "no real audit sink",
+        "no production approval",
+        "no rollback failure recovery implementation",
+    ]
+
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "secret_read": False,
+        "secret_read_enabled": False,
+        "external_call": False,
+        "external_call_enabled": False,
+        "token_issue": False,
+        "token_issue_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_phase2_llm_provider_gate_pack_v1",
+        "llm_provider_gate_summary": {
+            "mode": "phase2_llm_provider_gate_preview_deterministic_prompt_invocation_contract_dry_run_only",
+            "source_packs": source_pack_ids,
+            "source_pack_presence": {pack_id: bool(packs.get(pack_id)) for pack_id in source_pack_ids},
+            "prompt_invocation_contract_count": len(prompt_invocation_contract_cards),
+            "evidence_grounding_requirement_count": len(evidence_grounding_requirement_cards),
+            "claim_safety_prompt_guard_count": len(claim_safety_prompt_guard_cards),
+            "llm_output_schema_contract_count": len(llm_output_schema_contract_cards),
+            "provider_boundary_lock_count": len(provider_boundary_lock_cards),
+            "phase2_llm_unlock_blocker_count": len(phase2_llm_unlock_blockers),
+            "llm_generation_allowed": False,
+            "real_provider_call_allowed": False,
+            "external_call_allowed": False,
+            "secret_read_allowed": False,
+            "real_execution_allowed": False,
+            "real_database_write_allowed": False,
+            "real_file_write_allowed": False,
+            "risk_note": "LLM provider gate is deterministic preview only; it does not read API keys, read secrets, call a real LLM, create a provider client, make external calls, write databases, write files, or export real ads.",
+        },
+        "prompt_invocation_contract_cards": prompt_invocation_contract_cards,
+        "evidence_grounding_requirement_cards": evidence_grounding_requirement_cards,
+        "claim_safety_prompt_guard_cards": claim_safety_prompt_guard_cards,
+        "llm_output_schema_contract_cards": llm_output_schema_contract_cards,
+        "provider_boundary_lock_cards": provider_boundary_lock_cards,
+        "prompt_redaction_privacy_cards": prompt_redaction_privacy_cards,
+        "cost_quota_timeout_guard_cards": cost_quota_timeout_guard_cards,
+        "human_approval_requirement_cards": human_approval_requirement_cards,
+        "llm_failure_handling_cards": llm_failure_handling_cards,
+        "llm_audit_packet_preview_cards": llm_audit_packet_preview_cards,
+        "llm_provider_test_plan_cards": llm_provider_test_plan_cards,
+        "phase2_llm_unlock_blockers": phase2_llm_unlock_blockers,
+        "llm_gate_quality_checks": {
+            "prompt_contract_covered": bool(prompt_invocation_contract_cards),
+            "evidence_grounding_covered": bool(evidence_grounding_requirement_cards),
+            "claim_guard_covered": bool(claim_safety_prompt_guard_cards),
+            "output_schema_covered": bool(llm_output_schema_contract_cards),
+            "provider_boundary_lock_covered": bool(provider_boundary_lock_cards),
+            "redaction_privacy_covered": bool(prompt_redaction_privacy_cards),
+            "cost_quota_timeout_covered": bool(cost_quota_timeout_guard_cards),
+            "human_approval_covered": bool(human_approval_requirement_cards),
+            "failure_handling_covered": bool(llm_failure_handling_cards),
+            "audit_preview_covered": bool(llm_audit_packet_preview_cards),
+            "test_plan_covered": bool(llm_provider_test_plan_cards),
+            "unlock_blockers_covered": bool(phase2_llm_unlock_blockers),
+            "safety_boundary_covered": True,
+            "llm_generation_performed": False,
+            "real_provider_call_performed": False,
+            "secret_read_performed": False,
+            "external_call_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "workspace_phase2_llm_provider_gate_preview",
+            "source": "creative_decision_pack.workspace_phase2_llm_provider_gate_pack",
+            "audit_record_created": False,
+            "real_audit_event_created": False,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_file_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit preview is display-only and does not write databases, read real logs, read history tables, or create real audit events.",
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -45826,6 +46330,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_phase2_persistence_mock_harness_pack"] = (
         _rw_workspace_phase2_persistence_mock_harness_pack(
+            creative_decision_pack
+        )
+    )
+    creative_decision_pack["workspace_phase2_llm_provider_gate_pack"] = (
+        _rw_workspace_phase2_llm_provider_gate_pack(
             creative_decision_pack
         )
     )

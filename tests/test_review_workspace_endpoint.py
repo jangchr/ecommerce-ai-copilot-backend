@@ -12536,6 +12536,434 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
                 self.assertIn(key, boundaries)
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_phase2_llm_provider_gate_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-phase2-llm-provider-gate-preview",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "PHASE2LLM001",
+                "title": "Adjustable Laptop Stand",
+                "reviews": [
+                    {
+                        "rating": 2,
+                        "title": "Slides on glass desk",
+                        "text": (
+                            "The stand slides on my glass desk and the hinge "
+                            "feels stiff when I adjust height."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 5,
+                        "title": "Helps my posture",
+                        "text": (
+                            "It lifts my laptop to eye level and my neck "
+                            "feels better during long calls."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 1,
+                        "title": "Competitor bent quickly",
+                        "text": (
+                            "The competitor bent quickly and the screws "
+                            "started rattling after a few days."
+                        ),
+                        "source_section": "competitor_review",
+                        "metadata": {"source_type": "competitor"},
+                    },
+                ],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        self.assertIn("workspace_phase2_llm_provider_gate_pack", creative_pack)
+        for existing_pack in [
+            "workspace_phase2_persistence_mock_harness_pack",
+            "workspace_phase2_database_persistence_gate_pack",
+            "workspace_mvp_readiness_dossier_pack",
+            "workspace_demo_campaign_walkthrough_pack",
+            "workspace_mvp_consolidation_pack",
+            "workspace_final_system_health_pack",
+            "workspace_scenario_presets_pack",
+            "workspace_product_navigation_pack",
+            "campaign_creative_dossier_pack",
+            "final_claim_safe_export_packet_pack",
+            "claim_safe_remediation_verification_pack",
+            "claim_safe_delivery_remediation_pack",
+            "claim_safe_delivery_qa_pack",
+            "claim_safe_platform_delivery_pack",
+            "claim_safe_creative_output_pack",
+            "claim_safe_creative_brief_pack",
+            "claim_risk_guard_pack",
+            "review_evidence_quality_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "workspace_real_execution_approval_token_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_capability_permission_matrix_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_phase2_llm_provider_gate_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_phase2_llm_provider_gate_pack_v1",
+        )
+        for required_key in [
+            "llm_provider_gate_summary",
+            "prompt_invocation_contract_cards",
+            "evidence_grounding_requirement_cards",
+            "claim_safety_prompt_guard_cards",
+            "llm_output_schema_contract_cards",
+            "provider_boundary_lock_cards",
+            "prompt_redaction_privacy_cards",
+            "cost_quota_timeout_guard_cards",
+            "human_approval_requirement_cards",
+            "llm_failure_handling_cards",
+            "llm_audit_packet_preview_cards",
+            "llm_provider_test_plan_cards",
+            "phase2_llm_unlock_blockers",
+            "llm_gate_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+        ]:
+            with self.subTest(required_key=required_key):
+                self.assertIn(required_key, pack)
+                self.assertTrue(pack[required_key])
+
+        summary = pack["llm_provider_gate_summary"]
+        self.assertIn("phase2_llm_provider_gate_preview", summary["mode"])
+        self.assertIn("deterministic_prompt_invocation_contract", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        for source_pack in [
+            "workspace_phase2_persistence_mock_harness_pack",
+            "workspace_phase2_database_persistence_gate_pack",
+            "workspace_mvp_readiness_dossier_pack",
+            "workspace_demo_campaign_walkthrough_pack",
+            "workspace_mvp_consolidation_pack",
+            "workspace_final_system_health_pack",
+            "workspace_scenario_presets_pack",
+            "workspace_product_navigation_pack",
+            "campaign_creative_dossier_pack",
+            "final_claim_safe_export_packet_pack",
+            "claim_safe_remediation_verification_pack",
+            "claim_safe_delivery_remediation_pack",
+            "claim_safe_delivery_qa_pack",
+            "claim_safe_platform_delivery_pack",
+            "claim_safe_creative_output_pack",
+            "claim_safe_creative_brief_pack",
+            "claim_risk_guard_pack",
+            "review_evidence_quality_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "workspace_real_execution_approval_token_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_capability_permission_matrix_pack",
+        ]:
+            self.assertIn(source_pack, summary["source_packs"])
+        for disabled_key in [
+            "llm_generation_allowed",
+            "real_provider_call_allowed",
+            "external_call_allowed",
+            "secret_read_allowed",
+            "real_execution_allowed",
+            "real_database_write_allowed",
+            "real_file_write_allowed",
+        ]:
+            self.assertFalse(summary[disabled_key])
+
+        prompt_ids = {
+            card["prompt_contract_id"]
+            for card in pack["prompt_invocation_contract_cards"]
+        }
+        for prompt_id in [
+            "claim_safe_brief_generation_prompt",
+            "creative_output_generation_prompt",
+            "platform_delivery_adaptation_prompt",
+            "delivery_qa_assist_prompt",
+            "remediation_suggestion_prompt",
+            "final_export_summary_prompt",
+            "campaign_dossier_summary_prompt",
+            "demo_walkthrough_presenter_prompt",
+        ]:
+            with self.subTest(prompt_id=prompt_id):
+                self.assertIn(prompt_id, prompt_ids)
+        for card in pack["prompt_invocation_contract_cards"]:
+            for field in [
+                "prompt_contract_id",
+                "prompt_label",
+                "prompt_group",
+                "source_pack_refs",
+                "input_context_shape",
+                "required_evidence_refs",
+                "required_claim_safety_refs",
+                "allowed_prompt_purpose",
+                "forbidden_prompt_purpose",
+                "expected_output_shape",
+                "requires_human_approval",
+                "llm_generation_allowed",
+                "real_provider_call_allowed",
+                "external_call_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(prompt=card["prompt_contract_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertFalse(card["llm_generation_allowed"])
+            self.assertFalse(card["real_provider_call_allowed"])
+            self.assertFalse(card["external_call_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+            self.assertIn("invent real quote", card["forbidden_prompt_purpose"])
+            self.assertIn("invent real buyer evidence", card["forbidden_prompt_purpose"])
+
+        grounding_text = " ".join(
+            " ".join(str(value) for value in card.values())
+            for card in pack["evidence_grounding_requirement_cards"]
+        )
+        for expected in [
+            "unsupported claim",
+            "missing quote",
+            "do_not_claim",
+            "never invent real quote",
+            "buyer evidence",
+        ]:
+            with self.subTest(grounding=expected):
+                self.assertIn(expected, grounding_text)
+        for card in pack["evidence_grounding_requirement_cards"]:
+            self.assertTrue(card["required_quote_refs"])
+            self.assertTrue(card["required_claim_refs"])
+            self.assertFalse(card["llm_generation_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        guard_text = " ".join(
+            " ".join(str(value) for value in card.values())
+            for card in pack["claim_safety_prompt_guard_cards"]
+        )
+        for expected in [
+            "unsupported claim",
+            "missing quote",
+            "do_not_claim",
+            "restricted claim",
+            "platform policy disabled",
+            "operator review required",
+        ]:
+            with self.subTest(guard=expected):
+                self.assertIn(expected, guard_text)
+        for card in pack["claim_safety_prompt_guard_cards"]:
+            self.assertTrue(card["operator_review_required"])
+            self.assertFalse(card["real_policy_check_allowed"])
+            self.assertFalse(card["llm_generation_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        schema_text = " ".join(
+            " ".join(str(value) for value in card.values())
+            for card in pack["llm_output_schema_contract_cards"]
+        )
+        for expected in [
+            "evidence_trace",
+            "claim_trace",
+            "usage_status",
+            "risk_note",
+            "untraced_claim",
+            "provider_secret",
+            "raw_hidden_prompt",
+        ]:
+            with self.subTest(schema=expected):
+                self.assertIn(expected, schema_text)
+        for card in pack["llm_output_schema_contract_cards"]:
+            self.assertTrue(card["claim_trace_required"])
+            self.assertTrue(card["evidence_trace_required"])
+            self.assertTrue(card["schema_validation_required"])
+            self.assertFalse(card["real_provider_call_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        boundary_ids = {
+            card["capability_id"]
+            for card in pack["provider_boundary_lock_cards"]
+        }
+        for capability_id in [
+            "llm",
+            "provider",
+            "secret_read",
+            "external_call",
+            "real_execution",
+            "real_policy_check",
+            "database_persistence",
+            "file_write",
+        ]:
+            with self.subTest(boundary_id=capability_id):
+                self.assertIn(capability_id, boundary_ids)
+        for card in pack["provider_boundary_lock_cards"]:
+            self.assertTrue(card["expected_disabled"])
+            self.assertFalse(card["observed_allowed"])
+            self.assertTrue(card["must_remain_disabled_until_unlocked"])
+
+        redaction_by_group = {
+            card["data_group"]: card
+            for card in pack["prompt_redaction_privacy_cards"]
+        }
+        for data_group in [
+            "provider secret",
+            "customer data",
+            "review text",
+            "generated copy",
+            "operator note",
+        ]:
+            with self.subTest(data_group=data_group):
+                self.assertIn(data_group, redaction_by_group)
+        provider_secret = redaction_by_group["provider secret"]
+        self.assertFalse(provider_secret["secret_read_allowed"])
+        self.assertFalse(provider_secret["prompt_inclusion_allowed"])
+        self.assertTrue(provider_secret["contains_provider_secret"])
+
+        for card in pack["cost_quota_timeout_guard_cards"]:
+            self.assertFalse(card["real_billing_performed"])
+            self.assertFalse(card["external_call_allowed"])
+            self.assertFalse(card["real_provider_call_allowed"])
+            self.assertTrue(card["max_tokens_preview"])
+            self.assertTrue(card["timeout_ms_preview"])
+            self.assertTrue(card["quota_policy_preview"])
+            self.assertTrue(card["cost_estimate_preview"])
+            self.assertTrue(card["rate_limit_policy_preview"])
+            self.assertIn("retry", card["retry_cap_preview"] == 0 and "retry")
+
+        for card in pack["human_approval_requirement_cards"]:
+            self.assertFalse(card["approval_token_created"])
+            self.assertFalse(card["real_approval_created"])
+            self.assertFalse(card["llm_generation_allowed"])
+            self.assertFalse(card["real_provider_call_allowed"])
+
+        failure_text = " ".join(
+            card["failure_type"]
+            for card in pack["llm_failure_handling_cards"]
+        )
+        for failure_type in [
+            "timeout",
+            "rate limit",
+            "provider unavailable",
+            "schema invalid",
+            "unsafe claim output",
+            "missing evidence trace",
+            "cost quota exceeded",
+            "secret missing",
+        ]:
+            with self.subTest(failure_type=failure_type):
+                self.assertIn(failure_type, failure_text)
+        for card in pack["llm_failure_handling_cards"]:
+            self.assertFalse(card["real_retry_executed"])
+            self.assertFalse(card["real_provider_call_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        for card in pack["llm_audit_packet_preview_cards"]:
+            self.assertFalse(card["real_audit_event_created"])
+            self.assertFalse(card["database_write_allowed"])
+            self.assertFalse(card["real_log_read_allowed"])
+
+        test_plan_text = " ".join(
+            f"{card['test_type']} {card['test_label']}"
+            for card in pack["llm_provider_test_plan_cards"]
+        )
+        for expected in [
+            "unit",
+            "contract",
+            "prompt_snapshot",
+            "prompt snapshot",
+            "schema_validation",
+            "schema validation",
+            "claim_safety_guard",
+            "claim safety guard",
+            "redaction",
+            "cost_quota",
+            "cost quota",
+            "timeout",
+            "audit_preview",
+            "audit preview",
+            "permission_boundary",
+            "permission boundary",
+        ]:
+            with self.subTest(test_plan=expected):
+                self.assertIn(expected, test_plan_text)
+        for card in pack["llm_provider_test_plan_cards"]:
+            self.assertFalse(card["llm_generation_allowed"])
+            self.assertFalse(card["real_provider_call_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        blockers = set(pack["phase2_llm_unlock_blockers"])
+        for blocker in [
+            "no provider key approval",
+            "no secret access approval",
+            "no external call approval",
+            "no cost quota approval",
+            "no provider sandbox contract test",
+            "no real audit sink",
+            "no production approval",
+            "no rollback failure recovery implementation",
+        ]:
+            with self.subTest(blocker=blocker):
+                self.assertIn(blocker, blockers)
+
+        checks = pack["llm_gate_quality_checks"]
+        for key in [
+            "prompt_contract_covered",
+            "evidence_grounding_covered",
+            "claim_guard_covered",
+            "output_schema_covered",
+            "provider_boundary_lock_covered",
+            "redaction_privacy_covered",
+            "cost_quota_timeout_covered",
+            "human_approval_covered",
+            "failure_handling_covered",
+            "audit_preview_covered",
+            "test_plan_covered",
+            "unlock_blockers_covered",
+            "safety_boundary_covered",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "llm_generation_performed",
+            "real_provider_call_performed",
+            "secret_read_performed",
+            "external_call_performed",
+            "real_execution_performed",
+        ]:
+            self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["audit_record_created"])
+        self.assertFalse(audit["real_audit_event_created"])
+        self.assertFalse(audit["database_write_allowed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["real_file_write_allowed"])
+        self.assertFalse(audit["real_execution_allowed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider", "provider_enabled", "llm", "llm_enabled",
+            "media", "media_enabled", "external_scraping",
+            "external_scraping_enabled", "database_persistence",
+            "database_persistence_enabled", "real_execution",
+            "real_execution_enabled", "real_policy_check",
+            "real_policy_check_enabled", "platform_upload",
+            "platform_upload_enabled", "task_creation",
+            "task_creation_enabled", "real_export", "real_export_enabled",
+            "file_write", "file_write_enabled", "secret_read",
+            "secret_read_enabled", "external_call", "external_call_enabled",
+            "token_issue", "token_issue_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertIn(key, boundaries)
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
