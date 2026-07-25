@@ -17497,6 +17497,233 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_phase2_persistence_mock_harness_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace phase2 persistence mock harness bundle",
+            "project_workspace_phase2_persistence_mock_harness_marker",
+            "PROJECT_WORKSPACE_PHASE2_PERSISTENCE_MOCK_HARNESS_MARKER",
+            "latestProjectWorkspacePhase2PersistenceMockHarnessPack",
+            "workspace_phase2_persistence_mock_harness_pack",
+            "projectWorkspacePhase2PersistenceMockHarnessPackFromWorkspace",
+            "projectWorkspaceExportPhase2PersistenceMockHarnessSnapshot",
+            "projectWorkspaceExportPhase2PersistenceMockHarnessMarkdown",
+            "renderProjectWorkspacePhase2PersistenceMockHarnessSummaryReplayPanel",
+            "renderProjectWorkspacePhase2PersistenceMockHarnessContractRedactionPanel",
+            "renderProjectWorkspacePhase2PersistenceMockHarnessRunsRollbackPanel",
+            "renderProjectWorkspacePhase2PersistenceMockHarnessIntegrityPermissionAuditTestPanel",
+            "renderProjectWorkspacePhase2PersistenceMockHarnessBlockersQualityAuditSafetyPanel",
+            "copyProjectWorkspacePhase2PersistenceMockHarnessSummary",
+            "copyProjectWorkspaceMockSnapshotReplayCards",
+            "copyProjectWorkspaceDeterministicReplayContractCards",
+            "copyProjectWorkspaceRedactionValidationCards",
+            "copyProjectWorkspaceMockPersistenceRunCards",
+            "copyProjectWorkspaceRollbackDryRunCards",
+            "copyProjectWorkspaceReplayIntegrityCheckCards",
+            "copyProjectWorkspacePermissionBoundaryAssertionCards",
+            "copyProjectWorkspaceMockAuditEventPreviewCards",
+            "copyProjectWorkspaceFullPhase2PersistenceMockHarnessPack",
+            "workspace_phase2_persistence_mock_harness_pack: projectWorkspaceExportPhase2PersistenceMockHarnessSnapshot(workspace)",
+            "Phase 2 Persistence Mock Harness / Snapshot Replay",
+            "Persistence Mock Harness Summary",
+            "Mock Snapshot Replay Cards",
+            "Deterministic Replay Contract Cards",
+            "Redaction Validation Cards",
+            "Mock Persistence Run Cards",
+            "Rollback Dry-Run Cards",
+            "Replay Integrity Check Cards",
+            "Permission Boundary Assertion Cards",
+            "Mock Audit Event Preview Cards",
+            "Persistence Mock Test Plan Cards",
+            "Phase 2 Mock Harness Unlock Blockers",
+            "Persistence Mock Harness Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "persistence_mock_harness_summary",
+            "mock_snapshot_replay_cards",
+            "deterministic_replay_contract_cards",
+            "redaction_validation_cards",
+            "mock_persistence_run_cards",
+            "rollback_dry_run_cards",
+            "replay_integrity_check_cards",
+            "permission_boundary_assertion_cards",
+            "mock_audit_event_preview_cards",
+            "persistence_mock_test_plan_cards",
+            "phase2_mock_harness_unlock_blockers",
+            "persistence_mock_harness_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+            "card.mock_replay_id",
+            "card.snapshot_ref",
+            "card.snapshot_group",
+            "card.input_snapshot_shape",
+            "card.expected_replay_output_shape",
+            "card.deterministic_replay_status",
+            "card.redaction_required",
+            "card.permission_boundary_required",
+            "card.mock_only",
+            "card.real_database_write_allowed",
+            "card.real_file_write_allowed",
+            "card.real_execution_allowed",
+            "card.replay_contract_id",
+            "card.contract_label",
+            "card.source_snapshot_refs",
+            "card.required_stable_fields",
+            "card.ignored_runtime_fields",
+            "card.expected_idempotency_behavior",
+            "card.expected_ordering_behavior",
+            "card.expected_missing_field_behavior",
+            "card.expected_schema_mismatch_behavior",
+            "card.redaction_validation_id",
+            "card.data_group",
+            "card.sensitive_field_refs",
+            "card.redaction_strategy",
+            "card.expected_redacted_fields",
+            "card.forbidden_persisted_fields",
+            "card.contains_provider_secret",
+            "card.contains_customer_data",
+            "card.validation_status",
+            "card.secret_read_allowed",
+            "card.mock_run_id",
+            "card.mock_run_label",
+            "card.mock_run_group",
+            "card.simulated_operation",
+            "card.expected_result",
+            "card.expected_failure_mode",
+            "card.writes_real_database",
+            "card.writes_real_file",
+            "card.uses_external_call",
+            "card.reads_secret",
+            "card.rollback_dry_run_id",
+            "card.rollback_scenario",
+            "card.simulated_failure_type",
+            "card.expected_recovery_action",
+            "card.expected_operator_action",
+            "card.requires_real_rollback",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for coverage in [
+            "review_import_snapshot",
+            "evidence_quality_snapshot",
+            "claim_risk_snapshot",
+            "creative_output_snapshot",
+            "delivery_qa_snapshot",
+            "final_export_packet_snapshot",
+            "campaign_dossier_snapshot",
+            "scenario_preset_snapshot",
+            "mvp_readiness_snapshot",
+            "provider secret / customer data / review text / generated copy",
+            "DB write failure / migration failure / schema mismatch / partial write / redaction failure / permission denied",
+            "snapshot hash preview / deterministic ordering / missing dependency / duplicate id / stale version",
+            "database_persistence / file_write / secret_read / external_call / real_execution / provider / llm all disabled",
+            "unit tests / contract tests / replay tests / redaction tests / permission boundary tests / rollback dry-run tests / audit event preview tests",
+            "no DB connection config / no schema migration / no audit sink / no retention policy / no deletion policy / no production approval / no real rollback implementation / no secret access approval",
+            "snapshot replay / deterministic contract / redaction validation / mock run / rollback dry-run / integrity checks / permission boundary / audit preview / test plan / unlock blockers / safety boundary",
+            "provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled",
+        ]:
+            with self.subTest(coverage=coverage):
+                self.assertIn(coverage, html)
+        previous = html.index("renderProjectWorkspacePhase2DatabasePersistenceGateBlockersQualityAuditSafetyPanel(workspace)")
+        summary = html.index("renderProjectWorkspacePhase2PersistenceMockHarnessSummaryReplayPanel(workspace)")
+        contract = html.index("renderProjectWorkspacePhase2PersistenceMockHarnessContractRedactionPanel(workspace)")
+        runs = html.index("renderProjectWorkspacePhase2PersistenceMockHarnessRunsRollbackPanel(workspace)")
+        integrity = html.index("renderProjectWorkspacePhase2PersistenceMockHarnessIntegrityPermissionAuditTestPanel(workspace)")
+        blockers = html.index("renderProjectWorkspacePhase2PersistenceMockHarnessBlockersQualityAuditSafetyPanel(workspace)")
+        core = html.index("renderProjectWorkspaceCreativeCoreFlowStrip(workspace)")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, contract)
+        self.assertLess(contract, runs)
+        self.assertLess(runs, integrity)
+        self.assertLess(integrity, blockers)
+        self.assertLess(blockers, core)
+
+    def test_workspace_phase2_persistence_mock_harness_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "phase2MockHarnessPackTitle",
+            "phase2MockHarnessPackHelper",
+            "phase2MockHarnessSummaryReplayTitle",
+            "phase2MockHarnessContractRedactionTitle",
+            "phase2MockHarnessRunsRollbackTitle",
+            "phase2MockHarnessIntegrityPermissionAuditTestTitle",
+            "phase2MockHarnessBlockersQualityAuditSafetyTitle",
+            "phase2MockHarnessCopySummary",
+            "phase2MockHarnessCopyReplay",
+            "phase2MockHarnessCopyContract",
+            "phase2MockHarnessCopyRedaction",
+            "phase2MockHarnessCopyRun",
+            "phase2MockHarnessCopyRollback",
+            "phase2MockHarnessCopyIntegrity",
+            "phase2MockHarnessCopyPermission",
+            "phase2MockHarnessCopyAuditEvent",
+            "phase2MockHarnessCopyFull",
+            "phase2MockHarnessCopied",
+            "phase2MockHarnessCopyFailed",
+            "phase2MockHarnessCopyNoData",
+            "phase2MockHarnessPreviewNote",
+            "phase2MockHarnessSafetyNote",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace phase2 persistence mock harness bundle", script)
+            self.assertIn("project_workspace_phase2_persistence_mock_harness_marker", script)
+        markdown = html[
+            html.index("function projectWorkspacePhase2PersistenceMockHarnessSummaryText"):
+            html.index("async function copyProjectWorkspacePhase2PersistenceMockHarnessText")
+        ]
+        for key in [
+            "phase2MockHarnessPackTitle",
+            "phase2MockHarnessSummaryTitle",
+            "phase2MockHarnessReplayTitle",
+            "phase2MockHarnessContractTitle",
+            "phase2MockHarnessRedactionTitle",
+            "phase2MockHarnessRunTitle",
+            "phase2MockHarnessRollbackTitle",
+            "phase2MockHarnessIntegrityTitle",
+            "phase2MockHarnessPermissionTitle",
+            "phase2MockHarnessAuditEventTitle",
+            "phase2MockHarnessTestPlanTitle",
+            "phase2MockHarnessBlockersTitle",
+            "phase2MockHarnessQualityTitle",
+            "phase2MockHarnessAuditTitle",
+            "phase2MockHarnessSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PHASE2_PERSISTENCE_MOCK_HARNESS_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic snapshot replay preview only",
+            "not real database persistence",
+            "does not write DB",
+            "does not write files",
+            "does not read real logs",
+            "does not save real customer data",
+            "does not read secrets",
+            "does not make external calls",
+            "does not call providers",
+            "does not execute real rollback",
+            "does not run a production readiness job",
+            "Provider secrets are not allowed to be read or persisted",
+            "does not compute or store a real persistence hash",
+            "does not read databases",
+            "does not create real audit events",
+            "Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_secret_environment_gate_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [

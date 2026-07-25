@@ -193,6 +193,7 @@ Add-Check "project_workspace_mvp_consolidation_marker" ($page.Content -match "Pr
 Add-Check "project_workspace_demo_campaign_walkthrough_marker" ($page.Content -match "Project Workspace demo campaign walkthrough bundle")
 Add-Check "project_workspace_mvp_readiness_dossier_marker" ($page.Content -match "Project Workspace MVP readiness dossier bundle")
 Add-Check "project_workspace_phase2_database_persistence_gate_marker" ($page.Content -match "Project Workspace phase2 database persistence gate bundle")
+Add-Check "project_workspace_phase2_persistence_mock_harness_marker" ($page.Content -match "Project Workspace phase2 persistence mock harness bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")

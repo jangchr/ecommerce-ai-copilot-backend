@@ -3652,6 +3652,7 @@
         let latestProjectWorkspaceDemoCampaignWalkthroughPack = {};
         let latestProjectWorkspaceMvpReadinessDossierPack = {};
         let latestProjectWorkspacePhase2DatabasePersistenceGatePack = {};
+        let latestProjectWorkspacePhase2PersistenceMockHarnessPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7439,6 +7440,60 @@
             phase2DatabaseGateAuditNote: 'Audit preview is display-only; it does not write databases, does not read real logs or real history tables, and does not create real audit events.',
             phase2DatabaseGateSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.'
         });
+        Object.assign(LANGUAGE_COPY.en, {
+            projectWorkspacePhase2PersistenceMockHarnessMarker: 'Project Workspace phase2 persistence mock harness bundle',
+            phase2MockHarnessPackTitle: 'Phase 2 Persistence Mock Harness / Snapshot Replay',
+            phase2MockHarnessPackHelper: 'Project Workspace phase2 persistence mock harness bundle. Deterministic snapshot replay preview only; it is not real database persistence, does not write DB, does not write files, does not read real logs, does not save real customer data, does not read secrets, does not make external calls, does not call providers, does not execute real rollback, and does not run a production readiness job.',
+            phase2MockHarnessSummaryReplayTitle: 'Persistence Mock Harness Summary / Snapshot Replay',
+            phase2MockHarnessSummaryTitle: 'Persistence Mock Harness Summary',
+            phase2MockHarnessReplayTitle: 'Mock Snapshot Replay Cards',
+            phase2MockHarnessContractRedactionTitle: 'Deterministic Replay Contract / Redaction Validation',
+            phase2MockHarnessContractTitle: 'Deterministic Replay Contract Cards',
+            phase2MockHarnessRedactionTitle: 'Redaction Validation Cards',
+            phase2MockHarnessRunsRollbackTitle: 'Mock Persistence Runs / Rollback Dry-Run',
+            phase2MockHarnessRunTitle: 'Mock Persistence Run Cards',
+            phase2MockHarnessRollbackTitle: 'Rollback Dry-Run Cards',
+            phase2MockHarnessIntegrityPermissionAuditTestTitle: 'Replay Integrity / Permission Boundary / Mock Audit / Test Plan',
+            phase2MockHarnessIntegrityTitle: 'Replay Integrity Check Cards',
+            phase2MockHarnessPermissionTitle: 'Permission Boundary Assertion Cards',
+            phase2MockHarnessAuditEventTitle: 'Mock Audit Event Preview Cards',
+            phase2MockHarnessTestPlanTitle: 'Persistence Mock Test Plan Cards',
+            phase2MockHarnessBlockersQualityAuditSafetyTitle: 'Phase 2 Mock Harness Unlock Blockers / Quality / Audit / Safety',
+            phase2MockHarnessBlockersTitle: 'Phase 2 Mock Harness Unlock Blockers',
+            phase2MockHarnessQualityTitle: 'Persistence Mock Harness Quality Checks',
+            phase2MockHarnessAuditTitle: 'Audit Preview',
+            phase2MockHarnessSafetyTitle: 'Safety Boundaries',
+            phase2MockHarnessMode: 'Mode',
+            phase2MockHarnessReplayCount: 'Mock snapshot replay count',
+            phase2MockHarnessContractCount: 'Deterministic replay contract count',
+            phase2MockHarnessRedactionCount: 'Redaction validation count',
+            phase2MockHarnessRunCount: 'Mock persistence run count',
+            phase2MockHarnessRollbackCount: 'Rollback dry-run count',
+            phase2MockHarnessBlockerCount: 'Unlock blocker count',
+            phase2MockHarnessRecommendedAction: 'Recommended operator action',
+            phase2MockHarnessDisabled: 'disabled',
+            phase2MockHarnessNoData: 'No persistence mock harness data is available.',
+            phase2MockHarnessCopyNoData: 'No persistence mock harness content is available to copy.',
+            phase2MockHarnessCopyFailed: 'Unable to copy persistence mock harness content.',
+            phase2MockHarnessCopied: 'Persistence mock harness content copied.',
+            phase2MockHarnessCopySummary: 'Copy persistence mock harness summary',
+            phase2MockHarnessCopyReplay: 'Copy mock snapshot replay cards',
+            phase2MockHarnessCopyContract: 'Copy deterministic replay contract cards',
+            phase2MockHarnessCopyRedaction: 'Copy redaction validation cards',
+            phase2MockHarnessCopyRun: 'Copy mock persistence run cards',
+            phase2MockHarnessCopyRollback: 'Copy rollback dry-run cards',
+            phase2MockHarnessCopyIntegrity: 'Copy replay integrity check cards',
+            phase2MockHarnessCopyPermission: 'Copy permission boundary assertion cards',
+            phase2MockHarnessCopyAuditEvent: 'Copy mock audit event preview cards',
+            phase2MockHarnessCopyFull: 'Copy full persistence mock harness pack',
+            phase2MockHarnessPreviewNote: 'Deterministic snapshot replay preview only. It does not write real DB, does not write files, does not save real customer data, does not read real logs, does not read secrets, does not make external calls, does not call providers, does not execute real rollback, and does not run a production readiness job.',
+            phase2MockHarnessRedactionNote: 'Redaction validation preview only. Provider secrets are not allowed to be read or persisted; customer data, review text, and generated copy remain mock-only until redaction, retention, deletion, and approval controls exist.',
+            phase2MockHarnessRunRollbackNote: 'Mock runs and rollback dry-runs are preview-only. They simulate write, read, replay, validation, DB write failure, migration failure, schema mismatch, partial write, redaction failure, and permission denied without writing DB, calling external services, or executing real rollback.',
+            phase2MockHarnessIntegrityNote: 'Replay integrity checks cover snapshot hash preview, deterministic ordering, missing dependency, duplicate id, and stale version. This preview does not compute or store a real persistence hash and does not read databases.',
+            phase2MockHarnessAuditNote: 'Audit preview is display-only; it does not write databases, does not read real logs or real history tables, and does not create real audit events.',
+            phase2MockHarnessQualityNote: 'Quality checks cover snapshot replay, deterministic contract, redaction validation, mock run, rollback dry-run, integrity checks, permission boundary, audit preview, test plan, unlock blockers, and safety boundary.',
+            phase2MockHarnessSafetyNote: 'Provider, LLM, media, external scraping, database persistence, real execution, real policy check, platform upload, task creation, real export, file write, secret read, external call, and token issue remain disabled.'
+        });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
             claimSafeCreativeOutputPackTitle: 'Claim-Safe Creative Output Pack',
@@ -8415,6 +8470,60 @@
             phase2DatabaseGateQualityNote: 'Quality checks \u8986\u76d6 state snapshot contract\u3001boundary locks\u3001storage candidates\u3001migration readiness\u3001data sensitivity\u3001audit contract\u3001rollback contract\u3001test plan\u3001operator approval\u3001unlock blockers \u548c safety boundary\u3002',
             phase2DatabaseGateAuditNote: 'Audit preview \u53ea\u7528\u4e8e\u5c55\u793a\uff1b\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u8bfb\u53d6\u771f\u5b9e\u65e5\u5fd7\u6216\u771f\u5b9e\u5386\u53f2\u8868\uff0c\u4e0d\u521b\u5efa\u771f\u5b9e audit event\u3002',
             phase2DatabaseGateSafetyNote: 'Provider\u3001LLM\u3001media\u3001external scraping\u3001database persistence\u3001real execution\u3001real policy check\u3001platform upload\u3001task creation\u3001real export\u3001file write\u3001secret read\u3001external call \u548c token issue \u5168\u90e8\u4fdd\u6301\u7981\u7528\u3002'
+        });
+        Object.assign(LANGUAGE_COPY['zh-CN'], {
+            projectWorkspacePhase2PersistenceMockHarnessMarker: 'Project Workspace phase2 persistence mock harness bundle',
+            phase2MockHarnessPackTitle: 'Phase 2 Persistence Mock Harness / Snapshot Replay',
+            phase2MockHarnessPackHelper: '查看 Project Workspace phase2 persistence mock harness bundle。这只是 deterministic snapshot replay preview，不是真实 database persistence，不写 DB，不写文件，不读取真实日志，不保存真实客户数据，不读取 secret，不发送外部请求，不调用 provider，不执行真实 rollback，也不运行真实 production readiness job。',
+            phase2MockHarnessSummaryReplayTitle: 'Persistence Mock Harness Summary / Snapshot Replay',
+            phase2MockHarnessSummaryTitle: 'Persistence Mock Harness Summary',
+            phase2MockHarnessReplayTitle: 'Mock Snapshot Replay Cards',
+            phase2MockHarnessContractRedactionTitle: 'Deterministic Replay Contract / Redaction Validation',
+            phase2MockHarnessContractTitle: 'Deterministic Replay Contract Cards',
+            phase2MockHarnessRedactionTitle: 'Redaction Validation Cards',
+            phase2MockHarnessRunsRollbackTitle: 'Mock Persistence Runs / Rollback Dry-Run',
+            phase2MockHarnessRunTitle: 'Mock Persistence Run Cards',
+            phase2MockHarnessRollbackTitle: 'Rollback Dry-Run Cards',
+            phase2MockHarnessIntegrityPermissionAuditTestTitle: 'Replay Integrity / Permission Boundary / Mock Audit / Test Plan',
+            phase2MockHarnessIntegrityTitle: 'Replay Integrity Check Cards',
+            phase2MockHarnessPermissionTitle: 'Permission Boundary Assertion Cards',
+            phase2MockHarnessAuditEventTitle: 'Mock Audit Event Preview Cards',
+            phase2MockHarnessTestPlanTitle: 'Persistence Mock Test Plan Cards',
+            phase2MockHarnessBlockersQualityAuditSafetyTitle: 'Phase 2 Mock Harness Unlock Blockers / Quality / Audit / Safety',
+            phase2MockHarnessBlockersTitle: 'Phase 2 Mock Harness Unlock Blockers',
+            phase2MockHarnessQualityTitle: 'Persistence Mock Harness Quality Checks',
+            phase2MockHarnessAuditTitle: 'Audit Preview',
+            phase2MockHarnessSafetyTitle: '安全边界',
+            phase2MockHarnessMode: '模式',
+            phase2MockHarnessReplayCount: 'Mock snapshot replay 数量',
+            phase2MockHarnessContractCount: 'Deterministic replay contract 数量',
+            phase2MockHarnessRedactionCount: 'Redaction validation 数量',
+            phase2MockHarnessRunCount: 'Mock persistence run 数量',
+            phase2MockHarnessRollbackCount: 'Rollback dry-run 数量',
+            phase2MockHarnessBlockerCount: 'Unlock blocker 数量',
+            phase2MockHarnessRecommendedAction: '推荐 operator action',
+            phase2MockHarnessDisabled: '已禁用',
+            phase2MockHarnessNoData: '暂无 persistence mock harness 数据。',
+            phase2MockHarnessCopyNoData: '暂无可复制的 persistence mock harness 内容。',
+            phase2MockHarnessCopyFailed: '无法复制 persistence mock harness 内容。',
+            phase2MockHarnessCopied: 'Persistence mock harness 内容已复制。',
+            phase2MockHarnessCopySummary: '复制 persistence mock harness summary',
+            phase2MockHarnessCopyReplay: '复制 mock snapshot replay cards',
+            phase2MockHarnessCopyContract: '复制 deterministic replay contract cards',
+            phase2MockHarnessCopyRedaction: '复制 redaction validation cards',
+            phase2MockHarnessCopyRun: '复制 mock persistence run cards',
+            phase2MockHarnessCopyRollback: '复制 rollback dry-run cards',
+            phase2MockHarnessCopyIntegrity: '复制 replay integrity check cards',
+            phase2MockHarnessCopyPermission: '复制 permission boundary assertion cards',
+            phase2MockHarnessCopyAuditEvent: '复制 mock audit event preview cards',
+            phase2MockHarnessCopyFull: '复制完整 persistence mock harness pack',
+            phase2MockHarnessPreviewNote: '仅为 deterministic snapshot replay preview。不写真实 DB，不写文件，不保存真实客户数据，不读取真实日志，不读取 secret，不发送外部请求，不调用 provider，不执行真实 rollback，也不运行真实 production readiness job。',
+            phase2MockHarnessRedactionNote: 'Redaction validation 只是 preview。Provider secret 不允许读取、不允许持久化；customer data、review text 和 generated copy 在 redaction、retention、deletion、approval controls 完成前都保持 mock-only。',
+            phase2MockHarnessRunRollbackNote: 'Mock runs 和 rollback dry-runs 只是 preview。它们只模拟 write、read、replay、validation、DB write failure、migration failure、schema mismatch、partial write、redaction failure 和 permission denied，不写 DB、不发送外部请求、不执行真实 rollback。',
+            phase2MockHarnessIntegrityNote: 'Replay integrity checks 覆盖 snapshot hash preview、deterministic ordering、missing dependency、duplicate id 和 stale version。这个 preview 不计算或保存真实 persistence hash，也不读取数据库。',
+            phase2MockHarnessAuditNote: 'Audit preview 只用于展示；不写数据库，不读取真实日志或真实历史表，不创建真实 audit event。',
+            phase2MockHarnessQualityNote: 'Quality checks 覆盖 snapshot replay、deterministic contract、redaction validation、mock run、rollback dry-run、integrity checks、permission boundary、audit preview、test plan、unlock blockers 和 safety boundary。',
+            phase2MockHarnessSafetyNote: 'Provider、LLM、media、external scraping、database persistence、real execution、real policy check、platform upload、task creation、real export、file write、secret read、external call 和 token issue 全部保持禁用。'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -11921,6 +12030,7 @@
                 latestProjectWorkspaceDemoCampaignWalkthroughPack = latestProjectCreativeDecisionPack.workspace_demo_campaign_walkthrough_pack || {};
                 latestProjectWorkspaceMvpReadinessDossierPack = latestProjectCreativeDecisionPack.workspace_mvp_readiness_dossier_pack || {};
                 latestProjectWorkspacePhase2DatabasePersistenceGatePack = latestProjectCreativeDecisionPack.workspace_phase2_database_persistence_gate_pack || {};
+                latestProjectWorkspacePhase2PersistenceMockHarnessPack = latestProjectCreativeDecisionPack.workspace_phase2_persistence_mock_harness_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -17809,6 +17919,7 @@
         const PROJECT_WORKSPACE_DEMO_CAMPAIGN_WALKTHROUGH_MARKER = 'Project Workspace demo campaign walkthrough bundle';
         const PROJECT_WORKSPACE_MVP_READINESS_DOSSIER_MARKER = 'Project Workspace MVP readiness dossier bundle';
         const PROJECT_WORKSPACE_PHASE2_DATABASE_PERSISTENCE_GATE_MARKER = 'Project Workspace phase2 database persistence gate bundle';
+        const PROJECT_WORKSPACE_PHASE2_PERSISTENCE_MOCK_HARNESS_MARKER = 'Project Workspace phase2 persistence mock harness bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -25555,6 +25666,137 @@
         function copyProjectWorkspaceRollbackRecoveryContractCards() { return copyProjectWorkspacePhase2DatabasePersistenceGateText('rollback'); }
         function copyProjectWorkspacePersistenceTestPlanCards() { return copyProjectWorkspacePhase2DatabasePersistenceGateText('test_plan'); }
         function copyProjectWorkspaceFullPhase2DatabasePersistenceGatePack() { return copyProjectWorkspacePhase2DatabasePersistenceGateText('full'); }
+
+        function projectWorkspacePhase2PersistenceMockHarnessPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspacePhase2PersistenceMockHarnessPack && Object.keys(latestProjectWorkspacePhase2PersistenceMockHarnessPack).length) return latestProjectWorkspacePhase2PersistenceMockHarnessPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_phase2_persistence_mock_harness_pack || {};
+        }
+
+        function projectWorkspacePhase2PersistenceMockHarnessHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspacePhase2PersistenceMockHarnessJsonText(value) {
+            if (!projectWorkspacePhase2PersistenceMockHarnessHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspacePhase2PersistenceMockHarnessDisabledText(value) {
+            return value === false || value == null ? t('phase2MockHarnessDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportPhase2PersistenceMockHarnessSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspacePhase2PersistenceMockHarnessPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PHASE2_PERSISTENCE_MOCK_HARNESS_MARKER,
+                has_workspace_phase2_persistence_mock_harness_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                persistence_mock_harness_summary: pack.persistence_mock_harness_summary || {},
+                mock_snapshot_replay_cards: Array.isArray(pack.mock_snapshot_replay_cards) ? pack.mock_snapshot_replay_cards : [],
+                deterministic_replay_contract_cards: Array.isArray(pack.deterministic_replay_contract_cards) ? pack.deterministic_replay_contract_cards : [],
+                redaction_validation_cards: Array.isArray(pack.redaction_validation_cards) ? pack.redaction_validation_cards : [],
+                mock_persistence_run_cards: Array.isArray(pack.mock_persistence_run_cards) ? pack.mock_persistence_run_cards : [],
+                rollback_dry_run_cards: Array.isArray(pack.rollback_dry_run_cards) ? pack.rollback_dry_run_cards : [],
+                replay_integrity_check_cards: Array.isArray(pack.replay_integrity_check_cards) ? pack.replay_integrity_check_cards : [],
+                permission_boundary_assertion_cards: Array.isArray(pack.permission_boundary_assertion_cards) ? pack.permission_boundary_assertion_cards : [],
+                mock_audit_event_preview_cards: Array.isArray(pack.mock_audit_event_preview_cards) ? pack.mock_audit_event_preview_cards : [],
+                persistence_mock_test_plan_cards: Array.isArray(pack.persistence_mock_test_plan_cards) ? pack.persistence_mock_test_plan_cards : [],
+                phase2_mock_harness_unlock_blockers: Array.isArray(pack.phase2_mock_harness_unlock_blockers) ? pack.phase2_mock_harness_unlock_blockers : [],
+                persistence_mock_harness_quality_checks: pack.persistence_mock_harness_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspacePhase2PersistenceMockHarnessSummaryText(pack = projectWorkspaceExportPhase2PersistenceMockHarnessSnapshot()) {
+            if (!pack.has_workspace_phase2_persistence_mock_harness_pack) return '';
+            const summary = pack.persistence_mock_harness_summary || {};
+            return [
+                t('phase2MockHarnessSummaryTitle'),
+                `${t('phase2MockHarnessMode')}: ${summary.mode || t('none')}`,
+                `${t('phase2MockHarnessReplayCount')}: ${summary.mock_snapshot_replay_count ?? pack.mock_snapshot_replay_cards.length}`,
+                `${t('phase2MockHarnessContractCount')}: ${summary.deterministic_replay_contract_count ?? pack.deterministic_replay_contract_cards.length}`,
+                `${t('phase2MockHarnessRedactionCount')}: ${summary.redaction_validation_count ?? pack.redaction_validation_cards.length}`,
+                `${t('phase2MockHarnessRunCount')}: ${summary.mock_persistence_run_count ?? pack.mock_persistence_run_cards.length}`,
+                `${t('phase2MockHarnessRollbackCount')}: ${summary.rollback_dry_run_count ?? pack.rollback_dry_run_cards.length}`,
+                `${t('phase2MockHarnessBlockerCount')}: ${summary.phase2_mock_harness_unlock_blocker_count ?? pack.phase2_mock_harness_unlock_blockers.length}`,
+                `${t('phase2MockHarnessRecommendedAction')}: ${summary.risk_note || t('phase2MockHarnessPreviewNote')}`,
+                `mock_only: ${String(summary.mock_only === true)}`,
+                `real_database_write_allowed: ${projectWorkspacePhase2PersistenceMockHarnessDisabledText(summary.real_database_write_allowed)}`,
+                `real_file_write_allowed: ${projectWorkspacePhase2PersistenceMockHarnessDisabledText(summary.real_file_write_allowed)}`,
+                `real_execution_allowed: ${projectWorkspacePhase2PersistenceMockHarnessDisabledText(summary.real_execution_allowed)}`,
+                `external_call_allowed: ${projectWorkspacePhase2PersistenceMockHarnessDisabledText(summary.external_call_allowed)}`,
+                `secret_read_allowed: ${projectWorkspacePhase2PersistenceMockHarnessDisabledText(summary.secret_read_allowed)}`,
+                t('phase2MockHarnessPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspacePhase2PersistenceMockHarnessSectionText(titleKey, value) {
+            const body = projectWorkspacePhase2PersistenceMockHarnessJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportPhase2PersistenceMockHarnessMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2PersistenceMockHarnessSnapshot(workspace);
+            if (!pack.has_workspace_phase2_persistence_mock_harness_pack) return '';
+            return [
+                `## ${t('phase2MockHarnessPackTitle')}`,
+                projectWorkspacePhase2PersistenceMockHarnessSummaryText(pack), '',
+                projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessReplayTitle', pack.mock_snapshot_replay_cards), '',
+                projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessContractTitle', pack.deterministic_replay_contract_cards), '',
+                projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessRedactionTitle', pack.redaction_validation_cards), '',
+                projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessRunTitle', pack.mock_persistence_run_cards), '',
+                projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessRollbackTitle', pack.rollback_dry_run_cards), '',
+                projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessIntegrityTitle', pack.replay_integrity_check_cards), '',
+                projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessPermissionTitle', pack.permission_boundary_assertion_cards), '',
+                projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessAuditEventTitle', pack.mock_audit_event_preview_cards), '',
+                projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessTestPlanTitle', pack.persistence_mock_test_plan_cards), '',
+                projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessBlockersTitle', pack.phase2_mock_harness_unlock_blockers), '',
+                projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessQualityTitle', pack.persistence_mock_harness_quality_checks), '',
+                projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessAuditTitle', pack.audit_preview), '',
+                projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessSafetyTitle', pack.safety_boundaries),
+                t('phase2MockHarnessPreviewNote'),
+                t('phase2MockHarnessRedactionNote'),
+                t('phase2MockHarnessRunRollbackNote'),
+                t('phase2MockHarnessIntegrityNote'),
+                t('phase2MockHarnessAuditNote'),
+                t('phase2MockHarnessQualityNote'),
+                t('phase2MockHarnessSafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspacePhase2PersistenceMockHarnessText(kind = 'full') {
+            const status = document.getElementById('projectWorkspacePhase2PersistenceMockHarnessStatus');
+            const pack = projectWorkspaceExportPhase2PersistenceMockHarnessSnapshot();
+            const text = kind === 'summary' ? projectWorkspacePhase2PersistenceMockHarnessSummaryText(pack)
+                : kind === 'replay' ? projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessReplayTitle', pack.mock_snapshot_replay_cards)
+                : kind === 'contract' ? projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessContractTitle', pack.deterministic_replay_contract_cards)
+                : kind === 'redaction' ? projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessRedactionTitle', pack.redaction_validation_cards)
+                : kind === 'run' ? projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessRunTitle', pack.mock_persistence_run_cards)
+                : kind === 'rollback' ? projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessRollbackTitle', pack.rollback_dry_run_cards)
+                : kind === 'integrity' ? projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessIntegrityTitle', pack.replay_integrity_check_cards)
+                : kind === 'permission' ? projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessPermissionTitle', pack.permission_boundary_assertion_cards)
+                : kind === 'audit_event' ? projectWorkspacePhase2PersistenceMockHarnessSectionText('phase2MockHarnessAuditEventTitle', pack.mock_audit_event_preview_cards)
+                : projectWorkspaceExportPhase2PersistenceMockHarnessMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('phase2MockHarnessCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('phase2MockHarnessCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('phase2MockHarnessCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('phase2MockHarnessCopyFailed'); }
+        }
+
+        function copyProjectWorkspacePhase2PersistenceMockHarnessSummary() { return copyProjectWorkspacePhase2PersistenceMockHarnessText('summary'); }
+        function copyProjectWorkspaceMockSnapshotReplayCards() { return copyProjectWorkspacePhase2PersistenceMockHarnessText('replay'); }
+        function copyProjectWorkspaceDeterministicReplayContractCards() { return copyProjectWorkspacePhase2PersistenceMockHarnessText('contract'); }
+        function copyProjectWorkspaceRedactionValidationCards() { return copyProjectWorkspacePhase2PersistenceMockHarnessText('redaction'); }
+        function copyProjectWorkspaceMockPersistenceRunCards() { return copyProjectWorkspacePhase2PersistenceMockHarnessText('run'); }
+        function copyProjectWorkspaceRollbackDryRunCards() { return copyProjectWorkspacePhase2PersistenceMockHarnessText('rollback'); }
+        function copyProjectWorkspaceReplayIntegrityCheckCards() { return copyProjectWorkspacePhase2PersistenceMockHarnessText('integrity'); }
+        function copyProjectWorkspacePermissionBoundaryAssertionCards() { return copyProjectWorkspacePhase2PersistenceMockHarnessText('permission'); }
+        function copyProjectWorkspaceMockAuditEventPreviewCards() { return copyProjectWorkspacePhase2PersistenceMockHarnessText('audit_event'); }
+        function copyProjectWorkspaceFullPhase2PersistenceMockHarnessPack() { return copyProjectWorkspacePhase2PersistenceMockHarnessText('full'); }
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -30174,6 +30416,45 @@
             return `<div class="section-block" id="projectWorkspacePhase2DatabasePersistenceGateBlockersQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2DatabaseGateBlockersQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2DatabaseGateSafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2DatabasePersistenceGatePack()">${escapeHTML(t('phase2DatabaseGateCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2DatabaseGateBlockersTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2DatabaseGateNoData'))}</pre><div class="field-helper">no schema migration / no DB connection config / no retention policy / no deletion policy / no redaction policy / no audit sink / no rollback plan implemented / no production approval</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DatabaseGateQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2DatabaseGateNoData'))}</pre><div class="field-helper">state snapshot contract / boundary locks / storage candidates / migration readiness / data sensitivity / audit contract / rollback contract / test plan / operator approval / unlock blockers / safety boundary</div><div class="field-helper">${escapeHTML(t('phase2DatabaseGateQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DatabaseGateAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2DatabaseGateNoData'))}</pre><div class="field-helper">${escapeHTML(t('phase2DatabaseGateAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2DatabaseGateSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled</div><div class="field-helper">${escapeHTML(t('phase2DatabaseGateSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspacePhase2PersistenceMockHarnessSummaryReplayPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2PersistenceMockHarnessSnapshot(workspace); if (!pack.has_workspace_phase2_persistence_mock_harness_pack) return '';
+            const summary = pack.persistence_mock_harness_summary || {};
+            const replayCards = pack.mock_snapshot_replay_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.mock_replay_id || card.snapshot_ref || t('none'))}</strong><div class="field-helper">snapshot_ref: ${escapeHTML(card.snapshot_ref || '')} / snapshot_group: ${escapeHTML(card.snapshot_group || '')}</div><div class="field-helper">source_pack_refs: ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div><strong>input_snapshot_shape:</strong> ${escapeHTML(card.input_snapshot_shape || '')}</div><div><strong>expected_replay_output_shape:</strong> ${escapeHTML(projectWorkspacePhase2PersistenceMockHarnessJsonText(card.expected_replay_output_shape) || t('none'))}</div><div class="field-helper">deterministic_replay_status: ${escapeHTML(card.deterministic_replay_status || '')}</div><div class="field-helper">redaction_required: ${escapeHTML(String(card.redaction_required))} / permission_boundary_required: ${escapeHTML(String(card.permission_boundary_required))} / mock_only: ${escapeHTML(String(card.mock_only))}</div><div class="field-helper">real_database_write_allowed: ${escapeHTML(projectWorkspacePhase2PersistenceMockHarnessDisabledText(card.real_database_write_allowed))} / real_file_write_allowed: ${escapeHTML(projectWorkspacePhase2PersistenceMockHarnessDisabledText(card.real_file_write_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspacePhase2PersistenceMockHarnessDisabledText(card.real_execution_allowed))}</div><div>${escapeHTML(card.risk_note || '')}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspacePhase2PersistenceMockHarnessSummaryReplayPanel" data-marker="project_workspace_phase2_persistence_mock_harness_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2MockHarnessSummaryReplayTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2MockHarnessPackHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2PersistenceMockHarnessSummary()">${escapeHTML(t('phase2MockHarnessCopySummary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMockSnapshotReplayCards()">${escapeHTML(t('phase2MockHarnessCopyReplay'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2PersistenceMockHarnessPack()">${escapeHTML(t('phase2MockHarnessCopyFull'))}</button></div></div><div class="metric-strip">${metricPill(t('phase2MockHarnessMode'), summary.mode || t('none'))}${metricPill(t('phase2MockHarnessReplayCount'), String(summary.mock_snapshot_replay_count ?? pack.mock_snapshot_replay_cards.length))}${metricPill(t('phase2MockHarnessContractCount'), String(summary.deterministic_replay_contract_count ?? pack.deterministic_replay_contract_cards.length))}${metricPill(t('phase2MockHarnessRedactionCount'), String(summary.redaction_validation_count ?? pack.redaction_validation_cards.length))}${metricPill(t('phase2MockHarnessRunCount'), String(summary.mock_persistence_run_count ?? pack.mock_persistence_run_cards.length))}${metricPill(t('phase2MockHarnessRollbackCount'), String(summary.rollback_dry_run_count ?? pack.rollback_dry_run_cards.length))}${metricPill(t('phase2MockHarnessBlockerCount'), String(summary.phase2_mock_harness_unlock_blocker_count ?? pack.phase2_mock_harness_unlock_blockers.length))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspacePhase2PersistenceMockHarnessSummaryText(pack) || t('phase2MockHarnessNoData'))}</pre><div class="graph-os-compact-grid">${replayCards || `<div class="empty-state">${escapeHTML(t('phase2MockHarnessNoData'))}</div>`}</div><div class="field-helper">review_import_snapshot / evidence_quality_snapshot / claim_risk_snapshot / creative_output_snapshot / delivery_qa_snapshot / final_export_packet_snapshot / campaign_dossier_snapshot / scenario_preset_snapshot / mvp_readiness_snapshot</div><div class="demo-warning">${escapeHTML(t('phase2MockHarnessPreviewNote'))}</div><div id="projectWorkspacePhase2PersistenceMockHarnessStatus" class="field-helper" aria-live="polite"></div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2PersistenceMockHarnessContractRedactionPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2PersistenceMockHarnessSnapshot(workspace); if (!pack.has_workspace_phase2_persistence_mock_harness_pack) return '';
+            const contracts = pack.deterministic_replay_contract_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.contract_label || card.replay_contract_id || t('none'))}</strong><div class="field-helper">replay_contract_id: ${escapeHTML(card.replay_contract_id || '')}</div><div class="field-helper">source_snapshot_refs: ${escapeHTML((card.source_snapshot_refs || []).join(', ') || t('none'))}</div><div class="field-helper">required_stable_fields: ${escapeHTML((card.required_stable_fields || []).join(', ') || t('none'))}</div><div class="field-helper">ignored_runtime_fields: ${escapeHTML((card.ignored_runtime_fields || []).join(', ') || t('none'))}</div><div>${escapeHTML(card.expected_idempotency_behavior || '')}</div><div>${escapeHTML(card.expected_ordering_behavior || '')}</div><div>${escapeHTML(card.expected_missing_field_behavior || '')}</div><div>${escapeHTML(card.expected_schema_mismatch_behavior || '')}</div><div class="field-helper">real_database_write_allowed: ${escapeHTML(projectWorkspacePhase2PersistenceMockHarnessDisabledText(card.real_database_write_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspacePhase2PersistenceMockHarnessDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            const redactions = pack.redaction_validation_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.redaction_validation_id || card.data_group || t('none'))}</strong><div class="field-helper">data_group: ${escapeHTML(card.data_group || '')} / validation_status: ${escapeHTML(card.validation_status || '')}</div><div class="field-helper">source_pack_refs: ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div class="field-helper">sensitive_field_refs: ${escapeHTML((card.sensitive_field_refs || []).join(', ') || t('none'))}</div><div><strong>redaction_strategy:</strong> ${escapeHTML(card.redaction_strategy || '')}</div><div class="field-helper">expected_redacted_fields: ${escapeHTML((card.expected_redacted_fields || []).join(', ') || t('none'))}</div><div class="field-helper">forbidden_persisted_fields: ${escapeHTML((card.forbidden_persisted_fields || []).join(', ') || t('none'))}</div><div class="field-helper">contains_provider_secret: ${escapeHTML(String(card.contains_provider_secret))} / contains_customer_data: ${escapeHTML(String(card.contains_customer_data))}</div><div class="field-helper">real_database_write_allowed: ${escapeHTML(projectWorkspacePhase2PersistenceMockHarnessDisabledText(card.real_database_write_allowed))} / secret_read_allowed: ${escapeHTML(projectWorkspacePhase2PersistenceMockHarnessDisabledText(card.secret_read_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspacePhase2PersistenceMockHarnessContractRedactionPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2MockHarnessContractRedactionTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2MockHarnessRedactionNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDeterministicReplayContractCards()">${escapeHTML(t('phase2MockHarnessCopyContract'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRedactionValidationCards()">${escapeHTML(t('phase2MockHarnessCopyRedaction'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2MockHarnessContractTitle'))}</strong><div class="graph-os-compact-grid">${contracts || `<div class="empty-state">${escapeHTML(t('phase2MockHarnessNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2MockHarnessRedactionTitle'))}</strong><div class="graph-os-compact-grid">${redactions || `<div class="empty-state">${escapeHTML(t('phase2MockHarnessNoData'))}</div>`}</div><div class="field-helper">provider secret / customer data / review text / generated copy</div></div></div><div class="demo-warning">${escapeHTML(t('phase2MockHarnessRedactionNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2PersistenceMockHarnessRunsRollbackPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2PersistenceMockHarnessSnapshot(workspace); if (!pack.has_workspace_phase2_persistence_mock_harness_pack) return '';
+            const runs = pack.mock_persistence_run_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.mock_run_label || card.mock_run_id || t('none'))}</strong><div class="field-helper">mock_run_id: ${escapeHTML(card.mock_run_id || '')} / mock_run_group: ${escapeHTML(card.mock_run_group || '')}</div><div class="field-helper">source_snapshot_refs: ${escapeHTML((card.source_snapshot_refs || []).join(', ') || t('none'))}</div><div><strong>simulated_operation:</strong> ${escapeHTML(card.simulated_operation || '')}</div><div><strong>expected_result:</strong> ${escapeHTML(card.expected_result || '')}</div><div><strong>expected_failure_mode:</strong> ${escapeHTML(card.expected_failure_mode || '')}</div><div class="field-helper">writes_real_database: ${escapeHTML(String(card.writes_real_database))} / writes_real_file: ${escapeHTML(String(card.writes_real_file))} / uses_external_call: ${escapeHTML(String(card.uses_external_call))} / reads_secret: ${escapeHTML(String(card.reads_secret))} / real_execution_allowed: ${escapeHTML(projectWorkspacePhase2PersistenceMockHarnessDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            const rollback = pack.rollback_dry_run_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.rollback_scenario || card.rollback_dry_run_id || t('none'))}</strong><div class="field-helper">rollback_dry_run_id: ${escapeHTML(card.rollback_dry_run_id || '')} / simulated_failure_type: ${escapeHTML(card.simulated_failure_type || '')}</div><div class="field-helper">source_pack_refs: ${escapeHTML((card.source_pack_refs || []).join(', ') || t('none'))}</div><div><strong>expected_recovery_action:</strong> ${escapeHTML(card.expected_recovery_action || '')}</div><div><strong>expected_operator_action:</strong> ${escapeHTML(card.expected_operator_action || '')}</div><div class="field-helper">requires_real_rollback: ${escapeHTML(String(card.requires_real_rollback))} / real_database_write_allowed: ${escapeHTML(projectWorkspacePhase2PersistenceMockHarnessDisabledText(card.real_database_write_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspacePhase2PersistenceMockHarnessDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspacePhase2PersistenceMockHarnessRunsRollbackPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2MockHarnessRunsRollbackTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2MockHarnessRunRollbackNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMockPersistenceRunCards()">${escapeHTML(t('phase2MockHarnessCopyRun'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRollbackDryRunCards()">${escapeHTML(t('phase2MockHarnessCopyRollback'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2MockHarnessRunTitle'))}</strong><div class="graph-os-compact-grid">${runs || `<div class="empty-state">${escapeHTML(t('phase2MockHarnessNoData'))}</div>`}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2MockHarnessRollbackTitle'))}</strong><div class="graph-os-compact-grid">${rollback || `<div class="empty-state">${escapeHTML(t('phase2MockHarnessNoData'))}</div>`}</div><div class="field-helper">DB write failure / migration failure / schema mismatch / partial write / redaction failure / permission denied</div></div></div><div class="demo-warning">${escapeHTML(t('phase2MockHarnessRunRollbackNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2PersistenceMockHarnessIntegrityPermissionAuditTestPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2PersistenceMockHarnessSnapshot(workspace); if (!pack.has_workspace_phase2_persistence_mock_harness_pack) return '';
+            const integrity = projectWorkspacePhase2PersistenceMockHarnessJsonText(pack.replay_integrity_check_cards);
+            const permission = projectWorkspacePhase2PersistenceMockHarnessJsonText(pack.permission_boundary_assertion_cards);
+            const auditEvents = projectWorkspacePhase2PersistenceMockHarnessJsonText(pack.mock_audit_event_preview_cards);
+            const tests = projectWorkspacePhase2PersistenceMockHarnessJsonText(pack.persistence_mock_test_plan_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2PersistenceMockHarnessIntegrityPermissionAuditTestPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2MockHarnessIntegrityPermissionAuditTestTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2MockHarnessIntegrityNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceReplayIntegrityCheckCards()">${escapeHTML(t('phase2MockHarnessCopyIntegrity'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePermissionBoundaryAssertionCards()">${escapeHTML(t('phase2MockHarnessCopyPermission'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMockAuditEventPreviewCards()">${escapeHTML(t('phase2MockHarnessCopyAuditEvent'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2MockHarnessIntegrityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(integrity || t('phase2MockHarnessNoData'))}</pre><div class="field-helper">snapshot hash preview / deterministic ordering / missing dependency / duplicate id / stale version</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2MockHarnessPermissionTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(permission || t('phase2MockHarnessNoData'))}</pre><div class="field-helper">database_persistence / file_write / secret_read / external_call / real_execution / provider / llm all disabled</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2MockHarnessAuditEventTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(auditEvents || t('phase2MockHarnessNoData'))}</pre><div class="field-helper">${escapeHTML(t('phase2MockHarnessAuditNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2MockHarnessTestPlanTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(tests || t('phase2MockHarnessNoData'))}</pre><div class="field-helper">unit tests / contract tests / replay tests / redaction tests / permission boundary tests / rollback dry-run tests / audit event preview tests</div></div></div><div class="demo-warning">${escapeHTML(t('phase2MockHarnessIntegrityNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2PersistenceMockHarnessBlockersQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2PersistenceMockHarnessSnapshot(workspace); if (!pack.has_workspace_phase2_persistence_mock_harness_pack) return '';
+            const blockers = projectWorkspacePhase2PersistenceMockHarnessJsonText(pack.phase2_mock_harness_unlock_blockers);
+            const quality = projectWorkspacePhase2PersistenceMockHarnessJsonText(pack.persistence_mock_harness_quality_checks);
+            const audit = projectWorkspacePhase2PersistenceMockHarnessJsonText(pack.audit_preview);
+            const safety = projectWorkspacePhase2PersistenceMockHarnessJsonText(pack.safety_boundaries);
+            return `<div class="section-block" id="projectWorkspacePhase2PersistenceMockHarnessBlockersQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2MockHarnessBlockersQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2MockHarnessSafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2PersistenceMockHarnessPack()">${escapeHTML(t('phase2MockHarnessCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2MockHarnessBlockersTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2MockHarnessNoData'))}</pre><div class="field-helper">no DB connection config / no schema migration / no audit sink / no retention policy / no deletion policy / no production approval / no real rollback implementation / no secret access approval</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2MockHarnessQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2MockHarnessNoData'))}</pre><div class="field-helper">snapshot replay / deterministic contract / redaction validation / mock run / rollback dry-run / integrity checks / permission boundary / audit preview / test plan / unlock blockers / safety boundary</div><div class="field-helper">${escapeHTML(t('phase2MockHarnessQualityNote'))}</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2MockHarnessAuditTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2MockHarnessNoData'))}</pre><div class="field-helper">${escapeHTML(t('phase2MockHarnessAuditNote'))}</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2MockHarnessSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled</div><div class="field-helper">${escapeHTML(t('phase2MockHarnessSafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -30638,6 +30919,8 @@
                 '',
                 projectWorkspaceExportPhase2DatabasePersistenceGateMarkdown(workspace),
                 '',
+                projectWorkspaceExportPhase2PersistenceMockHarnessMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -30771,6 +31054,7 @@
                 workspace_demo_campaign_walkthrough_pack: projectWorkspaceExportDemoCampaignWalkthroughSnapshot(workspace),
                 workspace_mvp_readiness_dossier_pack: projectWorkspaceExportMvpReadinessDossierSnapshot(workspace),
                 workspace_phase2_database_persistence_gate_pack: projectWorkspaceExportPhase2DatabasePersistenceGateSnapshot(workspace),
+                workspace_phase2_persistence_mock_harness_pack: projectWorkspaceExportPhase2PersistenceMockHarnessSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -43427,6 +43711,11 @@
                     ${renderProjectWorkspacePhase2DatabasePersistenceGateMigrationSensitivityPanel(workspace)}
                     ${renderProjectWorkspacePhase2DatabasePersistenceGateAuditRollbackTestApprovalPanel(workspace)}
                     ${renderProjectWorkspacePhase2DatabasePersistenceGateBlockersQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspacePhase2PersistenceMockHarnessSummaryReplayPanel(workspace)}
+                    ${renderProjectWorkspacePhase2PersistenceMockHarnessContractRedactionPanel(workspace)}
+                    ${renderProjectWorkspacePhase2PersistenceMockHarnessRunsRollbackPanel(workspace)}
+                    ${renderProjectWorkspacePhase2PersistenceMockHarnessIntegrityPermissionAuditTestPanel(workspace)}
+                    ${renderProjectWorkspacePhase2PersistenceMockHarnessBlockersQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
