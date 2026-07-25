@@ -47272,6 +47272,453 @@ def _rw_workspace_phase2_real_db_minimal_adapter_contract_pack(
     }
 
 
+def _rw_workspace_phase2_db_schema_migration_dry_run_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_ids = [
+        "workspace_phase2_real_db_minimal_adapter_contract_pack",
+        "workspace_phase2_readiness_review_pack",
+        "workspace_phase2_persistence_mock_harness_pack",
+        "workspace_phase2_database_persistence_gate_pack",
+        "workspace_mvp_readiness_dossier_pack",
+        "workspace_final_system_health_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_capability_permission_matrix_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "review_evidence_quality_pack",
+        "claim_risk_guard_pack",
+        "final_claim_safe_export_packet_pack",
+        "campaign_creative_dossier_pack",
+    ]
+    packs = {
+        pack_id: dict(creative_decision_pack.get(pack_id) or {})
+        for pack_id in source_pack_ids
+    }
+
+    schema_specs = [
+        ("workspace_session_schema_migration", "Workspace session schema migration", "workspace", "workspace_sessions", "workspace_session_id"),
+        ("review_import_snapshot_schema_migration", "Review import snapshot schema migration", "review_import", "review_import_snapshots", "review_import_snapshot_id"),
+        ("evidence_quality_snapshot_schema_migration", "Evidence quality snapshot schema migration", "evidence_quality", "evidence_quality_snapshots", "evidence_quality_snapshot_id"),
+        ("claim_risk_snapshot_schema_migration", "Claim risk snapshot schema migration", "claim_risk", "claim_risk_snapshots", "claim_risk_snapshot_id"),
+        ("final_export_packet_schema_migration", "Final export packet schema migration", "final_export", "final_export_packets", "final_export_packet_id"),
+        ("campaign_dossier_schema_migration", "Campaign dossier schema migration", "campaign_dossier", "campaign_dossiers", "campaign_dossier_id"),
+        ("audit_event_schema_migration", "Audit event schema migration", "audit", "audit_events", "audit_event_id"),
+        ("operator_decision_schema_migration", "Operator decision schema migration", "operator_decision", "operator_decisions", "operator_decision_id"),
+    ]
+
+    common_contract_refs = [
+        "workspace_phase2_real_db_minimal_adapter_contract_pack",
+        "workspace_phase2_database_persistence_gate_pack",
+        "workspace_phase2_persistence_mock_harness_pack",
+        "workspace_phase2_readiness_review_pack",
+    ]
+    migration_plan_preview_cards = [
+        {
+            "migration_plan_id": migration_id,
+            "migration_label": label,
+            "migration_group": group,
+            "source_contract_refs": common_contract_refs,
+            "migration_scope": "preview schema planning only",
+            "candidate_tables_or_collections": [table],
+            "required_schema_changes": [
+                f"define {table} preview shape",
+                "define identifiers, status fields, timestamps, redaction metadata, retention metadata, and audit refs",
+            ],
+            "required_pre_migration_checks": [
+                "real DB connection config exists",
+                "migration dry-run sandbox approval exists",
+                "redaction enforcement is implemented",
+                "retention and deletion policies are implemented",
+                "audit sink is implemented",
+            ],
+            "required_post_migration_checks": [
+                "schema validation passes",
+                "permission boundary remains enforced",
+                "rollback plan is reviewed",
+                "audit dependency is validated",
+            ],
+            "dry_run_status": "preview_defined_not_executed",
+            "real_migration_file_created": False,
+            "real_migration_executed": False,
+            "real_database_connection_allowed": False,
+            "real_database_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Migration plan is deterministic preview only and creates no migration file, connects to no database, and executes no migration.",
+        }
+        for migration_id, label, group, table, _primary_key in schema_specs
+    ]
+
+    schema_definition_preview_cards = [
+        {
+            "schema_definition_id": f"schema_definition_{table}",
+            "schema_label": table,
+            "schema_group": group,
+            "candidate_table_or_collection": table,
+            "candidate_primary_key": primary_key,
+            "required_columns_or_fields": [
+                primary_key,
+                "workspace_id",
+                "snapshot_payload_redacted",
+                "status",
+                "created_at_preview",
+                "updated_at_preview",
+                "trace_id",
+                "operator_ref",
+            ],
+            "required_index_fields": ["workspace_id", "status", "created_at_preview"],
+            "required_status_fields": ["status", "blocked_reason", "validation_status"],
+            "required_timestamp_fields": ["created_at_preview", "updated_at_preview"],
+            "sensitive_fields": ["customer data", "review text", "generated copy", "operator note"],
+            "excluded_fields": ["provider_secret", "api_key", "raw_hidden_prompt", "unredacted_customer_identifier"],
+            "retention_requirement": "retention policy enforcement required before real migration",
+            "deletion_requirement": "deletion policy enforcement required before real migration",
+            "migration_required": True,
+            "real_database_write_allowed": False,
+            "risk_note": "Schema definition is a preview contract and does not create tables, indexes, files, or DB writes.",
+        }
+        for _migration_id, _label, group, table, primary_key in schema_specs
+    ]
+
+    step_specs = [
+        ("create_schema", "Create schema preview", "schema", "simulate create schema statement shape"),
+        ("validate_schema", "Validate schema preview", "validation", "simulate validate schema required fields"),
+        ("add_index", "Add index preview", "index", "simulate index definition shape"),
+        ("validate_redaction", "Validate redaction preview", "redaction", "simulate redaction controls"),
+        ("validate_retention", "Validate retention preview", "retention", "simulate retention and deletion controls"),
+        ("validate_audit_refs", "Validate audit refs preview", "audit", "simulate validate audit refs trace id, actor ref, operation ref checks"),
+        ("validate_rollback_plan", "Validate rollback plan preview", "rollback", "simulate rollback readiness review"),
+        ("verify_permission_boundary", "Verify permission boundary preview", "permission", "simulate disabled permission gates"),
+    ]
+    migration_step_dry_run_cards = [
+        {
+            "migration_step_id": f"migration_step_{step_id}",
+            "step_label": label,
+            "step_group": group,
+            "simulated_step": simulated,
+            "expected_dry_run_output": "preview_only_no_database_side_effect",
+            "required_input_refs": common_contract_refs,
+            "required_validation_refs": ["schema_validation_rule_cards", "migration_permission_boundary_cards"],
+            "failure_mode_preview": f"{step_id} fails if required controls are missing",
+            "operator_action_preview": "keep real migration locked and resolve the missing control",
+            "creates_real_table": False,
+            "modifies_real_schema": False,
+            "writes_real_database": False,
+            "real_execution_allowed": False,
+            "risk_note": "Dry-run step simulates migration behavior only; it creates no table, modifies no schema, writes no DB, and executes no real operation.",
+        }
+        for step_id, label, group, simulated in step_specs
+    ]
+
+    validation_specs = [
+        ("required_identifiers", "Required identifiers", "identifier", ["workspace_id", "trace_id"], []),
+        ("timestamps", "Timestamps", "timestamp", ["created_at_preview", "updated_at_preview"], []),
+        ("status_fields", "Status fields", "status", ["status", "validation_status", "blocked_reason"], []),
+        ("excluded_provider_secret", "Excluded provider secret", "secret", [], ["provider_secret", "api_key"]),
+        ("redaction_required", "Redaction required", "redaction", ["redaction_status", "redacted_payload_ref"], ["unredacted_customer_identifier"]),
+        ("retention_required", "Retention required", "retention", ["retention_policy_ref"], []),
+        ("deletion_policy_required", "Deletion policy required", "deletion", ["deletion_policy_ref"], []),
+        ("audit_trace_refs", "Audit trace refs", "audit", ["trace_id", "actor_ref", "operation_ref"], []),
+    ]
+    schema_validation_rule_cards = [
+        {
+            "validation_rule_id": rule_id,
+            "validation_label": label,
+            "validation_group": group,
+            "target_schema_ref": "all_candidate_schema_definitions",
+            "validation_type": rule_id,
+            "required_fields": required_fields,
+            "forbidden_fields": forbidden_fields,
+            "sensitive_field_controls": ["redaction required", "retention required", "deletion policy required"],
+            "expected_validation_status": "blocks_real_migration_until_implemented",
+            "blocks_real_migration": True,
+            "real_database_read_allowed": False,
+            "real_database_write_allowed": False,
+            "risk_note": "Validation rule is preview-only and does not read or write a real database.",
+        }
+        for rule_id, label, group, required_fields, forbidden_fields in validation_specs
+    ]
+
+    rollback_specs = [
+        "schema mismatch",
+        "partial migration",
+        "index creation failure",
+        "redaction validation failure",
+        "retention policy missing",
+        "audit sink missing",
+        "permission denied",
+        "rollback unavailable",
+    ]
+    migration_rollback_preview_cards = [
+        {
+            "rollback_preview_id": f"rollback_preview_{idx}",
+            "rollback_label": label,
+            "rollback_group": "rollback",
+            "simulated_failure_type": label,
+            "expected_rollback_action_preview": "stop dry-run, preserve preview state, and require operator review",
+            "required_backup_or_snapshot_refs": ["backup strategy", "snapshot manifest", "rollback approval"],
+            "operator_review_required": True,
+            "requires_real_rollback": False,
+            "real_database_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Rollback card previews failure handling only and never executes real rollback.",
+        }
+        for idx, label in enumerate(rollback_specs, start=1)
+    ]
+
+    backfill_targets = [
+        "workspace_sessions",
+        "review_import_snapshots",
+        "evidence_quality_snapshots",
+        "claim_risk_snapshots",
+        "final_export_packets",
+        "campaign_dossiers",
+    ]
+    backfill_dry_run_preview_cards = [
+        {
+            "backfill_preview_id": f"backfill_preview_{target}",
+            "backfill_label": f"{target} backfill shape preview",
+            "backfill_group": "backfill",
+            "target_table_or_collection": target,
+            "simulated_backfill_shape": "derive redacted snapshot payload shape from existing deterministic packs",
+            "uses_real_customer_data": False,
+            "reads_real_database": False,
+            "writes_real_database": False,
+            "real_execution_allowed": False,
+            "risk_note": "Backfill dry-run previews shape only; it reads no DB, writes no DB, and uses no real customer data.",
+        }
+        for target in backfill_targets
+    ]
+
+    redaction_specs = [
+        ("provider secret", False, False, "provider secret must not be read and must not be written to DB"),
+        ("customer data", False, False, "customer data requires redaction, retention, and deletion enforcement"),
+        ("review text", False, False, "review text requires retention and deletion controls"),
+        ("generated copy", False, False, "generated copy requires claim-safety and retention controls"),
+        ("operator note", False, False, "operator note requires access policy and retention controls"),
+    ]
+    redaction_retention_dependency_cards = [
+        {
+            "redaction_retention_dependency_id": f"migration_redaction_{idx}",
+            "data_label": label,
+            "dependency_group": label,
+            "redaction_required": True,
+            "retention_policy_required": True,
+            "deletion_policy_required": True,
+            "db_persistence_allowed": db_allowed,
+            "secret_read_allowed": secret_allowed,
+            "real_database_write_allowed": False,
+            "risk_note": risk_note,
+        }
+        for idx, (label, db_allowed, secret_allowed, risk_note) in enumerate(redaction_specs, start=1)
+    ]
+
+    migration_audit_dependency_cards = [
+        {
+            "migration_audit_dependency_id": "future_migration_audit_dependency",
+            "audit_sink_requirement": "future audit sink required before real migration",
+            "trace_id_requirement": "trace id required for each migration step",
+            "actor_ref_requirement": "actor ref required for operator and system actor",
+            "operation_ref_requirement": "operation ref required for migration plan and step",
+            "before_after_summary_requirement": "before/after summary must be redacted",
+            "database_write_allowed": False,
+            "real_audit_event_created": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit dependency previews future event shape only and does not write databases or create real audit events.",
+        }
+    ]
+
+    permission_ids = [
+        "database_persistence",
+        "database_read",
+        "database_write",
+        "schema_migration",
+        "file_write",
+        "secret_read",
+        "external_call",
+        "real_execution",
+    ]
+    migration_permission_boundary_cards = [
+        {
+            "permission_boundary_id": permission_id,
+            "permission_label": permission_id,
+            "permission_group": "database" if "database" in permission_id or permission_id == "schema_migration" else "execution",
+            "current_status": "disabled",
+            "allowed_in_preview": False,
+            "real_capability_enabled": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{permission_id} remains disabled for migration dry-run preview.",
+        }
+        for permission_id in permission_ids
+    ]
+
+    test_labels = [
+        "unit tests",
+        "contract tests",
+        "schema validation tests",
+        "migration dry-run tests",
+        "rollback dry-run tests",
+        "backfill dry-run tests",
+        "redaction tests",
+        "retention tests",
+        "permission boundary tests",
+        "audit preview tests",
+    ]
+    migration_test_plan_cards = [
+        {
+            "test_plan_id": f"db_migration_test_{idx}",
+            "test_label": label,
+            "test_group": label.split()[0],
+            "required_before_unlock": True,
+            "current_status": "preview_defined",
+            "real_database_required": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} must pass before any real schema migration unlock.",
+        }
+        for idx, label in enumerate(test_labels, start=1)
+    ]
+
+    blocker_labels = [
+        "no real DB connection config",
+        "no migration file generated",
+        "no migration dry-run executed against sandbox",
+        "no rollback implementation",
+        "no backup strategy",
+        "no retention policy enforcement",
+        "no deletion policy enforcement",
+        "no redaction enforcement",
+        "no real audit sink",
+        "no production approval",
+    ]
+    phase2_db_migration_unlock_blockers = [
+        {
+            "unlock_blocker_id": f"db_migration_blocker_{idx}",
+            "blocker_label": label,
+            "blocks_real_schema_migration": True,
+            "recommended_operator_action": "keep schema migration in dry-run preview until this blocker is resolved",
+            "real_migration_executed": False,
+            "real_database_connection_allowed": False,
+            "real_database_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} blocks DB schema migration unlock.",
+        }
+        for idx, label in enumerate(blocker_labels, start=1)
+    ]
+
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "database_read": False,
+        "database_read_enabled": False,
+        "database_write": False,
+        "database_write_enabled": False,
+        "schema_migration": False,
+        "schema_migration_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "secret_read": False,
+        "secret_read_enabled": False,
+        "external_call": False,
+        "external_call_enabled": False,
+        "token_issue": False,
+        "token_issue_enabled": False,
+        "paid_operation": False,
+        "paid_operation_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_phase2_db_schema_migration_dry_run_pack_v1",
+        "db_schema_migration_dry_run_summary": {
+            "mode": "phase2_db_schema_migration_dry_run_preview_deterministic_schema_migration_plan_dry_run_only",
+            "source_packs": source_pack_ids,
+            "source_pack_presence": {
+                pack_id: bool(packs.get(pack_id)) for pack_id in source_pack_ids
+            },
+            "migration_plan_preview_count": len(migration_plan_preview_cards),
+            "schema_definition_preview_count": len(schema_definition_preview_cards),
+            "migration_step_dry_run_count": len(migration_step_dry_run_cards),
+            "schema_validation_rule_count": len(schema_validation_rule_cards),
+            "rollback_preview_count": len(migration_rollback_preview_cards),
+            "unlock_blocker_count": len(phase2_db_migration_unlock_blockers),
+            "real_migration_file_created": False,
+            "real_migration_executed": False,
+            "real_database_connection_allowed": False,
+            "real_database_read_allowed": False,
+            "real_database_write_allowed": False,
+            "real_file_write_allowed": False,
+            "secret_read_allowed": False,
+            "external_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "DB schema migration dry-run is deterministic preview only; it creates no migration file, reads no DB config or secret, connects to no DB, reads no DB, writes no DB, writes no files, executes no rollback, and creates no audit event.",
+        },
+        "migration_plan_preview_cards": migration_plan_preview_cards,
+        "schema_definition_preview_cards": schema_definition_preview_cards,
+        "migration_step_dry_run_cards": migration_step_dry_run_cards,
+        "schema_validation_rule_cards": schema_validation_rule_cards,
+        "migration_rollback_preview_cards": migration_rollback_preview_cards,
+        "backfill_dry_run_preview_cards": backfill_dry_run_preview_cards,
+        "redaction_retention_dependency_cards": redaction_retention_dependency_cards,
+        "migration_audit_dependency_cards": migration_audit_dependency_cards,
+        "migration_permission_boundary_cards": migration_permission_boundary_cards,
+        "migration_test_plan_cards": migration_test_plan_cards,
+        "phase2_db_migration_unlock_blockers": phase2_db_migration_unlock_blockers,
+        "db_migration_quality_checks": {
+            "migration_plan_covered": bool(migration_plan_preview_cards),
+            "schema_definition_covered": bool(schema_definition_preview_cards),
+            "dry_run_steps_covered": bool(migration_step_dry_run_cards),
+            "schema_validation_covered": bool(schema_validation_rule_cards),
+            "rollback_preview_covered": bool(migration_rollback_preview_cards),
+            "backfill_preview_covered": bool(backfill_dry_run_preview_cards),
+            "redaction_retention_dependency_covered": bool(redaction_retention_dependency_cards),
+            "audit_dependency_covered": bool(migration_audit_dependency_cards),
+            "permission_boundary_covered": bool(migration_permission_boundary_cards),
+            "test_plan_covered": bool(migration_test_plan_cards),
+            "unlock_blockers_covered": bool(phase2_db_migration_unlock_blockers),
+            "safety_boundary_covered": True,
+            "real_migration_file_created": False,
+            "real_migration_executed": False,
+            "real_database_connection_performed": False,
+            "real_database_read_performed": False,
+            "real_database_write_performed": False,
+            "real_file_write_performed": False,
+            "secret_read_performed": False,
+            "external_call_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "db_schema_migration_dry_run_audit_preview",
+            "source": "creative_decision_pack.workspace_phase2_db_schema_migration_dry_run_pack",
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "audit_record_created": False,
+            "real_audit_event_created": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit preview is display-only; it does not write databases, read real logs, read history tables, or create real audit events.",
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -47543,6 +47990,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     creative_decision_pack[
         "workspace_phase2_real_db_minimal_adapter_contract_pack"
     ] = _rw_workspace_phase2_real_db_minimal_adapter_contract_pack(
+        creative_decision_pack
+    )
+    creative_decision_pack[
+        "workspace_phase2_db_schema_migration_dry_run_pack"
+    ] = _rw_workspace_phase2_db_schema_migration_dry_run_pack(
         creative_decision_pack
     )
 

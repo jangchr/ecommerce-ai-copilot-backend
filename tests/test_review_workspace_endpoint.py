@@ -14054,6 +14054,426 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
                 self.assertIn(key, boundaries)
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_phase2_db_schema_migration_dry_run_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-phase2-db-schema-migration-dry-run",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "DBMIGRATIONDRYRUN001",
+                "title": "Adjustable Laptop Stand",
+                "reviews": [
+                    {
+                        "rating": 2,
+                        "title": "Slides on glass desk",
+                        "text": (
+                            "The stand slides on my glass desk and the hinge "
+                            "feels stiff when I adjust height."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 5,
+                        "title": "Helps my posture",
+                        "text": (
+                            "It lifts my laptop to eye level and my neck "
+                            "feels better during long calls."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 1,
+                        "title": "Competitor bent quickly",
+                        "text": (
+                            "The competitor bent quickly and the screws "
+                            "started rattling after a few days."
+                        ),
+                        "source_section": "competitor_review",
+                        "metadata": {"source_type": "competitor"},
+                    },
+                ],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        self.assertIn(
+            "workspace_phase2_db_schema_migration_dry_run_pack",
+            creative_pack,
+        )
+        for existing_pack in [
+            "workspace_phase2_real_db_minimal_adapter_contract_pack",
+            "workspace_phase2_readiness_review_pack",
+            "workspace_phase2_persistence_mock_harness_pack",
+            "workspace_phase2_database_persistence_gate_pack",
+            "workspace_mvp_readiness_dossier_pack",
+            "workspace_final_system_health_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "review_evidence_quality_pack",
+            "claim_risk_guard_pack",
+            "final_claim_safe_export_packet_pack",
+            "campaign_creative_dossier_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_phase2_db_schema_migration_dry_run_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_phase2_db_schema_migration_dry_run_pack_v1",
+        )
+        for required_key in [
+            "db_schema_migration_dry_run_summary",
+            "migration_plan_preview_cards",
+            "schema_definition_preview_cards",
+            "migration_step_dry_run_cards",
+            "schema_validation_rule_cards",
+            "migration_rollback_preview_cards",
+            "backfill_dry_run_preview_cards",
+            "redaction_retention_dependency_cards",
+            "migration_audit_dependency_cards",
+            "migration_permission_boundary_cards",
+            "migration_test_plan_cards",
+            "phase2_db_migration_unlock_blockers",
+            "db_migration_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+        ]:
+            with self.subTest(required_key=required_key):
+                self.assertIn(required_key, pack)
+                self.assertTrue(pack[required_key])
+
+        summary = pack["db_schema_migration_dry_run_summary"]
+        self.assertIn("phase2_db_schema_migration_dry_run_preview", summary["mode"])
+        self.assertIn("deterministic_schema_migration_plan", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        for source_pack in [
+            "workspace_phase2_real_db_minimal_adapter_contract_pack",
+            "workspace_phase2_readiness_review_pack",
+            "workspace_phase2_persistence_mock_harness_pack",
+            "workspace_phase2_database_persistence_gate_pack",
+            "workspace_mvp_readiness_dossier_pack",
+            "workspace_final_system_health_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "review_evidence_quality_pack",
+            "claim_risk_guard_pack",
+            "final_claim_safe_export_packet_pack",
+            "campaign_creative_dossier_pack",
+        ]:
+            self.assertIn(source_pack, summary["source_packs"])
+        for disabled_key in [
+            "real_migration_file_created",
+            "real_migration_executed",
+            "real_database_connection_allowed",
+            "real_database_read_allowed",
+            "real_database_write_allowed",
+            "real_file_write_allowed",
+            "secret_read_allowed",
+            "external_call_allowed",
+            "real_execution_allowed",
+        ]:
+            self.assertFalse(summary[disabled_key])
+
+        migration_plan_ids = {
+            card["migration_plan_id"]
+            for card in pack["migration_plan_preview_cards"]
+        }
+        for migration_id in [
+            "workspace_session_schema_migration",
+            "review_import_snapshot_schema_migration",
+            "evidence_quality_snapshot_schema_migration",
+            "claim_risk_snapshot_schema_migration",
+            "final_export_packet_schema_migration",
+            "campaign_dossier_schema_migration",
+            "audit_event_schema_migration",
+            "operator_decision_schema_migration",
+        ]:
+            with self.subTest(migration_id=migration_id):
+                self.assertIn(migration_id, migration_plan_ids)
+        for card in pack["migration_plan_preview_cards"]:
+            for field in [
+                "migration_plan_id",
+                "migration_label",
+                "migration_group",
+                "migration_scope",
+                "candidate_tables_or_collections",
+                "required_schema_changes",
+            ]:
+                self.assertIn(field, card)
+            self.assertFalse(card["real_migration_file_created"])
+            self.assertFalse(card["real_migration_executed"])
+            self.assertFalse(card["real_database_connection_allowed"])
+            self.assertFalse(card["real_database_write_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        schema_tables = {
+            card["candidate_table_or_collection"]
+            for card in pack["schema_definition_preview_cards"]
+        }
+        for table in [
+            "workspace_sessions",
+            "review_import_snapshots",
+            "evidence_quality_snapshots",
+            "claim_risk_snapshots",
+            "final_export_packets",
+            "campaign_dossiers",
+            "audit_events",
+            "operator_decisions",
+        ]:
+            with self.subTest(table=table):
+                self.assertIn(table, schema_tables)
+        for card in pack["schema_definition_preview_cards"]:
+            for field in [
+                "schema_definition_id",
+                "schema_label",
+                "schema_group",
+                "candidate_primary_key",
+                "required_columns_or_fields",
+                "required_index_fields",
+                "required_status_fields",
+                "required_timestamp_fields",
+                "sensitive_fields",
+                "excluded_fields",
+                "retention_requirement",
+                "deletion_requirement",
+                "migration_required",
+                "real_database_write_allowed",
+                "risk_note",
+            ]:
+                self.assertIn(field, card)
+            self.assertTrue(card["migration_required"])
+            self.assertFalse(card["real_database_write_allowed"])
+            self.assertIn("provider_secret", card["excluded_fields"])
+
+        step_text = " ".join(
+            card["simulated_step"]
+            for card in pack["migration_step_dry_run_cards"]
+        )
+        for step in [
+            "create schema",
+            "validate schema",
+            "index",
+            "redaction",
+            "retention",
+            "audit refs",
+            "rollback",
+            "permission",
+        ]:
+            with self.subTest(step=step):
+                self.assertIn(step, step_text)
+        for card in pack["migration_step_dry_run_cards"]:
+            self.assertFalse(card["creates_real_table"])
+            self.assertFalse(card["modifies_real_schema"])
+            self.assertFalse(card["writes_real_database"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        rule_text = " ".join(
+            card["validation_rule_id"]
+            for card in pack["schema_validation_rule_cards"]
+        )
+        for rule in [
+            "required_identifiers",
+            "timestamps",
+            "status_fields",
+            "excluded_provider_secret",
+            "redaction_required",
+            "retention_required",
+            "deletion_policy_required",
+            "audit_trace_refs",
+        ]:
+            with self.subTest(rule=rule):
+                self.assertIn(rule, rule_text)
+        for card in pack["schema_validation_rule_cards"]:
+            self.assertTrue(card["blocks_real_migration"])
+            self.assertFalse(card["real_database_read_allowed"])
+            self.assertFalse(card["real_database_write_allowed"])
+
+        rollback_text = " ".join(
+            card["simulated_failure_type"]
+            for card in pack["migration_rollback_preview_cards"]
+        )
+        for failure in [
+            "schema mismatch",
+            "partial migration",
+            "index creation failure",
+            "redaction validation failure",
+            "retention policy missing",
+            "audit sink missing",
+            "permission denied",
+            "rollback unavailable",
+        ]:
+            with self.subTest(failure=failure):
+                self.assertIn(failure, rollback_text)
+        for card in pack["migration_rollback_preview_cards"]:
+            self.assertFalse(card["requires_real_rollback"])
+            self.assertFalse(card["real_database_write_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        for card in pack["backfill_dry_run_preview_cards"]:
+            self.assertFalse(card["uses_real_customer_data"])
+            self.assertFalse(card["reads_real_database"])
+            self.assertFalse(card["writes_real_database"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        redaction_labels = {
+            card["data_label"]
+            for card in pack["redaction_retention_dependency_cards"]
+        }
+        for label in [
+            "provider secret",
+            "customer data",
+            "review text",
+            "generated copy",
+            "operator note",
+        ]:
+            with self.subTest(redaction_label=label):
+                self.assertIn(label, redaction_labels)
+        provider_secret = next(
+            card for card in pack["redaction_retention_dependency_cards"]
+            if card["data_label"] == "provider secret"
+        )
+        self.assertFalse(provider_secret["db_persistence_allowed"])
+        self.assertFalse(provider_secret["secret_read_allowed"])
+        self.assertFalse(provider_secret["real_database_write_allowed"])
+
+        for card in pack["migration_audit_dependency_cards"]:
+            self.assertIn("audit_sink_requirement", card)
+            self.assertIn("trace_id_requirement", card)
+            self.assertIn("actor_ref_requirement", card)
+            self.assertIn("operation_ref_requirement", card)
+            self.assertIn("before_after_summary_requirement", card)
+            self.assertFalse(card["database_write_allowed"])
+            self.assertFalse(card["real_audit_event_created"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        permission_ids = {
+            card["permission_boundary_id"]
+            for card in pack["migration_permission_boundary_cards"]
+        }
+        for permission_id in [
+            "database_persistence",
+            "database_read",
+            "database_write",
+            "schema_migration",
+            "file_write",
+            "secret_read",
+            "external_call",
+            "real_execution",
+        ]:
+            with self.subTest(permission_id=permission_id):
+                self.assertIn(permission_id, permission_ids)
+        for card in pack["migration_permission_boundary_cards"]:
+            self.assertEqual(card["current_status"], "disabled")
+            self.assertFalse(card["allowed_in_preview"])
+            self.assertFalse(card["real_capability_enabled"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        test_plan_text = " ".join(
+            card["test_label"] for card in pack["migration_test_plan_cards"]
+        )
+        for test_label in [
+            "unit tests",
+            "contract tests",
+            "schema validation tests",
+            "migration dry-run tests",
+            "rollback dry-run tests",
+            "backfill dry-run tests",
+            "redaction tests",
+            "retention tests",
+            "permission boundary tests",
+            "audit preview tests",
+        ]:
+            with self.subTest(test_label=test_label):
+                self.assertIn(test_label, test_plan_text)
+
+        blocker_text = " ".join(
+            card["blocker_label"]
+            for card in pack["phase2_db_migration_unlock_blockers"]
+        )
+        for blocker in [
+            "no real DB connection config",
+            "no migration file generated",
+            "no migration dry-run executed against sandbox",
+            "no rollback implementation",
+            "no backup strategy",
+            "no retention policy enforcement",
+            "no deletion policy enforcement",
+            "no redaction enforcement",
+            "no real audit sink",
+            "no production approval",
+        ]:
+            with self.subTest(blocker=blocker):
+                self.assertIn(blocker, blocker_text)
+
+        checks = pack["db_migration_quality_checks"]
+        for key in [
+            "migration_plan_covered",
+            "schema_definition_covered",
+            "dry_run_steps_covered",
+            "schema_validation_covered",
+            "rollback_preview_covered",
+            "backfill_preview_covered",
+            "redaction_retention_dependency_covered",
+            "audit_dependency_covered",
+            "permission_boundary_covered",
+            "test_plan_covered",
+            "unlock_blockers_covered",
+            "safety_boundary_covered",
+        ]:
+            self.assertTrue(checks[key])
+        for key in [
+            "real_migration_file_created",
+            "real_migration_executed",
+            "real_database_connection_performed",
+            "real_database_read_performed",
+            "real_database_write_performed",
+            "real_file_write_performed",
+            "secret_read_performed",
+            "external_call_performed",
+            "real_execution_performed",
+        ]:
+            self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["database_write_allowed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["audit_record_created"])
+        self.assertFalse(audit["real_audit_event_created"])
+        self.assertFalse(audit["real_execution_allowed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider", "provider_enabled", "llm", "llm_enabled",
+            "media", "media_enabled", "external_scraping",
+            "external_scraping_enabled", "database_persistence",
+            "database_persistence_enabled", "database_read",
+            "database_read_enabled", "database_write",
+            "database_write_enabled", "schema_migration",
+            "schema_migration_enabled", "real_execution",
+            "real_execution_enabled", "real_policy_check",
+            "real_policy_check_enabled", "platform_upload",
+            "platform_upload_enabled", "task_creation",
+            "task_creation_enabled", "real_export", "real_export_enabled",
+            "file_write", "file_write_enabled", "secret_read",
+            "secret_read_enabled", "external_call", "external_call_enabled",
+            "token_issue", "token_issue_enabled", "paid_operation",
+            "paid_operation_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertIn(key, boundaries)
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
