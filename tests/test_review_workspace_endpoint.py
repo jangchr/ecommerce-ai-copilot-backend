@@ -12164,6 +12164,378 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
                 self.assertIn(key, boundaries)
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_phase2_persistence_mock_harness_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-phase2-mock-harness-preview",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "PHASE2MOCK001",
+                "title": "Clip-On Reading Light",
+                "reviews": [
+                    {
+                        "rating": 2,
+                        "title": "Battery drains fast",
+                        "text": (
+                            "The battery drains fast and the clamp slips "
+                            "when I attach it to a thick headboard."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 5,
+                        "title": "Great for night reading",
+                        "text": (
+                            "It is bright enough for night reading without "
+                            "waking my partner."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 1,
+                        "title": "Competitor hinge broke",
+                        "text": (
+                            "The competitor hinge broke after a week and "
+                            "the charging port felt loose."
+                        ),
+                        "source_section": "competitor_review",
+                        "metadata": {"source_type": "competitor"},
+                    },
+                ],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        self.assertIn(
+            "workspace_phase2_persistence_mock_harness_pack",
+            creative_pack,
+        )
+        self.assertIn(
+            "workspace_phase2_database_persistence_gate_pack",
+            creative_pack,
+        )
+        for existing_pack in [
+            "workspace_phase2_database_persistence_gate_pack",
+            "workspace_mvp_readiness_dossier_pack",
+            "workspace_demo_campaign_walkthrough_pack",
+            "workspace_mvp_consolidation_pack",
+            "workspace_final_system_health_pack",
+            "workspace_scenario_presets_pack",
+            "workspace_product_navigation_pack",
+            "campaign_creative_dossier_pack",
+            "final_claim_safe_export_packet_pack",
+            "review_evidence_quality_pack",
+            "claim_risk_guard_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_capability_permission_matrix_pack",
+        ]:
+            with self.subTest(existing_pack=existing_pack):
+                self.assertIn(existing_pack, creative_pack)
+
+        pack = creative_pack["workspace_phase2_persistence_mock_harness_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_phase2_persistence_mock_harness_pack_v1",
+        )
+        for required_key in [
+            "persistence_mock_harness_summary",
+            "mock_snapshot_replay_cards",
+            "deterministic_replay_contract_cards",
+            "redaction_validation_cards",
+            "mock_persistence_run_cards",
+            "rollback_dry_run_cards",
+            "replay_integrity_check_cards",
+            "permission_boundary_assertion_cards",
+            "mock_audit_event_preview_cards",
+            "persistence_mock_test_plan_cards",
+            "phase2_mock_harness_unlock_blockers",
+            "persistence_mock_harness_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+        ]:
+            with self.subTest(required_key=required_key):
+                self.assertIn(required_key, pack)
+                self.assertTrue(pack[required_key])
+
+        summary = pack["persistence_mock_harness_summary"]
+        self.assertIn("phase2_persistence_mock_harness_preview", summary["mode"])
+        self.assertIn("deterministic_snapshot_replay", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        self.assertTrue(summary["mock_only"])
+        for source_pack in [
+            "workspace_phase2_database_persistence_gate_pack",
+            "workspace_mvp_readiness_dossier_pack",
+            "workspace_demo_campaign_walkthrough_pack",
+            "workspace_mvp_consolidation_pack",
+            "workspace_final_system_health_pack",
+            "workspace_scenario_presets_pack",
+            "workspace_product_navigation_pack",
+            "campaign_creative_dossier_pack",
+            "final_claim_safe_export_packet_pack",
+            "review_evidence_quality_pack",
+            "claim_risk_guard_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_capability_permission_matrix_pack",
+        ]:
+            self.assertIn(source_pack, summary["source_packs"])
+        for disabled_key in [
+            "real_database_write_allowed",
+            "real_file_write_allowed",
+            "real_execution_allowed",
+            "external_call_allowed",
+            "secret_read_allowed",
+        ]:
+            self.assertFalse(summary[disabled_key])
+
+        replay_ids = {
+            card["snapshot_ref"]
+            for card in pack["mock_snapshot_replay_cards"]
+        }
+        for snapshot_ref in [
+            "review_import_snapshot",
+            "evidence_quality_snapshot",
+            "claim_risk_snapshot",
+            "creative_output_snapshot",
+            "delivery_qa_snapshot",
+            "final_export_packet_snapshot",
+            "campaign_dossier_snapshot",
+            "scenario_preset_snapshot",
+            "mvp_readiness_snapshot",
+        ]:
+            with self.subTest(snapshot_ref=snapshot_ref):
+                self.assertIn(snapshot_ref, replay_ids)
+        for card in pack["mock_snapshot_replay_cards"]:
+            for field in [
+                "mock_replay_id",
+                "snapshot_ref",
+                "snapshot_group",
+                "source_pack_refs",
+                "input_snapshot_shape",
+                "expected_replay_output_shape",
+                "deterministic_replay_status",
+                "redaction_required",
+                "permission_boundary_required",
+                "mock_only",
+                "real_database_write_allowed",
+                "real_file_write_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                with self.subTest(replay=card["mock_replay_id"], field=field):
+                    self.assertIn(field, card)
+            self.assertTrue(card["mock_only"])
+            self.assertFalse(card["real_database_write_allowed"])
+            self.assertFalse(card["real_file_write_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        contract_text = " ".join(
+            " ".join(str(value) for value in card.values())
+            for card in pack["deterministic_replay_contract_cards"]
+        )
+        for expected in [
+            "Stable fields",
+            "ignored_runtime_fields",
+            "idempotency",
+            "ordering",
+            "Missing",
+            "Schema mismatch",
+        ]:
+            with self.subTest(contract=expected):
+                self.assertIn(expected, contract_text)
+        for card in pack["deterministic_replay_contract_cards"]:
+            self.assertTrue(card["required_stable_fields"])
+            self.assertTrue(card["ignored_runtime_fields"])
+            self.assertTrue(card["expected_idempotency_behavior"])
+            self.assertTrue(card["expected_ordering_behavior"])
+            self.assertTrue(card["expected_missing_field_behavior"])
+            self.assertTrue(card["expected_schema_mismatch_behavior"])
+            self.assertFalse(card["real_database_write_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        redaction_by_group = {
+            card["data_group"]: card
+            for card in pack["redaction_validation_cards"]
+        }
+        for data_group in [
+            "provider secret",
+            "customer data",
+            "review text",
+            "generated copy",
+        ]:
+            with self.subTest(data_group=data_group):
+                self.assertIn(data_group, redaction_by_group)
+        provider_secret = redaction_by_group["provider secret"]
+        self.assertTrue(provider_secret["contains_provider_secret"])
+        self.assertFalse(provider_secret["secret_read_allowed"])
+        self.assertFalse(provider_secret["real_database_write_allowed"])
+        self.assertTrue(redaction_by_group["customer data"]["contains_customer_data"])
+        self.assertTrue(redaction_by_group["review text"]["contains_customer_data"])
+        self.assertTrue(redaction_by_group["generated copy"]["forbidden_persisted_fields"])
+
+        for card in pack["mock_persistence_run_cards"]:
+            self.assertFalse(card["writes_real_database"])
+            self.assertFalse(card["writes_real_file"])
+            self.assertFalse(card["uses_external_call"])
+            self.assertFalse(card["reads_secret"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        rollback_text = " ".join(
+            card["simulated_failure_type"]
+            for card in pack["rollback_dry_run_cards"]
+        )
+        for failure_type in [
+            "DB write failure",
+            "migration failure",
+            "schema mismatch",
+            "partial write",
+            "redaction failure",
+            "permission denied",
+        ]:
+            with self.subTest(failure_type=failure_type):
+                self.assertIn(failure_type, rollback_text)
+        for card in pack["rollback_dry_run_cards"]:
+            self.assertFalse(card["requires_real_rollback"])
+            self.assertFalse(card["real_database_write_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        integrity_text = " ".join(
+            card["check_label"]
+            for card in pack["replay_integrity_check_cards"]
+        )
+        for expected in [
+            "snapshot hash preview",
+            "deterministic ordering",
+            "missing dependency",
+            "duplicate id",
+            "stale version",
+        ]:
+            with self.subTest(integrity=expected):
+                self.assertIn(expected, integrity_text)
+        for card in pack["replay_integrity_check_cards"]:
+            self.assertFalse(card["reads_real_database"])
+
+        boundary_ids = {
+            card["capability_id"]
+            for card in pack["permission_boundary_assertion_cards"]
+        }
+        for capability_id in [
+            "database_persistence",
+            "file_write",
+            "secret_read",
+            "external_call",
+            "real_execution",
+            "provider",
+            "llm",
+        ]:
+            with self.subTest(boundary_id=capability_id):
+                self.assertIn(capability_id, boundary_ids)
+        for card in pack["permission_boundary_assertion_cards"]:
+            self.assertEqual(card["expected_status"], "disabled")
+            self.assertEqual(card["observed_status"], "disabled")
+            self.assertTrue(card["must_remain_disabled"])
+
+        for card in pack["mock_audit_event_preview_cards"]:
+            self.assertFalse(card["real_audit_event_created"])
+            self.assertFalse(card["database_write_allowed"])
+            self.assertFalse(card["real_log_read_allowed"])
+
+        test_plan_text = " ".join(
+            f"{card['test_type']} {card['test_label']}"
+            for card in pack["persistence_mock_test_plan_cards"]
+        )
+        for expected in [
+            "unit",
+            "contract",
+            "replay",
+            "redaction",
+            "permission_boundary",
+            "permission boundary",
+            "rollback_dry_run",
+            "rollback dry-run",
+            "audit_event_preview",
+            "audit event preview",
+        ]:
+            with self.subTest(test_plan=expected):
+                self.assertIn(expected, test_plan_text)
+        for card in pack["persistence_mock_test_plan_cards"]:
+            self.assertFalse(card["real_database_write_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        blockers = set(pack["phase2_mock_harness_unlock_blockers"])
+        for blocker in [
+            "no DB connection config",
+            "no schema migration",
+            "no audit sink",
+            "no retention policy",
+            "no deletion policy",
+            "no production approval",
+            "no real rollback implementation",
+            "no secret access approval",
+        ]:
+            with self.subTest(blocker=blocker):
+                self.assertIn(blocker, blockers)
+
+        checks = pack["persistence_mock_harness_quality_checks"]
+        for key in [
+            "snapshot_replay_covered",
+            "deterministic_contract_covered",
+            "redaction_validation_covered",
+            "mock_run_covered",
+            "rollback_dry_run_covered",
+            "integrity_checks_covered",
+            "permission_boundary_covered",
+            "audit_preview_covered",
+            "test_plan_covered",
+            "unlock_blockers_covered",
+            "safety_boundary_covered",
+        ]:
+            with self.subTest(check=key):
+                self.assertTrue(checks[key])
+        for key in [
+            "real_database_write_performed",
+            "real_file_write_performed",
+            "real_execution_performed",
+            "secret_read_performed",
+            "external_call_performed",
+        ]:
+            self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertFalse(audit["audit_record_created"])
+        self.assertFalse(audit["real_audit_event_created"])
+        self.assertFalse(audit["database_write_allowed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_history_table_read_performed"])
+        self.assertFalse(audit["real_file_write_allowed"])
+        self.assertFalse(audit["real_execution_allowed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider", "provider_enabled", "llm", "llm_enabled",
+            "media", "media_enabled", "external_scraping",
+            "external_scraping_enabled", "database_persistence",
+            "database_persistence_enabled", "real_execution",
+            "real_execution_enabled", "real_policy_check",
+            "real_policy_check_enabled", "platform_upload",
+            "platform_upload_enabled", "task_creation",
+            "task_creation_enabled", "real_export", "real_export_enabled",
+            "file_write", "file_write_enabled", "secret_read",
+            "secret_read_enabled", "external_call", "external_call_enabled",
+            "token_issue", "token_issue_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertIn(key, boundaries)
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):

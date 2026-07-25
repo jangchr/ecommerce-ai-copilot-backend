@@ -45147,6 +45147,435 @@ def _rw_workspace_phase2_database_persistence_gate_pack(
     }
 
 
+def _rw_workspace_phase2_persistence_mock_harness_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_ids = [
+        "workspace_phase2_database_persistence_gate_pack",
+        "workspace_mvp_readiness_dossier_pack",
+        "workspace_demo_campaign_walkthrough_pack",
+        "workspace_mvp_consolidation_pack",
+        "workspace_final_system_health_pack",
+        "workspace_scenario_presets_pack",
+        "workspace_product_navigation_pack",
+        "campaign_creative_dossier_pack",
+        "final_claim_safe_export_packet_pack",
+        "review_evidence_quality_pack",
+        "claim_risk_guard_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_capability_permission_matrix_pack",
+    ]
+    packs = {pack_id: dict(creative_decision_pack.get(pack_id) or {}) for pack_id in source_pack_ids}
+    database_gate = packs.get("workspace_phase2_database_persistence_gate_pack") or {}
+    snapshot_contracts = database_gate.get("state_snapshot_contract_cards") or []
+
+    fallback_snapshot_specs = [
+        ("review_import_snapshot", "review_state", ["review_import_pack", "workspace_product_navigation_pack"]),
+        ("evidence_quality_snapshot", "evidence_state", ["review_evidence_quality_pack"]),
+        ("claim_risk_snapshot", "claim_state", ["claim_risk_guard_pack"]),
+        ("creative_output_snapshot", "creative_state", ["campaign_creative_dossier_pack", "final_claim_safe_export_packet_pack"]),
+        ("delivery_qa_snapshot", "delivery_state", ["final_claim_safe_export_packet_pack", "workspace_final_system_health_pack"]),
+        ("final_export_packet_snapshot", "export_state", ["final_claim_safe_export_packet_pack"]),
+        ("campaign_dossier_snapshot", "handoff_state", ["campaign_creative_dossier_pack"]),
+        ("scenario_preset_snapshot", "scenario_state", ["workspace_scenario_presets_pack"]),
+        ("mvp_readiness_snapshot", "readiness_state", ["workspace_mvp_readiness_dossier_pack", "workspace_final_system_health_pack"]),
+    ]
+    snapshot_contract_by_id = {
+        str(card.get("snapshot_contract_id")): card
+        for card in snapshot_contracts
+        if isinstance(card, dict) and card.get("snapshot_contract_id")
+    }
+    mock_snapshot_replay_cards = []
+    for snapshot_ref, snapshot_group, refs in fallback_snapshot_specs:
+        contract = snapshot_contract_by_id.get(snapshot_ref, {})
+        mock_snapshot_replay_cards.append({
+            "mock_replay_id": f"mock_replay_{snapshot_ref}",
+            "snapshot_ref": snapshot_ref,
+            "snapshot_group": contract.get("snapshot_group") or snapshot_group,
+            "source_pack_refs": contract.get("source_pack_refs") or refs,
+            "input_snapshot_shape": contract.get("recommended_storage_shape") or "preview snapshot shape",
+            "expected_replay_output_shape": {
+                "snapshot_ref": snapshot_ref,
+                "stable_identifiers": contract.get("required_identifiers") or ["workspace_id"],
+                "status_fields": contract.get("required_status_fields") or ["preview_status"],
+                "redacted_fields": contract.get("excluded_sensitive_fields") or [],
+            },
+            "deterministic_replay_status": "preview_replay_contract_ready",
+            "redaction_required": True,
+            "permission_boundary_required": True,
+            "mock_only": True,
+            "real_database_write_allowed": False,
+            "real_file_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Mock snapshot replay is deterministic preview only; it writes no DB, writes no file, reads no secrets, and makes no external calls.",
+        })
+
+    deterministic_replay_contract_cards = [
+        {
+            "replay_contract_id": "stable_snapshot_field_contract",
+            "contract_label": "Stable fields contract",
+            "source_snapshot_refs": [card["snapshot_ref"] for card in mock_snapshot_replay_cards],
+            "required_stable_fields": ["workspace_id", "snapshot_ref", "snapshot_group", "source_pack_refs", "status_fields"],
+            "ignored_runtime_fields": ["generated_at", "created_at", "updated_at", "request_id", "duration_ms", "trace_id"],
+            "expected_idempotency_behavior": "idempotency: same input snapshot shape returns the same mock replay output shape.",
+            "expected_ordering_behavior": "ordering: cards are sorted by declared snapshot replay order, not runtime arrival order.",
+            "expected_missing_field_behavior": "Missing optional fields are replaced with deterministic preview defaults and surfaced as warnings.",
+            "expected_schema_mismatch_behavior": "Schema mismatch blocks mock persistence and requires operator review; no write is attempted.",
+            "real_database_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Deterministic replay contract covers stable fields, ignored_runtime_fields, idempotency, ordering, missing field behavior, and schema mismatch without executing real persistence.",
+        },
+        {
+            "replay_contract_id": "idempotent_replay_boundary_contract",
+            "contract_label": "Idempotency and boundary contract",
+            "source_snapshot_refs": ["review_import_snapshot", "claim_risk_snapshot", "mvp_readiness_snapshot"],
+            "required_stable_fields": ["mock_replay_id", "snapshot_ref", "source_pack_refs"],
+            "ignored_runtime_fields": ["request_timestamp", "log_line", "worker_pid", "random_seed"],
+            "expected_idempotency_behavior": "idempotency: repeated mock replay keeps identical ids and status fields.",
+            "expected_ordering_behavior": "ordering: dependency snapshots must appear before derived output snapshots.",
+            "expected_missing_field_behavior": "Missing required fields produce a mock validation failure card.",
+            "expected_schema_mismatch_behavior": "Mismatched schema version is treated as stale version and blocked.",
+            "real_database_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Runtime-only values are ignored so no real log or database state is read.",
+        },
+    ]
+
+    redaction_validation_cards = [
+        {
+            "redaction_validation_id": "redact_provider_secret",
+            "data_group": "provider secret",
+            "source_pack_refs": ["workspace_secret_environment_gate_pack", "workspace_provider_invocation_audit_packet_pack"],
+            "sensitive_field_refs": ["provider_secret", "api_key", "access_token", "database_connection_string"],
+            "redaction_strategy": "forbid persistence and forbid secret value read",
+            "expected_redacted_fields": ["secret_name_preview", "provider_id"],
+            "forbidden_persisted_fields": ["provider_secret", "api_key", "access_token", "database_connection_string"],
+            "contains_provider_secret": True,
+            "contains_customer_data": False,
+            "validation_status": "blocked_until_secret_access_approval",
+            "real_database_write_allowed": False,
+            "secret_read_allowed": False,
+            "risk_note": "Provider secret must not be persisted or read by the mock harness.",
+        },
+        {
+            "redaction_validation_id": "redact_customer_data",
+            "data_group": "customer data",
+            "source_pack_refs": ["workspace_product_navigation_pack", "review_evidence_quality_pack"],
+            "sensitive_field_refs": ["buyer_identifier", "customer_name", "external_account_id"],
+            "redaction_strategy": "persist only anonymized refs in future storage",
+            "expected_redacted_fields": ["buyer_identifier", "customer_name"],
+            "forbidden_persisted_fields": ["raw_customer_profile", "external_account_id"],
+            "contains_provider_secret": False,
+            "contains_customer_data": True,
+            "validation_status": "mock_redaction_preview_only",
+            "real_database_write_allowed": False,
+            "secret_read_allowed": False,
+            "risk_note": "No real customer data is saved by this preview.",
+        },
+        {
+            "redaction_validation_id": "redact_review_text",
+            "data_group": "review text",
+            "source_pack_refs": ["review_evidence_quality_pack", "claim_risk_guard_pack"],
+            "sensitive_field_refs": ["raw_unredacted_review_text", "buyer_quote", "reviewer_profile"],
+            "redaction_strategy": "persist quote ids and redacted evidence refs only after approval",
+            "expected_redacted_fields": ["raw_unredacted_review_text", "reviewer_profile"],
+            "forbidden_persisted_fields": ["raw_unredacted_review_text", "reviewer_profile"],
+            "contains_provider_secret": False,
+            "contains_customer_data": True,
+            "validation_status": "mock_redaction_preview_only",
+            "real_database_write_allowed": False,
+            "secret_read_allowed": False,
+            "risk_note": "Review text replay uses existing preview data only and writes nothing.",
+        },
+        {
+            "redaction_validation_id": "redact_generated_copy",
+            "data_group": "generated copy",
+            "source_pack_refs": ["campaign_creative_dossier_pack", "final_claim_safe_export_packet_pack"],
+            "sensitive_field_refs": ["unreviewed_generated_copy", "unsupported_claim_text"],
+            "redaction_strategy": "persist claim-safe copy refs only after policy and deletion controls exist",
+            "expected_redacted_fields": ["unsupported_claim_text"],
+            "forbidden_persisted_fields": ["unreviewed_generated_copy", "unsupported_claim_text"],
+            "contains_provider_secret": False,
+            "contains_customer_data": False,
+            "validation_status": "mock_redaction_preview_only",
+            "real_database_write_allowed": False,
+            "secret_read_allowed": False,
+            "risk_note": "Generated copy remains preview-only and is not exported or persisted.",
+        },
+    ]
+
+    mock_persistence_run_cards = [
+        ("mock_write_preview", "Mock write preview", "write", ["review_import_snapshot", "mvp_readiness_snapshot"], "simulate write validation", "blocked_before_real_write", "database_persistence_disabled"),
+        ("mock_read_preview", "Mock read preview", "read", ["campaign_dossier_snapshot"], "simulate replay read from in-memory preview shape", "preview_shape_returned", "missing_snapshot_dependency"),
+        ("mock_replay_preview", "Mock replay preview", "replay", ["scenario_preset_snapshot", "final_export_packet_snapshot"], "simulate deterministic replay", "deterministic_output_shape_previewed", "schema_mismatch"),
+        ("mock_validation_preview", "Mock validation preview", "validation", ["claim_risk_snapshot", "evidence_quality_snapshot"], "simulate redaction and permission validation", "validation_cards_returned", "redaction_failure"),
+    ]
+    mock_persistence_run_cards = [
+        {
+            "mock_run_id": run_id,
+            "mock_run_label": label,
+            "mock_run_group": group,
+            "source_snapshot_refs": refs,
+            "simulated_operation": operation,
+            "expected_result": expected_result,
+            "expected_failure_mode": failure_mode,
+            "writes_real_database": False,
+            "writes_real_file": False,
+            "uses_external_call": False,
+            "reads_secret": False,
+            "real_execution_allowed": False,
+            "risk_note": "Mock run is request-scoped preview only; it does not write DB, write files, call external services, or read secrets.",
+        }
+        for run_id, label, group, refs, operation, expected_result, failure_mode in mock_persistence_run_cards
+    ]
+
+    rollback_dry_run_cards = [
+        ("rollback_db_write_failure", "DB write failure", "DB write failure", "reject write and keep preview state", "review database configuration and retry mock only"),
+        ("rollback_migration_failure", "migration failure", "migration failure", "abort dry-run migration plan", "add migration plan and rollback tests"),
+        ("rollback_schema_mismatch", "schema mismatch", "schema mismatch", "block replay and require schema contract review", "align snapshot contract version"),
+        ("rollback_partial_write", "partial write", "partial write", "simulate transaction rollback requirement", "define idempotency and transaction policy"),
+        ("rollback_redaction_failure", "redaction failure", "redaction failure", "block persistence until redaction passes", "review forbidden persisted fields"),
+        ("rollback_permission_denied", "permission denied", "permission denied", "keep all disabled boundaries locked", "obtain production approval before unlock"),
+    ]
+    rollback_dry_run_cards = [
+        {
+            "rollback_dry_run_id": rollback_id,
+            "rollback_scenario": scenario,
+            "source_pack_refs": ["workspace_phase2_database_persistence_gate_pack", "workspace_capability_permission_matrix_pack"],
+            "simulated_failure_type": failure_type,
+            "expected_recovery_action": recovery_action,
+            "expected_operator_action": operator_action,
+            "requires_real_rollback": False,
+            "real_database_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Rollback dry-run describes future recovery only; no real rollback is executed.",
+        }
+        for rollback_id, scenario, failure_type, recovery_action, operator_action in rollback_dry_run_cards
+    ]
+
+    replay_integrity_check_cards = [
+        {
+            "integrity_check_id": "snapshot_hash_preview",
+            "check_label": "snapshot hash preview",
+            "check_shape": "preview hash over deterministic fields only",
+            "check_status": "preview_only_not_persistent_hash",
+            "reads_real_database": False,
+            "risk_note": "Does not compute or store a real persistence hash.",
+        },
+        {
+            "integrity_check_id": "deterministic_ordering",
+            "check_label": "deterministic ordering",
+            "check_shape": "declared snapshot order must be stable",
+            "check_status": "covered",
+            "reads_real_database": False,
+            "risk_note": "Ordering is checked from in-memory preview cards only.",
+        },
+        {
+            "integrity_check_id": "missing_dependency",
+            "check_label": "missing dependency",
+            "check_shape": "source_pack_refs must resolve to preview pack names",
+            "check_status": "preview_warning_only",
+            "reads_real_database": False,
+            "risk_note": "No database dependency lookup is performed.",
+        },
+        {
+            "integrity_check_id": "duplicate_id",
+            "check_label": "duplicate id",
+            "check_shape": "mock ids should be unique in the preview response",
+            "check_status": "covered",
+            "reads_real_database": False,
+            "risk_note": "Duplicate checks are local to this response.",
+        },
+        {
+            "integrity_check_id": "stale_version",
+            "check_label": "stale version",
+            "check_shape": "pack_version mismatch blocks future persistence",
+            "check_status": "preview_warning_only",
+            "reads_real_database": False,
+            "risk_note": "No persisted version is read.",
+        },
+    ]
+
+    permission_boundary_assertion_cards = [
+        {
+            "permission_boundary_assertion_id": f"mock_harness_boundary_{capability_id}",
+            "capability_id": capability_id,
+            "expected_status": "disabled",
+            "observed_status": "disabled",
+            "must_remain_disabled": True,
+            "source_guard_refs": [
+                "workspace_phase2_database_persistence_gate_pack",
+                "workspace_capability_permission_matrix_pack",
+                "workspace_secret_environment_gate_pack",
+                "workspace_network_external_call_block_guard_pack",
+            ],
+            "risk_note": f"{capability_id} remains disabled during persistence mock harness preview.",
+        }
+        for capability_id in [
+            "database_persistence",
+            "file_write",
+            "secret_read",
+            "external_call",
+            "real_execution",
+            "provider",
+            "llm",
+        ]
+    ]
+
+    mock_audit_event_preview_cards = [
+        {
+            "mock_audit_event_preview_id": "mock_snapshot_replay_requested",
+            "event_label": "Mock snapshot replay requested",
+            "event_shape": ["event_id", "workspace_id", "mock_replay_id", "source_pack_refs", "preview_status"],
+            "source_pack_refs": source_pack_ids,
+            "real_audit_event_created": False,
+            "database_write_allowed": False,
+            "real_log_read_allowed": False,
+            "risk_note": "Audit event preview is descriptive only and is not written to a database.",
+        },
+        {
+            "mock_audit_event_preview_id": "mock_rollback_dry_run_blocked",
+            "event_label": "Mock rollback dry-run blocked",
+            "event_shape": ["event_id", "rollback_dry_run_id", "simulated_failure_type", "blocked_reason"],
+            "source_pack_refs": ["workspace_phase2_database_persistence_gate_pack"],
+            "real_audit_event_created": False,
+            "database_write_allowed": False,
+            "real_log_read_allowed": False,
+            "risk_note": "No real audit event, log read, or history table read occurs.",
+        },
+    ]
+
+    test_specs = [
+        ("unit", "unit tests"),
+        ("contract", "contract tests"),
+        ("replay", "replay tests"),
+        ("redaction", "redaction tests"),
+        ("permission_boundary", "permission boundary tests"),
+        ("rollback_dry_run", "rollback dry-run tests"),
+        ("audit_event_preview", "audit event preview tests"),
+    ]
+    persistence_mock_test_plan_cards = [
+        {
+            "test_plan_id": f"phase2_mock_harness_{test_id}_test_plan",
+            "test_type": test_id,
+            "test_label": label,
+            "required_before_real_persistence_unlock": True,
+            "current_status": "preview_contract_defined",
+            "real_database_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} must pass before any real persistence unlock.",
+        }
+        for test_id, label in test_specs
+    ]
+
+    phase2_mock_harness_unlock_blockers = [
+        "no DB connection config",
+        "no schema migration",
+        "no audit sink",
+        "no retention policy",
+        "no deletion policy",
+        "no production approval",
+        "no real rollback implementation",
+        "no secret access approval",
+    ]
+
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "secret_read": False,
+        "secret_read_enabled": False,
+        "external_call": False,
+        "external_call_enabled": False,
+        "token_issue": False,
+        "token_issue_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_phase2_persistence_mock_harness_pack_v1",
+        "persistence_mock_harness_summary": {
+            "mode": "phase2_persistence_mock_harness_preview_deterministic_snapshot_replay_dry_run_only",
+            "source_packs": source_pack_ids,
+            "source_pack_presence": {pack_id: bool(packs.get(pack_id)) for pack_id in source_pack_ids},
+            "mock_snapshot_replay_count": len(mock_snapshot_replay_cards),
+            "deterministic_replay_contract_count": len(deterministic_replay_contract_cards),
+            "redaction_validation_count": len(redaction_validation_cards),
+            "mock_persistence_run_count": len(mock_persistence_run_cards),
+            "rollback_dry_run_count": len(rollback_dry_run_cards),
+            "mock_only": True,
+            "real_database_write_allowed": False,
+            "real_file_write_allowed": False,
+            "real_execution_allowed": False,
+            "external_call_allowed": False,
+            "secret_read_allowed": False,
+            "risk_note": "Persistence mock harness is deterministic snapshot replay preview only; it creates no migration, writes no DB, writes no files, saves no customer data, reads no real logs, reads no secrets, makes no external calls, and executes no real rollback.",
+        },
+        "mock_snapshot_replay_cards": mock_snapshot_replay_cards,
+        "deterministic_replay_contract_cards": deterministic_replay_contract_cards,
+        "redaction_validation_cards": redaction_validation_cards,
+        "mock_persistence_run_cards": mock_persistence_run_cards,
+        "rollback_dry_run_cards": rollback_dry_run_cards,
+        "replay_integrity_check_cards": replay_integrity_check_cards,
+        "permission_boundary_assertion_cards": permission_boundary_assertion_cards,
+        "mock_audit_event_preview_cards": mock_audit_event_preview_cards,
+        "persistence_mock_test_plan_cards": persistence_mock_test_plan_cards,
+        "phase2_mock_harness_unlock_blockers": phase2_mock_harness_unlock_blockers,
+        "persistence_mock_harness_quality_checks": {
+            "snapshot_replay_covered": bool(mock_snapshot_replay_cards),
+            "deterministic_contract_covered": bool(deterministic_replay_contract_cards),
+            "redaction_validation_covered": bool(redaction_validation_cards),
+            "mock_run_covered": bool(mock_persistence_run_cards),
+            "rollback_dry_run_covered": bool(rollback_dry_run_cards),
+            "integrity_checks_covered": bool(replay_integrity_check_cards),
+            "permission_boundary_covered": bool(permission_boundary_assertion_cards),
+            "audit_preview_covered": bool(mock_audit_event_preview_cards),
+            "test_plan_covered": bool(persistence_mock_test_plan_cards),
+            "unlock_blockers_covered": bool(phase2_mock_harness_unlock_blockers),
+            "safety_boundary_covered": True,
+            "real_database_write_performed": False,
+            "real_file_write_performed": False,
+            "real_execution_performed": False,
+            "secret_read_performed": False,
+            "external_call_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "workspace_phase2_persistence_mock_harness_preview",
+            "source": "creative_decision_pack.workspace_phase2_persistence_mock_harness_pack",
+            "audit_record_created": False,
+            "real_audit_event_created": False,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "real_file_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit preview is display-only and does not write databases, read real logs, read history tables, or create real audit events.",
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -45392,6 +45821,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_phase2_database_persistence_gate_pack"] = (
         _rw_workspace_phase2_database_persistence_gate_pack(
+            creative_decision_pack
+        )
+    )
+    creative_decision_pack["workspace_phase2_persistence_mock_harness_pack"] = (
+        _rw_workspace_phase2_persistence_mock_harness_pack(
             creative_decision_pack
         )
     )
