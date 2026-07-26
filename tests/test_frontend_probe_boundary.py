@@ -12871,6 +12871,303 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_phase2_db_schema_migration_dry_run_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace phase2 DB schema migration dry-run bundle",
+            "PROJECT_WORKSPACE_PHASE2_DB_SCHEMA_MIGRATION_DRY_RUN_MARKER",
+            "latestProjectWorkspacePhase2DbSchemaMigrationDryRunPack",
+            "projectWorkspacePhase2DbSchemaMigrationDryRunPackFromWorkspace",
+            "projectWorkspaceExportPhase2DbSchemaMigrationDryRunSnapshot",
+            "projectWorkspaceExportPhase2DbSchemaMigrationDryRunMarkdown",
+            "renderProjectWorkspacePhase2DbSchemaMigrationDryRunSummaryPlanPanel",
+            "renderProjectWorkspacePhase2DbSchemaMigrationDryRunSchemaStepPanel",
+            "renderProjectWorkspacePhase2DbSchemaMigrationDryRunValidationRollbackBackfillPanel",
+            "renderProjectWorkspacePhase2DbSchemaMigrationDryRunRedactionAuditPermissionPanel",
+            "renderProjectWorkspacePhase2DbSchemaMigrationDryRunTestQualityAuditSafetyPanel",
+            "copyProjectWorkspacePhase2DbSchemaMigrationDryRunSummary",
+            "copyProjectWorkspaceMigrationPlanPreviewCards",
+            "copyProjectWorkspaceSchemaDefinitionPreviewCards",
+            "copyProjectWorkspaceMigrationStepDryRunCards",
+            "copyProjectWorkspaceSchemaValidationRuleCards",
+            "copyProjectWorkspaceMigrationRollbackPreviewCards",
+            "copyProjectWorkspaceBackfillDryRunPreviewCards",
+            "copyProjectWorkspaceRedactionRetentionDependencyCards",
+            "copyProjectWorkspaceMigrationPermissionBoundaryCards",
+            "copyProjectWorkspaceFullPhase2DbSchemaMigrationDryRunPack",
+            "workspace_phase2_db_schema_migration_dry_run_pack: projectWorkspaceExportPhase2DbSchemaMigrationDryRunSnapshot(workspace)",
+            "projectWorkspaceExportPhase2DbSchemaMigrationDryRunMarkdown(workspace)",
+            "project_workspace_phase2_db_schema_migration_dry_run_marker",
+            "DB Schema Migration Dry-Run Preview",
+            "DB Schema Migration Dry-Run Summary",
+            "Migration Plan Preview Cards",
+            "Schema Definition Preview Cards",
+            "Migration Step Dry-Run Cards",
+            "Schema Validation Rule Cards",
+            "Migration Rollback Preview Cards",
+            "Backfill Dry-Run Preview Cards",
+            "Redaction Retention Dependency Cards",
+            "Migration Audit Dependency Cards",
+            "Migration Permission Boundary Cards",
+            "Migration Test Plan Cards",
+            "Phase 2 DB Migration Unlock Blockers",
+            "DB Migration Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for field in [
+            "pack.db_schema_migration_dry_run_summary",
+            "pack.migration_plan_preview_cards",
+            "pack.schema_definition_preview_cards",
+            "pack.migration_step_dry_run_cards",
+            "pack.schema_validation_rule_cards",
+            "pack.migration_rollback_preview_cards",
+            "pack.backfill_dry_run_preview_cards",
+            "pack.redaction_retention_dependency_cards",
+            "pack.migration_audit_dependency_cards",
+            "pack.migration_permission_boundary_cards",
+            "pack.migration_test_plan_cards",
+            "pack.phase2_db_migration_unlock_blockers",
+            "pack.db_migration_quality_checks",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.migration_plan_preview_count",
+            "summary.schema_definition_preview_count",
+            "summary.migration_step_dry_run_count",
+            "summary.schema_validation_rule_count",
+            "summary.rollback_preview_count",
+            "summary.unlock_blocker_count",
+            "summary.real_migration_file_created",
+            "summary.real_migration_executed",
+            "summary.real_database_connection_allowed",
+            "summary.real_database_read_allowed",
+            "summary.real_database_write_allowed",
+            "summary.real_file_write_allowed",
+            "summary.secret_read_allowed",
+            "summary.external_call_allowed",
+            "summary.real_execution_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for coverage in [
+            "workspace_session_schema_migration",
+            "review_import_snapshot_schema_migration",
+            "evidence_quality_snapshot_schema_migration",
+            "claim_risk_snapshot_schema_migration",
+            "final_export_packet_schema_migration",
+            "campaign_dossier_schema_migration",
+            "audit_event_schema_migration",
+            "operator_decision_schema_migration",
+            "workspace_sessions",
+            "review_import_snapshots",
+            "evidence_quality_snapshots",
+            "claim_risk_snapshots",
+            "final_export_packets",
+            "campaign_dossiers",
+            "audit_events",
+            "operator_decisions",
+            "create schema",
+            "validate schema",
+            "add index",
+            "validate redaction",
+            "validate retention",
+            "validate audit refs",
+            "validate rollback plan",
+            "verify permission boundary",
+            "required identifiers",
+            "timestamps",
+            "status fields",
+            "excluded provider secret",
+            "redaction required",
+            "retention required",
+            "deletion policy required",
+            "audit trace refs",
+            "schema mismatch",
+            "partial migration",
+            "index creation failure",
+            "redaction validation failure",
+            "retention policy missing",
+            "audit sink missing",
+            "permission denied",
+            "rollback unavailable",
+            "backfill shape preview only",
+            "provider secret",
+            "customer data",
+            "review text",
+            "generated copy",
+            "operator note",
+            "future audit sink",
+            "trace id",
+            "actor ref",
+            "operation ref",
+            "before-after summary",
+            "database_persistence",
+            "database_read",
+            "database_write",
+            "schema_migration",
+            "file_write",
+            "secret_read",
+            "external_call",
+            "real_execution",
+            "unit tests",
+            "contract tests",
+            "schema validation tests",
+            "migration dry-run tests",
+            "rollback dry-run tests",
+            "backfill dry-run tests",
+            "redaction tests",
+            "retention tests",
+            "permission boundary tests",
+            "audit preview tests",
+            "no real DB connection config",
+            "no migration file generated",
+            "no migration dry-run executed against sandbox",
+            "no rollback implementation",
+            "no backup strategy",
+            "no retention policy enforcement",
+            "no deletion policy enforcement",
+            "no redaction enforcement",
+            "no real audit sink",
+            "no production approval",
+            "migration plan / schema definition / dry-run steps / schema validation / rollback preview / backfill preview / redaction retention dependency / audit dependency / permission boundary / test plan / unlock blockers / safety boundary",
+        ]:
+            with self.subTest(coverage=coverage):
+                self.assertIn(coverage, html)
+        previous = html.index("${renderProjectWorkspacePhase2RealDbAdapterMigrationTestQualitySafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspacePhase2DbSchemaMigrationDryRunSummaryPlanPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspacePhase2DbSchemaMigrationDryRunTestQualityAuditSafetyPanel(workspace)}")
+        creative = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, creative)
+        rendered_panel_ids = [
+            'id="projectWorkspacePhase2DbSchemaMigrationDryRunSummaryPlanPanel"',
+            'id="projectWorkspacePhase2DbSchemaMigrationDryRunSchemaStepPanel"',
+            'id="projectWorkspacePhase2DbSchemaMigrationDryRunValidationRollbackBackfillPanel"',
+            'id="projectWorkspacePhase2DbSchemaMigrationDryRunRedactionAuditPermissionPanel"',
+            'id="projectWorkspacePhase2DbSchemaMigrationDryRunTestQualityAuditSafetyPanel"',
+        ]
+        for panel_id in rendered_panel_ids:
+            with self.subTest(panel_id=panel_id):
+                self.assertEqual(html.count(panel_id), 1)
+
+    def test_workspace_phase2_db_schema_migration_dry_run_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "phase2DbMigrationDryRunPackTitle",
+            "phase2DbMigrationDryRunPackHelper",
+            "phase2DbMigrationDryRunSummaryTitle",
+            "phase2DbMigrationDryRunMigrationPlanTitle",
+            "phase2DbMigrationDryRunSchemaDefinitionTitle",
+            "phase2DbMigrationDryRunStepTitle",
+            "phase2DbMigrationDryRunValidationRuleTitle",
+            "phase2DbMigrationDryRunRollbackTitle",
+            "phase2DbMigrationDryRunBackfillTitle",
+            "phase2DbMigrationDryRunRedactionRetentionTitle",
+            "phase2DbMigrationDryRunAuditDependencyTitle",
+            "phase2DbMigrationDryRunPermissionTitle",
+            "phase2DbMigrationDryRunTestPlanTitle",
+            "phase2DbMigrationDryRunUnlockBlockerTitle",
+            "phase2DbMigrationDryRunQualityTitle",
+            "phase2DbMigrationDryRunAuditPreviewTitle",
+            "phase2DbMigrationDryRunSafetyTitle",
+            "phase2DbMigrationDryRunCopySummary",
+            "phase2DbMigrationDryRunCopyPlans",
+            "phase2DbMigrationDryRunCopySchemas",
+            "phase2DbMigrationDryRunCopySteps",
+            "phase2DbMigrationDryRunCopyValidation",
+            "phase2DbMigrationDryRunCopyRollback",
+            "phase2DbMigrationDryRunCopyBackfill",
+            "phase2DbMigrationDryRunCopyRedaction",
+            "phase2DbMigrationDryRunCopyPermission",
+            "phase2DbMigrationDryRunCopyFull",
+            "phase2DbMigrationDryRunCopied",
+            "phase2DbMigrationDryRunCopyFailed",
+            "phase2DbMigrationDryRunCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace phase2 DB schema migration dry-run bundle", script)
+            self.assertIn("project_workspace_phase2_db_schema_migration_dry_run_marker", script)
+        markdown = html[
+            html.index("function projectWorkspacePhase2DbSchemaMigrationDryRunSummaryText"):
+            html.index("async function copyProjectWorkspacePhase2DbSchemaMigrationDryRunText")
+        ]
+        for key in [
+            "phase2DbMigrationDryRunPackTitle",
+            "phase2DbMigrationDryRunSummaryTitle",
+            "phase2DbMigrationDryRunMigrationPlanTitle",
+            "phase2DbMigrationDryRunSchemaDefinitionTitle",
+            "phase2DbMigrationDryRunStepTitle",
+            "phase2DbMigrationDryRunValidationRuleTitle",
+            "phase2DbMigrationDryRunRollbackTitle",
+            "phase2DbMigrationDryRunBackfillTitle",
+            "phase2DbMigrationDryRunRedactionRetentionTitle",
+            "phase2DbMigrationDryRunAuditDependencyTitle",
+            "phase2DbMigrationDryRunPermissionTitle",
+            "phase2DbMigrationDryRunTestPlanTitle",
+            "phase2DbMigrationDryRunUnlockBlockerTitle",
+            "phase2DbMigrationDryRunQualityTitle",
+            "phase2DbMigrationDryRunAuditPreviewTitle",
+            "phase2DbMigrationDryRunSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PHASE2_DB_SCHEMA_MIGRATION_DRY_RUN_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic schema migration plan preview only",
+            "creates no real migration file",
+            "executes no migration",
+            "reads no DB config",
+            "connects to no database",
+            "reads no real DB",
+            "writes no real DB",
+            "writes no files",
+            "reads no secrets",
+            "makes no external calls",
+            "executes no retry or rollback",
+            "creates no real audit event",
+            "not production readiness",
+            "Provider secret",
+            "customer data",
+            "review text",
+            "generated copy",
+            "operator note",
+            "not persisted",
+            "not written to DB",
+            "not allowed into migration or backfill",
+            "provider",
+            "LLM",
+            "media",
+            "external scraping",
+            "database persistence",
+            "database read",
+            "database write",
+            "schema migration",
+            "real policy check",
+            "platform upload",
+            "task creation",
+            "real export",
+            "file write",
+            "secret read",
+            "external call",
+            "token issue",
+            "paid operation",
+            "real execution",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_provider_cost_quota_risk_guard_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [

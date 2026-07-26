@@ -3657,6 +3657,7 @@
         let latestProjectWorkspacePhase2ProviderUnlockReviewPack = {};
         let latestProjectWorkspacePhase2ReadinessReviewPack = {};
         let latestProjectWorkspacePhase2RealDbAdapterContractPack = {};
+        let latestProjectWorkspacePhase2DbSchemaMigrationDryRunPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7713,7 +7714,57 @@
             phase2RealDbAdapterInterfaceSchemaNote: 'Interface and schema mapping are contract previews only. They cover save/read/list adapter shapes and future tables, but do not create tables, run migrations, read secrets, select from a real database, insert, update, delete, export files, or write storage.',
             phase2RealDbAdapterBoundaryMockNote: 'Operation boundaries and mock invocations are dry-run only. Mock save/read/list/validation cards simulate behavior without real database reads, real database writes, file writes, external calls, secret reads, provider calls, paid operations, or real execution.',
             phase2RealDbAdapterAuditPermissionNote: 'Audit trace, permission boundary, and redaction retention cards are previews. They describe future trace IDs, actor refs, operation refs, before/after summaries, permission gates, and retention expectations without writing databases, reading real logs, creating tasks, or creating real audit events.',
-            phase2RealDbAdapterMigrationTestSafetyNote: 'Migration dependencies, test plan, blockers, quality checks, audit preview, and safety boundaries remain blocked previews. Schema migration, rollback, backfill, retention, deletion, audit sink, monitoring, production approval, provider, LLM, media, external scraping, database persistence, database read, database write, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, and paid operation remain disabled.'
+            phase2RealDbAdapterMigrationTestSafetyNote: 'Migration dependencies, test plan, blockers, quality checks, audit preview, and safety boundaries remain blocked previews. Schema migration, rollback, backfill, retention, deletion, audit sink, monitoring, production approval, provider, LLM, media, external scraping, database persistence, database read, database write, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, and paid operation remain disabled.',
+            phase2DbMigrationDryRunPackTitle: 'DB Schema Migration Dry-Run Preview',
+            phase2DbMigrationDryRunPackHelper: 'Project Workspace phase2 DB schema migration dry-run bundle. Deterministic schema migration plan preview only; it creates no real migration file, executes no migration, reads no DB config, connects to no database, reads no real DB, writes no real DB, writes no files, reads no secrets, makes no external calls, executes no rollback, and is not production readiness.',
+            phase2DbMigrationDryRunSummaryPlanTitle: 'DB Schema Migration Dry-Run Summary / Migration Plans',
+            phase2DbMigrationDryRunSummaryTitle: 'DB Schema Migration Dry-Run Summary',
+            phase2DbMigrationDryRunMigrationPlanTitle: 'Migration Plan Preview Cards',
+            phase2DbMigrationDryRunSchemaStepTitle: 'Schema Definition Preview / Migration Step Dry-Run',
+            phase2DbMigrationDryRunSchemaDefinitionTitle: 'Schema Definition Preview Cards',
+            phase2DbMigrationDryRunStepTitle: 'Migration Step Dry-Run Cards',
+            phase2DbMigrationDryRunValidationRollbackBackfillTitle: 'Schema Validation / Rollback Preview / Backfill Dry-Run',
+            phase2DbMigrationDryRunValidationRuleTitle: 'Schema Validation Rule Cards',
+            phase2DbMigrationDryRunRollbackTitle: 'Migration Rollback Preview Cards',
+            phase2DbMigrationDryRunBackfillTitle: 'Backfill Dry-Run Preview Cards',
+            phase2DbMigrationDryRunRedactionAuditPermissionTitle: 'Redaction Retention / Migration Audit Dependency / Permission Boundary',
+            phase2DbMigrationDryRunRedactionRetentionTitle: 'Redaction Retention Dependency Cards',
+            phase2DbMigrationDryRunAuditDependencyTitle: 'Migration Audit Dependency Cards',
+            phase2DbMigrationDryRunPermissionTitle: 'Migration Permission Boundary Cards',
+            phase2DbMigrationDryRunTestQualityAuditSafetyTitle: 'Migration Test Plan / Unlock Blockers / Quality / Audit / Safety',
+            phase2DbMigrationDryRunTestPlanTitle: 'Migration Test Plan Cards',
+            phase2DbMigrationDryRunUnlockBlockerTitle: 'Phase 2 DB Migration Unlock Blockers',
+            phase2DbMigrationDryRunQualityTitle: 'DB Migration Quality Checks',
+            phase2DbMigrationDryRunAuditPreviewTitle: 'Audit Preview',
+            phase2DbMigrationDryRunSafetyTitle: 'Safety Boundaries',
+            phase2DbMigrationDryRunMode: 'Mode',
+            phase2DbMigrationDryRunMigrationPlanCount: 'Migration plan count',
+            phase2DbMigrationDryRunSchemaDefinitionCount: 'Schema definition count',
+            phase2DbMigrationDryRunStepCount: 'Dry-run step count',
+            phase2DbMigrationDryRunValidationRuleCount: 'Validation rule count',
+            phase2DbMigrationDryRunRollbackCount: 'Rollback preview count',
+            phase2DbMigrationDryRunUnlockBlockerCount: 'Unlock blocker count',
+            phase2DbMigrationDryRunRecommendedAction: 'Recommended operator action',
+            phase2DbMigrationDryRunDisabled: 'disabled',
+            phase2DbMigrationDryRunNoData: 'No DB schema migration dry-run preview data is available.',
+            phase2DbMigrationDryRunCopyNoData: 'No DB schema migration dry-run preview content is available to copy.',
+            phase2DbMigrationDryRunCopyFailed: 'Unable to copy DB schema migration dry-run preview content.',
+            phase2DbMigrationDryRunCopied: 'DB schema migration dry-run preview content copied.',
+            phase2DbMigrationDryRunCopySummary: 'Copy DB schema migration dry-run summary',
+            phase2DbMigrationDryRunCopyPlans: 'Copy migration plan preview cards',
+            phase2DbMigrationDryRunCopySchemas: 'Copy schema definition preview cards',
+            phase2DbMigrationDryRunCopySteps: 'Copy migration step dry-run cards',
+            phase2DbMigrationDryRunCopyValidation: 'Copy schema validation rule cards',
+            phase2DbMigrationDryRunCopyRollback: 'Copy migration rollback preview cards',
+            phase2DbMigrationDryRunCopyBackfill: 'Copy backfill dry-run preview cards',
+            phase2DbMigrationDryRunCopyRedaction: 'Copy redaction retention dependency cards',
+            phase2DbMigrationDryRunCopyPermission: 'Copy migration permission boundary cards',
+            phase2DbMigrationDryRunCopyFull: 'Copy full DB schema migration dry-run pack',
+            phase2DbMigrationDryRunPreviewNote: 'Deterministic schema migration plan preview only. It creates no real migration file, executes no migration, reads no DB config, connects to no database, reads no real DB, writes no real DB, writes no files, reads no secrets, makes no external calls, executes no retry or rollback, creates no real audit event, and is not production readiness.',
+            phase2DbMigrationDryRunSchemaStepNote: 'Schema definitions and migration steps are dry-run previews only. They cover candidate tables, required fields, indexes, status fields, timestamps, sensitive fields, excluded provider secrets, retention, deletion, create schema, validate schema, add index, validate redaction, validate retention, validate audit refs, validate rollback plan, and verify permission boundary without creating real tables, modifying real schema, writing DB, or running real execution.',
+            phase2DbMigrationDryRunValidationRollbackBackfillNote: 'Validation, rollback, and backfill are previews only. They cover required identifiers, timestamps, status fields, excluded provider secret, redaction, retention, deletion policy, audit trace refs, schema mismatch, partial migration, index creation failure, redaction validation failure, retention policy missing, audit sink missing, permission denied, and rollback unavailable without reading DB, writing DB, using real customer data, or executing rollback.',
+            phase2DbMigrationDryRunRedactionAuditPermissionNote: 'Redaction, retention, audit dependency, and permission boundary are previews only. Provider secret, customer data, review text, generated copy, and operator note are not persisted; provider secrets are not read, not written to DB, and not allowed into migration or backfill. Future audit sink, trace ID, actor ref, operation ref, and before/after summary are displayed without database writes or real audit events.',
+            phase2DbMigrationDryRunTestQualitySafetyNote: 'Test plan, unlock blockers, quality checks, audit preview, and safety boundaries remain blocked previews. Unit, contract, schema validation, migration dry-run, rollback dry-run, backfill dry-run, redaction, retention, permission boundary, and audit preview tests are listed only. Provider, LLM, media, external scraping, database persistence, database read, database write, schema migration, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, paid operation, and real execution remain disabled.'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
@@ -8961,7 +9012,57 @@
             phase2RealDbAdapterInterfaceSchemaNote: 'Interface 和 schema mapping 只是 contract preview。它们覆盖 save/read/list adapter shape 和未来 table，但不 create table，不运行 migration，不读取 secret，不 select 真实数据库，不 insert、update、delete，不 export file，也不写 storage。',
             phase2RealDbAdapterBoundaryMockNote: 'Operation boundary 和 mock invocation 仅为 dry-run。Mock save/read/list/validation cards 只模拟行为，不进行真实 database read、database write、file write、external call、secret read、provider call、paid operation 或 real execution。',
             phase2RealDbAdapterAuditPermissionNote: 'Audit trace、permission boundary 和 redaction retention cards 都是 preview。它们描述未来 trace ID、actor ref、operation ref、before/after summary、permission gate 和 retention 预期，但不写数据库，不读取真实日志，不创建 task，也不创建真实 audit event。',
-            phase2RealDbAdapterMigrationTestSafetyNote: 'Migration dependencies、test plan、blockers、quality checks、audit preview 和 safety boundaries 都保持 blocked preview。Schema migration、rollback、backfill、retention、deletion、audit sink、monitoring、production approval、provider、LLM、media、external scraping、database persistence、database read、database write、real policy check、platform upload、task creation、real export、file write、secret read、external call、token issue 和 paid operation 全部保持禁用。'
+            phase2RealDbAdapterMigrationTestSafetyNote: 'Migration dependencies、test plan、blockers、quality checks、audit preview 和 safety boundaries 都保持 blocked preview。Schema migration、rollback、backfill、retention、deletion、audit sink、monitoring、production approval、provider、LLM、media、external scraping、database persistence、database read、database write、real policy check、platform upload、task creation、real export、file write、secret read、external call、token issue 和 paid operation 全部保持禁用。',
+            phase2DbMigrationDryRunPackTitle: 'DB Schema Migration Dry-Run Preview',
+            phase2DbMigrationDryRunPackHelper: 'Project Workspace phase2 DB schema migration dry-run bundle。仅为 deterministic schema migration plan preview；不创建真实 migration 文件，不执行 migration，不读取 DB config，不连接数据库，不读取真实 DB，不写真实 DB，不写文件，不读取 secret，不发外部请求，不执行 rollback，也不代表 production readiness。',
+            phase2DbMigrationDryRunSummaryPlanTitle: 'DB Schema Migration Dry-Run Summary / Migration Plans',
+            phase2DbMigrationDryRunSummaryTitle: 'DB Schema Migration Dry-Run Summary',
+            phase2DbMigrationDryRunMigrationPlanTitle: 'Migration Plan Preview Cards',
+            phase2DbMigrationDryRunSchemaStepTitle: 'Schema Definition Preview / Migration Step Dry-Run',
+            phase2DbMigrationDryRunSchemaDefinitionTitle: 'Schema Definition Preview Cards',
+            phase2DbMigrationDryRunStepTitle: 'Migration Step Dry-Run Cards',
+            phase2DbMigrationDryRunValidationRollbackBackfillTitle: 'Schema Validation / Rollback Preview / Backfill Dry-Run',
+            phase2DbMigrationDryRunValidationRuleTitle: 'Schema Validation Rule Cards',
+            phase2DbMigrationDryRunRollbackTitle: 'Migration Rollback Preview Cards',
+            phase2DbMigrationDryRunBackfillTitle: 'Backfill Dry-Run Preview Cards',
+            phase2DbMigrationDryRunRedactionAuditPermissionTitle: 'Redaction Retention / Migration Audit Dependency / Permission Boundary',
+            phase2DbMigrationDryRunRedactionRetentionTitle: 'Redaction Retention Dependency Cards',
+            phase2DbMigrationDryRunAuditDependencyTitle: 'Migration Audit Dependency Cards',
+            phase2DbMigrationDryRunPermissionTitle: 'Migration Permission Boundary Cards',
+            phase2DbMigrationDryRunTestQualityAuditSafetyTitle: 'Migration Test Plan / Unlock Blockers / Quality / Audit / Safety',
+            phase2DbMigrationDryRunTestPlanTitle: 'Migration Test Plan Cards',
+            phase2DbMigrationDryRunUnlockBlockerTitle: 'Phase 2 DB Migration Unlock Blockers',
+            phase2DbMigrationDryRunQualityTitle: 'DB Migration Quality Checks',
+            phase2DbMigrationDryRunAuditPreviewTitle: 'Audit Preview',
+            phase2DbMigrationDryRunSafetyTitle: 'Safety Boundaries',
+            phase2DbMigrationDryRunMode: 'Mode',
+            phase2DbMigrationDryRunMigrationPlanCount: 'Migration plan 数量',
+            phase2DbMigrationDryRunSchemaDefinitionCount: 'Schema definition 数量',
+            phase2DbMigrationDryRunStepCount: 'Dry-run step 数量',
+            phase2DbMigrationDryRunValidationRuleCount: 'Validation rule 数量',
+            phase2DbMigrationDryRunRollbackCount: 'Rollback preview 数量',
+            phase2DbMigrationDryRunUnlockBlockerCount: 'Unlock blocker 数量',
+            phase2DbMigrationDryRunRecommendedAction: 'Recommended operator action',
+            phase2DbMigrationDryRunDisabled: 'disabled',
+            phase2DbMigrationDryRunNoData: '暂无 DB schema migration dry-run preview 数据。',
+            phase2DbMigrationDryRunCopyNoData: '暂无可复制的 DB schema migration dry-run preview 内容。',
+            phase2DbMigrationDryRunCopyFailed: '无法复制 DB schema migration dry-run preview 内容。',
+            phase2DbMigrationDryRunCopied: 'DB schema migration dry-run preview 内容已复制。',
+            phase2DbMigrationDryRunCopySummary: '复制 DB schema migration dry-run summary',
+            phase2DbMigrationDryRunCopyPlans: '复制 migration plan preview cards',
+            phase2DbMigrationDryRunCopySchemas: '复制 schema definition preview cards',
+            phase2DbMigrationDryRunCopySteps: '复制 migration step dry-run cards',
+            phase2DbMigrationDryRunCopyValidation: '复制 schema validation rule cards',
+            phase2DbMigrationDryRunCopyRollback: '复制 migration rollback preview cards',
+            phase2DbMigrationDryRunCopyBackfill: '复制 backfill dry-run preview cards',
+            phase2DbMigrationDryRunCopyRedaction: '复制 redaction retention dependency cards',
+            phase2DbMigrationDryRunCopyPermission: '复制 migration permission boundary cards',
+            phase2DbMigrationDryRunCopyFull: '复制完整 DB schema migration dry-run pack',
+            phase2DbMigrationDryRunPreviewNote: '仅为 deterministic schema migration plan preview。不创建真实 migration 文件，不执行 migration，不读取 DB config，不连接数据库，不读取真实 DB，不写真实 DB，不写文件，不读取 secret，不发外部请求，不执行真实 retry 或 rollback，不创建真实 audit event，也不代表 production readiness。',
+            phase2DbMigrationDryRunSchemaStepNote: 'Schema definitions 和 migration steps 仅为 dry-run preview。它们覆盖 candidate tables、required fields、indexes、status fields、timestamps、sensitive fields、excluded provider secrets、retention、deletion、create schema、validate schema、add index、validate redaction、validate retention、validate audit refs、validate rollback plan 和 verify permission boundary，但不创建真实表，不修改真实 schema，不写 DB，也不执行真实操作。',
+            phase2DbMigrationDryRunValidationRollbackBackfillNote: 'Validation、rollback 和 backfill 仅为 preview。覆盖 required identifiers、timestamps、status fields、excluded provider secret、redaction、retention、deletion policy、audit trace refs、schema mismatch、partial migration、index creation failure、redaction validation failure、retention policy missing、audit sink missing、permission denied 和 rollback unavailable，但不读 DB、不写 DB、不使用真实客户数据、不执行 rollback。',
+            phase2DbMigrationDryRunRedactionAuditPermissionNote: 'Redaction、retention、audit dependency 和 permission boundary 都只是 preview。Provider secret、customer data、review text、generated copy 和 operator note 不会被持久化；provider secret 不读取、不写入 DB，也不允许进入 migration 或 backfill。Future audit sink、trace ID、actor ref、operation ref 和 before/after summary 只展示，不写数据库，也不创建真实 audit event。',
+            phase2DbMigrationDryRunTestQualitySafetyNote: 'Test plan、unlock blockers、quality checks、audit preview 和 safety boundaries 都保持 blocked preview。Unit、contract、schema validation、migration dry-run、rollback dry-run、backfill dry-run、redaction、retention、permission boundary 和 audit preview tests 只列出。Provider、LLM、media、external scraping、database persistence、database read、database write、schema migration、real policy check、platform upload、task creation、real export、file write、secret read、external call、token issue、paid operation 和 real execution 全部保持禁用。'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -12473,6 +12574,7 @@
                 latestProjectWorkspacePhase2ProviderUnlockReviewPack = latestProjectCreativeDecisionPack.workspace_phase2_provider_unlock_review_pack || {};
                 latestProjectWorkspacePhase2ReadinessReviewPack = latestProjectCreativeDecisionPack.workspace_phase2_readiness_review_pack || {};
                 latestProjectWorkspacePhase2RealDbAdapterContractPack = latestProjectCreativeDecisionPack.workspace_phase2_real_db_minimal_adapter_contract_pack || {};
+                latestProjectWorkspacePhase2DbSchemaMigrationDryRunPack = latestProjectCreativeDecisionPack.workspace_phase2_db_schema_migration_dry_run_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -18366,6 +18468,7 @@
         const PROJECT_WORKSPACE_PHASE2_PROVIDER_UNLOCK_REVIEW_MARKER = 'Project Workspace phase2 provider unlock review bundle';
         const PROJECT_WORKSPACE_PHASE2_READINESS_REVIEW_MARKER = 'Project Workspace phase2 readiness review bundle';
         const PROJECT_WORKSPACE_PHASE2_REAL_DB_ADAPTER_CONTRACT_MARKER = 'Project Workspace phase2 real DB adapter contract bundle';
+        const PROJECT_WORKSPACE_PHASE2_DB_SCHEMA_MIGRATION_DRY_RUN_MARKER = 'Project Workspace phase2 DB schema migration dry-run bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -26784,6 +26887,141 @@
         function copyProjectWorkspacePhase2RealDbAdapterUnlockBlockers() { return copyProjectWorkspacePhase2RealDbAdapterContractText('blocker'); }
         function copyProjectWorkspaceFullPhase2RealDbAdapterContractPack() { return copyProjectWorkspacePhase2RealDbAdapterContractText('full'); }
 
+        function projectWorkspacePhase2DbSchemaMigrationDryRunPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspacePhase2DbSchemaMigrationDryRunPack && Object.keys(latestProjectWorkspacePhase2DbSchemaMigrationDryRunPack).length) return latestProjectWorkspacePhase2DbSchemaMigrationDryRunPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_phase2_db_schema_migration_dry_run_pack || {};
+        }
+
+        function projectWorkspacePhase2DbSchemaMigrationDryRunHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspacePhase2DbSchemaMigrationDryRunJsonText(value) {
+            if (!projectWorkspacePhase2DbSchemaMigrationDryRunHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspacePhase2DbSchemaMigrationDryRunDisabledText(value) {
+            return value === false || value == null ? t('phase2DbMigrationDryRunDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportPhase2DbSchemaMigrationDryRunSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspacePhase2DbSchemaMigrationDryRunPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PHASE2_DB_SCHEMA_MIGRATION_DRY_RUN_MARKER,
+                has_workspace_phase2_db_schema_migration_dry_run_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                db_schema_migration_dry_run_summary: pack.db_schema_migration_dry_run_summary || {},
+                migration_plan_preview_cards: Array.isArray(pack.migration_plan_preview_cards) ? pack.migration_plan_preview_cards : [],
+                schema_definition_preview_cards: Array.isArray(pack.schema_definition_preview_cards) ? pack.schema_definition_preview_cards : [],
+                migration_step_dry_run_cards: Array.isArray(pack.migration_step_dry_run_cards) ? pack.migration_step_dry_run_cards : [],
+                schema_validation_rule_cards: Array.isArray(pack.schema_validation_rule_cards) ? pack.schema_validation_rule_cards : [],
+                migration_rollback_preview_cards: Array.isArray(pack.migration_rollback_preview_cards) ? pack.migration_rollback_preview_cards : [],
+                backfill_dry_run_preview_cards: Array.isArray(pack.backfill_dry_run_preview_cards) ? pack.backfill_dry_run_preview_cards : [],
+                redaction_retention_dependency_cards: Array.isArray(pack.redaction_retention_dependency_cards) ? pack.redaction_retention_dependency_cards : [],
+                migration_audit_dependency_cards: Array.isArray(pack.migration_audit_dependency_cards) ? pack.migration_audit_dependency_cards : [],
+                migration_permission_boundary_cards: Array.isArray(pack.migration_permission_boundary_cards) ? pack.migration_permission_boundary_cards : [],
+                migration_test_plan_cards: Array.isArray(pack.migration_test_plan_cards) ? pack.migration_test_plan_cards : [],
+                phase2_db_migration_unlock_blockers: Array.isArray(pack.phase2_db_migration_unlock_blockers) ? pack.phase2_db_migration_unlock_blockers : [],
+                db_migration_quality_checks: pack.db_migration_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspacePhase2DbSchemaMigrationDryRunSummaryText(pack = projectWorkspaceExportPhase2DbSchemaMigrationDryRunSnapshot()) {
+            if (!pack.has_workspace_phase2_db_schema_migration_dry_run_pack) return '';
+            const summary = pack.db_schema_migration_dry_run_summary || {};
+            return [
+                t('phase2DbMigrationDryRunSummaryTitle'),
+                `${t('phase2DbMigrationDryRunMode')}: ${summary.mode || t('none')}`,
+                `${t('phase2DbMigrationDryRunMigrationPlanCount')}: ${summary.migration_plan_preview_count ?? pack.migration_plan_preview_cards.length}`,
+                `${t('phase2DbMigrationDryRunSchemaDefinitionCount')}: ${summary.schema_definition_preview_count ?? pack.schema_definition_preview_cards.length}`,
+                `${t('phase2DbMigrationDryRunStepCount')}: ${summary.migration_step_dry_run_count ?? pack.migration_step_dry_run_cards.length}`,
+                `${t('phase2DbMigrationDryRunValidationRuleCount')}: ${summary.schema_validation_rule_count ?? pack.schema_validation_rule_cards.length}`,
+                `${t('phase2DbMigrationDryRunRollbackCount')}: ${summary.rollback_preview_count ?? pack.migration_rollback_preview_cards.length}`,
+                `${t('phase2DbMigrationDryRunUnlockBlockerCount')}: ${summary.unlock_blocker_count ?? pack.phase2_db_migration_unlock_blockers.length}`,
+                `${t('phase2DbMigrationDryRunRecommendedAction')}: ${summary.recommended_operator_action || summary.risk_note || t('phase2DbMigrationDryRunPreviewNote')}`,
+                `real_migration_file_created: ${projectWorkspacePhase2DbSchemaMigrationDryRunDisabledText(summary.real_migration_file_created)}`,
+                `real_migration_executed: ${projectWorkspacePhase2DbSchemaMigrationDryRunDisabledText(summary.real_migration_executed)}`,
+                `real_database_connection_allowed: ${projectWorkspacePhase2DbSchemaMigrationDryRunDisabledText(summary.real_database_connection_allowed)}`,
+                `real_database_read_allowed: ${projectWorkspacePhase2DbSchemaMigrationDryRunDisabledText(summary.real_database_read_allowed)}`,
+                `real_database_write_allowed: ${projectWorkspacePhase2DbSchemaMigrationDryRunDisabledText(summary.real_database_write_allowed)}`,
+                `real_file_write_allowed: ${projectWorkspacePhase2DbSchemaMigrationDryRunDisabledText(summary.real_file_write_allowed)}`,
+                `secret_read_allowed: ${projectWorkspacePhase2DbSchemaMigrationDryRunDisabledText(summary.secret_read_allowed)}`,
+                `external_call_allowed: ${projectWorkspacePhase2DbSchemaMigrationDryRunDisabledText(summary.external_call_allowed)}`,
+                `real_execution_allowed: ${projectWorkspacePhase2DbSchemaMigrationDryRunDisabledText(summary.real_execution_allowed)}`,
+                t('phase2DbMigrationDryRunPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspacePhase2DbSchemaMigrationDryRunSectionText(titleKey, value) {
+            const body = projectWorkspacePhase2DbSchemaMigrationDryRunJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportPhase2DbSchemaMigrationDryRunMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2DbSchemaMigrationDryRunSnapshot(workspace);
+            if (!pack.has_workspace_phase2_db_schema_migration_dry_run_pack) return '';
+            return [
+                `## ${t('phase2DbMigrationDryRunPackTitle')}`,
+                projectWorkspacePhase2DbSchemaMigrationDryRunSummaryText(pack), '',
+                projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunSummaryTitle', pack.db_schema_migration_dry_run_summary), '',
+                projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunMigrationPlanTitle', pack.migration_plan_preview_cards), '',
+                projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunSchemaDefinitionTitle', pack.schema_definition_preview_cards), '',
+                projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunStepTitle', pack.migration_step_dry_run_cards), '',
+                projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunValidationRuleTitle', pack.schema_validation_rule_cards), '',
+                projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunRollbackTitle', pack.migration_rollback_preview_cards), '',
+                projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunBackfillTitle', pack.backfill_dry_run_preview_cards), '',
+                projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunRedactionRetentionTitle', pack.redaction_retention_dependency_cards), '',
+                projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunAuditDependencyTitle', pack.migration_audit_dependency_cards), '',
+                projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunPermissionTitle', pack.migration_permission_boundary_cards), '',
+                projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunTestPlanTitle', pack.migration_test_plan_cards), '',
+                projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunUnlockBlockerTitle', pack.phase2_db_migration_unlock_blockers), '',
+                projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunQualityTitle', pack.db_migration_quality_checks), '',
+                projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunAuditPreviewTitle', pack.audit_preview), '',
+                projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunSafetyTitle', pack.safety_boundaries),
+                t('phase2DbMigrationDryRunPreviewNote'),
+                t('phase2DbMigrationDryRunSchemaStepNote'),
+                t('phase2DbMigrationDryRunValidationRollbackBackfillNote'),
+                t('phase2DbMigrationDryRunRedactionAuditPermissionNote'),
+                t('phase2DbMigrationDryRunTestQualitySafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspacePhase2DbSchemaMigrationDryRunText(kind = 'full') {
+            const status = document.getElementById('projectWorkspacePhase2DbSchemaMigrationDryRunStatus');
+            const pack = projectWorkspaceExportPhase2DbSchemaMigrationDryRunSnapshot();
+            const text = kind === 'summary' ? projectWorkspacePhase2DbSchemaMigrationDryRunSummaryText(pack)
+                : kind === 'plans' ? projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunMigrationPlanTitle', pack.migration_plan_preview_cards)
+                : kind === 'schemas' ? projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunSchemaDefinitionTitle', pack.schema_definition_preview_cards)
+                : kind === 'steps' ? projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunStepTitle', pack.migration_step_dry_run_cards)
+                : kind === 'validation' ? projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunValidationRuleTitle', pack.schema_validation_rule_cards)
+                : kind === 'rollback' ? projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunRollbackTitle', pack.migration_rollback_preview_cards)
+                : kind === 'backfill' ? projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunBackfillTitle', pack.backfill_dry_run_preview_cards)
+                : kind === 'redaction' ? projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunRedactionRetentionTitle', pack.redaction_retention_dependency_cards)
+                : kind === 'permission' ? projectWorkspacePhase2DbSchemaMigrationDryRunSectionText('phase2DbMigrationDryRunPermissionTitle', pack.migration_permission_boundary_cards)
+                : projectWorkspaceExportPhase2DbSchemaMigrationDryRunMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('phase2DbMigrationDryRunCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('phase2DbMigrationDryRunCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('phase2DbMigrationDryRunCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('phase2DbMigrationDryRunCopyFailed'); }
+        }
+
+        function copyProjectWorkspacePhase2DbSchemaMigrationDryRunSummary() { return copyProjectWorkspacePhase2DbSchemaMigrationDryRunText('summary'); }
+        function copyProjectWorkspaceMigrationPlanPreviewCards() { return copyProjectWorkspacePhase2DbSchemaMigrationDryRunText('plans'); }
+        function copyProjectWorkspaceSchemaDefinitionPreviewCards() { return copyProjectWorkspacePhase2DbSchemaMigrationDryRunText('schemas'); }
+        function copyProjectWorkspaceMigrationStepDryRunCards() { return copyProjectWorkspacePhase2DbSchemaMigrationDryRunText('steps'); }
+        function copyProjectWorkspaceSchemaValidationRuleCards() { return copyProjectWorkspacePhase2DbSchemaMigrationDryRunText('validation'); }
+        function copyProjectWorkspaceMigrationRollbackPreviewCards() { return copyProjectWorkspacePhase2DbSchemaMigrationDryRunText('rollback'); }
+        function copyProjectWorkspaceBackfillDryRunPreviewCards() { return copyProjectWorkspacePhase2DbSchemaMigrationDryRunText('backfill'); }
+        function copyProjectWorkspaceRedactionRetentionDependencyCards() { return copyProjectWorkspacePhase2DbSchemaMigrationDryRunText('redaction'); }
+        function copyProjectWorkspaceMigrationPermissionBoundaryCards() { return copyProjectWorkspacePhase2DbSchemaMigrationDryRunText('permission'); }
+        function copyProjectWorkspaceFullPhase2DbSchemaMigrationDryRunPack() { return copyProjectWorkspacePhase2DbSchemaMigrationDryRunText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -31602,6 +31840,46 @@
             return `<div class="section-block" id="projectWorkspacePhase2RealDbAdapterMigrationTestQualitySafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2RealDbAdapterMigrationTestQualitySafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2RealDbAdapterMigrationTestSafetyNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDbMigrationDependencyCards()">${escapeHTML(t('phase2RealDbAdapterCopyMigration'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceDbAdapterTestPlanCards()">${escapeHTML(t('phase2RealDbAdapterCopyTestPlan'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2RealDbAdapterUnlockBlockers()">${escapeHTML(t('phase2RealDbAdapterCopyBlockers'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterMigrationDependencyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(migration || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">schema migration / rollback plan / backfill plan / retention policy / deletion policy / audit sink / monitoring all not implemented</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterTestPlanTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(tests || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">unit / contract / mock invocation / schema mapping / redaction / retention / permission boundary / error taxonomy / audit preview / migration dry-run tests</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterUnlockBlockerTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">no real DB connection config / no schema migration / no migration dry-run / no rollback implementation / no retention policy / no deletion policy / no redaction enforcement / no real audit sink / no production approval / no monitoring</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">adapter interface / schema mapping / operation boundary / mock invocation / error taxonomy / audit trace / permission boundary / redaction retention / migration dependency / test plan / unlock blockers / safety boundary</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2RealDbAdapterAuditPreviewTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2RealDbAdapterNoData'))}</pre><div class="field-helper">audit preview only; no database write / no real audit event / no file write</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2RealDbAdapterSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / database_read disabled / database_write disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled / paid_operation disabled</div><div class="field-helper">${escapeHTML(t('phase2RealDbAdapterMigrationTestSafetyNote'))}</div></div>`;
         }
 
+        function renderProjectWorkspacePhase2DbSchemaMigrationDryRunSummaryPlanPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2DbSchemaMigrationDryRunSnapshot(workspace); if (!pack.has_workspace_phase2_db_schema_migration_dry_run_pack) return '';
+            const summary = pack.db_schema_migration_dry_run_summary || {};
+            const plans = pack.migration_plan_preview_cards.map((card) => `<div class="graph-os-card"><strong>${escapeHTML(card.migration_label || card.migration_plan_id || t('none'))}</strong><div class="field-helper">migration_plan_id: ${escapeHTML(card.migration_plan_id || '')} / migration_group: ${escapeHTML(card.migration_group || '')}</div><div><strong>migration_scope:</strong> ${escapeHTML(card.migration_scope || '')}</div><div class="field-helper">candidate_tables_or_collections: ${escapeHTML((card.candidate_tables_or_collections || []).join(', ') || t('none'))}</div><div class="field-helper">required_schema_changes: ${escapeHTML((card.required_schema_changes || []).join(' | ') || t('none'))}</div><div class="field-helper">required_pre_migration_checks: ${escapeHTML((card.required_pre_migration_checks || []).join(' | ') || t('none'))}</div><div class="field-helper">required_post_migration_checks: ${escapeHTML((card.required_post_migration_checks || []).join(' | ') || t('none'))}</div><div class="field-helper">dry_run_status: ${escapeHTML(card.dry_run_status || '')}</div><div class="field-helper">real_migration_file_created: ${escapeHTML(projectWorkspacePhase2DbSchemaMigrationDryRunDisabledText(card.real_migration_file_created))} / real_migration_executed: ${escapeHTML(projectWorkspacePhase2DbSchemaMigrationDryRunDisabledText(card.real_migration_executed))} / real_database_connection_allowed: ${escapeHTML(projectWorkspacePhase2DbSchemaMigrationDryRunDisabledText(card.real_database_connection_allowed))} / real_database_write_allowed: ${escapeHTML(projectWorkspacePhase2DbSchemaMigrationDryRunDisabledText(card.real_database_write_allowed))} / real_execution_allowed: ${escapeHTML(projectWorkspacePhase2DbSchemaMigrationDryRunDisabledText(card.real_execution_allowed))}</div></div>`).join('');
+            return `<div class="section-block" id="projectWorkspacePhase2DbSchemaMigrationDryRunSummaryPlanPanel" data-marker="project_workspace_phase2_db_schema_migration_dry_run_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2DbMigrationDryRunPackTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2DbMigrationDryRunSummaryPlanTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2DbMigrationDryRunPackHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2DbSchemaMigrationDryRunSummary()">${escapeHTML(t('phase2DbMigrationDryRunCopySummary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMigrationPlanPreviewCards()">${escapeHTML(t('phase2DbMigrationDryRunCopyPlans'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2DbSchemaMigrationDryRunPack()">${escapeHTML(t('phase2DbMigrationDryRunCopyFull'))}</button></div></div><div class="metric-strip">${metricPill(t('phase2DbMigrationDryRunMode'), summary.mode || t('none'))}${metricPill(t('phase2DbMigrationDryRunMigrationPlanCount'), String(summary.migration_plan_preview_count ?? pack.migration_plan_preview_cards.length))}${metricPill(t('phase2DbMigrationDryRunSchemaDefinitionCount'), String(summary.schema_definition_preview_count ?? pack.schema_definition_preview_cards.length))}${metricPill(t('phase2DbMigrationDryRunStepCount'), String(summary.migration_step_dry_run_count ?? pack.migration_step_dry_run_cards.length))}${metricPill(t('phase2DbMigrationDryRunValidationRuleCount'), String(summary.schema_validation_rule_count ?? pack.schema_validation_rule_cards.length))}${metricPill(t('phase2DbMigrationDryRunRollbackCount'), String(summary.rollback_preview_count ?? pack.migration_rollback_preview_cards.length))}${metricPill(t('phase2DbMigrationDryRunUnlockBlockerCount'), String(summary.unlock_blocker_count ?? pack.phase2_db_migration_unlock_blockers.length))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspacePhase2DbSchemaMigrationDryRunSummaryText(pack) || t('phase2DbMigrationDryRunNoData'))}</pre><div class="graph-os-compact-grid">${plans || `<div class="empty-state">${escapeHTML(t('phase2DbMigrationDryRunNoData'))}</div>`}</div><div class="field-helper">workspace_session_schema_migration / review_import_snapshot_schema_migration / evidence_quality_snapshot_schema_migration / claim_risk_snapshot_schema_migration / final_export_packet_schema_migration / campaign_dossier_schema_migration / audit_event_schema_migration / operator_decision_schema_migration</div><div class="demo-warning">${escapeHTML(t('phase2DbMigrationDryRunPreviewNote'))}</div><div id="projectWorkspacePhase2DbSchemaMigrationDryRunStatus" class="field-helper" aria-live="polite"></div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2DbSchemaMigrationDryRunSchemaStepPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2DbSchemaMigrationDryRunSnapshot(workspace); if (!pack.has_workspace_phase2_db_schema_migration_dry_run_pack) return '';
+            const schemas = projectWorkspacePhase2DbSchemaMigrationDryRunJsonText(pack.schema_definition_preview_cards);
+            const steps = projectWorkspacePhase2DbSchemaMigrationDryRunJsonText(pack.migration_step_dry_run_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2DbSchemaMigrationDryRunSchemaStepPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2DbMigrationDryRunSchemaStepTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2DbMigrationDryRunSchemaStepNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSchemaDefinitionPreviewCards()">${escapeHTML(t('phase2DbMigrationDryRunCopySchemas'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMigrationStepDryRunCards()">${escapeHTML(t('phase2DbMigrationDryRunCopySteps'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2DbMigrationDryRunSchemaDefinitionTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(schemas || t('phase2DbMigrationDryRunNoData'))}</pre><div class="field-helper">schema_definition_id / schema_label / schema_group / candidate_table_or_collection / candidate_primary_key / required_columns_or_fields / required_index_fields / required_status_fields / required_timestamp_fields / sensitive_fields / excluded_fields / retention_requirement / deletion_requirement / migration_required / real_database_write_allowed=false</div><div class="field-helper">workspace_sessions / review_import_snapshots / evidence_quality_snapshots / claim_risk_snapshots / final_export_packets / campaign_dossiers / audit_events / operator_decisions</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DbMigrationDryRunStepTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(steps || t('phase2DbMigrationDryRunNoData'))}</pre><div class="field-helper">migration_step_id / step_label / step_group / simulated_step / expected_dry_run_output / required_input_refs / required_validation_refs / failure_mode_preview / operator_action_preview / creates_real_table=false / modifies_real_schema=false / writes_real_database=false / real_execution_allowed=false</div><div class="field-helper">create schema / validate schema / add index / validate redaction / validate retention / validate audit refs / validate rollback plan / verify permission boundary</div></div></div><div class="demo-warning">${escapeHTML(t('phase2DbMigrationDryRunSchemaStepNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2DbSchemaMigrationDryRunValidationRollbackBackfillPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2DbSchemaMigrationDryRunSnapshot(workspace); if (!pack.has_workspace_phase2_db_schema_migration_dry_run_pack) return '';
+            const validation = projectWorkspacePhase2DbSchemaMigrationDryRunJsonText(pack.schema_validation_rule_cards);
+            const rollback = projectWorkspacePhase2DbSchemaMigrationDryRunJsonText(pack.migration_rollback_preview_cards);
+            const backfill = projectWorkspacePhase2DbSchemaMigrationDryRunJsonText(pack.backfill_dry_run_preview_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2DbSchemaMigrationDryRunValidationRollbackBackfillPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2DbMigrationDryRunValidationRollbackBackfillTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2DbMigrationDryRunValidationRollbackBackfillNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSchemaValidationRuleCards()">${escapeHTML(t('phase2DbMigrationDryRunCopyValidation'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMigrationRollbackPreviewCards()">${escapeHTML(t('phase2DbMigrationDryRunCopyRollback'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceBackfillDryRunPreviewCards()">${escapeHTML(t('phase2DbMigrationDryRunCopyBackfill'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2DbMigrationDryRunValidationRuleTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(validation || t('phase2DbMigrationDryRunNoData'))}</pre><div class="field-helper">validation_rule_id / validation_label / validation_group / target_schema_ref / validation_type / required_fields / forbidden_fields / sensitive_field_controls / expected_validation_status / blocks_real_migration / real_database_read_allowed=false / real_database_write_allowed=false</div><div class="field-helper">required identifiers / timestamps / status fields / excluded provider secret / redaction required / retention required / deletion policy required / audit trace refs</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DbMigrationDryRunRollbackTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(rollback || t('phase2DbMigrationDryRunNoData'))}</pre><div class="field-helper">rollback_preview_id / rollback_label / rollback_group / simulated_failure_type / expected_rollback_action_preview / required_backup_or_snapshot_refs / operator_review_required / requires_real_rollback=false / real_database_write_allowed=false / real_execution_allowed=false</div><div class="field-helper">schema mismatch / partial migration / index creation failure / redaction validation failure / retention policy missing / audit sink missing / permission denied / rollback unavailable</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DbMigrationDryRunBackfillTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(backfill || t('phase2DbMigrationDryRunNoData'))}</pre><div class="field-helper">backfill shape preview only / reads_real_database=false / writes_real_database=false / uses_real_customer_data=false / no real customer data</div></div></div><div class="demo-warning">${escapeHTML(t('phase2DbMigrationDryRunValidationRollbackBackfillNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2DbSchemaMigrationDryRunRedactionAuditPermissionPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2DbSchemaMigrationDryRunSnapshot(workspace); if (!pack.has_workspace_phase2_db_schema_migration_dry_run_pack) return '';
+            const redaction = projectWorkspacePhase2DbSchemaMigrationDryRunJsonText(pack.redaction_retention_dependency_cards);
+            const audit = projectWorkspacePhase2DbSchemaMigrationDryRunJsonText(pack.migration_audit_dependency_cards);
+            const permissions = projectWorkspacePhase2DbSchemaMigrationDryRunJsonText(pack.migration_permission_boundary_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2DbSchemaMigrationDryRunRedactionAuditPermissionPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2DbMigrationDryRunRedactionAuditPermissionTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2DbMigrationDryRunRedactionAuditPermissionNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceRedactionRetentionDependencyCards()">${escapeHTML(t('phase2DbMigrationDryRunCopyRedaction'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceMigrationPermissionBoundaryCards()">${escapeHTML(t('phase2DbMigrationDryRunCopyPermission'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2DbMigrationDryRunRedactionRetentionTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(redaction || t('phase2DbMigrationDryRunNoData'))}</pre><div class="field-helper">provider secret / customer data / review text / generated copy / operator note; provider secret cannot be read, cannot be written to DB, and cannot enter migration or backfill.</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DbMigrationDryRunAuditDependencyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2DbMigrationDryRunNoData'))}</pre><div class="field-helper">future audit sink / trace id / actor ref / operation ref / before-after summary / no database write / no real audit event</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DbMigrationDryRunPermissionTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(permissions || t('phase2DbMigrationDryRunNoData'))}</pre><div class="field-helper">database_persistence / database_read / database_write / schema_migration / file_write / secret_read / external_call / real_execution disabled</div></div></div><div class="demo-warning">${escapeHTML(t('phase2DbMigrationDryRunRedactionAuditPermissionNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2DbSchemaMigrationDryRunTestQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2DbSchemaMigrationDryRunSnapshot(workspace); if (!pack.has_workspace_phase2_db_schema_migration_dry_run_pack) return '';
+            const tests = projectWorkspacePhase2DbSchemaMigrationDryRunJsonText(pack.migration_test_plan_cards);
+            const blockers = projectWorkspacePhase2DbSchemaMigrationDryRunJsonText(pack.phase2_db_migration_unlock_blockers);
+            const quality = projectWorkspacePhase2DbSchemaMigrationDryRunJsonText(pack.db_migration_quality_checks);
+            const audit = projectWorkspacePhase2DbSchemaMigrationDryRunJsonText(pack.audit_preview);
+            const safety = projectWorkspacePhase2DbSchemaMigrationDryRunJsonText(pack.safety_boundaries);
+            return `<div class="section-block" id="projectWorkspacePhase2DbSchemaMigrationDryRunTestQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2DbMigrationDryRunTestQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2DbMigrationDryRunTestQualitySafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2DbSchemaMigrationDryRunPack()">${escapeHTML(t('phase2DbMigrationDryRunCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2DbMigrationDryRunTestPlanTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(tests || t('phase2DbMigrationDryRunNoData'))}</pre><div class="field-helper">unit tests / contract tests / schema validation tests / migration dry-run tests / rollback dry-run tests / backfill dry-run tests / redaction tests / retention tests / permission boundary tests / audit preview tests</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DbMigrationDryRunUnlockBlockerTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2DbMigrationDryRunNoData'))}</pre><div class="field-helper">no real DB connection config / no migration file generated / no migration dry-run executed against sandbox / no rollback implementation / no backup strategy / no retention policy enforcement / no deletion policy enforcement / no redaction enforcement / no real audit sink / no production approval</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DbMigrationDryRunQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2DbMigrationDryRunNoData'))}</pre><div class="field-helper">migration plan / schema definition / dry-run steps / schema validation / rollback preview / backfill preview / redaction retention dependency / audit dependency / permission boundary / test plan / unlock blockers / safety boundary</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2DbMigrationDryRunAuditPreviewTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2DbMigrationDryRunNoData'))}</pre><div class="field-helper">audit preview only; no database write / no real log read / no real audit event</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2DbMigrationDryRunSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / database_read disabled / database_write disabled / schema_migration disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled / paid_operation disabled</div><div class="field-helper">${escapeHTML(t('phase2DbMigrationDryRunTestQualitySafetyNote'))}</div></div>`;
+        }
+
         function renderProjectWorkspaceCreativeRecommendedActionPanel(workspace = latestProjectWorkspace) {
             const runtime = projectWorkspaceCreativeFeedbackRuntime(workspace);
             const summary = runtime.feedback_summary || {};
@@ -32076,6 +32354,8 @@
                 '',
                 projectWorkspaceExportPhase2RealDbAdapterContractMarkdown(workspace),
                 '',
+                projectWorkspaceExportPhase2DbSchemaMigrationDryRunMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -32214,6 +32494,7 @@
                 workspace_phase2_provider_unlock_review_pack: projectWorkspaceExportPhase2ProviderUnlockReviewSnapshot(workspace),
                 workspace_phase2_readiness_review_pack: projectWorkspaceExportPhase2ReadinessReviewSnapshot(workspace),
                 workspace_phase2_real_db_minimal_adapter_contract_pack: projectWorkspaceExportPhase2RealDbAdapterContractSnapshot(workspace),
+                workspace_phase2_db_schema_migration_dry_run_pack: projectWorkspaceExportPhase2DbSchemaMigrationDryRunSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -44895,6 +45176,11 @@
                     ${renderProjectWorkspacePhase2RealDbAdapterBoundaryMockErrorPanel(workspace)}
                     ${renderProjectWorkspacePhase2RealDbAdapterAuditPermissionRedactionPanel(workspace)}
                     ${renderProjectWorkspacePhase2RealDbAdapterMigrationTestQualitySafetyPanel(workspace)}
+                    ${renderProjectWorkspacePhase2DbSchemaMigrationDryRunSummaryPlanPanel(workspace)}
+                    ${renderProjectWorkspacePhase2DbSchemaMigrationDryRunSchemaStepPanel(workspace)}
+                    ${renderProjectWorkspacePhase2DbSchemaMigrationDryRunValidationRollbackBackfillPanel(workspace)}
+                    ${renderProjectWorkspacePhase2DbSchemaMigrationDryRunRedactionAuditPermissionPanel(workspace)}
+                    ${renderProjectWorkspacePhase2DbSchemaMigrationDryRunTestQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
