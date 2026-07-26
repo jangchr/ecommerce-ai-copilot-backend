@@ -13168,6 +13168,240 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_phase2_audit_sink_contract_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace phase2 audit sink contract bundle",
+            "PROJECT_WORKSPACE_PHASE2_AUDIT_SINK_CONTRACT_MARKER",
+            "latestProjectWorkspacePhase2AuditSinkContractPack",
+            "workspace_phase2_audit_sink_contract_pack: projectWorkspaceExportPhase2AuditSinkContractSnapshot(workspace)",
+            "projectWorkspaceExportPhase2AuditSinkContractMarkdown(workspace)",
+            "project_workspace_phase2_audit_sink_contract_marker",
+            "projectWorkspaceExportPhase2AuditSinkContractSnapshot",
+            "projectWorkspaceExportPhase2AuditSinkContractMarkdown",
+            "renderProjectWorkspacePhase2AuditSinkContractSummaryEventPanel",
+            "renderProjectWorkspacePhase2AuditSinkContractTraceBoundaryPanel",
+            "renderProjectWorkspacePhase2AuditSinkContractStorageRedactionMockPanel",
+            "renderProjectWorkspacePhase2AuditSinkContractQueryFailureMonitoringPanel",
+            "renderProjectWorkspacePhase2AuditSinkContractTestQualityAuditSafetyPanel",
+            "copyProjectWorkspacePhase2AuditSinkContractSummary",
+            "copyProjectWorkspaceAuditEventSchemaContractCards",
+            "copyProjectWorkspaceAuditTraceIdentityCards",
+            "copyProjectWorkspaceAuditSinkAdapterBoundaryCards",
+            "copyProjectWorkspaceAuditStorageRetentionCards",
+            "copyProjectWorkspaceAuditRedactionPrivacyCards",
+            "copyProjectWorkspaceAuditMockWriteContractCards",
+            "copyProjectWorkspaceAuditQueryAccessBoundaryCards",
+            "copyProjectWorkspaceAuditFailureRecoveryCards",
+            "copyProjectWorkspaceFullPhase2AuditSinkContractPack",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for title in [
+            "Audit Sink Contract Preview",
+            "Audit Sink Contract Summary",
+            "Audit Event Schema Contract Cards",
+            "Audit Trace Identity Cards",
+            "Audit Sink Adapter Boundary Cards",
+            "Audit Storage Retention Cards",
+            "Audit Redaction Privacy Cards",
+            "Audit Mock Write Contract Cards",
+            "Audit Query Access Boundary Cards",
+            "Audit Failure Recovery Cards",
+            "Audit Monitoring Alert Preview Cards",
+            "Audit Test Plan Cards",
+            "Phase 2 Audit Sink Unlock Blockers",
+            "Audit Sink Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(title=title):
+                self.assertIn(title, html)
+        for field in [
+            "pack.audit_sink_contract_summary",
+            "pack.audit_event_schema_contract_cards",
+            "pack.audit_trace_identity_cards",
+            "pack.audit_sink_adapter_boundary_cards",
+            "pack.audit_storage_retention_cards",
+            "pack.audit_redaction_privacy_cards",
+            "pack.audit_mock_write_contract_cards",
+            "pack.audit_query_access_boundary_cards",
+            "pack.audit_failure_recovery_cards",
+            "pack.audit_monitoring_alert_preview_cards",
+            "pack.audit_test_plan_cards",
+            "pack.phase2_audit_sink_unlock_blockers",
+            "pack.audit_sink_quality_checks",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.audit_event_schema_contract_count",
+            "summary.audit_trace_identity_count",
+            "summary.audit_sink_adapter_boundary_count",
+            "summary.audit_storage_retention_count",
+            "summary.audit_mock_write_contract_count",
+            "summary.unlock_blocker_count",
+            "summary.real_audit_sink_connection_allowed",
+            "summary.real_audit_event_created",
+            "summary.real_database_write_allowed",
+            "summary.real_file_write_allowed",
+            "summary.secret_read_allowed",
+            "summary.external_call_allowed",
+            "summary.real_execution_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for coverage in [
+            "workspace_snapshot_audit_event", "db_adapter_audit_event",
+            "migration_dry_run_audit_event", "llm_prompt_gate_audit_event",
+            "provider_unlock_review_audit_event", "approval_decision_audit_event",
+            "permission_boundary_audit_event", "export_readiness_audit_event",
+            "rollback_preview_audit_event", "operator_review_audit_event",
+            "audit_event_schema_id", "required_event_fields",
+            "required_trace_fields", "required_actor_fields",
+            "required_operation_fields", "required_status_fields",
+            "forbidden_event_fields", "trace_id", "run_id",
+            "snapshot_id", "campaign_id", "operator_ref",
+            "source_pack_ref", "decision_ref", "correlation_id",
+            "connect audit sink", "insert event", "stream logs",
+            "export logs", "read secret", "external log call",
+            "event schema preview", "mock write contract",
+            "retention discussion", "query access boundary",
+            "audit_events", "operator_decisions",
+            "provider_invocation_audits", "db_operation_audits",
+            "migration_dry_run_audits", "approval_audits",
+            "provider secret", "customer data", "review text",
+            "generated copy", "operator note", "raw prompt",
+            "provider response preview", "event validation", "mock write",
+            "mock query", "mock failure handling",
+            "actor role / scope / filter", "audit sink missing",
+            "schema invalid", "trace id missing", "redaction failed",
+            "retention policy missing", "permission denied",
+            "external sink unavailable", "partial audit write",
+            "duplicate audit event", "monitoring unavailable",
+            "future alert type", "severity", "trigger condition",
+            "operator action", "escalation preview", "unit tests",
+            "contract tests", "schema validation tests", "mock write tests",
+            "mock query tests", "redaction tests", "retention tests",
+            "permission boundary tests", "failure recovery tests",
+            "monitoring preview tests", "no real audit sink config",
+            "no audit database table", "no audit event schema migration",
+            "no audit retention policy enforcement",
+            "no audit deletion policy enforcement",
+            "no audit redaction enforcement",
+            "no audit query access control",
+            "no monitoring alert integration", "no production approval",
+            "no external sink approval",
+            "event schema / trace identity / sink adapter boundary / storage retention / redaction privacy / mock write / query access boundary / failure recovery / monitoring alert preview / test plan / unlock blockers / safety boundary",
+        ]:
+            with self.subTest(coverage=coverage):
+                self.assertIn(coverage, html)
+        previous = html.index("${renderProjectWorkspacePhase2DbSchemaMigrationDryRunTestQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspacePhase2AuditSinkContractSummaryEventPanel(workspace)}")
+        safety = html.index("${renderProjectWorkspacePhase2AuditSinkContractTestQualityAuditSafetyPanel(workspace)}")
+        creative = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, creative)
+        for panel_id in [
+            'id="projectWorkspacePhase2AuditSinkContractSummaryEventPanel"',
+            'id="projectWorkspacePhase2AuditSinkContractTraceBoundaryPanel"',
+            'id="projectWorkspacePhase2AuditSinkContractStorageRedactionMockPanel"',
+            'id="projectWorkspacePhase2AuditSinkContractQueryFailureMonitoringPanel"',
+            'id="projectWorkspacePhase2AuditSinkContractTestQualityAuditSafetyPanel"',
+        ]:
+            with self.subTest(panel_id=panel_id):
+                self.assertEqual(html.count(panel_id), 1)
+
+    def test_workspace_phase2_audit_sink_contract_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "phase2AuditSinkContractPackTitle",
+            "phase2AuditSinkContractPackHelper",
+            "phase2AuditSinkContractSummaryTitle",
+            "phase2AuditSinkContractEventSchemaTitle",
+            "phase2AuditSinkContractTraceIdentityTitle",
+            "phase2AuditSinkContractAdapterBoundaryTitle",
+            "phase2AuditSinkContractStorageRetentionTitle",
+            "phase2AuditSinkContractRedactionPrivacyTitle",
+            "phase2AuditSinkContractMockWriteTitle",
+            "phase2AuditSinkContractQueryAccessTitle",
+            "phase2AuditSinkContractFailureRecoveryTitle",
+            "phase2AuditSinkContractMonitoringAlertTitle",
+            "phase2AuditSinkContractTestPlanTitle",
+            "phase2AuditSinkContractUnlockBlockerTitle",
+            "phase2AuditSinkContractQualityTitle",
+            "phase2AuditSinkContractAuditPreviewTitle",
+            "phase2AuditSinkContractSafetyTitle",
+            "phase2AuditSinkContractCopySummary",
+            "phase2AuditSinkContractCopyEvents",
+            "phase2AuditSinkContractCopyTrace",
+            "phase2AuditSinkContractCopyBoundary",
+            "phase2AuditSinkContractCopyRetention",
+            "phase2AuditSinkContractCopyRedaction",
+            "phase2AuditSinkContractCopyMock",
+            "phase2AuditSinkContractCopyQuery",
+            "phase2AuditSinkContractCopyFailure",
+            "phase2AuditSinkContractCopyFull",
+            "phase2AuditSinkContractCopied",
+            "phase2AuditSinkContractCopyFailed",
+            "phase2AuditSinkContractCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace phase2 audit sink contract bundle", script)
+            self.assertIn("project_workspace_phase2_audit_sink_contract_marker", script)
+        markdown = html[
+            html.index("function projectWorkspacePhase2AuditSinkContractSummaryText"):
+            html.index("async function copyProjectWorkspacePhase2AuditSinkContractText")
+        ]
+        for key in [
+            "phase2AuditSinkContractPackTitle",
+            "phase2AuditSinkContractSummaryTitle",
+            "phase2AuditSinkContractEventSchemaTitle",
+            "phase2AuditSinkContractTraceIdentityTitle",
+            "phase2AuditSinkContractAdapterBoundaryTitle",
+            "phase2AuditSinkContractStorageRetentionTitle",
+            "phase2AuditSinkContractRedactionPrivacyTitle",
+            "phase2AuditSinkContractMockWriteTitle",
+            "phase2AuditSinkContractQueryAccessTitle",
+            "phase2AuditSinkContractFailureRecoveryTitle",
+            "phase2AuditSinkContractMonitoringAlertTitle",
+            "phase2AuditSinkContractTestPlanTitle",
+            "phase2AuditSinkContractUnlockBlockerTitle",
+            "phase2AuditSinkContractQualityTitle",
+            "phase2AuditSinkContractAuditPreviewTitle",
+            "phase2AuditSinkContractSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PHASE2_AUDIT_SINK_CONTRACT_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic audit event contract preview only",
+            "creates no real audit sink",
+            "creates no real audit event",
+            "reads no real logs",
+            "writes no database",
+            "writes no files",
+            "connects to no external observability provider",
+            "reads no secret",
+            "sends no external request",
+            "creates no real alert",
+            "sends no notification",
+            "query DB",
+            "provider secret cannot enter audit event",
+            "cannot be persisted",
+            "audit_sink disabled / audit_event_write disabled / audit_log_read disabled",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_provider_cost_quota_risk_guard_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [

@@ -3658,6 +3658,7 @@
         let latestProjectWorkspacePhase2ReadinessReviewPack = {};
         let latestProjectWorkspacePhase2RealDbAdapterContractPack = {};
         let latestProjectWorkspacePhase2DbSchemaMigrationDryRunPack = {};
+        let latestProjectWorkspacePhase2AuditSinkContractPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7764,7 +7765,57 @@
             phase2DbMigrationDryRunSchemaStepNote: 'Schema definitions and migration steps are dry-run previews only. They cover candidate tables, required fields, indexes, status fields, timestamps, sensitive fields, excluded provider secrets, retention, deletion, create schema, validate schema, add index, validate redaction, validate retention, validate audit refs, validate rollback plan, and verify permission boundary without creating real tables, modifying real schema, writing DB, or running real execution.',
             phase2DbMigrationDryRunValidationRollbackBackfillNote: 'Validation, rollback, and backfill are previews only. They cover required identifiers, timestamps, status fields, excluded provider secret, redaction, retention, deletion policy, audit trace refs, schema mismatch, partial migration, index creation failure, redaction validation failure, retention policy missing, audit sink missing, permission denied, and rollback unavailable without reading DB, writing DB, using real customer data, or executing rollback.',
             phase2DbMigrationDryRunRedactionAuditPermissionNote: 'Redaction, retention, audit dependency, and permission boundary are previews only. Provider secret, customer data, review text, generated copy, and operator note are not persisted; provider secrets are not read, not written to DB, and not allowed into migration or backfill. Future audit sink, trace ID, actor ref, operation ref, and before/after summary are displayed without database writes or real audit events.',
-            phase2DbMigrationDryRunTestQualitySafetyNote: 'Test plan, unlock blockers, quality checks, audit preview, and safety boundaries remain blocked previews. Unit, contract, schema validation, migration dry-run, rollback dry-run, backfill dry-run, redaction, retention, permission boundary, and audit preview tests are listed only. Provider, LLM, media, external scraping, database persistence, database read, database write, schema migration, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, paid operation, and real execution remain disabled.'
+            phase2DbMigrationDryRunTestQualitySafetyNote: 'Test plan, unlock blockers, quality checks, audit preview, and safety boundaries remain blocked previews. Unit, contract, schema validation, migration dry-run, rollback dry-run, backfill dry-run, redaction, retention, permission boundary, and audit preview tests are listed only. Provider, LLM, media, external scraping, database persistence, database read, database write, schema migration, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, paid operation, and real execution remain disabled.',
+            phase2AuditSinkContractPackTitle: 'Audit Sink Contract Preview',
+            phase2AuditSinkContractPackHelper: 'Project Workspace phase2 audit sink contract bundle. Deterministic audit event contract preview only; it creates no real audit sink, creates no real audit event, reads no real logs, writes no database or file, connects to no external observability provider, reads no secret, sends no external request, creates no real alert, and sends no notification.',
+            phase2AuditSinkContractSummaryEventTitle: 'Audit Sink Contract Summary / Event Schema Contracts',
+            phase2AuditSinkContractSummaryTitle: 'Audit Sink Contract Summary',
+            phase2AuditSinkContractEventSchemaTitle: 'Audit Event Schema Contract Cards',
+            phase2AuditSinkContractTraceBoundaryTitle: 'Trace Identity / Sink Adapter Boundary',
+            phase2AuditSinkContractTraceIdentityTitle: 'Audit Trace Identity Cards',
+            phase2AuditSinkContractAdapterBoundaryTitle: 'Audit Sink Adapter Boundary Cards',
+            phase2AuditSinkContractStorageRedactionMockTitle: 'Storage Retention / Redaction Privacy / Mock Write',
+            phase2AuditSinkContractStorageRetentionTitle: 'Audit Storage Retention Cards',
+            phase2AuditSinkContractRedactionPrivacyTitle: 'Audit Redaction Privacy Cards',
+            phase2AuditSinkContractMockWriteTitle: 'Audit Mock Write Contract Cards',
+            phase2AuditSinkContractQueryFailureMonitoringTitle: 'Query Access Boundary / Failure Recovery / Monitoring Alert Preview',
+            phase2AuditSinkContractQueryAccessTitle: 'Audit Query Access Boundary Cards',
+            phase2AuditSinkContractFailureRecoveryTitle: 'Audit Failure Recovery Cards',
+            phase2AuditSinkContractMonitoringAlertTitle: 'Audit Monitoring Alert Preview Cards',
+            phase2AuditSinkContractTestQualityAuditSafetyTitle: 'Audit Test Plan / Unlock Blockers / Quality / Audit / Safety',
+            phase2AuditSinkContractTestPlanTitle: 'Audit Test Plan Cards',
+            phase2AuditSinkContractUnlockBlockerTitle: 'Phase 2 Audit Sink Unlock Blockers',
+            phase2AuditSinkContractQualityTitle: 'Audit Sink Quality Checks',
+            phase2AuditSinkContractAuditPreviewTitle: 'Audit Preview',
+            phase2AuditSinkContractSafetyTitle: 'Safety Boundaries',
+            phase2AuditSinkContractMode: 'Mode',
+            phase2AuditSinkContractEventSchemaCount: 'Audit event schema count',
+            phase2AuditSinkContractTraceIdentityCount: 'Trace identity count',
+            phase2AuditSinkContractBoundaryCount: 'Sink adapter boundary count',
+            phase2AuditSinkContractRetentionCount: 'Storage retention count',
+            phase2AuditSinkContractMockWriteCount: 'Mock write count',
+            phase2AuditSinkContractUnlockBlockerCount: 'Unlock blocker count',
+            phase2AuditSinkContractRecommendedAction: 'Recommended operator action',
+            phase2AuditSinkContractDisabled: 'disabled',
+            phase2AuditSinkContractNoData: 'No audit sink contract preview data is available.',
+            phase2AuditSinkContractCopyNoData: 'No audit sink contract preview content is available to copy.',
+            phase2AuditSinkContractCopyFailed: 'Unable to copy audit sink contract preview content.',
+            phase2AuditSinkContractCopied: 'Audit sink contract preview content copied.',
+            phase2AuditSinkContractCopySummary: 'Copy audit sink contract summary',
+            phase2AuditSinkContractCopyEvents: 'Copy audit event schema contract cards',
+            phase2AuditSinkContractCopyTrace: 'Copy audit trace identity cards',
+            phase2AuditSinkContractCopyBoundary: 'Copy audit sink adapter boundary cards',
+            phase2AuditSinkContractCopyRetention: 'Copy audit storage retention cards',
+            phase2AuditSinkContractCopyRedaction: 'Copy audit redaction privacy cards',
+            phase2AuditSinkContractCopyMock: 'Copy audit mock write contract cards',
+            phase2AuditSinkContractCopyQuery: 'Copy audit query access boundary cards',
+            phase2AuditSinkContractCopyFailure: 'Copy audit failure recovery cards',
+            phase2AuditSinkContractCopyFull: 'Copy full audit sink contract pack',
+            phase2AuditSinkContractPreviewNote: 'Deterministic audit event contract preview only. It does not create a real audit sink, create real audit events, read real logs, write databases, write files, connect to external observability providers, read secrets, send external requests, create real alerts, send notifications, connect to DB, execute migrations, call providers, call LLMs, export files, upload files, perform paid operations, or represent production readiness.',
+            phase2AuditSinkContractTraceBoundaryNote: 'Trace identity and sink adapter boundaries are previews only. They show trace_id, run_id, snapshot_id, campaign_id, operator_ref, source_pack_ref, decision_ref, correlation_id, and forbidden operations such as connect audit sink, insert event, stream logs, export logs, read secret, and external log call without performing them.',
+            phase2AuditSinkContractStorageMockNote: 'Storage retention, redaction privacy, and mock write cards are previews only. Retention/deletion is not executed; customer data, review text, generated copy, operator note, raw prompt, and provider response preview are not stored as real data; provider secret cannot enter audit events, cannot be persisted, and secrets are not read.',
+            phase2AuditSinkContractQueryFailureMonitoringNote: 'Query access, failure recovery, and monitoring alert cards are previews only. They do not read real logs, query DB, create real alerts, send notifications, execute real retries, or execute real rollback.',
+            phase2AuditSinkContractTestQualitySafetyNote: 'Test plan, unlock blockers, quality checks, audit preview, and safety boundaries remain blocked previews. Event schema, trace identity, sink adapter boundary, storage retention, redaction privacy, mock write, query access boundary, failure recovery, monitoring alert preview, test plan, unlock blockers, and safety boundary are displayed while provider, LLM, media, external scraping, database persistence, database read, database write, schema migration, audit sink, audit event write, audit log read, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, paid operation, and real execution remain disabled.'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
@@ -9062,7 +9113,57 @@
             phase2DbMigrationDryRunSchemaStepNote: 'Schema definitions 和 migration steps 仅为 dry-run preview。它们覆盖 candidate tables、required fields、indexes、status fields、timestamps、sensitive fields、excluded provider secrets、retention、deletion、create schema、validate schema、add index、validate redaction、validate retention、validate audit refs、validate rollback plan 和 verify permission boundary，但不创建真实表，不修改真实 schema，不写 DB，也不执行真实操作。',
             phase2DbMigrationDryRunValidationRollbackBackfillNote: 'Validation、rollback 和 backfill 仅为 preview。覆盖 required identifiers、timestamps、status fields、excluded provider secret、redaction、retention、deletion policy、audit trace refs、schema mismatch、partial migration、index creation failure、redaction validation failure、retention policy missing、audit sink missing、permission denied 和 rollback unavailable，但不读 DB、不写 DB、不使用真实客户数据、不执行 rollback。',
             phase2DbMigrationDryRunRedactionAuditPermissionNote: 'Redaction、retention、audit dependency 和 permission boundary 都只是 preview。Provider secret、customer data、review text、generated copy 和 operator note 不会被持久化；provider secret 不读取、不写入 DB，也不允许进入 migration 或 backfill。Future audit sink、trace ID、actor ref、operation ref 和 before/after summary 只展示，不写数据库，也不创建真实 audit event。',
-            phase2DbMigrationDryRunTestQualitySafetyNote: 'Test plan、unlock blockers、quality checks、audit preview 和 safety boundaries 都保持 blocked preview。Unit、contract、schema validation、migration dry-run、rollback dry-run、backfill dry-run、redaction、retention、permission boundary 和 audit preview tests 只列出。Provider、LLM、media、external scraping、database persistence、database read、database write、schema migration、real policy check、platform upload、task creation、real export、file write、secret read、external call、token issue、paid operation 和 real execution 全部保持禁用。'
+            phase2DbMigrationDryRunTestQualitySafetyNote: 'Test plan、unlock blockers、quality checks、audit preview 和 safety boundaries 都保持 blocked preview。Unit、contract、schema validation、migration dry-run、rollback dry-run、backfill dry-run、redaction、retention、permission boundary 和 audit preview tests 只列出。Provider、LLM、media、external scraping、database persistence、database read、database write、schema migration、real policy check、platform upload、task creation、real export、file write、secret read、external call、token issue、paid operation 和 real execution 全部保持禁用。',
+            phase2AuditSinkContractPackTitle: 'Audit Sink Contract Preview',
+            phase2AuditSinkContractPackHelper: 'Project Workspace phase2 audit sink contract bundle。仅为 deterministic audit event contract preview；不创建真实 audit sink，不创建真实 audit event，不读取真实日志，不写数据库或文件，不连接外部 observability provider，不读取 secret，不发外部请求，不创建真实 alert，也不发送通知。',
+            phase2AuditSinkContractSummaryEventTitle: 'Audit Sink Contract Summary / Event Schema Contracts',
+            phase2AuditSinkContractSummaryTitle: 'Audit Sink Contract Summary',
+            phase2AuditSinkContractEventSchemaTitle: 'Audit Event Schema Contract Cards',
+            phase2AuditSinkContractTraceBoundaryTitle: 'Trace Identity / Sink Adapter Boundary',
+            phase2AuditSinkContractTraceIdentityTitle: 'Audit Trace Identity Cards',
+            phase2AuditSinkContractAdapterBoundaryTitle: 'Audit Sink Adapter Boundary Cards',
+            phase2AuditSinkContractStorageRedactionMockTitle: 'Storage Retention / Redaction Privacy / Mock Write',
+            phase2AuditSinkContractStorageRetentionTitle: 'Audit Storage Retention Cards',
+            phase2AuditSinkContractRedactionPrivacyTitle: 'Audit Redaction Privacy Cards',
+            phase2AuditSinkContractMockWriteTitle: 'Audit Mock Write Contract Cards',
+            phase2AuditSinkContractQueryFailureMonitoringTitle: 'Query Access Boundary / Failure Recovery / Monitoring Alert Preview',
+            phase2AuditSinkContractQueryAccessTitle: 'Audit Query Access Boundary Cards',
+            phase2AuditSinkContractFailureRecoveryTitle: 'Audit Failure Recovery Cards',
+            phase2AuditSinkContractMonitoringAlertTitle: 'Audit Monitoring Alert Preview Cards',
+            phase2AuditSinkContractTestQualityAuditSafetyTitle: 'Audit Test Plan / Unlock Blockers / Quality / Audit / Safety',
+            phase2AuditSinkContractTestPlanTitle: 'Audit Test Plan Cards',
+            phase2AuditSinkContractUnlockBlockerTitle: 'Phase 2 Audit Sink Unlock Blockers',
+            phase2AuditSinkContractQualityTitle: 'Audit Sink Quality Checks',
+            phase2AuditSinkContractAuditPreviewTitle: 'Audit Preview',
+            phase2AuditSinkContractSafetyTitle: 'Safety Boundaries',
+            phase2AuditSinkContractMode: 'Mode',
+            phase2AuditSinkContractEventSchemaCount: 'Audit event schema 数量',
+            phase2AuditSinkContractTraceIdentityCount: 'Trace identity 数量',
+            phase2AuditSinkContractBoundaryCount: 'Sink adapter boundary 数量',
+            phase2AuditSinkContractRetentionCount: 'Storage retention 数量',
+            phase2AuditSinkContractMockWriteCount: 'Mock write 数量',
+            phase2AuditSinkContractUnlockBlockerCount: 'Unlock blocker 数量',
+            phase2AuditSinkContractRecommendedAction: 'Recommended operator action',
+            phase2AuditSinkContractDisabled: 'disabled',
+            phase2AuditSinkContractNoData: '暂无 audit sink contract preview 数据。',
+            phase2AuditSinkContractCopyNoData: '暂无可复制的 audit sink contract preview 内容。',
+            phase2AuditSinkContractCopyFailed: '无法复制 audit sink contract preview 内容。',
+            phase2AuditSinkContractCopied: 'Audit sink contract preview 内容已复制。',
+            phase2AuditSinkContractCopySummary: '复制 audit sink contract summary',
+            phase2AuditSinkContractCopyEvents: '复制 audit event schema contract cards',
+            phase2AuditSinkContractCopyTrace: '复制 audit trace identity cards',
+            phase2AuditSinkContractCopyBoundary: '复制 audit sink adapter boundary cards',
+            phase2AuditSinkContractCopyRetention: '复制 audit storage retention cards',
+            phase2AuditSinkContractCopyRedaction: '复制 audit redaction privacy cards',
+            phase2AuditSinkContractCopyMock: '复制 audit mock write contract cards',
+            phase2AuditSinkContractCopyQuery: '复制 audit query access boundary cards',
+            phase2AuditSinkContractCopyFailure: '复制 audit failure recovery cards',
+            phase2AuditSinkContractCopyFull: '复制完整 audit sink contract pack',
+            phase2AuditSinkContractPreviewNote: '仅为 deterministic audit event contract preview。不创建真实 audit sink，不创建真实 audit event，不读取真实日志，不写数据库，不写文件，不连接外部 observability provider，不读取 secret，不发外部请求，不创建真实 alert，不发送通知，不连接 DB，不执行 migration，不调用 provider，不调用 LLM，不真实导出，不上传文件，不执行 paid operation，也不代表 production readiness。',
+            phase2AuditSinkContractTraceBoundaryNote: 'Trace identity 和 sink adapter boundary 仅为 preview。展示 trace_id、run_id、snapshot_id、campaign_id、operator_ref、source_pack_ref、decision_ref、correlation_id，以及 connect audit sink、insert event、stream logs、export logs、read secret、external log call 等禁止操作，但不会执行这些操作。',
+            phase2AuditSinkContractStorageMockNote: 'Storage retention、redaction privacy 和 mock write cards 仅为 preview。Retention/deletion 不会真实执行；customer data、review text、generated copy、operator note、raw prompt、provider response preview 不会作为真实数据保存；provider secret 不允许进入 audit event、不允许持久化，也不会读取 secret。',
+            phase2AuditSinkContractQueryFailureMonitoringNote: 'Query access、failure recovery 和 monitoring alert cards 仅为 preview。不读取真实日志，不查询 DB，不创建真实 alert，不发送通知，不执行真实 retry，也不执行真实 rollback。',
+            phase2AuditSinkContractTestQualitySafetyNote: 'Test plan、unlock blockers、quality checks、audit preview 和 safety boundaries 都保持 blocked preview。Event schema、trace identity、sink adapter boundary、storage retention、redaction privacy、mock write、query access boundary、failure recovery、monitoring alert preview、test plan、unlock blockers 和 safety boundary 只展示；provider、LLM、media、external scraping、database persistence、database read、database write、schema migration、audit sink、audit event write、audit log read、real policy check、platform upload、task creation、real export、file write、secret read、external call、token issue、paid operation 和 real execution 全部保持禁用。'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -12575,6 +12676,7 @@
                 latestProjectWorkspacePhase2ReadinessReviewPack = latestProjectCreativeDecisionPack.workspace_phase2_readiness_review_pack || {};
                 latestProjectWorkspacePhase2RealDbAdapterContractPack = latestProjectCreativeDecisionPack.workspace_phase2_real_db_minimal_adapter_contract_pack || {};
                 latestProjectWorkspacePhase2DbSchemaMigrationDryRunPack = latestProjectCreativeDecisionPack.workspace_phase2_db_schema_migration_dry_run_pack || {};
+                latestProjectWorkspacePhase2AuditSinkContractPack = latestProjectCreativeDecisionPack.workspace_phase2_audit_sink_contract_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -18469,6 +18571,7 @@
         const PROJECT_WORKSPACE_PHASE2_READINESS_REVIEW_MARKER = 'Project Workspace phase2 readiness review bundle';
         const PROJECT_WORKSPACE_PHASE2_REAL_DB_ADAPTER_CONTRACT_MARKER = 'Project Workspace phase2 real DB adapter contract bundle';
         const PROJECT_WORKSPACE_PHASE2_DB_SCHEMA_MIGRATION_DRY_RUN_MARKER = 'Project Workspace phase2 DB schema migration dry-run bundle';
+        const PROJECT_WORKSPACE_PHASE2_AUDIT_SINK_CONTRACT_MARKER = 'Project Workspace phase2 audit sink contract bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -27022,6 +27125,139 @@
         function copyProjectWorkspaceMigrationPermissionBoundaryCards() { return copyProjectWorkspacePhase2DbSchemaMigrationDryRunText('permission'); }
         function copyProjectWorkspaceFullPhase2DbSchemaMigrationDryRunPack() { return copyProjectWorkspacePhase2DbSchemaMigrationDryRunText('full'); }
 
+        function projectWorkspacePhase2AuditSinkContractPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspacePhase2AuditSinkContractPack && Object.keys(latestProjectWorkspacePhase2AuditSinkContractPack).length) return latestProjectWorkspacePhase2AuditSinkContractPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_phase2_audit_sink_contract_pack || {};
+        }
+
+        function projectWorkspacePhase2AuditSinkContractHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspacePhase2AuditSinkContractJsonText(value) {
+            if (!projectWorkspacePhase2AuditSinkContractHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspacePhase2AuditSinkContractDisabledText(value) {
+            return value === false || value == null ? t('phase2AuditSinkContractDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportPhase2AuditSinkContractSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspacePhase2AuditSinkContractPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PHASE2_AUDIT_SINK_CONTRACT_MARKER,
+                has_workspace_phase2_audit_sink_contract_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                audit_sink_contract_summary: pack.audit_sink_contract_summary || {},
+                audit_event_schema_contract_cards: Array.isArray(pack.audit_event_schema_contract_cards) ? pack.audit_event_schema_contract_cards : [],
+                audit_trace_identity_cards: Array.isArray(pack.audit_trace_identity_cards) ? pack.audit_trace_identity_cards : [],
+                audit_sink_adapter_boundary_cards: Array.isArray(pack.audit_sink_adapter_boundary_cards) ? pack.audit_sink_adapter_boundary_cards : [],
+                audit_storage_retention_cards: Array.isArray(pack.audit_storage_retention_cards) ? pack.audit_storage_retention_cards : [],
+                audit_redaction_privacy_cards: Array.isArray(pack.audit_redaction_privacy_cards) ? pack.audit_redaction_privacy_cards : [],
+                audit_mock_write_contract_cards: Array.isArray(pack.audit_mock_write_contract_cards) ? pack.audit_mock_write_contract_cards : [],
+                audit_query_access_boundary_cards: Array.isArray(pack.audit_query_access_boundary_cards) ? pack.audit_query_access_boundary_cards : [],
+                audit_failure_recovery_cards: Array.isArray(pack.audit_failure_recovery_cards) ? pack.audit_failure_recovery_cards : [],
+                audit_monitoring_alert_preview_cards: Array.isArray(pack.audit_monitoring_alert_preview_cards) ? pack.audit_monitoring_alert_preview_cards : [],
+                audit_test_plan_cards: Array.isArray(pack.audit_test_plan_cards) ? pack.audit_test_plan_cards : [],
+                phase2_audit_sink_unlock_blockers: Array.isArray(pack.phase2_audit_sink_unlock_blockers) ? pack.phase2_audit_sink_unlock_blockers : [],
+                audit_sink_quality_checks: pack.audit_sink_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspacePhase2AuditSinkContractSummaryText(pack = projectWorkspaceExportPhase2AuditSinkContractSnapshot()) {
+            if (!pack.has_workspace_phase2_audit_sink_contract_pack) return '';
+            const summary = pack.audit_sink_contract_summary || {};
+            return [
+                t('phase2AuditSinkContractSummaryTitle'),
+                `${t('phase2AuditSinkContractMode')}: ${summary.mode || t('none')}`,
+                `${t('phase2AuditSinkContractEventSchemaCount')}: ${summary.audit_event_schema_contract_count ?? pack.audit_event_schema_contract_cards.length}`,
+                `${t('phase2AuditSinkContractTraceIdentityCount')}: ${summary.audit_trace_identity_count ?? pack.audit_trace_identity_cards.length}`,
+                `${t('phase2AuditSinkContractBoundaryCount')}: ${summary.audit_sink_adapter_boundary_count ?? pack.audit_sink_adapter_boundary_cards.length}`,
+                `${t('phase2AuditSinkContractRetentionCount')}: ${summary.audit_storage_retention_count ?? pack.audit_storage_retention_cards.length}`,
+                `${t('phase2AuditSinkContractMockWriteCount')}: ${summary.audit_mock_write_contract_count ?? pack.audit_mock_write_contract_cards.length}`,
+                `${t('phase2AuditSinkContractUnlockBlockerCount')}: ${summary.unlock_blocker_count ?? pack.phase2_audit_sink_unlock_blockers.length}`,
+                `${t('phase2AuditSinkContractRecommendedAction')}: ${summary.recommended_operator_action || summary.risk_note || t('phase2AuditSinkContractPreviewNote')}`,
+                `real_audit_sink_connection_allowed: ${projectWorkspacePhase2AuditSinkContractDisabledText(summary.real_audit_sink_connection_allowed)}`,
+                `real_audit_event_created: ${projectWorkspacePhase2AuditSinkContractDisabledText(summary.real_audit_event_created)}`,
+                `real_database_write_allowed: ${projectWorkspacePhase2AuditSinkContractDisabledText(summary.real_database_write_allowed)}`,
+                `real_file_write_allowed: ${projectWorkspacePhase2AuditSinkContractDisabledText(summary.real_file_write_allowed)}`,
+                `secret_read_allowed: ${projectWorkspacePhase2AuditSinkContractDisabledText(summary.secret_read_allowed)}`,
+                `external_call_allowed: ${projectWorkspacePhase2AuditSinkContractDisabledText(summary.external_call_allowed)}`,
+                `real_execution_allowed: ${projectWorkspacePhase2AuditSinkContractDisabledText(summary.real_execution_allowed)}`,
+                t('phase2AuditSinkContractPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspacePhase2AuditSinkContractSectionText(titleKey, value) {
+            const body = projectWorkspacePhase2AuditSinkContractJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportPhase2AuditSinkContractMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2AuditSinkContractSnapshot(workspace);
+            if (!pack.has_workspace_phase2_audit_sink_contract_pack) return '';
+            return [
+                `## ${t('phase2AuditSinkContractPackTitle')}`,
+                projectWorkspacePhase2AuditSinkContractSummaryText(pack), '',
+                projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractSummaryTitle', pack.audit_sink_contract_summary), '',
+                projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractEventSchemaTitle', pack.audit_event_schema_contract_cards), '',
+                projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractTraceIdentityTitle', pack.audit_trace_identity_cards), '',
+                projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractAdapterBoundaryTitle', pack.audit_sink_adapter_boundary_cards), '',
+                projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractStorageRetentionTitle', pack.audit_storage_retention_cards), '',
+                projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractRedactionPrivacyTitle', pack.audit_redaction_privacy_cards), '',
+                projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractMockWriteTitle', pack.audit_mock_write_contract_cards), '',
+                projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractQueryAccessTitle', pack.audit_query_access_boundary_cards), '',
+                projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractFailureRecoveryTitle', pack.audit_failure_recovery_cards), '',
+                projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractMonitoringAlertTitle', pack.audit_monitoring_alert_preview_cards), '',
+                projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractTestPlanTitle', pack.audit_test_plan_cards), '',
+                projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractUnlockBlockerTitle', pack.phase2_audit_sink_unlock_blockers), '',
+                projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractQualityTitle', pack.audit_sink_quality_checks), '',
+                projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractAuditPreviewTitle', pack.audit_preview), '',
+                projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractSafetyTitle', pack.safety_boundaries),
+                t('phase2AuditSinkContractPreviewNote'),
+                t('phase2AuditSinkContractTraceBoundaryNote'),
+                t('phase2AuditSinkContractStorageMockNote'),
+                t('phase2AuditSinkContractQueryFailureMonitoringNote'),
+                t('phase2AuditSinkContractTestQualitySafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspacePhase2AuditSinkContractText(kind = 'full') {
+            const status = document.getElementById('projectWorkspacePhase2AuditSinkContractStatus');
+            const pack = projectWorkspaceExportPhase2AuditSinkContractSnapshot();
+            const text = kind === 'summary' ? projectWorkspacePhase2AuditSinkContractSummaryText(pack)
+                : kind === 'events' ? projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractEventSchemaTitle', pack.audit_event_schema_contract_cards)
+                : kind === 'trace' ? projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractTraceIdentityTitle', pack.audit_trace_identity_cards)
+                : kind === 'boundary' ? projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractAdapterBoundaryTitle', pack.audit_sink_adapter_boundary_cards)
+                : kind === 'retention' ? projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractStorageRetentionTitle', pack.audit_storage_retention_cards)
+                : kind === 'redaction' ? projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractRedactionPrivacyTitle', pack.audit_redaction_privacy_cards)
+                : kind === 'mock' ? projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractMockWriteTitle', pack.audit_mock_write_contract_cards)
+                : kind === 'query' ? projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractQueryAccessTitle', pack.audit_query_access_boundary_cards)
+                : kind === 'failure' ? projectWorkspacePhase2AuditSinkContractSectionText('phase2AuditSinkContractFailureRecoveryTitle', pack.audit_failure_recovery_cards)
+                : projectWorkspaceExportPhase2AuditSinkContractMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('phase2AuditSinkContractCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('phase2AuditSinkContractCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('phase2AuditSinkContractCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('phase2AuditSinkContractCopyFailed'); }
+        }
+
+        function copyProjectWorkspacePhase2AuditSinkContractSummary() { return copyProjectWorkspacePhase2AuditSinkContractText('summary'); }
+        function copyProjectWorkspaceAuditEventSchemaContractCards() { return copyProjectWorkspacePhase2AuditSinkContractText('events'); }
+        function copyProjectWorkspaceAuditTraceIdentityCards() { return copyProjectWorkspacePhase2AuditSinkContractText('trace'); }
+        function copyProjectWorkspaceAuditSinkAdapterBoundaryCards() { return copyProjectWorkspacePhase2AuditSinkContractText('boundary'); }
+        function copyProjectWorkspaceAuditStorageRetentionCards() { return copyProjectWorkspacePhase2AuditSinkContractText('retention'); }
+        function copyProjectWorkspaceAuditRedactionPrivacyCards() { return copyProjectWorkspacePhase2AuditSinkContractText('redaction'); }
+        function copyProjectWorkspaceAuditMockWriteContractCards() { return copyProjectWorkspacePhase2AuditSinkContractText('mock'); }
+        function copyProjectWorkspaceAuditQueryAccessBoundaryCards() { return copyProjectWorkspacePhase2AuditSinkContractText('query'); }
+        function copyProjectWorkspaceAuditFailureRecoveryCards() { return copyProjectWorkspacePhase2AuditSinkContractText('failure'); }
+        function copyProjectWorkspaceFullPhase2AuditSinkContractPack() { return copyProjectWorkspacePhase2AuditSinkContractText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -27591,6 +27827,36 @@
                 no_data: t('creativeCoreFlowNoData')
             };
             return labels[status] || status;
+        }
+
+        function renderProjectWorkspacePhase2AuditSinkContractSummaryEventPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2AuditSinkContractSnapshot(workspace); if (!pack.has_workspace_phase2_audit_sink_contract_pack) return '';
+            const summary = pack.audit_sink_contract_summary || {}; const events = projectWorkspacePhase2AuditSinkContractJsonText(pack.audit_event_schema_contract_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2AuditSinkContractSummaryEventPanel" data-marker="project_workspace_phase2_audit_sink_contract_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2AuditSinkContractPackTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2AuditSinkContractSummaryEventTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2AuditSinkContractPackHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2AuditSinkContractSummary()">${escapeHTML(t('phase2AuditSinkContractCopySummary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAuditEventSchemaContractCards()">${escapeHTML(t('phase2AuditSinkContractCopyEvents'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2AuditSinkContractPack()">${escapeHTML(t('phase2AuditSinkContractCopyFull'))}</button></div></div><div class="metric-strip">${metricPill(t('phase2AuditSinkContractMode'), summary.mode || t('none'))}${metricPill(t('phase2AuditSinkContractEventSchemaCount'), String(summary.audit_event_schema_contract_count ?? pack.audit_event_schema_contract_cards.length))}${metricPill(t('phase2AuditSinkContractTraceIdentityCount'), String(summary.audit_trace_identity_count ?? pack.audit_trace_identity_cards.length))}${metricPill(t('phase2AuditSinkContractBoundaryCount'), String(summary.audit_sink_adapter_boundary_count ?? pack.audit_sink_adapter_boundary_cards.length))}${metricPill(t('phase2AuditSinkContractRetentionCount'), String(summary.audit_storage_retention_count ?? pack.audit_storage_retention_cards.length))}${metricPill(t('phase2AuditSinkContractMockWriteCount'), String(summary.audit_mock_write_contract_count ?? pack.audit_mock_write_contract_cards.length))}${metricPill(t('phase2AuditSinkContractUnlockBlockerCount'), String(summary.unlock_blocker_count ?? pack.phase2_audit_sink_unlock_blockers.length))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspacePhase2AuditSinkContractSummaryText(pack) || t('phase2AuditSinkContractNoData'))}</pre><div class="graph-os-card"><strong>${escapeHTML(t('phase2AuditSinkContractEventSchemaTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(events || t('phase2AuditSinkContractNoData'))}</pre><div class="field-helper">audit_event_schema_id / event_label / event_group / event_purpose / required_event_fields / required_trace_fields / required_actor_fields / required_operation_fields / required_status_fields / forbidden_event_fields / redaction_required / retention_required / real_audit_event_created=false / real_database_write_allowed=false / real_file_write_allowed=false / real_execution_allowed=false</div><div class="field-helper">workspace_snapshot_audit_event / db_adapter_audit_event / migration_dry_run_audit_event / llm_prompt_gate_audit_event / provider_unlock_review_audit_event / approval_decision_audit_event / permission_boundary_audit_event / export_readiness_audit_event / rollback_preview_audit_event / operator_review_audit_event</div></div><div class="demo-warning">${escapeHTML(t('phase2AuditSinkContractPreviewNote'))}</div><div id="projectWorkspacePhase2AuditSinkContractStatus" class="field-helper" aria-live="polite"></div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2AuditSinkContractTraceBoundaryPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2AuditSinkContractSnapshot(workspace); if (!pack.has_workspace_phase2_audit_sink_contract_pack) return '';
+            const trace = projectWorkspacePhase2AuditSinkContractJsonText(pack.audit_trace_identity_cards); const boundary = projectWorkspacePhase2AuditSinkContractJsonText(pack.audit_sink_adapter_boundary_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2AuditSinkContractTraceBoundaryPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2AuditSinkContractTraceBoundaryTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2AuditSinkContractTraceBoundaryNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAuditTraceIdentityCards()">${escapeHTML(t('phase2AuditSinkContractCopyTrace'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAuditSinkAdapterBoundaryCards()">${escapeHTML(t('phase2AuditSinkContractCopyBoundary'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2AuditSinkContractTraceIdentityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(trace || t('phase2AuditSinkContractNoData'))}</pre><div class="field-helper">trace_identity_id / trace_label / trace_group / required_trace_id_fields / required_correlation_fields / required_actor_ref_fields / required_run_ref_fields / required_snapshot_ref_fields / missing_trace_behavior / duplicate_trace_behavior</div><div class="field-helper">trace_id / run_id / snapshot_id / campaign_id / operator_ref / source_pack_ref / decision_ref / correlation_id</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2AuditSinkContractAdapterBoundaryTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(boundary || t('phase2AuditSinkContractNoData'))}</pre><div class="field-helper">audit_sink_boundary_id / sink_label / sink_group / allowed_preview_operation / forbidden_real_operations / requires_audit_sink_config / requires_secret_access / requires_external_call_approval / requires_database_connection / requires_operator_approval / real_audit_sink_connection_allowed=false / real_database_write_allowed=false / external_call_allowed=false / secret_read_allowed=false / real_execution_allowed=false</div><div class="field-helper">allowed preview: event schema preview / mock write contract / retention discussion / query access boundary. Forbidden: connect audit sink / insert event / stream logs / export logs / read secret / external log call.</div></div></div><div class="demo-warning">${escapeHTML(t('phase2AuditSinkContractTraceBoundaryNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2AuditSinkContractStorageRedactionMockPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2AuditSinkContractSnapshot(workspace); if (!pack.has_workspace_phase2_audit_sink_contract_pack) return '';
+            const retention = projectWorkspacePhase2AuditSinkContractJsonText(pack.audit_storage_retention_cards); const redaction = projectWorkspacePhase2AuditSinkContractJsonText(pack.audit_redaction_privacy_cards); const mock = projectWorkspacePhase2AuditSinkContractJsonText(pack.audit_mock_write_contract_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2AuditSinkContractStorageRedactionMockPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2AuditSinkContractStorageRedactionMockTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2AuditSinkContractStorageMockNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAuditStorageRetentionCards()">${escapeHTML(t('phase2AuditSinkContractCopyRetention'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAuditRedactionPrivacyCards()">${escapeHTML(t('phase2AuditSinkContractCopyRedaction'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAuditMockWriteContractCards()">${escapeHTML(t('phase2AuditSinkContractCopyMock'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2AuditSinkContractStorageRetentionTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(retention || t('phase2AuditSinkContractNoData'))}</pre><div class="field-helper">audit_events / operator_decisions / provider_invocation_audits / db_operation_audits / migration_dry_run_audits / approval_audits; retention/deletion not executed.</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2AuditSinkContractRedactionPrivacyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(redaction || t('phase2AuditSinkContractNoData'))}</pre><div class="field-helper">provider secret / customer data / review text / generated copy / operator note / raw prompt / provider response preview. Provider secret cannot enter audit event, cannot be read, and cannot be persisted.</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2AuditSinkContractMockWriteTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(mock || t('phase2AuditSinkContractNoData'))}</pre><div class="field-helper">mock_audit_write_id / mock_write_label / simulated_audit_operation / mock_input_shape / mock_output_shape / expected_mock_status / writes_real_audit_sink=false / writes_real_database=false / writes_real_file=false / uses_external_call=false / reads_secret=false / real_execution_allowed=false</div><div class="field-helper">event validation / mock write / mock query / mock failure handling only; no real audit sink, DB write, file write, external call, or secret read.</div></div></div><div class="demo-warning">${escapeHTML(t('phase2AuditSinkContractStorageMockNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2AuditSinkContractQueryFailureMonitoringPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2AuditSinkContractSnapshot(workspace); if (!pack.has_workspace_phase2_audit_sink_contract_pack) return '';
+            const query = projectWorkspacePhase2AuditSinkContractJsonText(pack.audit_query_access_boundary_cards); const failure = projectWorkspacePhase2AuditSinkContractJsonText(pack.audit_failure_recovery_cards); const monitoring = projectWorkspacePhase2AuditSinkContractJsonText(pack.audit_monitoring_alert_preview_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2AuditSinkContractQueryFailureMonitoringPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2AuditSinkContractQueryFailureMonitoringTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2AuditSinkContractQueryFailureMonitoringNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAuditQueryAccessBoundaryCards()">${escapeHTML(t('phase2AuditSinkContractCopyQuery'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceAuditFailureRecoveryCards()">${escapeHTML(t('phase2AuditSinkContractCopyFailure'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2AuditSinkContractQueryAccessTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(query || t('phase2AuditSinkContractNoData'))}</pre><div class="field-helper">actor role / scope / filter / redaction constraints / retention constraints / reads_real_audit_log=false / queries_real_database=false. No real log read and no DB query.</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2AuditSinkContractFailureRecoveryTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(failure || t('phase2AuditSinkContractNoData'))}</pre><div class="field-helper">audit sink missing / schema invalid / trace id missing / redaction failed / retention policy missing / permission denied / external sink unavailable / partial audit write / duplicate audit event / monitoring unavailable</div><div class="field-helper">expected_operator_message / expected_recovery_preview / blocks_real_unlock / retry_allowed_in_preview / requires_real_retry=false / requires_real_rollback=false</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2AuditSinkContractMonitoringAlertTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(monitoring || t('phase2AuditSinkContractNoData'))}</pre><div class="field-helper">future alert type / severity / trigger condition / operator action / escalation preview. No real alert, no notification, no real retry, no real rollback.</div></div></div><div class="demo-warning">${escapeHTML(t('phase2AuditSinkContractQueryFailureMonitoringNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2AuditSinkContractTestQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2AuditSinkContractSnapshot(workspace); if (!pack.has_workspace_phase2_audit_sink_contract_pack) return '';
+            const tests = projectWorkspacePhase2AuditSinkContractJsonText(pack.audit_test_plan_cards); const blockers = projectWorkspacePhase2AuditSinkContractJsonText(pack.phase2_audit_sink_unlock_blockers); const quality = projectWorkspacePhase2AuditSinkContractJsonText(pack.audit_sink_quality_checks); const audit = projectWorkspacePhase2AuditSinkContractJsonText(pack.audit_preview); const safety = projectWorkspacePhase2AuditSinkContractJsonText(pack.safety_boundaries);
+            return `<div class="section-block" id="projectWorkspacePhase2AuditSinkContractTestQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2AuditSinkContractTestQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2AuditSinkContractTestQualitySafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2AuditSinkContractPack()">${escapeHTML(t('phase2AuditSinkContractCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2AuditSinkContractTestPlanTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(tests || t('phase2AuditSinkContractNoData'))}</pre><div class="field-helper">unit tests / contract tests / schema validation tests / mock write tests / mock query tests / redaction tests / retention tests / permission boundary tests / failure recovery tests / monitoring preview tests</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2AuditSinkContractUnlockBlockerTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2AuditSinkContractNoData'))}</pre><div class="field-helper">no real audit sink config / no audit database table / no audit event schema migration / no audit retention policy enforcement / no audit deletion policy enforcement / no audit redaction enforcement / no audit query access control / no monitoring alert integration / no production approval / no external sink approval</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2AuditSinkContractQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2AuditSinkContractNoData'))}</pre><div class="field-helper">event schema / trace identity / sink adapter boundary / storage retention / redaction privacy / mock write / query access boundary / failure recovery / monitoring alert preview / test plan / unlock blockers / safety boundary</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2AuditSinkContractAuditPreviewTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2AuditSinkContractNoData'))}</pre><div class="field-helper">audit preview only; no database write / no real log read / no real audit event</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2AuditSinkContractSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / media disabled / external_scraping disabled / database_persistence disabled / database_read disabled / database_write disabled / schema_migration disabled / audit_sink disabled / audit_event_write disabled / audit_log_read disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled / paid_operation disabled</div><div class="field-helper">${escapeHTML(t('phase2AuditSinkContractTestQualitySafetyNote'))}</div></div>`;
         }
 
         function renderProjectWorkspaceCreativeCoreFlowStrip(workspace = latestProjectWorkspace) {
@@ -32356,6 +32622,8 @@
                 '',
                 projectWorkspaceExportPhase2DbSchemaMigrationDryRunMarkdown(workspace),
                 '',
+                projectWorkspaceExportPhase2AuditSinkContractMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -32495,6 +32763,7 @@
                 workspace_phase2_readiness_review_pack: projectWorkspaceExportPhase2ReadinessReviewSnapshot(workspace),
                 workspace_phase2_real_db_minimal_adapter_contract_pack: projectWorkspaceExportPhase2RealDbAdapterContractSnapshot(workspace),
                 workspace_phase2_db_schema_migration_dry_run_pack: projectWorkspaceExportPhase2DbSchemaMigrationDryRunSnapshot(workspace),
+                workspace_phase2_audit_sink_contract_pack: projectWorkspaceExportPhase2AuditSinkContractSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -45181,6 +45450,11 @@
                     ${renderProjectWorkspacePhase2DbSchemaMigrationDryRunValidationRollbackBackfillPanel(workspace)}
                     ${renderProjectWorkspacePhase2DbSchemaMigrationDryRunRedactionAuditPermissionPanel(workspace)}
                     ${renderProjectWorkspacePhase2DbSchemaMigrationDryRunTestQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspacePhase2AuditSinkContractSummaryEventPanel(workspace)}
+                    ${renderProjectWorkspacePhase2AuditSinkContractTraceBoundaryPanel(workspace)}
+                    ${renderProjectWorkspacePhase2AuditSinkContractStorageRedactionMockPanel(workspace)}
+                    ${renderProjectWorkspacePhase2AuditSinkContractQueryFailureMonitoringPanel(workspace)}
+                    ${renderProjectWorkspacePhase2AuditSinkContractTestQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}
