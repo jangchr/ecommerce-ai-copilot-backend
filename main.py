@@ -48172,6 +48172,508 @@ def _rw_workspace_phase2_audit_sink_contract_pack(
     }
 
 
+def _rw_workspace_phase2_llm_sandbox_contract_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_ids = [
+        "workspace_phase2_audit_sink_contract_pack",
+        "workspace_phase2_llm_provider_gate_pack",
+        "workspace_phase2_provider_unlock_review_pack",
+        "workspace_phase2_readiness_review_pack",
+        "workspace_phase2_persistence_mock_harness_pack",
+        "workspace_phase2_database_persistence_gate_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_provider_cost_quota_risk_guard_pack",
+        "workspace_capability_permission_matrix_pack",
+        "workspace_mvp_readiness_dossier_pack",
+        "workspace_final_system_health_pack",
+        "claim_safe_creative_brief_pack",
+        "claim_safe_creative_output_pack",
+        "claim_safe_delivery_qa_pack",
+        "claim_safe_delivery_remediation_pack",
+        "claim_safe_remediation_verification_pack",
+        "final_claim_safe_export_packet_pack",
+        "campaign_creative_dossier_pack",
+        "claim_risk_guard_pack",
+        "review_evidence_quality_pack",
+    ]
+    packs = {
+        pack_id: dict(creative_decision_pack.get(pack_id) or {})
+        for pack_id in source_pack_ids
+    }
+
+    provider_specs = [
+        ("text_generation_sandbox", "Text generation sandbox", "generation", "text_generation", "preview safe copy generation from redacted fixtures"),
+        ("claim_safe_copy_sandbox", "Claim-safe copy sandbox", "claim_safety", "claim_safe_copy", "preview claim-safe rewrite suggestions"),
+        ("delivery_qa_assist_sandbox", "Delivery QA assist sandbox", "delivery", "delivery_qa_assist", "preview delivery QA reasoning"),
+        ("remediation_suggestion_sandbox", "Remediation suggestion sandbox", "remediation", "remediation_suggestion", "preview blocked item remediation suggestions"),
+        ("dossier_summary_sandbox", "Dossier summary sandbox", "dossier", "dossier_summary", "preview campaign dossier summary generation"),
+        ("translation_sandbox", "Translation sandbox", "localization", "translation", "preview bilingual rewrite checks"),
+        ("policy_reasoning_sandbox", "Policy reasoning sandbox", "policy", "policy_reasoning", "preview policy reasoning without real policy API or legal advice"),
+        ("prompt_redaction_sandbox", "Prompt redaction sandbox", "privacy", "prompt_redaction", "preview prompt redaction checks"),
+    ]
+    llm_sandbox_provider_profile_cards = [
+        {
+            "sandbox_provider_profile_id": profile_id,
+            "provider_label": label,
+            "provider_group": group,
+            "sandbox_capability_type": capability,
+            "source_gate_refs": [
+                "workspace_phase2_llm_provider_gate_pack",
+                "workspace_phase2_provider_unlock_review_pack",
+                "workspace_secret_environment_gate_pack",
+                "workspace_network_external_call_block_guard_pack",
+            ],
+            "intended_sandbox_use_case": use_case,
+            "required_secret_refs": ["future_sandbox_api_key_ref", "future_provider_project_ref"],
+            "required_network_scope": "future approved sandbox provider endpoint allowlist",
+            "required_model_or_endpoint_profile": "future sandbox model or endpoint profile",
+            "sandbox_only": True,
+            "real_provider_client_created": False,
+            "llm_generation_allowed": False,
+            "real_provider_call_allowed": False,
+            "secret_read_allowed": False,
+            "external_call_allowed": False,
+            "paid_operation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Sandbox provider profile is a deterministic contract preview and does not create a provider client, read secrets, call an LLM, make external calls, or incur cost.",
+        }
+        for profile_id, label, group, capability, use_case in provider_specs
+    ]
+
+    fixture_specs = [
+        ("claim_safe_brief_fixture", "Claim-safe brief fixture", "brief", ["claim_safe_creative_brief_pack"]),
+        ("creative_output_fixture", "Creative output fixture", "creative_output", ["claim_safe_creative_output_pack"]),
+        ("platform_delivery_fixture", "Platform delivery fixture", "delivery", ["final_claim_safe_export_packet_pack"]),
+        ("delivery_qa_fixture", "Delivery QA fixture", "delivery_qa", ["claim_safe_delivery_qa_pack"]),
+        ("remediation_fixture", "Remediation fixture", "remediation", ["claim_safe_delivery_remediation_pack", "claim_safe_remediation_verification_pack"]),
+        ("final_export_summary_fixture", "Final export summary fixture", "final_export", ["final_claim_safe_export_packet_pack"]),
+        ("campaign_dossier_summary_fixture", "Campaign dossier summary fixture", "dossier", ["campaign_creative_dossier_pack"]),
+        ("demo_walkthrough_fixture", "Demo walkthrough fixture", "demo", ["workspace_mvp_readiness_dossier_pack", "workspace_final_system_health_pack"]),
+    ]
+    llm_sandbox_prompt_fixture_cards = [
+        {
+            "prompt_fixture_id": fixture_id,
+            "fixture_label": label,
+            "fixture_group": group,
+            "source_pack_refs": source_refs,
+            "prompt_purpose": f"Define redacted prompt fixture shape for {label.lower()} without invoking a real LLM.",
+            "input_context_fixture_shape": {
+                "source_pack_refs": source_refs,
+                "redacted_context": True,
+                "evidence_refs_only": True,
+                "claim_safety_refs_only": True,
+            },
+            "required_evidence_refs": ["review_evidence_quality_pack", "supporting_quote_ids", "evidence_refs"],
+            "required_claim_safety_refs": ["claim_risk_guard_pack", "do_not_claim_refs", "restricted_claim_refs"],
+            "forbidden_prompt_inputs": ["provider_secret", "api_key", "raw_hidden_prompt", "unredacted_customer_data"],
+            "expected_safe_output_shape": {
+                "draft_text": "preview_only",
+                "evidence_trace": "required",
+                "claim_trace": "required",
+                "risk_flags": "required",
+            },
+            "contains_customer_data": False,
+            "contains_provider_secret": False,
+            "requires_redaction": True,
+            "sandbox_invocation_allowed": False,
+            "real_llm_generation_allowed": False,
+            "risk_note": "Prompt fixture is redacted deterministic preview only and cannot be sent to a sandbox or real LLM.",
+        }
+        for fixture_id, label, group, source_refs in fixture_specs
+    ]
+
+    invocation_specs = [
+        ("safe_copy_invocation_contract", "Safe copy invocation contract", "copy", ["claim_safe_brief_fixture", "creative_output_fixture"]),
+        ("delivery_qa_invocation_contract", "Delivery QA invocation contract", "delivery", ["platform_delivery_fixture", "delivery_qa_fixture"]),
+        ("remediation_invocation_contract", "Remediation invocation contract", "remediation", ["remediation_fixture"]),
+        ("dossier_summary_invocation_contract", "Dossier summary invocation contract", "dossier", ["final_export_summary_fixture", "campaign_dossier_summary_fixture"]),
+        ("translation_invocation_contract", "Translation invocation contract", "localization", ["demo_walkthrough_fixture"]),
+    ]
+    llm_sandbox_invocation_contract_cards = [
+        {
+            "sandbox_invocation_contract_id": contract_id,
+            "invocation_label": label,
+            "invocation_group": group,
+            "source_prompt_fixture_refs": fixture_refs,
+            "simulated_request_shape": {
+                "provider_profile_ref": "sandbox_provider_profile_id",
+                "prompt_fixture_ref": fixture_refs,
+                "redacted_input": True,
+                "dry_run_only": True,
+            },
+            "simulated_response_shape": {
+                "status": "simulated_not_executed",
+                "response_schema_ref": f"{contract_id}_response_schema",
+                "usage_preview": "estimated_only",
+            },
+            "required_headers_or_metadata": ["trace_id", "run_id", "prompt_fixture_id", "operator_ref", "dry_run_only"],
+            "required_timeout_policy": "future sandbox timeout policy required before real call",
+            "required_retry_policy": "future retry cap required; no real retry in preview",
+            "required_cost_guard": "future max token, quota, and cost approval required",
+            "required_audit_trace_refs": ["workspace_phase2_audit_sink_contract_pack", "workspace_provider_invocation_audit_packet_pack"],
+            "sandbox_call_executed": False,
+            "real_provider_call_allowed": False,
+            "external_call_allowed": False,
+            "secret_read_allowed": False,
+            "paid_operation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Invocation contract describes simulated request/response only and performs no sandbox call, secret read, external request, provider call, paid operation, or execution.",
+        }
+        for contract_id, label, group, fixture_refs in invocation_specs
+    ]
+
+    response_specs = [
+        ("safe_copy_response_schema", "Safe copy response schema", "copy"),
+        ("delivery_qa_response_schema", "Delivery QA response schema", "delivery"),
+        ("remediation_response_schema", "Remediation response schema", "remediation"),
+        ("dossier_summary_response_schema", "Dossier summary response schema", "dossier"),
+    ]
+    llm_sandbox_response_schema_cards = [
+        {
+            "response_schema_id": schema_id,
+            "response_label": label,
+            "response_group": group,
+            "source_contract_refs": ["llm_sandbox_invocation_contract_cards", "llm_sandbox_prompt_fixture_cards"],
+            "expected_response_fields": ["safe_output_preview", "evidence_trace", "claim_trace", "usage_preview", "risk_flags"],
+            "required_evidence_trace_fields": ["supporting_quote_ids", "evidence_refs", "evidence_quality_status"],
+            "required_claim_trace_fields": ["claim_id", "claim_text", "claim_risk_level", "do_not_claim_refs"],
+            "required_usage_fields": ["estimated_input_tokens", "estimated_output_tokens", "cost_estimate_ref"],
+            "required_risk_fields": ["unsupported_claim_flags", "missing_evidence_flags", "operator_review_required"],
+            "forbidden_response_fields": ["provider secret", "raw hidden prompt", "untraced claim", "unsupported customer quote"],
+            "schema_validation_required": True,
+            "unsafe_output_behavior": "block preview export and require operator review",
+            "untraced_claim_behavior": "block output until evidence and claim trace are present",
+            "real_llm_generation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Response schema validates preview shape only and does not rely on real LLM generation.",
+        }
+        for schema_id, label, group in response_specs
+    ]
+
+    guard_specs = [
+        ("unsupported_claim", "Unsupported claim guard", "claim", ["unsupported claim"]),
+        ("missing_evidence", "Missing evidence guard", "evidence", ["missing evidence"]),
+        ("do_not_claim", "Do-not-claim guard", "restriction", ["do_not_claim"]),
+        ("restricted_claim", "Restricted claim guard", "restriction", ["restricted claim"]),
+        ("policy_disabled", "Policy disabled guard", "policy", ["policy disabled"]),
+        ("operator_review_required", "Operator review required guard", "operator", ["operator review required"]),
+    ]
+    llm_sandbox_evidence_claim_guard_cards = [
+        {
+            "sandbox_claim_guard_id": guard_id,
+            "guard_label": label,
+            "guard_group": group,
+            "source_gate_refs": ["claim_risk_guard_pack", "review_evidence_quality_pack", "claim_safe_delivery_qa_pack"],
+            "required_quote_refs": ["supporting_quote_ids", "evidence_refs"],
+            "required_claim_refs": ["claim_id", "claim_text", "claim_trace"],
+            "blocked_claim_refs": blockers if guard_id in {"unsupported_claim", "do_not_claim"} else [],
+            "restricted_claim_refs": blockers if guard_id == "restricted_claim" else [],
+            "do_not_claim_refs": ["do_not_claim_refs"],
+            "unsupported_claim_behavior": "block LLM sandbox output and require evidence-backed rewrite",
+            "missing_evidence_behavior": "block output until quote and evidence refs are present",
+            "operator_review_required": True,
+            "real_policy_check_allowed": False,
+            "real_llm_generation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Evidence and claim guard is a preview only; it does not call a policy API, produce legal advice, or run LLM generation.",
+        }
+        for guard_id, label, group, blockers in guard_specs
+    ]
+
+    privacy_specs = [
+        ("provider secret", False, False, False, "provider secret cannot enter prompt input, cannot be read, and cannot be written to audit"),
+        ("customer data", True, False, False, "customer data requires redaction before prompt fixture preview"),
+        ("review text", True, False, False, "review text must be represented through evidence refs and redacted snippets"),
+        ("generated copy", True, False, False, "generated copy requires claim trace and retention controls"),
+        ("operator note", True, False, False, "operator note requires role boundary before future persistence"),
+        ("raw prompt", True, False, False, "raw prompt is not persisted and must be redacted"),
+        ("prompt fixture metadata", True, False, False, "prompt fixture metadata is preview-only and not written to an audit sink"),
+    ]
+    llm_sandbox_redaction_privacy_cards = [
+        {
+            "redaction_privacy_id": f"llm_sandbox_redaction_{idx}",
+            "data_label": label,
+            "redaction_required": redaction_required,
+            "allowed_in_prompt_input": prompt_allowed,
+            "secret_read_allowed": False,
+            "audit_persistence_allowed": audit_allowed,
+            "real_database_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": risk_note,
+        }
+        for idx, (label, redaction_required, prompt_allowed, audit_allowed, risk_note) in enumerate(privacy_specs, start=1)
+    ]
+
+    cost_specs = [
+        ("safe_copy_cost_quota", "Safe copy cost quota", "copy", 1200, "20s", "10 preview calls/day", "$0.00 preview estimate", "5/min", 0),
+        ("delivery_qa_cost_quota", "Delivery QA cost quota", "delivery", 1600, "25s", "10 preview calls/day", "$0.00 preview estimate", "5/min", 0),
+        ("remediation_cost_quota", "Remediation cost quota", "remediation", 1800, "25s", "8 preview calls/day", "$0.00 preview estimate", "4/min", 0),
+        ("dossier_summary_cost_quota", "Dossier summary cost quota", "dossier", 2000, "30s", "6 preview calls/day", "$0.00 preview estimate", "3/min", 0),
+    ]
+    llm_sandbox_cost_quota_cards = [
+        {
+            "cost_quota_id": quota_id,
+            "cost_quota_label": label,
+            "quota_group": group,
+            "sandbox_max_tokens": max_tokens,
+            "timeout_policy": timeout,
+            "quota_policy": quota,
+            "cost_estimate": estimate,
+            "rate_limit": rate_limit,
+            "retry_cap": retry_cap,
+            "real_billing_performed": False,
+            "real_request_sent": False,
+            "paid_operation_allowed": False,
+            "external_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Cost/quota card is a preview only and does not send requests or incur real billing.",
+        }
+        for quota_id, label, group, max_tokens, timeout, quota, estimate, rate_limit, retry_cap in cost_specs
+    ]
+
+    audit_trace_specs = [
+        ("safe_copy_audit_trace", "Safe copy audit trace", "copy"),
+        ("delivery_qa_audit_trace", "Delivery QA audit trace", "delivery"),
+        ("remediation_audit_trace", "Remediation audit trace", "remediation"),
+        ("dossier_summary_audit_trace", "Dossier summary audit trace", "dossier"),
+    ]
+    llm_sandbox_audit_trace_cards = [
+        {
+            "llm_sandbox_audit_trace_id": trace_id,
+            "trace_label": label,
+            "trace_group": group,
+            "future_audit_trace_fields": [
+                "trace id",
+                "run id",
+                "prompt fixture id",
+                "response schema id",
+                "operator ref",
+                "decision ref",
+                "cost estimate ref",
+            ],
+            "required_audit_sink_refs": ["workspace_phase2_audit_sink_contract_pack"],
+            "database_write_allowed": False,
+            "real_audit_event_created": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit trace is preview-only and writes no database and creates no real audit event.",
+        }
+        for trace_id, label, group in audit_trace_specs
+    ]
+
+    failure_labels = [
+        "sandbox provider unavailable",
+        "timeout",
+        "rate limit",
+        "schema invalid",
+        "unsafe claim output",
+        "missing evidence trace",
+        "redaction failure",
+        "secret missing",
+        "cost quota exceeded",
+        "audit sink missing",
+    ]
+    llm_sandbox_failure_recovery_cards = [
+        {
+            "llm_sandbox_failure_id": f"llm_sandbox_failure_{idx}",
+            "failure_label": label,
+            "failure_group": "llm_sandbox_recovery",
+            "simulated_failure_type": label,
+            "expected_operator_message": f"{label} blocks real LLM sandbox unlock; keep deterministic preview mode.",
+            "expected_recovery_preview": "show remediation guidance and require operator review before any real retry",
+            "blocks_real_unlock": True,
+            "retry_allowed_in_preview": True,
+            "requires_real_retry": False,
+            "requires_real_rollback": False,
+            "real_execution_allowed": False,
+            "risk_note": "Failure recovery is preview-only and does not execute real retry or rollback.",
+        }
+        for idx, label in enumerate(failure_labels, start=1)
+    ]
+
+    test_labels = [
+        "unit tests",
+        "contract tests",
+        "prompt fixture tests",
+        "response schema tests",
+        "evidence claim guard tests",
+        "redaction tests",
+        "cost quota tests",
+        "timeout tests",
+        "audit trace tests",
+        "permission boundary tests",
+    ]
+    llm_sandbox_test_plan_cards = [
+        {
+            "llm_sandbox_test_plan_id": f"llm_sandbox_test_{idx}",
+            "test_label": label,
+            "test_group": label.split()[0],
+            "required_before_unlock": True,
+            "current_status": "preview_defined",
+            "requires_real_provider": False,
+            "requires_real_llm_generation": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} must pass before any real LLM sandbox unlock.",
+        }
+        for idx, label in enumerate(test_labels, start=1)
+    ]
+
+    blocker_labels = [
+        "no provider sandbox key approval",
+        "no secret access approval",
+        "no external call approval",
+        "no cost quota approval",
+        "no sandbox provider contract test executed",
+        "no real audit sink",
+        "no prompt fixture approval",
+        "no production approval",
+        "no rollback failure recovery implementation",
+        "no provider-specific legal review",
+    ]
+    phase2_llm_sandbox_unlock_blockers = [
+        {
+            "unlock_blocker_id": f"llm_sandbox_blocker_{idx}",
+            "blocker_label": label,
+            "blocks_real_llm_sandbox_unlock": True,
+            "recommended_operator_action": "keep LLM sandbox in deterministic preview until this blocker is resolved",
+            "real_provider_call_allowed": False,
+            "real_llm_generation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} blocks real LLM sandbox unlock.",
+        }
+        for idx, label in enumerate(blocker_labels, start=1)
+    ]
+
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "llm_sandbox_call": False,
+        "llm_sandbox_call_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "database_read": False,
+        "database_read_enabled": False,
+        "database_write": False,
+        "database_write_enabled": False,
+        "schema_migration": False,
+        "schema_migration_enabled": False,
+        "audit_sink": False,
+        "audit_sink_enabled": False,
+        "audit_event_write": False,
+        "audit_event_write_enabled": False,
+        "audit_log_read": False,
+        "audit_log_read_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "secret_read": False,
+        "secret_read_enabled": False,
+        "external_call": False,
+        "external_call_enabled": False,
+        "token_issue": False,
+        "token_issue_enabled": False,
+        "paid_operation": False,
+        "paid_operation_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_phase2_llm_sandbox_contract_pack_v1",
+        "llm_sandbox_contract_summary": {
+            "mode": "phase2_llm_sandbox_contract_preview_deterministic_llm_sandbox_contract_dry_run_only",
+            "source_packs": source_pack_ids,
+            "source_pack_presence": {
+                pack_id: bool(packs.get(pack_id)) for pack_id in source_pack_ids
+            },
+            "provider_profile_count": len(llm_sandbox_provider_profile_cards),
+            "prompt_fixture_count": len(llm_sandbox_prompt_fixture_cards),
+            "invocation_contract_count": len(llm_sandbox_invocation_contract_cards),
+            "response_schema_count": len(llm_sandbox_response_schema_cards),
+            "evidence_claim_guard_count": len(llm_sandbox_evidence_claim_guard_cards),
+            "redaction_privacy_count": len(llm_sandbox_redaction_privacy_cards),
+            "cost_quota_count": len(llm_sandbox_cost_quota_cards),
+            "audit_trace_count": len(llm_sandbox_audit_trace_cards),
+            "failure_recovery_count": len(llm_sandbox_failure_recovery_cards),
+            "unlock_blocker_count": len(phase2_llm_sandbox_unlock_blockers),
+            "sandbox_only": True,
+            "real_provider_client_created": False,
+            "sandbox_call_executed": False,
+            "real_llm_generation_allowed": False,
+            "real_provider_call_allowed": False,
+            "secret_read_allowed": False,
+            "external_call_allowed": False,
+            "paid_operation_allowed": False,
+            "real_execution_allowed": False,
+            "real_database_write_allowed": False,
+            "real_file_write_allowed": False,
+            "risk_note": "LLM sandbox contract is deterministic preview only; it reads no API key or secret, creates no provider client, calls no LLM, sends no external request, incurs no billing, writes no DB or file, creates no audit event, and issues no approval token.",
+        },
+        "llm_sandbox_provider_profile_cards": llm_sandbox_provider_profile_cards,
+        "llm_sandbox_prompt_fixture_cards": llm_sandbox_prompt_fixture_cards,
+        "llm_sandbox_invocation_contract_cards": llm_sandbox_invocation_contract_cards,
+        "llm_sandbox_response_schema_cards": llm_sandbox_response_schema_cards,
+        "llm_sandbox_evidence_claim_guard_cards": llm_sandbox_evidence_claim_guard_cards,
+        "llm_sandbox_redaction_privacy_cards": llm_sandbox_redaction_privacy_cards,
+        "llm_sandbox_cost_quota_cards": llm_sandbox_cost_quota_cards,
+        "llm_sandbox_audit_trace_cards": llm_sandbox_audit_trace_cards,
+        "llm_sandbox_failure_recovery_cards": llm_sandbox_failure_recovery_cards,
+        "llm_sandbox_test_plan_cards": llm_sandbox_test_plan_cards,
+        "phase2_llm_sandbox_unlock_blockers": phase2_llm_sandbox_unlock_blockers,
+        "llm_sandbox_quality_checks": {
+            "sandbox_provider_profile_covered": bool(llm_sandbox_provider_profile_cards),
+            "prompt_fixtures_covered": bool(llm_sandbox_prompt_fixture_cards),
+            "invocation_contract_covered": bool(llm_sandbox_invocation_contract_cards),
+            "response_schema_covered": bool(llm_sandbox_response_schema_cards),
+            "evidence_claim_guard_covered": bool(llm_sandbox_evidence_claim_guard_cards),
+            "redaction_privacy_covered": bool(llm_sandbox_redaction_privacy_cards),
+            "cost_quota_covered": bool(llm_sandbox_cost_quota_cards),
+            "audit_trace_covered": bool(llm_sandbox_audit_trace_cards),
+            "failure_recovery_covered": bool(llm_sandbox_failure_recovery_cards),
+            "test_plan_covered": bool(llm_sandbox_test_plan_cards),
+            "unlock_blockers_covered": bool(phase2_llm_sandbox_unlock_blockers),
+            "safety_boundary_covered": True,
+            "real_provider_client_created": False,
+            "sandbox_call_executed": False,
+            "real_llm_generation_performed": False,
+            "real_provider_call_performed": False,
+            "secret_read_performed": False,
+            "external_call_performed": False,
+            "paid_operation_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "phase2_llm_sandbox_contract_audit_preview",
+            "source": "creative_decision_pack.workspace_phase2_llm_sandbox_contract_pack",
+            "preview_only": True,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_audit_log_read_performed": False,
+            "audit_record_created": False,
+            "real_audit_event_created": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit preview is display-only; it does not write a database, read real logs, or create a real audit event.",
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -48452,6 +48954,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_phase2_audit_sink_contract_pack"] = (
         _rw_workspace_phase2_audit_sink_contract_pack(
+            creative_decision_pack
+        )
+    )
+    creative_decision_pack["workspace_phase2_llm_sandbox_contract_pack"] = (
+        _rw_workspace_phase2_llm_sandbox_contract_pack(
             creative_decision_pack
         )
     )
