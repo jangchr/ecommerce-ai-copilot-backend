@@ -47719,6 +47719,459 @@ def _rw_workspace_phase2_db_schema_migration_dry_run_pack(
     }
 
 
+def _rw_workspace_phase2_audit_sink_contract_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_ids = [
+        "workspace_phase2_db_schema_migration_dry_run_pack",
+        "workspace_phase2_real_db_minimal_adapter_contract_pack",
+        "workspace_phase2_readiness_review_pack",
+        "workspace_phase2_provider_unlock_review_pack",
+        "workspace_phase2_llm_provider_gate_pack",
+        "workspace_phase2_persistence_mock_harness_pack",
+        "workspace_phase2_database_persistence_gate_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_real_execution_approval_token_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_capability_permission_matrix_pack",
+        "workspace_mvp_readiness_dossier_pack",
+        "workspace_final_system_health_pack",
+        "claim_risk_guard_pack",
+        "review_evidence_quality_pack",
+        "final_claim_safe_export_packet_pack",
+        "campaign_creative_dossier_pack",
+    ]
+    packs = {
+        pack_id: dict(creative_decision_pack.get(pack_id) or {})
+        for pack_id in source_pack_ids
+    }
+
+    event_specs = [
+        ("workspace_snapshot_audit_event", "Workspace snapshot audit event", "workspace", ["workspace_phase2_database_persistence_gate_pack", "workspace_mvp_readiness_dossier_pack"]),
+        ("db_adapter_audit_event", "DB adapter audit event", "database", ["workspace_phase2_real_db_minimal_adapter_contract_pack"]),
+        ("migration_dry_run_audit_event", "Migration dry-run audit event", "migration", ["workspace_phase2_db_schema_migration_dry_run_pack"]),
+        ("llm_prompt_gate_audit_event", "LLM prompt gate audit event", "llm", ["workspace_phase2_llm_provider_gate_pack"]),
+        ("provider_unlock_review_audit_event", "Provider unlock review audit event", "provider", ["workspace_phase2_provider_unlock_review_pack"]),
+        ("approval_decision_audit_event", "Approval decision audit event", "approval", ["workspace_real_execution_approval_token_pack"]),
+        ("permission_boundary_audit_event", "Permission boundary audit event", "permission", ["workspace_capability_permission_matrix_pack"]),
+        ("export_readiness_audit_event", "Export readiness audit event", "export", ["final_claim_safe_export_packet_pack", "campaign_creative_dossier_pack"]),
+        ("rollback_preview_audit_event", "Rollback preview audit event", "rollback", ["workspace_phase2_persistence_mock_harness_pack", "workspace_phase2_db_schema_migration_dry_run_pack"]),
+        ("operator_review_audit_event", "Operator review audit event", "operator", ["workspace_phase2_readiness_review_pack", "workspace_phase2_provider_unlock_review_pack"]),
+    ]
+    audit_event_schema_contract_cards = [
+        {
+            "audit_event_schema_id": event_id,
+            "event_label": label,
+            "event_group": group,
+            "source_gate_refs": source_refs,
+            "event_purpose": f"Define future audit event schema for {label.lower()} before any real sink is unlocked.",
+            "required_event_fields": ["audit_event_id", "event_label", "event_group", "event_status", "created_at_preview"],
+            "required_trace_fields": ["trace_id", "correlation_id", "source_pack_ref", "decision_ref"],
+            "required_actor_fields": ["actor_ref", "actor_role", "operator_ref"],
+            "required_operation_fields": ["operation_ref", "operation_type", "target_resource_ref"],
+            "required_status_fields": ["status", "blocked_reason", "preview_only"],
+            "forbidden_event_fields": ["provider_secret", "api_key", "raw_secret", "unredacted_customer_identifier"],
+            "redaction_required": True,
+            "retention_required": True,
+            "real_audit_event_created": False,
+            "real_database_write_allowed": False,
+            "real_file_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit event schema is deterministic preview only and creates no real audit event.",
+        }
+        for event_id, label, group, source_refs in event_specs
+    ]
+
+    trace_specs = [
+        ("trace_id", "Trace ID", "trace", ["workspace_phase2_database_persistence_gate_pack"]),
+        ("run_id", "Run ID", "run", ["workspace_real_execution_approval_token_pack"]),
+        ("snapshot_id", "Snapshot ID", "snapshot", ["workspace_phase2_database_persistence_gate_pack", "workspace_mvp_readiness_dossier_pack"]),
+        ("campaign_id", "Campaign ID", "campaign", ["campaign_creative_dossier_pack"]),
+        ("operator_ref", "Operator ref", "actor", ["workspace_phase2_provider_unlock_review_pack"]),
+        ("source_pack_ref", "Source pack ref", "source", source_pack_ids[:4]),
+        ("decision_ref", "Decision ref", "decision", ["workspace_real_execution_approval_token_pack", "final_claim_safe_export_packet_pack"]),
+        ("correlation_id", "Correlation ID", "correlation", ["workspace_provider_invocation_audit_packet_pack"]),
+    ]
+    audit_trace_identity_cards = [
+        {
+            "trace_identity_id": trace_id,
+            "trace_label": label,
+            "trace_group": group,
+            "source_gate_refs": source_refs,
+            "required_trace_id_fields": ["trace_id", trace_id],
+            "required_correlation_fields": ["correlation_id", "parent_trace_id"],
+            "required_actor_ref_fields": ["actor_ref", "operator_ref", "actor_role"],
+            "required_run_ref_fields": ["run_id", "workspace_run_id"],
+            "required_snapshot_ref_fields": ["snapshot_id", "source_pack_ref"],
+            "missing_trace_behavior": "block real audit sink unlock and show operator preview message",
+            "duplicate_trace_behavior": "block real audit event creation until duplicate handling is implemented",
+            "real_audit_event_created": False,
+            "real_execution_allowed": False,
+            "risk_note": "Trace identity requirements are preview-only and do not create audit events.",
+        }
+        for trace_id, label, group, source_refs in trace_specs
+    ]
+
+    boundary_specs = [
+        ("event_schema_preview", "Event schema preview", "schema", "preview event schema fields"),
+        ("mock_write_contract", "Mock write contract", "mock", "simulate mock write contract"),
+        ("retention_discussion", "Retention discussion", "retention", "preview retention and deletion requirements"),
+        ("query_access_boundary", "Query access boundary", "query", "preview future query roles, scopes, filters, and redaction"),
+    ]
+    audit_sink_adapter_boundary_cards = [
+        {
+            "audit_sink_boundary_id": boundary_id,
+            "sink_label": label,
+            "sink_group": group,
+            "allowed_preview_operation": allowed_operation,
+            "forbidden_real_operations": [
+                "connect audit sink",
+                "insert event",
+                "stream logs",
+                "export logs",
+                "read secret",
+                "external log call",
+            ],
+            "requires_audit_sink_config": True,
+            "requires_secret_access": True,
+            "requires_external_call_approval": True,
+            "requires_database_connection": True,
+            "requires_operator_approval": True,
+            "real_audit_sink_connection_allowed": False,
+            "real_database_write_allowed": False,
+            "external_call_allowed": False,
+            "secret_read_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Only audit sink contract preview is allowed; no sink connection, event insert, log stream, log export, secret read, or external logging call is performed.",
+        }
+        for boundary_id, label, group, allowed_operation in boundary_specs
+    ]
+
+    retention_targets = [
+        "audit_events",
+        "operator_decisions",
+        "provider_invocation_audits",
+        "db_operation_audits",
+        "migration_dry_run_audits",
+        "approval_audits",
+    ]
+    audit_storage_retention_cards = [
+        {
+            "retention_card_id": f"audit_retention_{target}",
+            "storage_target": target,
+            "retention_requirement": "future retention policy enforcement required before real audit persistence",
+            "deletion_requirement": "future deletion policy enforcement required before real audit persistence",
+            "retention_or_deletion_executed": False,
+            "real_database_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Retention and deletion are described only; no real retention or deletion is executed.",
+        }
+        for target in retention_targets
+    ]
+
+    privacy_targets = [
+        ("provider secret", False, False, "provider secret must never enter audit event persistence and secrets are not read"),
+        ("customer data", True, False, "customer data requires redaction before future audit persistence"),
+        ("review text", True, False, "review text requires redaction and retention controls"),
+        ("generated copy", True, False, "generated copy requires claim-safety and retention controls"),
+        ("operator note", True, False, "operator note requires role-based query boundary and retention controls"),
+        ("raw prompt", True, False, "raw prompt requires redaction before any future audit event"),
+        ("provider response preview", True, False, "provider response preview requires redaction and cannot imply provider execution"),
+    ]
+    audit_redaction_privacy_cards = [
+        {
+            "redaction_privacy_id": f"audit_redaction_{idx}",
+            "data_label": label,
+            "redaction_required": redaction_required,
+            "audit_persistence_allowed": persistence_allowed,
+            "secret_read_allowed": False,
+            "real_database_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": risk_note,
+        }
+        for idx, (label, redaction_required, persistence_allowed, risk_note) in enumerate(privacy_targets, start=1)
+    ]
+
+    mock_write_specs = [
+        ("event_validation", "Event validation mock write", "validate event schema without persistence"),
+        ("mock_write", "Mock write preview", "return mock accepted status without sink write"),
+        ("mock_query", "Mock query preview", "return mock query result without reading logs or DB"),
+        ("mock_failure_handling", "Mock failure handling", "simulate recoverable audit write failure"),
+    ]
+    audit_mock_write_contract_cards = [
+        {
+            "mock_audit_write_id": mock_id,
+            "mock_write_label": label,
+            "source_event_schema_refs": [card["audit_event_schema_id"] for card in audit_event_schema_contract_cards[:3]],
+            "simulated_audit_operation": operation,
+            "mock_input_shape": {"event": "redacted_preview_event", "trace": "preview_trace_identity"},
+            "mock_output_shape": {"status": "mock_preview_only", "audit_event_created": False},
+            "expected_mock_status": "preview_only_no_real_sink_write",
+            "writes_real_audit_sink": False,
+            "writes_real_database": False,
+            "writes_real_file": False,
+            "uses_external_call": False,
+            "reads_secret": False,
+            "real_execution_allowed": False,
+            "risk_note": "Mock write contract validates shapes only and writes no real audit sink, DB, or file.",
+        }
+        for mock_id, label, operation in mock_write_specs
+    ]
+
+    query_roles = [
+        ("operator", "workspace scoped operator review", "workspace_id and run_id filters"),
+        ("admin", "admin troubleshooting preview", "time range, status, and source pack filters"),
+        ("auditor", "read-only audit review preview", "redacted event group and actor role filters"),
+    ]
+    audit_query_access_boundary_cards = [
+        {
+            "query_access_id": f"audit_query_access_{role}",
+            "actor_role": role,
+            "query_scope": scope,
+            "allowed_filters_preview": filters,
+            "redaction_constraints": ["provider secret excluded", "customer data redacted", "raw prompt redacted"],
+            "retention_constraints": ["retention policy required", "deletion policy required"],
+            "reads_real_audit_log": False,
+            "queries_real_database": False,
+            "secret_read_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Query boundary previews future audit log access only and reads no real log or database.",
+        }
+        for role, scope, filters in query_roles
+    ]
+
+    failure_labels = [
+        "audit sink missing",
+        "schema invalid",
+        "trace id missing",
+        "redaction failed",
+        "retention policy missing",
+        "permission denied",
+        "external sink unavailable",
+        "partial audit write",
+        "duplicate audit event",
+        "monitoring unavailable",
+    ]
+    audit_failure_recovery_cards = [
+        {
+            "audit_failure_id": f"audit_failure_{idx}",
+            "failure_label": label,
+            "failure_group": "audit_sink_recovery",
+            "simulated_failure_type": label,
+            "expected_operator_message": f"{label} blocks real audit sink unlock; keep preview mode enabled.",
+            "expected_recovery_preview": "show deterministic remediation guidance and require operator review before any real retry",
+            "blocks_real_unlock": True,
+            "retry_allowed_in_preview": True,
+            "requires_real_retry": False,
+            "requires_real_rollback": False,
+            "real_execution_allowed": False,
+            "risk_note": "Failure recovery is preview-only and does not perform real retry or rollback.",
+        }
+        for idx, label in enumerate(failure_labels, start=1)
+    ]
+
+    alert_specs = [
+        ("schema_invalid_alert", "high", "audit event schema validation would fail", "review schema contract"),
+        ("trace_missing_alert", "high", "trace identity is missing", "review trace identity requirements"),
+        ("redaction_failed_alert", "critical", "redaction enforcement is missing", "keep audit unlock blocked"),
+        ("retention_missing_alert", "medium", "retention policy is not implemented", "review retention policy"),
+        ("sink_unavailable_alert", "medium", "external audit sink would be unavailable", "review sink approval"),
+    ]
+    audit_monitoring_alert_preview_cards = [
+        {
+            "monitoring_alert_preview_id": alert_id,
+            "future_alert_type": alert_id,
+            "severity": severity,
+            "trigger_condition": trigger,
+            "operator_action": action,
+            "escalation_preview": "preview escalation only; no real alert or notification is created",
+            "real_alert_created": False,
+            "notification_sent": False,
+            "external_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Monitoring card previews future alerting and sends no notification.",
+        }
+        for alert_id, severity, trigger, action in alert_specs
+    ]
+
+    test_labels = [
+        "unit tests",
+        "contract tests",
+        "schema validation tests",
+        "mock write tests",
+        "mock query tests",
+        "redaction tests",
+        "retention tests",
+        "permission boundary tests",
+        "failure recovery tests",
+        "monitoring preview tests",
+    ]
+    audit_test_plan_cards = [
+        {
+            "audit_test_plan_id": f"audit_sink_test_{idx}",
+            "test_label": label,
+            "test_group": label.split()[0],
+            "required_before_unlock": True,
+            "current_status": "preview_defined",
+            "requires_real_audit_sink": False,
+            "requires_real_database": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} must pass before any real audit sink unlock.",
+        }
+        for idx, label in enumerate(test_labels, start=1)
+    ]
+
+    blocker_labels = [
+        "no real audit sink config",
+        "no audit database table",
+        "no audit event schema migration",
+        "no audit retention policy enforcement",
+        "no audit deletion policy enforcement",
+        "no audit redaction enforcement",
+        "no audit query access control",
+        "no monitoring alert integration",
+        "no production approval",
+        "no external sink approval",
+    ]
+    phase2_audit_sink_unlock_blockers = [
+        {
+            "unlock_blocker_id": f"audit_sink_blocker_{idx}",
+            "blocker_label": label,
+            "blocks_real_audit_sink_unlock": True,
+            "recommended_operator_action": "keep audit sink in deterministic preview until this blocker is resolved",
+            "real_audit_sink_connection_allowed": False,
+            "real_audit_event_created": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} blocks real audit sink unlock.",
+        }
+        for idx, label in enumerate(blocker_labels, start=1)
+    ]
+
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "database_read": False,
+        "database_read_enabled": False,
+        "database_write": False,
+        "database_write_enabled": False,
+        "schema_migration": False,
+        "schema_migration_enabled": False,
+        "audit_sink": False,
+        "audit_sink_enabled": False,
+        "audit_event_write": False,
+        "audit_event_write_enabled": False,
+        "audit_log_read": False,
+        "audit_log_read_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "secret_read": False,
+        "secret_read_enabled": False,
+        "external_call": False,
+        "external_call_enabled": False,
+        "token_issue": False,
+        "token_issue_enabled": False,
+        "paid_operation": False,
+        "paid_operation_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_phase2_audit_sink_contract_pack_v1",
+        "audit_sink_contract_summary": {
+            "mode": "phase2_audit_sink_contract_preview_deterministic_audit_event_contract_dry_run_only",
+            "source_packs": source_pack_ids,
+            "source_pack_presence": {
+                pack_id: bool(packs.get(pack_id)) for pack_id in source_pack_ids
+            },
+            "audit_event_schema_contract_count": len(audit_event_schema_contract_cards),
+            "audit_trace_identity_count": len(audit_trace_identity_cards),
+            "audit_sink_adapter_boundary_count": len(audit_sink_adapter_boundary_cards),
+            "audit_storage_retention_count": len(audit_storage_retention_cards),
+            "audit_redaction_privacy_count": len(audit_redaction_privacy_cards),
+            "audit_mock_write_contract_count": len(audit_mock_write_contract_cards),
+            "audit_query_access_boundary_count": len(audit_query_access_boundary_cards),
+            "audit_failure_recovery_count": len(audit_failure_recovery_cards),
+            "audit_monitoring_alert_preview_count": len(audit_monitoring_alert_preview_cards),
+            "audit_test_plan_count": len(audit_test_plan_cards),
+            "unlock_blocker_count": len(phase2_audit_sink_unlock_blockers),
+            "real_audit_sink_connection_allowed": False,
+            "real_audit_event_created": False,
+            "real_database_write_allowed": False,
+            "real_file_write_allowed": False,
+            "secret_read_allowed": False,
+            "external_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit sink contract preview is deterministic and dry-run only; it creates no sink, writes no DB or file, reads no secret or real log, makes no external call, and creates no real audit event.",
+        },
+        "audit_event_schema_contract_cards": audit_event_schema_contract_cards,
+        "audit_trace_identity_cards": audit_trace_identity_cards,
+        "audit_sink_adapter_boundary_cards": audit_sink_adapter_boundary_cards,
+        "audit_storage_retention_cards": audit_storage_retention_cards,
+        "audit_redaction_privacy_cards": audit_redaction_privacy_cards,
+        "audit_mock_write_contract_cards": audit_mock_write_contract_cards,
+        "audit_query_access_boundary_cards": audit_query_access_boundary_cards,
+        "audit_failure_recovery_cards": audit_failure_recovery_cards,
+        "audit_monitoring_alert_preview_cards": audit_monitoring_alert_preview_cards,
+        "audit_test_plan_cards": audit_test_plan_cards,
+        "phase2_audit_sink_unlock_blockers": phase2_audit_sink_unlock_blockers,
+        "audit_sink_quality_checks": {
+            "event_schema_covered": bool(audit_event_schema_contract_cards),
+            "trace_identity_covered": bool(audit_trace_identity_cards),
+            "sink_adapter_boundary_covered": bool(audit_sink_adapter_boundary_cards),
+            "storage_retention_covered": bool(audit_storage_retention_cards),
+            "redaction_privacy_covered": bool(audit_redaction_privacy_cards),
+            "mock_write_covered": bool(audit_mock_write_contract_cards),
+            "query_access_boundary_covered": bool(audit_query_access_boundary_cards),
+            "failure_recovery_covered": bool(audit_failure_recovery_cards),
+            "monitoring_alert_preview_covered": bool(audit_monitoring_alert_preview_cards),
+            "test_plan_covered": bool(audit_test_plan_cards),
+            "unlock_blockers_covered": bool(phase2_audit_sink_unlock_blockers),
+            "safety_boundary_covered": True,
+            "real_audit_sink_connection_performed": False,
+            "real_audit_event_created": False,
+            "real_audit_log_read_performed": False,
+            "real_database_write_performed": False,
+            "real_file_write_performed": False,
+            "secret_read_performed": False,
+            "external_call_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "phase2_audit_sink_contract_audit_preview",
+            "source": "creative_decision_pack.workspace_phase2_audit_sink_contract_pack",
+            "preview_only": True,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_audit_log_read_performed": False,
+            "real_history_table_read_performed": False,
+            "audit_record_created": False,
+            "real_audit_event_created": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit preview is display-only; it does not write a database, read real logs, query DB history, or create a real audit event.",
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -47996,6 +48449,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         "workspace_phase2_db_schema_migration_dry_run_pack"
     ] = _rw_workspace_phase2_db_schema_migration_dry_run_pack(
         creative_decision_pack
+    )
+    creative_decision_pack["workspace_phase2_audit_sink_contract_pack"] = (
+        _rw_workspace_phase2_audit_sink_contract_pack(
+            creative_decision_pack
+        )
     )
 
     return ReviewWorkspaceResponse(
