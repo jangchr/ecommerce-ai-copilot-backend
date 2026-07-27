@@ -48674,6 +48674,558 @@ def _rw_workspace_phase2_llm_sandbox_contract_pack(
     }
 
 
+def _rw_workspace_phase2_provider_sandbox_contract_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_ids = [
+        "workspace_phase2_llm_sandbox_contract_pack",
+        "workspace_phase2_audit_sink_contract_pack",
+        "workspace_phase2_provider_unlock_review_pack",
+        "workspace_phase2_llm_provider_gate_pack",
+        "workspace_phase2_readiness_review_pack",
+        "workspace_provider_adapter_contract_pack",
+        "workspace_provider_contract_test_pack",
+        "workspace_provider_mock_invocation_result_pack",
+        "workspace_provider_failure_taxonomy_pack",
+        "workspace_provider_asset_contract_pack",
+        "workspace_provider_cost_quota_risk_guard_pack",
+        "workspace_real_provider_readiness_checklist_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_capability_permission_matrix_pack",
+        "claim_safe_platform_delivery_pack",
+        "claim_safe_delivery_qa_pack",
+        "final_claim_safe_export_packet_pack",
+        "campaign_creative_dossier_pack",
+        "claim_risk_guard_pack",
+        "review_evidence_quality_pack",
+    ]
+    packs = {
+        pack_id: dict(creative_decision_pack.get(pack_id) or {})
+        for pack_id in source_pack_ids
+    }
+
+    provider_specs = [
+        ("image_generation_sandbox", "Image generation sandbox", "creative_media", "image_generation", "preview image generation request contract from claim-safe prompt fixtures"),
+        ("video_generation_sandbox", "Video generation sandbox", "creative_media", "video_generation", "preview video prompt request contract and provider response shape"),
+        ("media_storage_sandbox", "Media storage sandbox", "media_boundary", "media_storage", "preview media reference and manifest boundary without storage"),
+        ("analytics_tracking_sandbox", "Analytics tracking sandbox", "measurement", "analytics_tracking", "preview analytics event request shape without tracking calls"),
+        ("translation_sandbox", "Translation sandbox", "localization", "translation", "preview translation provider request and response schema"),
+        ("approval_ticket_sandbox", "Approval ticket sandbox", "operator_workflow", "approval_ticket", "preview approval ticket payload shape without task creation"),
+        ("platform_upload_sandbox", "Platform upload sandbox", "platform_delivery", "platform_upload", "preview platform upload payload without upload or publish"),
+        ("external_scraping_sandbox", "External scraping sandbox", "research", "external_scraping", "preview scraping request boundary without external call"),
+        ("rollback_restore_sandbox", "Rollback restore sandbox", "recovery", "rollback_restore", "preview rollback restore contract without file or DB mutation"),
+        ("policy_check_sandbox", "Policy check sandbox", "policy", "policy_check", "preview policy dependency shape without real policy API or legal advice"),
+    ]
+    provider_sandbox_profile_cards = [
+        {
+            "provider_sandbox_profile_id": profile_id,
+            "provider_label": label,
+            "provider_group": group,
+            "sandbox_capability_type": capability,
+            "source_gate_refs": [
+                "workspace_phase2_provider_unlock_review_pack",
+                "workspace_phase2_llm_provider_gate_pack",
+                "workspace_secret_environment_gate_pack",
+                "workspace_network_external_call_block_guard_pack",
+            ],
+            "intended_sandbox_use_case": use_case,
+            "required_secret_refs": ["future_provider_sandbox_key_ref", "future_provider_project_ref"],
+            "required_network_scope": "future approved provider sandbox endpoint allowlist",
+            "required_endpoint_or_model_profile": "future provider sandbox endpoint or model profile",
+            "sandbox_only": True,
+            "real_provider_client_created": False,
+            "provider_sandbox_call_executed": False,
+            "real_provider_call_allowed": False,
+            "secret_read_allowed": False,
+            "external_call_allowed": False,
+            "paid_operation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Provider sandbox profile is a deterministic preview and creates no provider client, reads no secret, makes no external call, and incurs no cost.",
+        }
+        for profile_id, label, group, capability, use_case in provider_specs
+    ]
+
+    fixture_specs = [
+        ("image_prompt_asset_fixture", "Image prompt asset fixture", "image_asset", ["claim_safe_creative_output_pack", "workspace_provider_asset_contract_pack"], ["prompt_asset_ref"], ["claim_risk_guard_pack"]),
+        ("video_prompt_asset_fixture", "Video prompt asset fixture", "video_asset", ["claim_safe_delivery_qa_pack", "workspace_provider_asset_contract_pack"], ["video_prompt_ref"], ["claim_safe_delivery_qa_pack"]),
+        ("media_manifest_fixture", "Media manifest fixture", "media_manifest", ["workspace_provider_asset_contract_pack"], ["media_manifest_ref"], ["review_evidence_quality_pack"]),
+        ("analytics_event_fixture", "Analytics event fixture", "analytics", ["campaign_creative_dossier_pack"], ["event_schema_ref"], ["claim_risk_guard_pack"]),
+        ("translation_copy_fixture", "Translation copy fixture", "translation", ["claim_safe_creative_brief_pack"], ["copy_ref"], ["review_evidence_quality_pack"]),
+        ("approval_ticket_fixture", "Approval ticket fixture", "approval", ["workspace_provider_invocation_audit_packet_pack"], ["operator_note_ref"], ["claim_risk_guard_pack"]),
+        ("platform_delivery_fixture", "Platform delivery fixture", "platform_delivery", ["claim_safe_platform_delivery_pack", "final_claim_safe_export_packet_pack"], ["delivery_payload_ref"], ["claim_safe_delivery_qa_pack"]),
+        ("scraping_input_fixture", "Scraping input fixture", "scraping", ["workspace_network_external_call_block_guard_pack"], ["source_url_ref"], ["review_evidence_quality_pack"]),
+        ("rollback_snapshot_fixture", "Rollback snapshot fixture", "rollback", ["workspace_phase2_audit_sink_contract_pack"], ["snapshot_ref"], ["claim_risk_guard_pack"]),
+        ("policy_claim_fixture", "Policy claim fixture", "policy", ["claim_risk_guard_pack"], ["claim_ref"], ["claim_risk_guard_pack", "review_evidence_quality_pack"]),
+    ]
+    provider_sandbox_fixture_cards = [
+        {
+            "sandbox_fixture_id": fixture_id,
+            "fixture_label": label,
+            "fixture_group": group,
+            "source_pack_refs": source_refs,
+            "fixture_purpose": f"Define deterministic provider sandbox fixture shape for {label.lower()} without invoking a provider.",
+            "input_context_fixture_shape": {
+                "source_pack_refs": source_refs,
+                "redacted_context": True,
+                "asset_refs_only": True,
+                "claim_safety_refs_only": True,
+            },
+            "required_asset_refs": asset_refs,
+            "required_claim_safety_refs": claim_refs,
+            "forbidden_fixture_inputs": ["provider_secret", "api_key", "raw_media_binary", "unredacted_customer_data", "real_platform_token"],
+            "expected_safe_output_shape": {
+                "provider_response_preview": "schema_only",
+                "asset_trace": "required",
+                "claim_trace": "required",
+                "risk_flags": "required",
+            },
+            "contains_customer_data": False,
+            "contains_provider_secret": False,
+            "contains_media_binary": False,
+            "requires_redaction": True,
+            "sandbox_invocation_allowed": False,
+            "real_provider_call_allowed": False,
+            "risk_note": "Fixture is preview-only and cannot carry secrets, media binaries, customer data, or real provider inputs.",
+        }
+        for fixture_id, label, group, source_refs, asset_refs, claim_refs in fixture_specs
+    ]
+
+    request_specs = [
+        ("image_generation_request_contract", "Image generation request contract", "image_generation", ["image_prompt_asset_fixture"]),
+        ("video_generation_request_contract", "Video generation request contract", "video_generation", ["video_prompt_asset_fixture"]),
+        ("media_storage_request_contract", "Media storage request contract", "media_storage", ["media_manifest_fixture"]),
+        ("analytics_tracking_request_contract", "Analytics tracking request contract", "analytics", ["analytics_event_fixture"]),
+        ("translation_request_contract", "Translation request contract", "translation", ["translation_copy_fixture"]),
+        ("approval_ticket_request_contract", "Approval ticket request contract", "approval", ["approval_ticket_fixture"]),
+        ("platform_upload_request_contract", "Platform upload request contract", "platform_upload", ["platform_delivery_fixture"]),
+        ("external_scraping_request_contract", "External scraping request contract", "scraping", ["scraping_input_fixture"]),
+        ("rollback_restore_request_contract", "Rollback restore request contract", "rollback", ["rollback_snapshot_fixture"]),
+        ("policy_check_request_contract", "Policy check request contract", "policy", ["policy_claim_fixture"]),
+    ]
+    provider_sandbox_request_contract_cards = [
+        {
+            "sandbox_request_contract_id": contract_id,
+            "request_label": label,
+            "request_group": group,
+            "source_fixture_refs": fixture_refs,
+            "simulated_request_shape": {
+                "provider_sandbox_profile_ref": "provider_sandbox_profile_id",
+                "fixture_refs": fixture_refs,
+                "dry_run_only": True,
+                "redacted_input": True,
+            },
+            "required_headers_or_metadata": ["trace_id", "run_id", "sandbox_fixture_id", "operator_ref", "dry_run_only"],
+            "required_timeout_policy": "future sandbox timeout policy required before real request",
+            "required_retry_policy": "future retry cap required; preview executes no retry",
+            "required_cost_guard": "future cost quota approval required before provider sandbox unlock",
+            "required_audit_trace_refs": ["workspace_phase2_audit_sink_contract_pack", "workspace_provider_invocation_audit_packet_pack"],
+            "forbidden_request_fields": ["api_key", "provider_secret", "media_binary", "real_customer_data", "platform_publish_token"],
+            "provider_sandbox_call_executed": False,
+            "real_provider_call_allowed": False,
+            "external_call_allowed": False,
+            "secret_read_allowed": False,
+            "paid_operation_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Request contract describes a simulated request only; it performs no sandbox call, secret read, external request, file upload, or media download.",
+        }
+        for contract_id, label, group, fixture_refs in request_specs
+    ]
+
+    response_specs = [
+        ("image_generation_response_schema", "Image generation response schema", "image_generation"),
+        ("video_generation_response_schema", "Video generation response schema", "video_generation"),
+        ("media_storage_response_schema", "Media storage response schema", "media_storage"),
+        ("analytics_tracking_response_schema", "Analytics tracking response schema", "analytics"),
+        ("translation_response_schema", "Translation response schema", "translation"),
+        ("approval_ticket_response_schema", "Approval ticket response schema", "approval"),
+        ("platform_upload_response_schema", "Platform upload response schema", "platform_upload"),
+        ("external_scraping_response_schema", "External scraping response schema", "scraping"),
+        ("rollback_restore_response_schema", "Rollback restore response schema", "rollback"),
+        ("policy_check_response_schema", "Policy check response schema", "policy"),
+    ]
+    provider_sandbox_response_schema_cards = [
+        {
+            "provider_sandbox_response_schema_id": schema_id,
+            "response_label": label,
+            "response_group": group,
+            "source_request_contract_refs": ["provider_sandbox_request_contract_cards"],
+            "expected_response_fields": ["status_preview", "asset_trace", "claim_trace", "usage_fields", "risk_fields"],
+            "required_asset_trace_fields": ["asset_ref", "fixture_id", "media_requirement_status", "no_binary_payload"],
+            "required_claim_trace_fields": ["claim_id", "claim_text", "support_status", "evidence_gap_refs"],
+            "required_usage_fields": ["estimated_units", "estimated_cost", "quota_ref", "rate_limit_ref"],
+            "required_risk_fields": ["unsafe_asset_flags", "unsupported_claim_flags", "operator_review_required"],
+            "forbidden_response_fields": [
+                "provider secret",
+                "raw hidden prompt",
+                "untraced claim",
+                "unapproved media URL",
+                "real customer data",
+            ],
+            "schema_validation_required": True,
+            "provider_sandbox_call_executed": False,
+            "real_provider_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Response schema validates preview shape only and forbids secrets, hidden prompts, untraced claims, unapproved media URLs, and real customer data.",
+        }
+        for schema_id, label, group in response_specs
+    ]
+
+    asset_boundary_specs = [
+        ("image_asset_boundary", "image asset", "image asset"),
+        ("video_asset_boundary", "video asset", "video asset"),
+        ("media_manifest_boundary", "media manifest", "media manifest"),
+        ("platform_delivery_payload_boundary", "platform delivery payload", "platform delivery payload"),
+        ("analytics_event_boundary", "analytics event", "analytics event"),
+        ("approval_ticket_boundary", "approval ticket", "approval ticket"),
+        ("rollback_snapshot_boundary", "rollback snapshot", "rollback snapshot"),
+    ]
+    provider_sandbox_asset_boundary_cards = [
+        {
+            "provider_sandbox_asset_boundary_id": boundary_id,
+            "asset_label": label,
+            "asset_group": group,
+            "source_pack_refs": ["workspace_provider_asset_contract_pack", "claim_safe_platform_delivery_pack"],
+            "allowed_asset_reference_shape": ["asset_ref", "manifest_ref", "claim_trace_ref", "operator_ref"],
+            "forbidden_asset_payloads": ["media_binary", "downloaded_file", "uploaded_file", "real_platform_asset_url"],
+            "media_upload_allowed": False,
+            "media_download_allowed": False,
+            "media_storage_allowed": False,
+            "platform_upload_allowed": False,
+            "real_export_allowed": False,
+            "real_file_write_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} boundary is reference-only and performs no media upload, download, storage, platform upload, export, or file write.",
+        }
+        for boundary_id, label, group in asset_boundary_specs
+    ]
+
+    policy_specs = [
+        ("unsupported_claim_dependency", "unsupported claim", "unsupported claim"),
+        ("missing_evidence_dependency", "missing evidence", "missing evidence"),
+        ("do_not_claim_dependency", "do_not_claim", "do_not_claim"),
+        ("restricted_claim_dependency", "restricted claim", "restricted claim"),
+        ("policy_disabled_dependency", "policy disabled", "policy disabled"),
+        ("operator_review_required_dependency", "operator review required", "operator review required"),
+    ]
+    provider_sandbox_policy_claim_dependency_cards = [
+        {
+            "provider_sandbox_policy_claim_dependency_id": dep_id,
+            "dependency_label": label,
+            "dependency_group": "claim_safety",
+            "source_pack_refs": ["claim_risk_guard_pack", "review_evidence_quality_pack", "claim_safe_delivery_qa_pack"],
+            "claim_dependency_type": dependency_type,
+            "required_quote_refs": ["supporting_quote_ids", "evidence_refs"],
+            "required_claim_refs": ["claim_id", "claim_text", "claim_trace"],
+            "blocked_provider_output_behavior": "block provider sandbox unlock and require operator review",
+            "real_policy_check_allowed": False,
+            "legal_advice_provided": False,
+            "real_provider_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Policy/claim dependency is not legal advice and does not call a real policy API or represent platform compliance.",
+        }
+        for dep_id, label, dependency_type in policy_specs
+    ]
+
+    cost_specs = [
+        ("image_generation_cost_quota", "Image generation cost quota", "image_generation", "$0.00 preview estimate", "10/day", "5/min", "30s"),
+        ("video_generation_cost_quota", "Video generation cost quota", "video_generation", "$0.00 preview estimate", "4/day", "2/min", "60s"),
+        ("media_storage_cost_quota", "Media storage cost quota", "media_storage", "$0.00 preview estimate", "0 writes/day", "0/min", "15s"),
+        ("analytics_tracking_cost_quota", "Analytics tracking cost quota", "analytics", "$0.00 preview estimate", "0 events/day", "0/min", "10s"),
+        ("translation_cost_quota", "Translation cost quota", "translation", "$0.00 preview estimate", "20/day", "5/min", "20s"),
+        ("platform_upload_cost_quota", "Platform upload cost quota", "platform_upload", "$0.00 preview estimate", "0 uploads/day", "0/min", "20s"),
+        ("policy_check_cost_quota", "Policy check cost quota", "policy", "$0.00 preview estimate", "0 real checks/day", "0/min", "20s"),
+    ]
+    provider_sandbox_cost_quota_cards = [
+        {
+            "provider_sandbox_cost_quota_id": quota_id,
+            "cost_quota_label": label,
+            "quota_group": group,
+            "sandbox_quota_policy": quota,
+            "timeout_policy": timeout,
+            "cost_estimate": cost_estimate,
+            "rate_limit": rate_limit,
+            "retry_cap": 0,
+            "billing_request_sent": False,
+            "real_request_sent": False,
+            "paid_operation_allowed": False,
+            "external_call_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": "Cost/quota is preview-only and performs no billing request, provider request, paid operation, external call, or retry.",
+        }
+        for quota_id, label, group, cost_estimate, quota, rate_limit, timeout in cost_specs
+    ]
+
+    audit_trace_specs = [
+        ("image_generation_audit_trace", "Image generation audit trace", "image_generation"),
+        ("video_generation_audit_trace", "Video generation audit trace", "video_generation"),
+        ("media_storage_audit_trace", "Media storage audit trace", "media_storage"),
+        ("platform_upload_audit_trace", "Platform upload audit trace", "platform_upload"),
+        ("policy_check_audit_trace", "Policy check audit trace", "policy"),
+    ]
+    provider_sandbox_audit_trace_cards = [
+        {
+            "provider_sandbox_audit_trace_id": trace_id,
+            "trace_label": label,
+            "trace_group": group,
+            "future_audit_trace_fields": [
+                "trace id",
+                "run id",
+                "fixture id",
+                "response schema id",
+                "asset ref",
+                "operator ref",
+                "decision ref",
+                "cost estimate ref",
+            ],
+            "required_audit_sink_refs": ["workspace_phase2_audit_sink_contract_pack"],
+            "database_write_allowed": False,
+            "real_audit_event_created": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit trace is future schema preview only and writes no DB, creates no real audit event, and reads no logs.",
+        }
+        for trace_id, label, group in audit_trace_specs
+    ]
+
+    failure_labels = [
+        "provider unavailable",
+        "timeout",
+        "rate limit",
+        "schema invalid",
+        "unsafe asset output",
+        "missing asset trace",
+        "redaction failure",
+        "secret missing",
+        "cost quota exceeded",
+        "audit sink missing",
+        "media operation blocked",
+        "platform upload blocked",
+    ]
+    provider_sandbox_failure_recovery_cards = [
+        {
+            "provider_sandbox_failure_id": f"provider_sandbox_failure_{idx}",
+            "failure_label": label,
+            "failure_group": "provider_sandbox_recovery",
+            "simulated_failure_type": label,
+            "expected_operator_message": f"{label} blocks provider sandbox unlock; keep deterministic preview mode.",
+            "expected_recovery_preview": "show recovery guidance and require operator review before any real retry or rollback",
+            "blocks_real_unlock": True,
+            "retry_allowed_in_preview": True,
+            "requires_real_retry": False,
+            "requires_real_rollback": False,
+            "real_execution_allowed": False,
+            "risk_note": "Failure recovery is preview-only and does not execute a real retry, rollback, media operation, upload, or restore.",
+        }
+        for idx, label in enumerate(failure_labels, start=1)
+    ]
+
+    test_labels = [
+        "unit tests",
+        "contract tests",
+        "fixture tests",
+        "response schema tests",
+        "asset boundary tests",
+        "policy claim dependency tests",
+        "redaction tests",
+        "cost quota tests",
+        "timeout tests",
+        "audit trace tests",
+        "permission boundary tests",
+    ]
+    provider_sandbox_test_plan_cards = [
+        {
+            "provider_sandbox_test_plan_id": f"provider_sandbox_test_{idx}",
+            "test_label": label,
+            "test_group": label.split()[0],
+            "required_before_unlock": True,
+            "current_status": "preview_defined",
+            "requires_real_provider": False,
+            "requires_provider_sandbox_call": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} must pass before any real provider sandbox unlock.",
+        }
+        for idx, label in enumerate(test_labels, start=1)
+    ]
+
+    blocker_labels = [
+        "no provider sandbox key approval",
+        "no secret access approval",
+        "no external call approval",
+        "no cost quota approval",
+        "no sandbox provider contract test executed",
+        "no real audit sink",
+        "no media storage approval",
+        "no platform upload approval",
+        "no production approval",
+        "no provider-specific legal review",
+    ]
+    phase2_provider_sandbox_unlock_blockers = [
+        {
+            "unlock_blocker_id": f"provider_sandbox_blocker_{idx}",
+            "blocker_label": label,
+            "blocks_real_provider_sandbox_unlock": True,
+            "recommended_operator_action": "keep provider sandbox in deterministic preview until this blocker is resolved",
+            "real_provider_call_allowed": False,
+            "provider_sandbox_call_executed": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} blocks real provider sandbox unlock.",
+        }
+        for idx, label in enumerate(blocker_labels, start=1)
+    ]
+
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "provider_sandbox_call": False,
+        "provider_sandbox_call_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "llm_sandbox_call": False,
+        "llm_sandbox_call_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "media_upload": False,
+        "media_upload_enabled": False,
+        "media_download": False,
+        "media_download_enabled": False,
+        "media_storage": False,
+        "media_storage_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "database_read": False,
+        "database_read_enabled": False,
+        "database_write": False,
+        "database_write_enabled": False,
+        "schema_migration": False,
+        "schema_migration_enabled": False,
+        "audit_sink": False,
+        "audit_sink_enabled": False,
+        "audit_event_write": False,
+        "audit_event_write_enabled": False,
+        "audit_log_read": False,
+        "audit_log_read_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "secret_read": False,
+        "secret_read_enabled": False,
+        "external_call": False,
+        "external_call_enabled": False,
+        "token_issue": False,
+        "token_issue_enabled": False,
+        "paid_operation": False,
+        "paid_operation_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_phase2_provider_sandbox_contract_pack_v1",
+        "provider_sandbox_contract_summary": {
+            "mode": "phase2_provider_sandbox_contract_preview_deterministic_provider_sandbox_contract_dry_run_only",
+            "source_packs": source_pack_ids,
+            "source_pack_presence": {
+                pack_id: bool(packs.get(pack_id)) for pack_id in source_pack_ids
+            },
+            "provider_profile_count": len(provider_sandbox_profile_cards),
+            "fixture_count": len(provider_sandbox_fixture_cards),
+            "request_contract_count": len(provider_sandbox_request_contract_cards),
+            "response_schema_count": len(provider_sandbox_response_schema_cards),
+            "asset_boundary_count": len(provider_sandbox_asset_boundary_cards),
+            "policy_claim_dependency_count": len(provider_sandbox_policy_claim_dependency_cards),
+            "cost_quota_count": len(provider_sandbox_cost_quota_cards),
+            "audit_trace_count": len(provider_sandbox_audit_trace_cards),
+            "failure_recovery_count": len(provider_sandbox_failure_recovery_cards),
+            "unlock_blocker_count": len(phase2_provider_sandbox_unlock_blockers),
+            "sandbox_only": True,
+            "real_provider_client_created": False,
+            "provider_sandbox_call_executed": False,
+            "real_provider_call_allowed": False,
+            "secret_read_allowed": False,
+            "external_call_allowed": False,
+            "paid_operation_allowed": False,
+            "media_upload_allowed": False,
+            "media_download_allowed": False,
+            "media_storage_allowed": False,
+            "platform_upload_allowed": False,
+            "real_export_allowed": False,
+            "real_execution_allowed": False,
+            "real_database_write_allowed": False,
+            "real_file_write_allowed": False,
+            "risk_note": "Provider sandbox contract is deterministic preview only; it creates no provider client, executes no sandbox or real provider call, reads no secrets, makes no external call, performs no paid operation, moves no media, uploads nothing, exports nothing, and writes no DB or file.",
+        },
+        "provider_sandbox_profile_cards": provider_sandbox_profile_cards,
+        "provider_sandbox_fixture_cards": provider_sandbox_fixture_cards,
+        "provider_sandbox_request_contract_cards": provider_sandbox_request_contract_cards,
+        "provider_sandbox_response_schema_cards": provider_sandbox_response_schema_cards,
+        "provider_sandbox_asset_boundary_cards": provider_sandbox_asset_boundary_cards,
+        "provider_sandbox_policy_claim_dependency_cards": provider_sandbox_policy_claim_dependency_cards,
+        "provider_sandbox_cost_quota_cards": provider_sandbox_cost_quota_cards,
+        "provider_sandbox_audit_trace_cards": provider_sandbox_audit_trace_cards,
+        "provider_sandbox_failure_recovery_cards": provider_sandbox_failure_recovery_cards,
+        "provider_sandbox_test_plan_cards": provider_sandbox_test_plan_cards,
+        "phase2_provider_sandbox_unlock_blockers": phase2_provider_sandbox_unlock_blockers,
+        "provider_sandbox_quality_checks": {
+            "sandbox_provider_profile_covered": bool(provider_sandbox_profile_cards),
+            "fixtures_covered": bool(provider_sandbox_fixture_cards),
+            "request_contract_covered": bool(provider_sandbox_request_contract_cards),
+            "response_schema_covered": bool(provider_sandbox_response_schema_cards),
+            "asset_boundary_covered": bool(provider_sandbox_asset_boundary_cards),
+            "policy_claim_dependency_covered": bool(provider_sandbox_policy_claim_dependency_cards),
+            "cost_quota_covered": bool(provider_sandbox_cost_quota_cards),
+            "audit_trace_covered": bool(provider_sandbox_audit_trace_cards),
+            "failure_recovery_covered": bool(provider_sandbox_failure_recovery_cards),
+            "test_plan_covered": bool(provider_sandbox_test_plan_cards),
+            "unlock_blockers_covered": bool(phase2_provider_sandbox_unlock_blockers),
+            "safety_boundary_covered": True,
+            "real_provider_client_created": False,
+            "provider_sandbox_call_performed": False,
+            "real_provider_call_performed": False,
+            "secret_read_performed": False,
+            "external_call_performed": False,
+            "paid_operation_performed": False,
+            "media_operation_performed": False,
+            "platform_upload_performed": False,
+            "real_export_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "phase2_provider_sandbox_contract_audit_preview",
+            "source": "creative_decision_pack.workspace_phase2_provider_sandbox_contract_pack",
+            "preview_only": True,
+            "future_audit_trace_fields": [
+                "trace id",
+                "run id",
+                "fixture id",
+                "response schema id",
+                "asset ref",
+                "operator ref",
+                "decision ref",
+                "cost estimate ref",
+            ],
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_audit_log_read_performed": False,
+            "audit_record_created": False,
+            "real_audit_event_created": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit preview is display-only; it does not write a database, read real logs, or create a real audit event.",
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -48959,6 +49511,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_phase2_llm_sandbox_contract_pack"] = (
         _rw_workspace_phase2_llm_sandbox_contract_pack(
+            creative_decision_pack
+        )
+    )
+    creative_decision_pack["workspace_phase2_provider_sandbox_contract_pack"] = (
+        _rw_workspace_phase2_provider_sandbox_contract_pack(
             creative_decision_pack
         )
     )
