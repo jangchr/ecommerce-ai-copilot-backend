@@ -13643,6 +13643,251 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
                 self.assertIn(safety_text, html)
         self.assertNotIn("????", html)
 
+    def test_workspace_phase2_provider_sandbox_contract_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace phase2 provider sandbox contract bundle",
+            "PROJECT_WORKSPACE_PHASE2_PROVIDER_SANDBOX_CONTRACT_MARKER",
+            "latestProjectWorkspacePhase2ProviderSandboxContractPack",
+            "workspace_phase2_provider_sandbox_contract_pack: projectWorkspaceExportPhase2ProviderSandboxContractSnapshot(workspace)",
+            "projectWorkspaceExportPhase2ProviderSandboxContractMarkdown(workspace)",
+            "project_workspace_phase2_provider_sandbox_contract_marker",
+            "projectWorkspaceExportPhase2ProviderSandboxContractSnapshot",
+            "projectWorkspaceExportPhase2ProviderSandboxContractMarkdown",
+            "renderProjectWorkspacePhase2ProviderSandboxContractSummaryProfilePanel",
+            "renderProjectWorkspacePhase2ProviderSandboxContractFixtureRequestPanel",
+            "renderProjectWorkspacePhase2ProviderSandboxContractResponseAssetPolicyPanel",
+            "renderProjectWorkspacePhase2ProviderSandboxContractCostAuditFailurePanel",
+            "renderProjectWorkspacePhase2ProviderSandboxContractTestQualityAuditSafetyPanel",
+            "copyProjectWorkspacePhase2ProviderSandboxContractSummary",
+            "copyProjectWorkspaceProviderSandboxProfileCards",
+            "copyProjectWorkspaceProviderSandboxFixtureCards",
+            "copyProjectWorkspaceProviderSandboxRequestContractCards",
+            "copyProjectWorkspaceProviderSandboxResponseSchemaCards",
+            "copyProjectWorkspaceProviderSandboxAssetBoundaryCards",
+            "copyProjectWorkspaceProviderSandboxPolicyClaimDependencyCards",
+            "copyProjectWorkspaceProviderSandboxCostQuotaCards",
+            "copyProjectWorkspaceProviderSandboxFailureRecoveryCards",
+            "copyProjectWorkspaceFullPhase2ProviderSandboxContractPack",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for title in [
+            "Provider Sandbox Contract Preview",
+            "Provider Sandbox Contract Summary",
+            "Provider Sandbox Profile Cards",
+            "Provider Sandbox Fixture Cards",
+            "Provider Sandbox Request Contract Cards",
+            "Provider Sandbox Response Schema Cards",
+            "Provider Sandbox Asset Boundary Cards",
+            "Provider Sandbox Policy Claim Dependency Cards",
+            "Provider Sandbox Cost Quota Cards",
+            "Provider Sandbox Audit Trace Cards",
+            "Provider Sandbox Failure Recovery Cards",
+            "Provider Sandbox Test Plan Cards",
+            "Phase 2 Provider Sandbox Unlock Blockers",
+            "Provider Sandbox Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(title=title):
+                self.assertIn(title, html)
+        for field in [
+            "pack.provider_sandbox_contract_summary",
+            "pack.provider_sandbox_profile_cards",
+            "pack.provider_sandbox_fixture_cards",
+            "pack.provider_sandbox_request_contract_cards",
+            "pack.provider_sandbox_response_schema_cards",
+            "pack.provider_sandbox_asset_boundary_cards",
+            "pack.provider_sandbox_policy_claim_dependency_cards",
+            "pack.provider_sandbox_cost_quota_cards",
+            "pack.provider_sandbox_audit_trace_cards",
+            "pack.provider_sandbox_failure_recovery_cards",
+            "pack.provider_sandbox_test_plan_cards",
+            "pack.phase2_provider_sandbox_unlock_blockers",
+            "pack.provider_sandbox_quality_checks",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.provider_profile_count",
+            "summary.fixture_count",
+            "summary.request_contract_count",
+            "summary.response_schema_count",
+            "summary.asset_boundary_count",
+            "summary.unlock_blocker_count",
+            "summary.real_provider_client_created",
+            "summary.provider_sandbox_call_executed",
+            "summary.real_provider_call_allowed",
+            "summary.secret_read_allowed",
+            "summary.external_call_allowed",
+            "summary.paid_operation_allowed",
+            "summary.real_execution_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for coverage in [
+            "image_generation_sandbox", "video_generation_sandbox",
+            "media_storage_sandbox", "analytics_tracking_sandbox",
+            "translation_sandbox", "approval_ticket_sandbox",
+            "platform_upload_sandbox", "external_scraping_sandbox",
+            "rollback_restore_sandbox", "policy_check_sandbox",
+            "provider_sandbox_profile_id", "required_secret_refs",
+            "required_network_scope", "required_endpoint_or_model_profile",
+            "image_prompt_asset_fixture", "video_prompt_asset_fixture",
+            "media_manifest_fixture", "analytics_event_fixture",
+            "translation_copy_fixture", "approval_ticket_fixture",
+            "platform_delivery_fixture", "scraping_input_fixture",
+            "rollback_snapshot_fixture", "policy_claim_fixture",
+            "sandbox_fixture_id", "input_context_fixture_shape",
+            "required_asset_refs", "required_claim_safety_refs",
+            "forbidden_fixture_inputs", "expected_safe_output_shape",
+            "sandbox_request_contract_id", "simulated_request_shape",
+            "required_headers_or_metadata", "required_timeout_policy",
+            "required_retry_policy", "required_cost_guard",
+            "required_audit_trace_refs", "forbidden_request_fields",
+            "response_schema_id", "expected_response_fields",
+            "required_asset_trace_fields", "required_claim_trace_fields",
+            "required_usage_fields", "required_risk_fields",
+            "forbidden_response_fields", "unsafe_output_behavior",
+            "missing_asset_trace_behavior", "provider secret",
+            "raw hidden prompt", "untraced claim",
+            "unapproved media URL", "real customer data",
+            "image asset", "video asset", "media manifest",
+            "platform delivery payload", "analytics event",
+            "approval ticket", "rollback snapshot",
+            "unsupported claim", "missing evidence", "do_not_claim",
+            "restricted claim", "policy disabled",
+            "operator review required", "sandbox quota", "timeout",
+            "cost estimate", "rate limit", "retry cap",
+            "future trace id", "run id", "fixture id",
+            "response schema id", "asset ref", "operator ref",
+            "decision ref", "cost estimate ref", "provider unavailable",
+            "schema invalid", "unsafe asset output",
+            "missing asset trace", "redaction failure", "secret missing",
+            "cost quota exceeded", "audit sink missing",
+            "media operation blocked", "platform upload blocked",
+            "unit tests", "contract tests", "fixture tests",
+            "response schema tests", "asset boundary tests",
+            "policy claim dependency tests", "redaction tests",
+            "cost quota tests", "timeout tests", "audit trace tests",
+            "permission boundary tests", "no provider sandbox key approval",
+            "no secret access approval", "no external call approval",
+            "no cost quota approval",
+            "no sandbox provider contract test executed",
+            "no real audit sink", "no media storage approval",
+            "no platform upload approval", "no production approval",
+            "no provider-specific legal review",
+            "sandbox provider profile / fixtures / request contract / response schema / asset boundary / policy claim dependency / cost quota / audit trace / failure recovery / test plan / unlock blockers / safety boundary",
+        ]:
+            with self.subTest(coverage=coverage):
+                self.assertIn(coverage, html)
+        previous = html.index("${renderProjectWorkspacePhase2LlmSandboxContractTestQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspacePhase2ProviderSandboxContractSummaryProfilePanel(workspace)}")
+        safety = html.index("${renderProjectWorkspacePhase2ProviderSandboxContractTestQualityAuditSafetyPanel(workspace)}")
+        creative = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, creative)
+        for panel_id in [
+            'id="projectWorkspacePhase2ProviderSandboxContractSummaryProfilePanel"',
+            'id="projectWorkspacePhase2ProviderSandboxContractFixtureRequestPanel"',
+            'id="projectWorkspacePhase2ProviderSandboxContractResponseAssetPolicyPanel"',
+            'id="projectWorkspacePhase2ProviderSandboxContractCostAuditFailurePanel"',
+            'id="projectWorkspacePhase2ProviderSandboxContractTestQualityAuditSafetyPanel"',
+        ]:
+            with self.subTest(panel_id=panel_id):
+                self.assertEqual(html.count(panel_id), 1)
+
+    def test_workspace_phase2_provider_sandbox_contract_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "phase2ProviderSandboxContractPackTitle",
+            "phase2ProviderSandboxContractPackHelper",
+            "phase2ProviderSandboxContractSummaryTitle",
+            "phase2ProviderSandboxContractProfileTitle",
+            "phase2ProviderSandboxContractFixtureTitle",
+            "phase2ProviderSandboxContractRequestTitle",
+            "phase2ProviderSandboxContractResponseTitle",
+            "phase2ProviderSandboxContractAssetBoundaryTitle",
+            "phase2ProviderSandboxContractPolicyClaimTitle",
+            "phase2ProviderSandboxContractCostQuotaTitle",
+            "phase2ProviderSandboxContractAuditTraceTitle",
+            "phase2ProviderSandboxContractFailureRecoveryTitle",
+            "phase2ProviderSandboxContractTestPlanTitle",
+            "phase2ProviderSandboxContractUnlockBlockerTitle",
+            "phase2ProviderSandboxContractQualityTitle",
+            "phase2ProviderSandboxContractAuditPreviewTitle",
+            "phase2ProviderSandboxContractSafetyTitle",
+            "phase2ProviderSandboxContractCopySummary",
+            "phase2ProviderSandboxContractCopyProfiles",
+            "phase2ProviderSandboxContractCopyFixtures",
+            "phase2ProviderSandboxContractCopyRequests",
+            "phase2ProviderSandboxContractCopyResponses",
+            "phase2ProviderSandboxContractCopyAssetBoundaries",
+            "phase2ProviderSandboxContractCopyPolicyClaims",
+            "phase2ProviderSandboxContractCopyCost",
+            "phase2ProviderSandboxContractCopyFailure",
+            "phase2ProviderSandboxContractCopyFull",
+            "phase2ProviderSandboxContractCopied",
+            "phase2ProviderSandboxContractCopyFailed",
+            "phase2ProviderSandboxContractCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace phase2 provider sandbox contract bundle", script)
+            self.assertIn("project_workspace_phase2_provider_sandbox_contract_marker", script)
+        markdown = html[
+            html.index("function projectWorkspacePhase2ProviderSandboxContractSummaryText"):
+            html.index("async function copyProjectWorkspacePhase2ProviderSandboxContractText")
+        ]
+        for key in [
+            "phase2ProviderSandboxContractPackTitle",
+            "phase2ProviderSandboxContractSummaryTitle",
+            "phase2ProviderSandboxContractProfileTitle",
+            "phase2ProviderSandboxContractFixtureTitle",
+            "phase2ProviderSandboxContractRequestTitle",
+            "phase2ProviderSandboxContractResponseTitle",
+            "phase2ProviderSandboxContractAssetBoundaryTitle",
+            "phase2ProviderSandboxContractPolicyClaimTitle",
+            "phase2ProviderSandboxContractCostQuotaTitle",
+            "phase2ProviderSandboxContractAuditTraceTitle",
+            "phase2ProviderSandboxContractFailureRecoveryTitle",
+            "phase2ProviderSandboxContractTestPlanTitle",
+            "phase2ProviderSandboxContractUnlockBlockerTitle",
+            "phase2ProviderSandboxContractQualityTitle",
+            "phase2ProviderSandboxContractAuditPreviewTitle",
+            "phase2ProviderSandboxContractSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("const PROJECT_WORKSPACE_PHASE2_PROVIDER_SANDBOX_CONTRACT_MARKER"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for safety_text in [
+            "Deterministic provider sandbox contract preview only",
+            "does not read API keys",
+            "does not read secrets",
+            "does not create provider clients",
+            "does not send external requests",
+            "does not call real providers",
+            "does not upload/download/store media",
+            "does not generate real image/video",
+            "does not upload to any platform",
+            "does not query real policy APIs",
+            "provide legal advice",
+            "invent real quotes or buyer evidence",
+            "provider_sandbox_call disabled",
+            "media_upload disabled / media_download disabled / media_storage disabled",
+            "audit_event_write disabled / audit_log_read disabled",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
     def test_workspace_provider_cost_quota_risk_guard_panels_copy_and_exports_exist(self):
         html = Path("static/index.html").read_text(encoding="utf-8")
         for marker in [

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -3660,6 +3660,7 @@
         let latestProjectWorkspacePhase2DbSchemaMigrationDryRunPack = {};
         let latestProjectWorkspacePhase2AuditSinkContractPack = {};
         let latestProjectWorkspacePhase2LlmSandboxContractPack = {};
+        let latestProjectWorkspacePhase2ProviderSandboxContractPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7866,7 +7867,57 @@
             phase2LlmSandboxContractPromptInvocationNote: 'Prompt fixtures and invocation contracts are simulated previews only. They show redacted fixture shapes, simulated request and response shapes, timeout, retry, cost guard, and audit trace refs without executing a sandbox call, reading secrets, sending external requests, or invoking real LLM generation.',
             phase2LlmSandboxContractResponseGuardRedactionNote: 'Response schema, evidence claim guard, and redaction privacy are previews only. Evidence trace, claim trace, usage fields, and risk fields are required; provider secret, raw hidden prompt, untraced claim, and unsupported customer quote are forbidden. This does not query real policy APIs, provide legal advice, imply platform compliance, or invent real quotes or buyer evidence.',
             phase2LlmSandboxContractCostAuditFailureNote: 'Cost quota, audit trace, and failure recovery are previews only. Max tokens, timeout, quota, cost estimate, rate limit, retry cap, trace refs, and failure modes are displayed without real billing, real requests, database writes, real audit events, real log reads, real retries, rollbacks, notifications, or alerts.',
-            phase2LlmSandboxContractTestQualitySafetyNote: 'Test plan, unlock blockers, quality checks, audit preview, and safety boundaries remain blocked previews. Sandbox provider profile, prompt fixtures, invocation contract, response schema, evidence claim guard, redaction privacy, cost quota, audit trace, failure recovery, test plan, unlock blockers, and safety boundary are displayed while provider, LLM, LLM sandbox call, media, external scraping, database persistence, database read, database write, schema migration, audit sink, audit event write, audit log read, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, paid operation, and real execution remain disabled.'
+            phase2LlmSandboxContractTestQualitySafetyNote: 'Test plan, unlock blockers, quality checks, audit preview, and safety boundaries remain blocked previews. Sandbox provider profile, prompt fixtures, invocation contract, response schema, evidence claim guard, redaction privacy, cost quota, audit trace, failure recovery, test plan, unlock blockers, and safety boundary are displayed while provider, LLM, LLM sandbox call, media, external scraping, database persistence, database read, database write, schema migration, audit sink, audit event write, audit log read, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, paid operation, and real execution remain disabled.',
+            phase2ProviderSandboxContractPackTitle: 'Provider Sandbox Contract Preview',
+            phase2ProviderSandboxContractPackHelper: 'Project Workspace phase2 provider sandbox contract bundle. Deterministic provider sandbox contract preview only; it is not a real provider sandbox call, does not read API keys or secrets, does not create provider clients, does not send external requests, does not call real providers, does not upload, download, or store media, does not generate real image/video, does not upload to platforms, does not bill, does not write DB or files, and does not create audit events.',
+            phase2ProviderSandboxContractSummaryProfileTitle: 'Provider Sandbox Contract Summary / Provider Profiles',
+            phase2ProviderSandboxContractSummaryTitle: 'Provider Sandbox Contract Summary',
+            phase2ProviderSandboxContractProfileTitle: 'Provider Sandbox Profile Cards',
+            phase2ProviderSandboxContractFixtureRequestTitle: 'Sandbox Fixtures / Request Contracts',
+            phase2ProviderSandboxContractFixtureTitle: 'Provider Sandbox Fixture Cards',
+            phase2ProviderSandboxContractRequestTitle: 'Provider Sandbox Request Contract Cards',
+            phase2ProviderSandboxContractResponseAssetPolicyTitle: 'Response Schema / Asset Boundary / Policy Claim Dependency',
+            phase2ProviderSandboxContractResponseTitle: 'Provider Sandbox Response Schema Cards',
+            phase2ProviderSandboxContractAssetBoundaryTitle: 'Provider Sandbox Asset Boundary Cards',
+            phase2ProviderSandboxContractPolicyClaimTitle: 'Provider Sandbox Policy Claim Dependency Cards',
+            phase2ProviderSandboxContractCostAuditFailureTitle: 'Cost Quota / Audit Trace / Failure Recovery',
+            phase2ProviderSandboxContractCostQuotaTitle: 'Provider Sandbox Cost Quota Cards',
+            phase2ProviderSandboxContractAuditTraceTitle: 'Provider Sandbox Audit Trace Cards',
+            phase2ProviderSandboxContractFailureRecoveryTitle: 'Provider Sandbox Failure Recovery Cards',
+            phase2ProviderSandboxContractTestQualityAuditSafetyTitle: 'Provider Sandbox Test Plan / Unlock Blockers / Quality / Audit / Safety',
+            phase2ProviderSandboxContractTestPlanTitle: 'Provider Sandbox Test Plan Cards',
+            phase2ProviderSandboxContractUnlockBlockerTitle: 'Phase 2 Provider Sandbox Unlock Blockers',
+            phase2ProviderSandboxContractQualityTitle: 'Provider Sandbox Quality Checks',
+            phase2ProviderSandboxContractAuditPreviewTitle: 'Audit Preview',
+            phase2ProviderSandboxContractSafetyTitle: 'Safety Boundaries',
+            phase2ProviderSandboxContractMode: 'Mode',
+            phase2ProviderSandboxContractProfileCount: 'Sandbox provider profile count',
+            phase2ProviderSandboxContractFixtureCount: 'Fixture count',
+            phase2ProviderSandboxContractRequestCount: 'Request contract count',
+            phase2ProviderSandboxContractResponseSchemaCount: 'Response schema count',
+            phase2ProviderSandboxContractAssetBoundaryCount: 'Asset boundary count',
+            phase2ProviderSandboxContractUnlockBlockerCount: 'Unlock blocker count',
+            phase2ProviderSandboxContractRecommendedAction: 'Recommended operator action',
+            phase2ProviderSandboxContractDisabled: 'disabled',
+            phase2ProviderSandboxContractNoData: 'No provider sandbox contract preview data is available.',
+            phase2ProviderSandboxContractCopyNoData: 'No provider sandbox contract preview content is available to copy.',
+            phase2ProviderSandboxContractCopyFailed: 'Unable to copy provider sandbox contract preview content.',
+            phase2ProviderSandboxContractCopied: 'Provider sandbox contract preview content copied.',
+            phase2ProviderSandboxContractCopySummary: 'Copy provider sandbox contract summary',
+            phase2ProviderSandboxContractCopyProfiles: 'Copy provider sandbox profile cards',
+            phase2ProviderSandboxContractCopyFixtures: 'Copy provider sandbox fixture cards',
+            phase2ProviderSandboxContractCopyRequests: 'Copy provider sandbox request contract cards',
+            phase2ProviderSandboxContractCopyResponses: 'Copy provider sandbox response schema cards',
+            phase2ProviderSandboxContractCopyAssetBoundaries: 'Copy provider sandbox asset boundary cards',
+            phase2ProviderSandboxContractCopyPolicyClaims: 'Copy provider sandbox policy claim dependency cards',
+            phase2ProviderSandboxContractCopyCost: 'Copy provider sandbox cost quota cards',
+            phase2ProviderSandboxContractCopyFailure: 'Copy provider sandbox failure recovery cards',
+            phase2ProviderSandboxContractCopyFull: 'Copy full provider sandbox contract pack',
+            phase2ProviderSandboxContractPreviewNote: 'Deterministic provider sandbox contract preview only. This is not a real provider sandbox call, does not read API keys, does not read secrets, does not create provider clients, does not send external requests, does not call real providers, does not execute paid operations, does not upload/download/store media, does not generate real image/video, and does not upload to any platform.',
+            phase2ProviderSandboxContractFixtureRequestNote: 'Fixtures and request contracts are simulated previews only. They show input context fixture shape, required asset refs, required claim safety refs, forbidden inputs, simulated request shape, headers, timeout, retry, cost guard, and audit trace refs without executing a sandbox call, reading secrets, sending external requests, uploading files, or downloading media.',
+            phase2ProviderSandboxContractResponseAssetPolicyNote: 'Response schema, asset boundary, and policy claim dependency are previews only. Asset trace, claim trace, usage fields, and risk fields are required; provider secret, raw hidden prompt, untraced claim, unapproved media URL, and real customer data are forbidden. This does not query real policy APIs, provide legal advice, imply real platform compliance or pass rate, or invent real quotes or buyer evidence.',
+            phase2ProviderSandboxContractCostAuditFailureNote: 'Cost quota, audit trace, and failure recovery are previews only. Sandbox quota, timeout, cost estimate, rate limit, retry cap, trace refs, and failure modes are displayed without real billing, real requests, database writes, real audit events, real log reads, real retries, rollbacks, notifications, or alerts.',
+            phase2ProviderSandboxContractTestQualitySafetyNote: 'Test plan, unlock blockers, quality checks, audit preview, and safety boundaries remain blocked previews. Provider profile, fixture, request contract, response schema, asset boundary, policy claim dependency, cost quota, audit trace, failure recovery, test plan, unlock blockers, and safety boundary are displayed while provider, provider sandbox call, LLM, LLM sandbox call, media, media upload, media download, media storage, external scraping, database persistence, database read, database write, schema migration, audit sink, audit event write, audit log read, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, paid operation, and real execution remain disabled.'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
@@ -9264,7 +9315,57 @@
             phase2LlmSandboxContractPromptInvocationNote: 'Prompt fixtures 和 invocation contracts 仅为模拟 preview。它们展示 redacted fixture shape、simulated request/response shape、timeout、retry、cost guard 和 audit trace refs，但不执行 sandbox call，不读取 secret，不发外部请求，也不调用真实 LLM generation。',
             phase2LlmSandboxContractResponseGuardRedactionNote: 'Response schema、evidence claim guard 和 redaction privacy 仅为 preview。必须有 evidence trace、claim trace、usage fields 和 risk fields；provider secret、raw hidden prompt、untraced claim、unsupported customer quote 被禁止。这不查询真实 policy API，不构成法律意见，不代表平台合规结论，也不凭空生成真实 quote 或真实买家证据。',
             phase2LlmSandboxContractCostAuditFailureNote: 'Cost quota、audit trace 和 failure recovery 仅为 preview。展示 max tokens、timeout、quota、cost estimate、rate limit、retry cap、trace refs 和 failure modes，但不执行真实计费，不发真实请求，不写数据库，不创建真实 audit event，不读取真实日志，不执行真实 retry/rollback，不发送通知，也不创建 alert。',
-            phase2LlmSandboxContractTestQualitySafetyNote: 'Test plan、unlock blockers、quality checks、audit preview 和 safety boundaries 都保持 blocked preview。Sandbox provider profile、prompt fixtures、invocation contract、response schema、evidence claim guard、redaction privacy、cost quota、audit trace、failure recovery、test plan、unlock blockers 和 safety boundary 只展示；provider、LLM、LLM sandbox call、media、external scraping、database persistence、database read、database write、schema migration、audit sink、audit event write、audit log read、real policy check、platform upload、task creation、real export、file write、secret read、external call、token issue、paid operation 和 real execution 全部保持禁用。'
+            phase2LlmSandboxContractTestQualitySafetyNote: 'Test plan、unlock blockers、quality checks、audit preview 和 safety boundaries 都保持 blocked preview。Sandbox provider profile、prompt fixtures、invocation contract、response schema、evidence claim guard、redaction privacy、cost quota、audit trace、failure recovery、test plan、unlock blockers 和 safety boundary 只展示；provider、LLM、LLM sandbox call、media、external scraping、database persistence、database read、database write、schema migration、audit sink、audit event write、audit log read、real policy check、platform upload、task creation、real export、file write、secret read、external call、token issue、paid operation 和 real execution 全部保持禁用。',
+            phase2ProviderSandboxContractPackTitle: 'Provider Sandbox Contract Preview',
+            phase2ProviderSandboxContractPackHelper: 'Project Workspace phase2 provider sandbox contract bundle。仅为 deterministic provider sandbox contract preview；不是真实 provider sandbox call，不读取 API key 或 secret，不创建 provider client，不发外部请求，不调用真实 provider，不上传、下载或存储 media，不生成真实 image/video，不上传到平台，不计费，不写 DB 或文件，也不创建 audit event。',
+            phase2ProviderSandboxContractSummaryProfileTitle: 'Provider Sandbox Contract Summary / Provider Profiles',
+            phase2ProviderSandboxContractSummaryTitle: 'Provider Sandbox Contract Summary',
+            phase2ProviderSandboxContractProfileTitle: 'Provider Sandbox Profile Cards',
+            phase2ProviderSandboxContractFixtureRequestTitle: 'Sandbox Fixtures / Request Contracts',
+            phase2ProviderSandboxContractFixtureTitle: 'Provider Sandbox Fixture Cards',
+            phase2ProviderSandboxContractRequestTitle: 'Provider Sandbox Request Contract Cards',
+            phase2ProviderSandboxContractResponseAssetPolicyTitle: 'Response Schema / Asset Boundary / Policy Claim Dependency',
+            phase2ProviderSandboxContractResponseTitle: 'Provider Sandbox Response Schema Cards',
+            phase2ProviderSandboxContractAssetBoundaryTitle: 'Provider Sandbox Asset Boundary Cards',
+            phase2ProviderSandboxContractPolicyClaimTitle: 'Provider Sandbox Policy Claim Dependency Cards',
+            phase2ProviderSandboxContractCostAuditFailureTitle: 'Cost Quota / Audit Trace / Failure Recovery',
+            phase2ProviderSandboxContractCostQuotaTitle: 'Provider Sandbox Cost Quota Cards',
+            phase2ProviderSandboxContractAuditTraceTitle: 'Provider Sandbox Audit Trace Cards',
+            phase2ProviderSandboxContractFailureRecoveryTitle: 'Provider Sandbox Failure Recovery Cards',
+            phase2ProviderSandboxContractTestQualityAuditSafetyTitle: 'Provider Sandbox Test Plan / Unlock Blockers / Quality / Audit / Safety',
+            phase2ProviderSandboxContractTestPlanTitle: 'Provider Sandbox Test Plan Cards',
+            phase2ProviderSandboxContractUnlockBlockerTitle: 'Phase 2 Provider Sandbox Unlock Blockers',
+            phase2ProviderSandboxContractQualityTitle: 'Provider Sandbox Quality Checks',
+            phase2ProviderSandboxContractAuditPreviewTitle: 'Audit Preview',
+            phase2ProviderSandboxContractSafetyTitle: 'Safety Boundaries',
+            phase2ProviderSandboxContractMode: 'Mode',
+            phase2ProviderSandboxContractProfileCount: 'Sandbox provider profile 数量',
+            phase2ProviderSandboxContractFixtureCount: 'Fixture 数量',
+            phase2ProviderSandboxContractRequestCount: 'Request contract 数量',
+            phase2ProviderSandboxContractResponseSchemaCount: 'Response schema 数量',
+            phase2ProviderSandboxContractAssetBoundaryCount: 'Asset boundary 数量',
+            phase2ProviderSandboxContractUnlockBlockerCount: 'Unlock blocker 数量',
+            phase2ProviderSandboxContractRecommendedAction: 'Recommended operator action',
+            phase2ProviderSandboxContractDisabled: 'disabled',
+            phase2ProviderSandboxContractNoData: '暂无 provider sandbox contract preview 数据。',
+            phase2ProviderSandboxContractCopyNoData: '暂无可复制的 provider sandbox contract preview 内容。',
+            phase2ProviderSandboxContractCopyFailed: '无法复制 provider sandbox contract preview 内容。',
+            phase2ProviderSandboxContractCopied: 'Provider sandbox contract preview 内容已复制。',
+            phase2ProviderSandboxContractCopySummary: '复制 provider sandbox contract summary',
+            phase2ProviderSandboxContractCopyProfiles: '复制 provider sandbox profile cards',
+            phase2ProviderSandboxContractCopyFixtures: '复制 provider sandbox fixture cards',
+            phase2ProviderSandboxContractCopyRequests: '复制 provider sandbox request contract cards',
+            phase2ProviderSandboxContractCopyResponses: '复制 provider sandbox response schema cards',
+            phase2ProviderSandboxContractCopyAssetBoundaries: '复制 provider sandbox asset boundary cards',
+            phase2ProviderSandboxContractCopyPolicyClaims: '复制 provider sandbox policy claim dependency cards',
+            phase2ProviderSandboxContractCopyCost: '复制 provider sandbox cost quota cards',
+            phase2ProviderSandboxContractCopyFailure: '复制 provider sandbox failure recovery cards',
+            phase2ProviderSandboxContractCopyFull: '复制完整 provider sandbox contract pack',
+            phase2ProviderSandboxContractPreviewNote: '仅为 deterministic provider sandbox contract preview。这不是真实 provider sandbox call，不读取 API key，不读取 secret，不创建 provider client，不发外部请求，不调用真实 provider，不执行 paid operation，不上传/下载/存储 media，不生成真实 image/video，也不上传到任何平台。',
+            phase2ProviderSandboxContractFixtureRequestNote: 'Fixtures 和 request contracts 仅为模拟 preview。它们展示 input context fixture shape、required asset refs、required claim safety refs、forbidden inputs、simulated request shape、headers、timeout、retry、cost guard 和 audit trace refs，但不执行 sandbox call，不读取 secret，不发外部请求，不上传文件，也不下载 media。',
+            phase2ProviderSandboxContractResponseAssetPolicyNote: 'Response schema、asset boundary 和 policy claim dependency 仅为 preview。必须有 asset trace、claim trace、usage fields 和 risk fields；provider secret、raw hidden prompt、untraced claim、unapproved media URL、real customer data 被禁止。这不查询真实 policy API，不构成法律意见，不代表真实平台合规结论或通过率，也不凭空生成真实 quote 或真实买家证据。',
+            phase2ProviderSandboxContractCostAuditFailureNote: 'Cost quota、audit trace 和 failure recovery 仅为 preview。展示 sandbox quota、timeout、cost estimate、rate limit、retry cap、trace refs 和 failure modes，但不执行真实计费，不发真实请求，不写数据库，不创建真实 audit event，不读取真实日志，不执行真实 retry/rollback，不发送通知，也不创建 alert。',
+            phase2ProviderSandboxContractTestQualitySafetyNote: 'Test plan、unlock blockers、quality checks、audit preview 和 safety boundaries 都保持 blocked preview。Provider profile、fixture、request contract、response schema、asset boundary、policy claim dependency、cost quota、audit trace、failure recovery、test plan、unlock blockers 和 safety boundary 只展示；provider、provider sandbox call、LLM、LLM sandbox call、media、media upload、media download、media storage、external scraping、database persistence、database read、database write、schema migration、audit sink、audit event write、audit log read、real policy check、platform upload、task creation、real export、file write、secret read、external call、token issue、paid operation 和 real execution 全部保持禁用。'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
@@ -12779,6 +12880,7 @@
                 latestProjectWorkspacePhase2DbSchemaMigrationDryRunPack = latestProjectCreativeDecisionPack.workspace_phase2_db_schema_migration_dry_run_pack || {};
                 latestProjectWorkspacePhase2AuditSinkContractPack = latestProjectCreativeDecisionPack.workspace_phase2_audit_sink_contract_pack || {};
                 latestProjectWorkspacePhase2LlmSandboxContractPack = latestProjectCreativeDecisionPack.workspace_phase2_llm_sandbox_contract_pack || {};
+                latestProjectWorkspacePhase2ProviderSandboxContractPack = latestProjectCreativeDecisionPack.workspace_phase2_provider_sandbox_contract_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -18675,6 +18777,7 @@
         const PROJECT_WORKSPACE_PHASE2_DB_SCHEMA_MIGRATION_DRY_RUN_MARKER = 'Project Workspace phase2 DB schema migration dry-run bundle';
         const PROJECT_WORKSPACE_PHASE2_AUDIT_SINK_CONTRACT_MARKER = 'Project Workspace phase2 audit sink contract bundle';
         const PROJECT_WORKSPACE_PHASE2_LLM_SANDBOX_CONTRACT_MARKER = 'Project Workspace phase2 LLM sandbox contract bundle';
+        const PROJECT_WORKSPACE_PHASE2_PROVIDER_SANDBOX_CONTRACT_MARKER = 'Project Workspace phase2 provider sandbox contract bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -27496,6 +27599,140 @@
         function copyProjectWorkspaceLlmSandboxFailureRecoveryCards() { return copyProjectWorkspacePhase2LlmSandboxContractText('failure'); }
         function copyProjectWorkspaceFullPhase2LlmSandboxContractPack() { return copyProjectWorkspacePhase2LlmSandboxContractText('full'); }
 
+        function projectWorkspacePhase2ProviderSandboxContractPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspacePhase2ProviderSandboxContractPack && Object.keys(latestProjectWorkspacePhase2ProviderSandboxContractPack).length) return latestProjectWorkspacePhase2ProviderSandboxContractPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_phase2_provider_sandbox_contract_pack || {};
+        }
+
+        function projectWorkspacePhase2ProviderSandboxContractHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspacePhase2ProviderSandboxContractJsonText(value) {
+            if (!projectWorkspacePhase2ProviderSandboxContractHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspacePhase2ProviderSandboxContractDisabledText(value) {
+            return value === false || value == null ? t('phase2ProviderSandboxContractDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportPhase2ProviderSandboxContractSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspacePhase2ProviderSandboxContractPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PHASE2_PROVIDER_SANDBOX_CONTRACT_MARKER,
+                has_workspace_phase2_provider_sandbox_contract_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                provider_sandbox_contract_summary: pack.provider_sandbox_contract_summary || {},
+                provider_sandbox_profile_cards: Array.isArray(pack.provider_sandbox_profile_cards) ? pack.provider_sandbox_profile_cards : [],
+                provider_sandbox_fixture_cards: Array.isArray(pack.provider_sandbox_fixture_cards) ? pack.provider_sandbox_fixture_cards : [],
+                provider_sandbox_request_contract_cards: Array.isArray(pack.provider_sandbox_request_contract_cards) ? pack.provider_sandbox_request_contract_cards : [],
+                provider_sandbox_response_schema_cards: Array.isArray(pack.provider_sandbox_response_schema_cards) ? pack.provider_sandbox_response_schema_cards : [],
+                provider_sandbox_asset_boundary_cards: Array.isArray(pack.provider_sandbox_asset_boundary_cards) ? pack.provider_sandbox_asset_boundary_cards : [],
+                provider_sandbox_policy_claim_dependency_cards: Array.isArray(pack.provider_sandbox_policy_claim_dependency_cards) ? pack.provider_sandbox_policy_claim_dependency_cards : [],
+                provider_sandbox_cost_quota_cards: Array.isArray(pack.provider_sandbox_cost_quota_cards) ? pack.provider_sandbox_cost_quota_cards : [],
+                provider_sandbox_audit_trace_cards: Array.isArray(pack.provider_sandbox_audit_trace_cards) ? pack.provider_sandbox_audit_trace_cards : [],
+                provider_sandbox_failure_recovery_cards: Array.isArray(pack.provider_sandbox_failure_recovery_cards) ? pack.provider_sandbox_failure_recovery_cards : [],
+                provider_sandbox_test_plan_cards: Array.isArray(pack.provider_sandbox_test_plan_cards) ? pack.provider_sandbox_test_plan_cards : [],
+                phase2_provider_sandbox_unlock_blockers: Array.isArray(pack.phase2_provider_sandbox_unlock_blockers) ? pack.phase2_provider_sandbox_unlock_blockers : [],
+                provider_sandbox_quality_checks: pack.provider_sandbox_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspacePhase2ProviderSandboxContractSummaryText(pack = projectWorkspaceExportPhase2ProviderSandboxContractSnapshot()) {
+            if (!pack.has_workspace_phase2_provider_sandbox_contract_pack) return '';
+            const summary = pack.provider_sandbox_contract_summary || {};
+            return [
+                t('phase2ProviderSandboxContractSummaryTitle'),
+                `${t('phase2ProviderSandboxContractMode')}: ${summary.mode || t('none')}`,
+                `${t('phase2ProviderSandboxContractProfileCount')}: ${summary.provider_profile_count ?? pack.provider_sandbox_profile_cards.length}`,
+                `${t('phase2ProviderSandboxContractFixtureCount')}: ${summary.fixture_count ?? pack.provider_sandbox_fixture_cards.length}`,
+                `${t('phase2ProviderSandboxContractRequestCount')}: ${summary.request_contract_count ?? pack.provider_sandbox_request_contract_cards.length}`,
+                `${t('phase2ProviderSandboxContractResponseSchemaCount')}: ${summary.response_schema_count ?? pack.provider_sandbox_response_schema_cards.length}`,
+                `${t('phase2ProviderSandboxContractAssetBoundaryCount')}: ${summary.asset_boundary_count ?? pack.provider_sandbox_asset_boundary_cards.length}`,
+                `${t('phase2ProviderSandboxContractUnlockBlockerCount')}: ${summary.unlock_blocker_count ?? pack.phase2_provider_sandbox_unlock_blockers.length}`,
+                `${t('phase2ProviderSandboxContractRecommendedAction')}: ${summary.recommended_operator_action || summary.risk_note || t('phase2ProviderSandboxContractPreviewNote')}`,
+                `sandbox_only: ${String(summary.sandbox_only === true)}`,
+                `real_provider_client_created: ${projectWorkspacePhase2ProviderSandboxContractDisabledText(summary.real_provider_client_created)}`,
+                `provider_sandbox_call_executed: ${projectWorkspacePhase2ProviderSandboxContractDisabledText(summary.provider_sandbox_call_executed)}`,
+                `real_provider_call_allowed: ${projectWorkspacePhase2ProviderSandboxContractDisabledText(summary.real_provider_call_allowed)}`,
+                `secret_read_allowed: ${projectWorkspacePhase2ProviderSandboxContractDisabledText(summary.secret_read_allowed)}`,
+                `external_call_allowed: ${projectWorkspacePhase2ProviderSandboxContractDisabledText(summary.external_call_allowed)}`,
+                `paid_operation_allowed: ${projectWorkspacePhase2ProviderSandboxContractDisabledText(summary.paid_operation_allowed)}`,
+                `real_execution_allowed: ${projectWorkspacePhase2ProviderSandboxContractDisabledText(summary.real_execution_allowed)}`,
+                t('phase2ProviderSandboxContractPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspacePhase2ProviderSandboxContractSectionText(titleKey, value) {
+            const body = projectWorkspacePhase2ProviderSandboxContractJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportPhase2ProviderSandboxContractMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ProviderSandboxContractSnapshot(workspace);
+            if (!pack.has_workspace_phase2_provider_sandbox_contract_pack) return '';
+            return [
+                `## ${t('phase2ProviderSandboxContractPackTitle')}`,
+                projectWorkspacePhase2ProviderSandboxContractSummaryText(pack), '',
+                projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractSummaryTitle', pack.provider_sandbox_contract_summary), '',
+                projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractProfileTitle', pack.provider_sandbox_profile_cards), '',
+                projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractFixtureTitle', pack.provider_sandbox_fixture_cards), '',
+                projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractRequestTitle', pack.provider_sandbox_request_contract_cards), '',
+                projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractResponseTitle', pack.provider_sandbox_response_schema_cards), '',
+                projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractAssetBoundaryTitle', pack.provider_sandbox_asset_boundary_cards), '',
+                projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractPolicyClaimTitle', pack.provider_sandbox_policy_claim_dependency_cards), '',
+                projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractCostQuotaTitle', pack.provider_sandbox_cost_quota_cards), '',
+                projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractAuditTraceTitle', pack.provider_sandbox_audit_trace_cards), '',
+                projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractFailureRecoveryTitle', pack.provider_sandbox_failure_recovery_cards), '',
+                projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractTestPlanTitle', pack.provider_sandbox_test_plan_cards), '',
+                projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractUnlockBlockerTitle', pack.phase2_provider_sandbox_unlock_blockers), '',
+                projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractQualityTitle', pack.provider_sandbox_quality_checks), '',
+                projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractAuditPreviewTitle', pack.audit_preview), '',
+                projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractSafetyTitle', pack.safety_boundaries),
+                t('phase2ProviderSandboxContractPreviewNote'),
+                t('phase2ProviderSandboxContractFixtureRequestNote'),
+                t('phase2ProviderSandboxContractResponseAssetPolicyNote'),
+                t('phase2ProviderSandboxContractCostAuditFailureNote'),
+                t('phase2ProviderSandboxContractTestQualitySafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspacePhase2ProviderSandboxContractText(kind = 'full') {
+            const status = document.getElementById('projectWorkspacePhase2ProviderSandboxContractStatus');
+            const pack = projectWorkspaceExportPhase2ProviderSandboxContractSnapshot();
+            const text = kind === 'summary' ? projectWorkspacePhase2ProviderSandboxContractSummaryText(pack)
+                : kind === 'profiles' ? projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractProfileTitle', pack.provider_sandbox_profile_cards)
+                : kind === 'fixtures' ? projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractFixtureTitle', pack.provider_sandbox_fixture_cards)
+                : kind === 'requests' ? projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractRequestTitle', pack.provider_sandbox_request_contract_cards)
+                : kind === 'responses' ? projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractResponseTitle', pack.provider_sandbox_response_schema_cards)
+                : kind === 'assets' ? projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractAssetBoundaryTitle', pack.provider_sandbox_asset_boundary_cards)
+                : kind === 'policy' ? projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractPolicyClaimTitle', pack.provider_sandbox_policy_claim_dependency_cards)
+                : kind === 'cost' ? projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractCostQuotaTitle', pack.provider_sandbox_cost_quota_cards)
+                : kind === 'failure' ? projectWorkspacePhase2ProviderSandboxContractSectionText('phase2ProviderSandboxContractFailureRecoveryTitle', pack.provider_sandbox_failure_recovery_cards)
+                : projectWorkspaceExportPhase2ProviderSandboxContractMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('phase2ProviderSandboxContractCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('phase2ProviderSandboxContractCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('phase2ProviderSandboxContractCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('phase2ProviderSandboxContractCopyFailed'); }
+        }
+
+        function copyProjectWorkspacePhase2ProviderSandboxContractSummary() { return copyProjectWorkspacePhase2ProviderSandboxContractText('summary'); }
+        function copyProjectWorkspaceProviderSandboxProfileCards() { return copyProjectWorkspacePhase2ProviderSandboxContractText('profiles'); }
+        function copyProjectWorkspaceProviderSandboxFixtureCards() { return copyProjectWorkspacePhase2ProviderSandboxContractText('fixtures'); }
+        function copyProjectWorkspaceProviderSandboxRequestContractCards() { return copyProjectWorkspacePhase2ProviderSandboxContractText('requests'); }
+        function copyProjectWorkspaceProviderSandboxResponseSchemaCards() { return copyProjectWorkspacePhase2ProviderSandboxContractText('responses'); }
+        function copyProjectWorkspaceProviderSandboxAssetBoundaryCards() { return copyProjectWorkspacePhase2ProviderSandboxContractText('assets'); }
+        function copyProjectWorkspaceProviderSandboxPolicyClaimDependencyCards() { return copyProjectWorkspacePhase2ProviderSandboxContractText('policy'); }
+        function copyProjectWorkspaceProviderSandboxCostQuotaCards() { return copyProjectWorkspacePhase2ProviderSandboxContractText('cost'); }
+        function copyProjectWorkspaceProviderSandboxFailureRecoveryCards() { return copyProjectWorkspacePhase2ProviderSandboxContractText('failure'); }
+        function copyProjectWorkspaceFullPhase2ProviderSandboxContractPack() { return copyProjectWorkspacePhase2ProviderSandboxContractText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -28125,6 +28362,36 @@
             const pack = projectWorkspaceExportPhase2LlmSandboxContractSnapshot(workspace); if (!pack.has_workspace_phase2_llm_sandbox_contract_pack) return '';
             const tests = projectWorkspacePhase2LlmSandboxContractJsonText(pack.llm_sandbox_test_plan_cards); const blockers = projectWorkspacePhase2LlmSandboxContractJsonText(pack.phase2_llm_sandbox_unlock_blockers); const quality = projectWorkspacePhase2LlmSandboxContractJsonText(pack.llm_sandbox_quality_checks); const audit = projectWorkspacePhase2LlmSandboxContractJsonText(pack.audit_preview); const safety = projectWorkspacePhase2LlmSandboxContractJsonText(pack.safety_boundaries);
             return `<div class="section-block" id="projectWorkspacePhase2LlmSandboxContractTestQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2LlmSandboxContractTestQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2LlmSandboxContractTestQualitySafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2LlmSandboxContractPack()">${escapeHTML(t('phase2LlmSandboxContractCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmSandboxContractTestPlanTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(tests || t('phase2LlmSandboxContractNoData'))}</pre><div class="field-helper">unit tests / contract tests / prompt fixture tests / response schema tests / evidence claim guard tests / redaction tests / cost quota tests / timeout tests / audit trace tests / permission boundary tests</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmSandboxContractUnlockBlockerTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2LlmSandboxContractNoData'))}</pre><div class="field-helper">no provider sandbox key approval / no secret access approval / no external call approval / no cost quota approval / no sandbox provider contract test executed / no real audit sink / no prompt fixture approval / no production approval / no rollback failure recovery implementation / no provider-specific legal review</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmSandboxContractQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2LlmSandboxContractNoData'))}</pre><div class="field-helper">sandbox provider profile / prompt fixtures / invocation contract / response schema / evidence claim guard / redaction privacy / cost quota / audit trace / failure recovery / test plan / unlock blockers / safety boundary</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2LlmSandboxContractAuditPreviewTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2LlmSandboxContractNoData'))}</pre><div class="field-helper">audit preview only; no database write / no real log read / no real audit event</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2LlmSandboxContractSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / llm disabled / llm_sandbox_call disabled / media disabled / external_scraping disabled / database_persistence disabled / database_read disabled / database_write disabled / schema_migration disabled / audit_sink disabled / audit_event_write disabled / audit_log_read disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled / paid_operation disabled</div><div class="field-helper">${escapeHTML(t('phase2LlmSandboxContractTestQualitySafetyNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2ProviderSandboxContractSummaryProfilePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ProviderSandboxContractSnapshot(workspace); if (!pack.has_workspace_phase2_provider_sandbox_contract_pack) return '';
+            const summary = pack.provider_sandbox_contract_summary || {}; const profiles = projectWorkspacePhase2ProviderSandboxContractJsonText(pack.provider_sandbox_profile_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2ProviderSandboxContractSummaryProfilePanel" data-marker="project_workspace_phase2_provider_sandbox_contract_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ProviderSandboxContractPackTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ProviderSandboxContractSummaryProfileTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ProviderSandboxContractPackHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2ProviderSandboxContractSummary()">${escapeHTML(t('phase2ProviderSandboxContractCopySummary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderSandboxProfileCards()">${escapeHTML(t('phase2ProviderSandboxContractCopyProfiles'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2ProviderSandboxContractPack()">${escapeHTML(t('phase2ProviderSandboxContractCopyFull'))}</button></div></div><div class="metric-strip">${metricPill(t('phase2ProviderSandboxContractMode'), summary.mode || t('none'))}${metricPill(t('phase2ProviderSandboxContractProfileCount'), String(summary.provider_profile_count ?? pack.provider_sandbox_profile_cards.length))}${metricPill(t('phase2ProviderSandboxContractFixtureCount'), String(summary.fixture_count ?? pack.provider_sandbox_fixture_cards.length))}${metricPill(t('phase2ProviderSandboxContractRequestCount'), String(summary.request_contract_count ?? pack.provider_sandbox_request_contract_cards.length))}${metricPill(t('phase2ProviderSandboxContractResponseSchemaCount'), String(summary.response_schema_count ?? pack.provider_sandbox_response_schema_cards.length))}${metricPill(t('phase2ProviderSandboxContractAssetBoundaryCount'), String(summary.asset_boundary_count ?? pack.provider_sandbox_asset_boundary_cards.length))}${metricPill(t('phase2ProviderSandboxContractUnlockBlockerCount'), String(summary.unlock_blocker_count ?? pack.phase2_provider_sandbox_unlock_blockers.length))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspacePhase2ProviderSandboxContractSummaryText(pack) || t('phase2ProviderSandboxContractNoData'))}</pre><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderSandboxContractProfileTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(profiles || t('phase2ProviderSandboxContractNoData'))}</pre><div class="field-helper">provider_sandbox_profile_id / provider_label / provider_group / sandbox_capability_type / intended_sandbox_use_case / required_secret_refs / required_network_scope / required_endpoint_or_model_profile / sandbox_only=true / real_provider_client_created=false / provider_sandbox_call_executed=false / real_provider_call_allowed=false / secret_read_allowed=false / external_call_allowed=false / paid_operation_allowed=false / real_execution_allowed=false</div><div class="field-helper">image_generation_sandbox / video_generation_sandbox / media_storage_sandbox / analytics_tracking_sandbox / translation_sandbox / approval_ticket_sandbox / platform_upload_sandbox / external_scraping_sandbox / rollback_restore_sandbox / policy_check_sandbox</div></div><div class="demo-warning">${escapeHTML(t('phase2ProviderSandboxContractPreviewNote'))}</div><div id="projectWorkspacePhase2ProviderSandboxContractStatus" class="field-helper" aria-live="polite"></div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2ProviderSandboxContractFixtureRequestPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ProviderSandboxContractSnapshot(workspace); if (!pack.has_workspace_phase2_provider_sandbox_contract_pack) return '';
+            const fixtures = projectWorkspacePhase2ProviderSandboxContractJsonText(pack.provider_sandbox_fixture_cards); const requests = projectWorkspacePhase2ProviderSandboxContractJsonText(pack.provider_sandbox_request_contract_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2ProviderSandboxContractFixtureRequestPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ProviderSandboxContractFixtureRequestTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ProviderSandboxContractFixtureRequestNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderSandboxFixtureCards()">${escapeHTML(t('phase2ProviderSandboxContractCopyFixtures'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderSandboxRequestContractCards()">${escapeHTML(t('phase2ProviderSandboxContractCopyRequests'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderSandboxContractFixtureTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(fixtures || t('phase2ProviderSandboxContractNoData'))}</pre><div class="field-helper">sandbox_fixture_id / fixture_label / fixture_group / fixture_purpose / input_context_fixture_shape / required_asset_refs / required_claim_safety_refs / forbidden_fixture_inputs / expected_safe_output_shape / contains_customer_data / contains_provider_secret / contains_media_binary / requires_redaction / sandbox_invocation_allowed=false / real_provider_call_allowed=false</div><div class="field-helper">image_prompt_asset_fixture / video_prompt_asset_fixture / media_manifest_fixture / analytics_event_fixture / translation_copy_fixture / approval_ticket_fixture / platform_delivery_fixture / scraping_input_fixture / rollback_snapshot_fixture / policy_claim_fixture</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderSandboxContractRequestTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(requests || t('phase2ProviderSandboxContractNoData'))}</pre><div class="field-helper">sandbox_request_contract_id / request_label / request_group / simulated_request_shape / required_headers_or_metadata / required_timeout_policy / required_retry_policy / required_cost_guard / required_audit_trace_refs / forbidden_request_fields / provider_sandbox_call_executed=false / external_call_allowed=false / secret_read_allowed=false / paid_operation_allowed=false / real_execution_allowed=false</div></div></div><div class="demo-warning">${escapeHTML(t('phase2ProviderSandboxContractFixtureRequestNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2ProviderSandboxContractResponseAssetPolicyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ProviderSandboxContractSnapshot(workspace); if (!pack.has_workspace_phase2_provider_sandbox_contract_pack) return '';
+            const responses = projectWorkspacePhase2ProviderSandboxContractJsonText(pack.provider_sandbox_response_schema_cards); const assets = projectWorkspacePhase2ProviderSandboxContractJsonText(pack.provider_sandbox_asset_boundary_cards); const policy = projectWorkspacePhase2ProviderSandboxContractJsonText(pack.provider_sandbox_policy_claim_dependency_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2ProviderSandboxContractResponseAssetPolicyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ProviderSandboxContractResponseAssetPolicyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ProviderSandboxContractResponseAssetPolicyNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderSandboxResponseSchemaCards()">${escapeHTML(t('phase2ProviderSandboxContractCopyResponses'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderSandboxAssetBoundaryCards()">${escapeHTML(t('phase2ProviderSandboxContractCopyAssetBoundaries'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderSandboxPolicyClaimDependencyCards()">${escapeHTML(t('phase2ProviderSandboxContractCopyPolicyClaims'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderSandboxContractResponseTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(responses || t('phase2ProviderSandboxContractNoData'))}</pre><div class="field-helper">response_schema_id / response_label / response_group / expected_response_fields / required_asset_trace_fields / required_claim_trace_fields / required_usage_fields / required_risk_fields / forbidden_response_fields / schema_validation_required / unsafe_output_behavior / missing_asset_trace_behavior / real_provider_call_allowed=false / real_execution_allowed=false</div><div class="field-helper">asset trace / claim trace / usage fields / risk fields / provider secret / raw hidden prompt / untraced claim / unapproved media URL / real customer data</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderSandboxContractAssetBoundaryTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(assets || t('phase2ProviderSandboxContractNoData'))}</pre><div class="field-helper">image asset / video asset / media manifest / platform delivery payload / analytics event / approval ticket / rollback snapshot</div><div class="field-helper">media_upload_allowed=false / media_download_allowed=false / media_storage_allowed=false / platform_upload_allowed=false / real_export_allowed=false / real_file_write_allowed=false</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderSandboxContractPolicyClaimTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(policy || t('phase2ProviderSandboxContractNoData'))}</pre><div class="field-helper">unsupported claim / missing evidence / do_not_claim / restricted claim / policy disabled / operator review required; no real policy API, no legal advice, no platform compliance conclusion, no real quote or buyer evidence generation.</div></div></div><div class="demo-warning">${escapeHTML(t('phase2ProviderSandboxContractResponseAssetPolicyNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2ProviderSandboxContractCostAuditFailurePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ProviderSandboxContractSnapshot(workspace); if (!pack.has_workspace_phase2_provider_sandbox_contract_pack) return '';
+            const cost = projectWorkspacePhase2ProviderSandboxContractJsonText(pack.provider_sandbox_cost_quota_cards); const audit = projectWorkspacePhase2ProviderSandboxContractJsonText(pack.provider_sandbox_audit_trace_cards); const failure = projectWorkspacePhase2ProviderSandboxContractJsonText(pack.provider_sandbox_failure_recovery_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2ProviderSandboxContractCostAuditFailurePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ProviderSandboxContractCostAuditFailureTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ProviderSandboxContractCostAuditFailureNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderSandboxCostQuotaCards()">${escapeHTML(t('phase2ProviderSandboxContractCopyCost'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceProviderSandboxFailureRecoveryCards()">${escapeHTML(t('phase2ProviderSandboxContractCopyFailure'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderSandboxContractCostQuotaTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(cost || t('phase2ProviderSandboxContractNoData'))}</pre><div class="field-helper">sandbox quota / timeout / cost estimate / rate limit / retry cap / paid operation disabled; no real billing and no real request.</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderSandboxContractAuditTraceTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2ProviderSandboxContractNoData'))}</pre><div class="field-helper">future trace id / run id / fixture id / response schema id / asset ref / operator ref / decision ref / cost estimate ref; no database write, no real audit event, no real log read.</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderSandboxContractFailureRecoveryTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(failure || t('phase2ProviderSandboxContractNoData'))}</pre><div class="field-helper">provider unavailable / timeout / rate limit / schema invalid / unsafe asset output / missing asset trace / redaction failure / secret missing / cost quota exceeded / audit sink missing / media operation blocked / platform upload blocked</div><div class="field-helper">no real retry / no real rollback / no notification / no real alert</div></div></div><div class="demo-warning">${escapeHTML(t('phase2ProviderSandboxContractCostAuditFailureNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2ProviderSandboxContractTestQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2ProviderSandboxContractSnapshot(workspace); if (!pack.has_workspace_phase2_provider_sandbox_contract_pack) return '';
+            const tests = projectWorkspacePhase2ProviderSandboxContractJsonText(pack.provider_sandbox_test_plan_cards); const blockers = projectWorkspacePhase2ProviderSandboxContractJsonText(pack.phase2_provider_sandbox_unlock_blockers); const quality = projectWorkspacePhase2ProviderSandboxContractJsonText(pack.provider_sandbox_quality_checks); const audit = projectWorkspacePhase2ProviderSandboxContractJsonText(pack.audit_preview); const safety = projectWorkspacePhase2ProviderSandboxContractJsonText(pack.safety_boundaries);
+            return `<div class="section-block" id="projectWorkspacePhase2ProviderSandboxContractTestQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2ProviderSandboxContractTestQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2ProviderSandboxContractTestQualitySafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2ProviderSandboxContractPack()">${escapeHTML(t('phase2ProviderSandboxContractCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderSandboxContractTestPlanTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(tests || t('phase2ProviderSandboxContractNoData'))}</pre><div class="field-helper">unit tests / contract tests / fixture tests / response schema tests / asset boundary tests / policy claim dependency tests / redaction tests / cost quota tests / timeout tests / audit trace tests / permission boundary tests</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderSandboxContractUnlockBlockerTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2ProviderSandboxContractNoData'))}</pre><div class="field-helper">no provider sandbox key approval / no secret access approval / no external call approval / no cost quota approval / no sandbox provider contract test executed / no real audit sink / no media storage approval / no platform upload approval / no production approval / no provider-specific legal review</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderSandboxContractQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2ProviderSandboxContractNoData'))}</pre><div class="field-helper">sandbox provider profile / fixtures / request contract / response schema / asset boundary / policy claim dependency / cost quota / audit trace / failure recovery / test plan / unlock blockers / safety boundary</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2ProviderSandboxContractAuditPreviewTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2ProviderSandboxContractNoData'))}</pre><div class="field-helper">audit preview only; no database write / no real log read / no real audit event</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2ProviderSandboxContractSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / provider_sandbox_call disabled / llm disabled / llm_sandbox_call disabled / media disabled / media_upload disabled / media_download disabled / media_storage disabled / external_scraping disabled / database_persistence disabled / database_read disabled / database_write disabled / schema_migration disabled / audit_sink disabled / audit_event_write disabled / audit_log_read disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled / paid_operation disabled</div><div class="field-helper">${escapeHTML(t('phase2ProviderSandboxContractTestQualitySafetyNote'))}</div></div>`;
         }
 
         function renderProjectWorkspaceCreativeCoreFlowStrip(workspace = latestProjectWorkspace) {
@@ -32894,6 +33161,8 @@
                 '',
                 projectWorkspaceExportPhase2LlmSandboxContractMarkdown(workspace),
                 '',
+                projectWorkspaceExportPhase2ProviderSandboxContractMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -33035,6 +33304,7 @@
                 workspace_phase2_db_schema_migration_dry_run_pack: projectWorkspaceExportPhase2DbSchemaMigrationDryRunSnapshot(workspace),
                 workspace_phase2_audit_sink_contract_pack: projectWorkspaceExportPhase2AuditSinkContractSnapshot(workspace),
                 workspace_phase2_llm_sandbox_contract_pack: projectWorkspaceExportPhase2LlmSandboxContractSnapshot(workspace),
+                workspace_phase2_provider_sandbox_contract_pack: projectWorkspaceExportPhase2ProviderSandboxContractSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -45731,6 +46001,11 @@
                     ${renderProjectWorkspacePhase2LlmSandboxContractResponseGuardRedactionPanel(workspace)}
                     ${renderProjectWorkspacePhase2LlmSandboxContractCostAuditFailurePanel(workspace)}
                     ${renderProjectWorkspacePhase2LlmSandboxContractTestQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspacePhase2ProviderSandboxContractSummaryProfilePanel(workspace)}
+                    ${renderProjectWorkspacePhase2ProviderSandboxContractFixtureRequestPanel(workspace)}
+                    ${renderProjectWorkspacePhase2ProviderSandboxContractResponseAssetPolicyPanel(workspace)}
+                    ${renderProjectWorkspacePhase2ProviderSandboxContractCostAuditFailurePanel(workspace)}
+                    ${renderProjectWorkspacePhase2ProviderSandboxContractTestQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}

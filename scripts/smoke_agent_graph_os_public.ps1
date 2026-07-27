@@ -201,6 +201,7 @@ Add-Check "project_workspace_phase2_real_db_adapter_contract_marker" ($page.Cont
 Add-Check "project_workspace_phase2_db_schema_migration_dry_run_marker" ($page.Content -match "Project Workspace phase2 DB schema migration dry-run bundle")
 Add-Check "project_workspace_phase2_audit_sink_contract_marker" ($page.Content -match "Project Workspace phase2 audit sink contract bundle")
 Add-Check "project_workspace_phase2_llm_sandbox_contract_marker" ($page.Content -match "Project Workspace phase2 LLM sandbox contract bundle")
+Add-Check "project_workspace_phase2_provider_sandbox_contract_marker" ($page.Content -match "Project Workspace phase2 provider sandbox contract bundle")
 Add-Check "project_workspace_safety_chain_history_summary_marker" ($page.Content -match "Project Workspace safety chain history summary bundle")
 Add-Check "frontend_interaction_recovery_marker" ($page.Content -match "Frontend interaction recovery bundle")
 Add-Check "frontend_interaction_binding_repair_marker" ($page.Content -match "Frontend interaction binding repair bundle")
