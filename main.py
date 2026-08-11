@@ -49724,6 +49724,451 @@ def _rw_workspace_phase2_sandbox_contract_test_matrix_pack(
     }
 
 
+def _rw_workspace_phase2_sandbox_readiness_review_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_ids = [
+        "workspace_phase2_real_db_minimal_adapter_contract_pack",
+        "workspace_phase2_db_schema_migration_dry_run_pack",
+        "workspace_phase2_audit_sink_contract_pack",
+        "workspace_phase2_llm_sandbox_contract_pack",
+        "workspace_phase2_provider_sandbox_contract_pack",
+        "workspace_phase2_sandbox_contract_test_matrix_pack",
+        "workspace_phase2_provider_unlock_review_pack",
+        "workspace_phase2_llm_provider_gate_pack",
+        "workspace_phase2_readiness_review_pack",
+        "workspace_phase2_database_persistence_gate_pack",
+        "workspace_phase2_persistence_mock_harness_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_capability_permission_matrix_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_final_system_health_pack",
+        "workspace_mvp_readiness_dossier_pack",
+    ]
+    packs = {
+        pack_id: dict(creative_decision_pack.get(pack_id) or {})
+        for pack_id in source_pack_ids
+    }
+    disabled_unlock_flags = {
+        "real_sandbox_unlock_allowed": False,
+        "real_database_unlock_allowed": False,
+        "real_audit_sink_unlock_allowed": False,
+        "real_llm_sandbox_unlock_allowed": False,
+        "real_provider_sandbox_unlock_allowed": False,
+        "real_provider_client_created": False,
+        "real_sandbox_test_executed": False,
+        "secret_read_allowed": False,
+        "external_call_allowed": False,
+        "paid_operation_allowed": False,
+        "media_upload_allowed": False,
+        "media_download_allowed": False,
+        "media_storage_allowed": False,
+        "platform_upload_allowed": False,
+        "real_export_allowed": False,
+        "real_execution_allowed": False,
+        "real_database_write_allowed": False,
+        "real_file_write_allowed": False,
+    }
+
+    gate_specs = [
+        ("database_adapter_gate", "Database adapter gate", "database", ["workspace_phase2_real_db_minimal_adapter_contract_pack"], ["database sandbox approval", "DB adapter harness"]),
+        ("schema_migration_gate", "Schema migration gate", "database", ["workspace_phase2_db_schema_migration_dry_run_pack"], ["migration execution approval", "rollback preview"]),
+        ("audit_sink_gate", "Audit sink gate", "audit", ["workspace_phase2_audit_sink_contract_pack"], ["real audit sink", "audit event write approval"]),
+        ("llm_sandbox_gate", "LLM sandbox gate", "llm", ["workspace_phase2_llm_sandbox_contract_pack", "workspace_phase2_llm_provider_gate_pack"], ["LLM sandbox approval", "prompt fixture validation"]),
+        ("provider_sandbox_gate", "Provider sandbox gate", "provider", ["workspace_phase2_provider_sandbox_contract_pack", "workspace_phase2_provider_unlock_review_pack"], ["provider sandbox key approval", "provider contract tests"]),
+        ("sandbox_contract_test_matrix_gate", "Sandbox contract test matrix gate", "test_matrix", ["workspace_phase2_sandbox_contract_test_matrix_pack"], ["sandbox contract test executed"]),
+        ("secret_network_cost_gate", "Secret network cost gate", "permission", ["workspace_secret_environment_gate_pack", "workspace_network_external_call_block_guard_pack"], ["secret access approval", "external call approval", "cost quota approval"]),
+        ("policy_claim_safety_gate", "Policy claim safety gate", "claim_safety", ["workspace_phase2_provider_sandbox_contract_pack"], ["provider-specific legal review", "claim-safety review"]),
+        ("media_platform_boundary_gate", "Media platform boundary gate", "media_platform", ["workspace_phase2_provider_sandbox_contract_pack"], ["media storage approval", "platform upload approval"]),
+        ("production_unlock_gate", "Production unlock gate", "production", ["workspace_final_system_health_pack", "workspace_mvp_readiness_dossier_pack"], ["production approval", "rollback implementation approval"]),
+    ]
+    sandbox_gate_status_cards = [
+        {
+            "sandbox_gate_status_id": gate_id,
+            "gate_label": label,
+            "gate_group": group,
+            "source_pack_refs": source_refs,
+            "current_status": "blocked" if group in {"production", "database", "audit"} else "requires_operator_review",
+            "status_reason": "deterministic readiness summary only; required approvals and executed sandbox tests are missing",
+            "required_before_unlock": required,
+            "blocking_refs": required,
+            "operator_action_required": True,
+            "real_unlock_allowed": False,
+            "real_execution_allowed": False,
+            "risk_note": f"{label} remains preview-only and cannot unlock real sandbox, provider, DB, audit sink, media, platform, or production execution.",
+        }
+        for gate_id, label, group, source_refs, required in gate_specs
+    ]
+
+    domain_specs = [
+        ("database_sandbox_readiness", "Database sandbox readiness", "database", ["database_adapter_gate"]),
+        ("migration_sandbox_readiness", "Migration sandbox readiness", "database", ["schema_migration_gate"]),
+        ("audit_sink_sandbox_readiness", "Audit sink sandbox readiness", "audit", ["audit_sink_gate"]),
+        ("llm_sandbox_readiness", "LLM sandbox readiness", "llm", ["llm_sandbox_gate"]),
+        ("provider_sandbox_readiness", "Provider sandbox readiness", "provider", ["provider_sandbox_gate"]),
+        ("media_boundary_readiness", "Media boundary readiness", "media", ["media_platform_boundary_gate"]),
+        ("platform_upload_readiness", "Platform upload readiness", "platform", ["media_platform_boundary_gate"]),
+        ("cost_quota_readiness", "Cost quota readiness", "cost", ["secret_network_cost_gate"]),
+        ("secret_network_readiness", "Secret network readiness", "permission", ["secret_network_cost_gate"]),
+        ("policy_claim_readiness", "Policy claim readiness", "claim_safety", ["policy_claim_safety_gate"]),
+    ]
+    sandbox_domain_readiness_cards = [
+        {
+            "sandbox_domain_readiness_id": readiness_id,
+            "domain_label": label,
+            "domain_group": group,
+            "source_gate_refs": source_gate_refs,
+            "readiness_status": "not_ready",
+            "ready_count": 0,
+            "blocked_count": 1,
+            "missing_approval_refs": ["operator approval", "sandbox unlock approval"],
+            "missing_test_refs": ["executed sandbox contract test"],
+            "required_next_controls": ["approval review", "audit trace preview", "rollback preview"],
+            "recommended_operator_action": "keep preview-only and prepare harness controls before any real unlock",
+            "real_unlock_allowed": False,
+            "risk_note": f"{label} is blocked until approvals, tests, and audit controls exist.",
+        }
+        for readiness_id, label, group, source_gate_refs in domain_specs
+    ]
+
+    candidate_specs = [
+        ("db_sandbox_adapter_candidate", "DB sandbox adapter candidate", "database", "db_sandbox_adapter"),
+        ("audit_sink_sandbox_candidate", "Audit sink sandbox candidate", "audit", "audit_sink_sandbox"),
+        ("llm_sandbox_invocation_candidate", "LLM sandbox invocation candidate", "llm", "llm_sandbox_invocation"),
+        ("provider_sandbox_invocation_candidate", "Provider sandbox invocation candidate", "provider", "provider_sandbox_invocation"),
+        ("media_storage_candidate", "Media storage candidate", "media", "media_storage"),
+        ("platform_upload_candidate", "Platform upload candidate", "platform", "platform_upload"),
+        ("production_db_candidate", "Production DB candidate", "production", "production_db"),
+        ("production_llm_candidate", "Production LLM candidate", "production", "production_llm"),
+        ("production_provider_candidate", "Production provider candidate", "production", "production_provider"),
+    ]
+    sandbox_unlock_candidate_cards = [
+        {
+            "sandbox_unlock_candidate_id": candidate_id,
+            "candidate_label": label,
+            "candidate_group": group,
+            "candidate_type": candidate_type,
+            "source_readiness_refs": [f"{group}_sandbox_readiness", "sandbox_contract_test_matrix_gate"],
+            "minimum_required_controls": ["approval", "executed sandbox contract tests", "audit trace", "rollback plan"],
+            "missing_controls": ["approval", "executed sandbox contract tests", "real audit sink"],
+            "candidate_status": "blocked" if group == "production" else "preview_only",
+            "unlock_allowed": False,
+            "production_allowed": False,
+            "recommended_sequence_order": index,
+            "risk_note": f"{label} is a future candidate only and cannot unlock real sandbox or production.",
+        }
+        for index, (candidate_id, label, group, candidate_type)
+        in enumerate(candidate_specs, start=1)
+    ]
+
+    blocker_labels = [
+        "no provider sandbox key approval",
+        "no secret access approval",
+        "no external call approval",
+        "no cost quota approval",
+        "no sandbox contract test executed",
+        "no real audit sink",
+        "no media storage approval",
+        "no platform upload approval",
+        "no production approval",
+        "no provider-specific legal review",
+        "no database sandbox approval",
+        "no migration execution approval",
+        "no audit event write approval",
+        "no rollback implementation approval",
+    ]
+    sandbox_blocker_consolidation_cards = [
+        {
+            "sandbox_blocker_consolidation_id": f"sandbox_readiness_blocker_{idx}",
+            "blocker_label": label,
+            "source_pack_refs": source_pack_ids,
+            "blocking_scope": "sandbox_and_production_unlock",
+            "blocks_real_unlock": True,
+            "recommended_operator_action": "resolve through preview harness, approval review, and deterministic tests before unlock",
+            "real_execution_allowed": False,
+            "risk_note": f"{label} blocks sandbox readiness.",
+        }
+        for idx, label in enumerate(blocker_labels, start=1)
+    ]
+
+    decision_specs = [
+        ("continue_preview_only", "Continue preview only", "preview", "allowed"),
+        ("prepare_db_sandbox_harness", "Prepare DB sandbox harness", "database", "draft_only"),
+        ("prepare_audit_sink_harness", "Prepare audit sink harness", "audit", "draft_only"),
+        ("prepare_llm_sandbox_approval", "Prepare LLM sandbox approval", "llm", "draft_only"),
+        ("prepare_provider_sandbox_approval", "Prepare provider sandbox approval", "provider", "draft_only"),
+        ("hold_production_unlock", "Hold production unlock", "production", "required"),
+        ("do_not_enable_external_calls", "Do not enable external calls", "network", "required"),
+        ("do_not_enable_paid_operations", "Do not enable paid operations", "cost", "required"),
+    ]
+    sandbox_operator_decision_cards = [
+        {
+            "operator_decision_id": decision_id,
+            "decision_label": label,
+            "decision_group": group,
+            "decision_status": status,
+            "decision_reason": "real unlock blockers remain unresolved",
+            "allowed_next_step": "prepare deterministic preview artifacts only",
+            "forbidden_actions": ["real sandbox unlock", "secret read", "external call", "paid operation", "production deployment"],
+            "required_review_refs": ["sandbox_readiness_review_summary", "phase2_sandbox_readiness_blockers"],
+            "real_execution_allowed": False,
+            "risk_note": f"{label} is an operator preview decision and creates no real task or approval.",
+        }
+        for decision_id, label, group, status in decision_specs
+    ]
+
+    validation_specs = [
+        ("backend_pack_presence_validation", "backend pack presence", "backend", ["main.py", "tests/test_review_workspace_endpoint.py"]),
+        ("frontend_workspace_render_validation", "frontend workspace render", "frontend", ["109B browser verification"]),
+        ("i18n_boundary_validation", "i18n boundary", "frontend", ["109B EN/ZH verification"]),
+        ("copy_export_validation", "copy export", "frontend", ["109B copy/export probes"]),
+        ("safety_boundary_validation", "safety boundary", "safety", ["safety_boundaries"]),
+        ("batch_gate_validation", "batch gate", "test", ["batch-gate"]),
+        ("sandbox_test_matrix_validation", "sandbox test matrix", "test_matrix", ["workspace_phase2_sandbox_contract_test_matrix_pack"]),
+        ("audit_preview_validation", "audit preview", "audit", ["audit_preview"]),
+    ]
+    sandbox_validation_evidence_cards = [
+        {
+            "validation_evidence_id": validation_id,
+            "validation_label": label,
+            "validation_group": group,
+            "source_refs": refs,
+            "validation_status": "deterministic_repo_validation_only",
+            "evidence_summary": "validated through local deterministic code/test/browser preview signals, not real sandbox/provider/LLM/media/DB execution",
+            "missing_evidence_refs": ["real sandbox execution evidence", "production approval evidence"],
+            "real_test_executed": False,
+            "risk_note": f"{label} does not represent real sandbox, provider, LLM, media, DB, or production validation.",
+        }
+        for validation_id, label, group, refs in validation_specs
+    ]
+
+    dependency_labels = [
+        "DB sandbox adapter harness",
+        "audit sink sandbox harness",
+        "DB + audit trace replay",
+        "LLM sandbox approval preview",
+        "provider sandbox approval preview",
+        "media storage approval preview",
+        "platform upload approval preview",
+        "production unlock risk review",
+    ]
+    sandbox_dependency_map_cards = [
+        {
+            "dependency_map_id": f"phase2_dependency_{idx}",
+            "dependency_label": label,
+            "dependency_group": "phase2_sandbox_readiness_sequence",
+            "depends_on_refs": dependency_labels[:idx - 1],
+            "unblocks_refs": dependency_labels[idx:idx + 1],
+            "blocked_by_refs": blocker_labels,
+            "recommended_order": idx,
+            "can_skip": False,
+            "risk_note": f"{label} is required in order and cannot be skipped before sandbox or production unlock.",
+        }
+        for idx, label in enumerate(dependency_labels, start=1)
+    ]
+
+    production_gap_labels = [
+        "real database connection missing",
+        "real audit sink missing",
+        "real secret approval missing",
+        "real external call approval missing",
+        "real cost quota approval missing",
+        "real sandbox contract tests missing",
+        "real LLM sandbox invocation missing",
+        "real provider sandbox invocation missing",
+        "real media storage missing",
+        "real platform upload missing",
+        "production legal review missing",
+        "production rollback implementation missing",
+    ]
+    sandbox_production_gap_cards = [
+        {
+            "sandbox_production_gap_id": f"production_gap_{idx}",
+            "gap_label": label,
+            "gap_group": "production_unlock_gap",
+            "gap_status": "blocked",
+            "source_blocker_refs": blocker_labels,
+            "required_resolution": "future approved sandbox harness and production risk review",
+            "real_execution_allowed": False,
+            "risk_note": f"{label} prevents production readiness.",
+        }
+        for idx, label in enumerate(production_gap_labels, start=1)
+    ]
+
+    next_phase_specs = [
+        ("111", "Real DB Sandbox Adapter Harness Preview", "workspace_phase2_real_db_sandbox_adapter_harness_pack"),
+        ("112", "Audit Sink Sandbox Harness Preview", "workspace_phase2_audit_sink_sandbox_harness_pack"),
+        ("113", "Real LLM Sandbox Invocation Approval Preview", "workspace_phase2_llm_sandbox_invocation_approval_pack"),
+        ("114", "Provider Sandbox Invocation Approval Preview", "workspace_phase2_provider_sandbox_invocation_approval_pack"),
+        ("115", "Secret / Network / Cost Approval Bundle Preview", "workspace_phase2_secret_network_cost_approval_bundle_pack"),
+        ("116", "Sandbox Failure Recovery / Rollback Rehearsal Preview", "workspace_phase2_sandbox_failure_recovery_rollback_rehearsal_pack"),
+        ("117", "Sandbox Monitoring / Alerting Preview", "workspace_phase2_sandbox_monitoring_alerting_pack"),
+        ("118", "Phase 2 Sandbox Gate Closeout Docs", "workspace_phase2_sandbox_gate_closeout_docs_pack"),
+    ]
+    sandbox_next_phase_recommendation_cards = [
+        {
+            "next_phase_recommendation_id": f"phase2_next_{chapter}",
+            "recommendation_label": f"{chapter} {label}",
+            "recommendation_group": "phase2_sandbox_readiness_next_step",
+            "recommended_sequence_order": idx,
+            "source_blocker_refs": blocker_labels,
+            "expected_output_pack": output_pack,
+            "must_remain_disabled": ["provider", "llm", "media", "external_call", "secret_read", "database_write", "real_execution", "paid_operation"],
+            "forbidden_actions": ["real sandbox unlock", "real provider call", "real LLM generation", "real DB write", "platform upload", "production deploy"],
+            "risk_note": f"{label} should remain preview-only and cannot unlock real capabilities.",
+        }
+        for idx, (chapter, label, output_pack)
+        in enumerate(next_phase_specs, start=1)
+    ]
+
+    phase2_sandbox_readiness_blockers = [
+        {
+            "sandbox_readiness_blocker_id": f"phase2_sandbox_readiness_blocker_{idx}",
+            "blocker_label": label,
+            "blocks_real_sandbox_unlock": True,
+            "blocks_production_unlock": True,
+            "recommended_operator_action": "keep blocked until explicit approval and deterministic harness evidence exist",
+            "real_execution_allowed": False,
+            "risk_note": f"{label} remains unresolved.",
+        }
+        for idx, label in enumerate([
+            "no database sandbox approval",
+            "no migration execution approval",
+            "no real audit sink",
+            "no audit event write approval",
+            "no provider sandbox key approval",
+            "no secret access approval",
+            "no external call approval",
+            "no cost quota approval",
+            "no sandbox contract test executed",
+            "no media storage approval",
+            "no platform upload approval",
+            "no production approval",
+            "no provider-specific legal review",
+            "no production rollback implementation",
+        ], start=1)
+    ]
+
+    safety_boundaries = {
+        "provider": False,
+        "provider_enabled": False,
+        "provider_sandbox_call": False,
+        "provider_sandbox_call_enabled": False,
+        "llm": False,
+        "llm_enabled": False,
+        "llm_sandbox_call": False,
+        "llm_sandbox_call_enabled": False,
+        "media": False,
+        "media_enabled": False,
+        "media_upload": False,
+        "media_upload_enabled": False,
+        "media_download": False,
+        "media_download_enabled": False,
+        "media_storage": False,
+        "media_storage_enabled": False,
+        "external_scraping": False,
+        "external_scraping_enabled": False,
+        "database_persistence": False,
+        "database_persistence_enabled": False,
+        "database_read": False,
+        "database_read_enabled": False,
+        "database_write": False,
+        "database_write_enabled": False,
+        "schema_migration": False,
+        "schema_migration_enabled": False,
+        "audit_sink": False,
+        "audit_sink_enabled": False,
+        "audit_event_write": False,
+        "audit_event_write_enabled": False,
+        "audit_log_read": False,
+        "audit_log_read_enabled": False,
+        "real_execution": False,
+        "real_execution_enabled": False,
+        "real_policy_check": False,
+        "real_policy_check_enabled": False,
+        "platform_upload": False,
+        "platform_upload_enabled": False,
+        "task_creation": False,
+        "task_creation_enabled": False,
+        "real_export": False,
+        "real_export_enabled": False,
+        "file_write": False,
+        "file_write_enabled": False,
+        "secret_read": False,
+        "secret_read_enabled": False,
+        "external_call": False,
+        "external_call_enabled": False,
+        "token_issue": False,
+        "token_issue_enabled": False,
+        "paid_operation": False,
+        "paid_operation_enabled": False,
+    }
+
+    return {
+        "pack_version": "workspace_phase2_sandbox_readiness_review_pack_v1",
+        "sandbox_readiness_review_summary": {
+            "mode": "phase2_sandbox_readiness_review_deterministic_gate_summary_dry_run_only",
+            "source_packs": source_pack_ids,
+            "source_pack_presence": {
+                pack_id: bool(packs.get(pack_id)) for pack_id in source_pack_ids
+            },
+            "overall_readiness_status": "not_ready",
+            "gate_status_count": len(sandbox_gate_status_cards),
+            "domain_readiness_count": len(sandbox_domain_readiness_cards),
+            "unlock_candidate_count": len(sandbox_unlock_candidate_cards),
+            "blocker_count": len(phase2_sandbox_readiness_blockers),
+            "recommended_operator_action": "continue preview-only Phase 2 work and prepare sandbox harness approvals before any real unlock",
+            **disabled_unlock_flags,
+            "risk_note": "Sandbox readiness review is a deterministic gate summary only; it does not unlock sandbox, DB, audit sink, LLM, provider, media, platform, export, or production execution.",
+        },
+        "sandbox_gate_status_cards": sandbox_gate_status_cards,
+        "sandbox_domain_readiness_cards": sandbox_domain_readiness_cards,
+        "sandbox_unlock_candidate_cards": sandbox_unlock_candidate_cards,
+        "sandbox_blocker_consolidation_cards": sandbox_blocker_consolidation_cards,
+        "sandbox_operator_decision_cards": sandbox_operator_decision_cards,
+        "sandbox_validation_evidence_cards": sandbox_validation_evidence_cards,
+        "sandbox_dependency_map_cards": sandbox_dependency_map_cards,
+        "sandbox_production_gap_cards": sandbox_production_gap_cards,
+        "sandbox_next_phase_recommendation_cards": sandbox_next_phase_recommendation_cards,
+        "phase2_sandbox_readiness_blockers": phase2_sandbox_readiness_blockers,
+        "sandbox_readiness_quality_checks": {
+            "gate_status_covered": bool(sandbox_gate_status_cards),
+            "domain_readiness_covered": bool(sandbox_domain_readiness_cards),
+            "unlock_candidates_covered": bool(sandbox_unlock_candidate_cards),
+            "blocker_consolidation_covered": bool(sandbox_blocker_consolidation_cards),
+            "operator_decisions_covered": bool(sandbox_operator_decision_cards),
+            "validation_evidence_covered": bool(sandbox_validation_evidence_cards),
+            "dependency_map_covered": bool(sandbox_dependency_map_cards),
+            "production_gaps_covered": bool(sandbox_production_gap_cards),
+            "next_phase_recommendations_covered": bool(sandbox_next_phase_recommendation_cards),
+            "blockers_covered": bool(phase2_sandbox_readiness_blockers),
+            "audit_preview_covered": True,
+            "safety_boundaries_covered": True,
+            "real_sandbox_unlock_performed": False,
+            "real_database_unlock_performed": False,
+            "real_audit_sink_unlock_performed": False,
+            "real_llm_sandbox_unlock_performed": False,
+            "real_provider_sandbox_unlock_performed": False,
+            "real_execution_performed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "phase2_sandbox_readiness_review_audit_preview",
+            "source": "creative_decision_pack.workspace_phase2_sandbox_readiness_review_pack",
+            "preview_only": True,
+            "database_write_allowed": False,
+            "database_write_performed": False,
+            "real_log_read_performed": False,
+            "real_audit_log_read_performed": False,
+            "audit_record_created": False,
+            "real_audit_event_created": False,
+            "real_execution_allowed": False,
+            "risk_note": "Audit preview is display-only and writes no database, reads no real logs, and creates no real audit event.",
+        },
+        "safety_boundaries": safety_boundaries,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -50019,6 +50464,11 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     )
     creative_decision_pack["workspace_phase2_sandbox_contract_test_matrix_pack"] = (
         _rw_workspace_phase2_sandbox_contract_test_matrix_pack(
+            creative_decision_pack
+        )
+    )
+    creative_decision_pack["workspace_phase2_sandbox_readiness_review_pack"] = (
+        _rw_workspace_phase2_sandbox_readiness_review_pack(
             creative_decision_pack
         )
     )

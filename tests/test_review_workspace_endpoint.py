@@ -16208,6 +16208,432 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
                 self.assertIn(key, boundaries)
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_phase2_sandbox_readiness_review_pack_is_preview_only(self):
+        payload = {
+            "workspace_id": "workspace-phase2-sandbox-readiness-review",
+            "source": "manual_import",
+            "output_language": "en",
+            "products": [{
+                "platform": "manual",
+                "asin": "SANDBOXREADINESS001",
+                "title": "Adjustable Laptop Stand",
+                "reviews": [
+                    {
+                        "rating": 2,
+                        "title": "Slides on glass desk",
+                        "text": (
+                            "The stand slides on my glass desk and the hinge "
+                            "feels stiff when I adjust height."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 5,
+                        "title": "Helps my posture",
+                        "text": (
+                            "It lifts my laptop to eye level and my neck "
+                            "feels better during long calls."
+                        ),
+                        "source_section": "manual_review",
+                    },
+                    {
+                        "rating": 1,
+                        "title": "Competitor bent quickly",
+                        "text": (
+                            "The competitor bent quickly and the screws "
+                            "started rattling after a few days."
+                        ),
+                        "source_section": "competitor_review",
+                        "metadata": {"source_type": "competitor"},
+                    },
+                ],
+            }],
+        }
+        response = self.client.post(
+            "/api/v1/analyze-review-workspace", json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        creative_pack = response.json()["creative_decision_pack"]
+        self.assertIn(
+            "workspace_phase2_sandbox_readiness_review_pack",
+            creative_pack,
+        )
+        for prior_pack in [
+            "workspace_phase2_real_db_minimal_adapter_contract_pack",
+            "workspace_phase2_db_schema_migration_dry_run_pack",
+            "workspace_phase2_audit_sink_contract_pack",
+            "workspace_phase2_llm_sandbox_contract_pack",
+            "workspace_phase2_provider_sandbox_contract_pack",
+            "workspace_phase2_sandbox_contract_test_matrix_pack",
+        ]:
+            with self.subTest(prior_pack=prior_pack):
+                self.assertIn(prior_pack, creative_pack)
+
+        pack = creative_pack["workspace_phase2_sandbox_readiness_review_pack"]
+        self.assertEqual(
+            pack["pack_version"],
+            "workspace_phase2_sandbox_readiness_review_pack_v1",
+        )
+        for required_key in [
+            "sandbox_readiness_review_summary",
+            "sandbox_gate_status_cards",
+            "sandbox_domain_readiness_cards",
+            "sandbox_unlock_candidate_cards",
+            "sandbox_blocker_consolidation_cards",
+            "sandbox_operator_decision_cards",
+            "sandbox_validation_evidence_cards",
+            "sandbox_dependency_map_cards",
+            "sandbox_production_gap_cards",
+            "sandbox_next_phase_recommendation_cards",
+            "phase2_sandbox_readiness_blockers",
+            "sandbox_readiness_quality_checks",
+            "audit_preview",
+            "safety_boundaries",
+        ]:
+            with self.subTest(required_key=required_key):
+                self.assertIn(required_key, pack)
+                self.assertTrue(pack[required_key])
+
+        summary = pack["sandbox_readiness_review_summary"]
+        self.assertIn("phase2_sandbox_readiness_review", summary["mode"])
+        self.assertIn("deterministic_gate_summary", summary["mode"])
+        self.assertIn("dry_run_only", summary["mode"])
+        self.assertNotEqual(
+            summary["overall_readiness_status"],
+            "ready_for_production",
+        )
+        for source_pack in [
+            "workspace_phase2_real_db_minimal_adapter_contract_pack",
+            "workspace_phase2_db_schema_migration_dry_run_pack",
+            "workspace_phase2_audit_sink_contract_pack",
+            "workspace_phase2_llm_sandbox_contract_pack",
+            "workspace_phase2_provider_sandbox_contract_pack",
+            "workspace_phase2_sandbox_contract_test_matrix_pack",
+            "workspace_phase2_provider_unlock_review_pack",
+            "workspace_phase2_llm_provider_gate_pack",
+            "workspace_phase2_readiness_review_pack",
+            "workspace_phase2_database_persistence_gate_pack",
+            "workspace_phase2_persistence_mock_harness_pack",
+            "workspace_secret_environment_gate_pack",
+            "workspace_network_external_call_block_guard_pack",
+            "workspace_capability_permission_matrix_pack",
+            "workspace_provider_invocation_audit_packet_pack",
+            "workspace_final_system_health_pack",
+            "workspace_mvp_readiness_dossier_pack",
+        ]:
+            with self.subTest(source_pack=source_pack):
+                self.assertIn(source_pack, summary["source_packs"])
+        for disabled_key in [
+            "real_sandbox_unlock_allowed",
+            "real_database_unlock_allowed",
+            "real_audit_sink_unlock_allowed",
+            "real_llm_sandbox_unlock_allowed",
+            "real_provider_sandbox_unlock_allowed",
+            "real_provider_client_created",
+            "real_sandbox_test_executed",
+            "secret_read_allowed",
+            "external_call_allowed",
+            "paid_operation_allowed",
+            "media_upload_allowed",
+            "media_download_allowed",
+            "media_storage_allowed",
+            "platform_upload_allowed",
+            "real_export_allowed",
+            "real_execution_allowed",
+            "real_database_write_allowed",
+            "real_file_write_allowed",
+        ]:
+            self.assertFalse(summary[disabled_key])
+
+        forbidden_ready_statuses = {
+            "ready_for_real_sandbox",
+            "ready_for_real_provider",
+            "ready_for_production",
+        }
+        allowed_gate_statuses = {
+            "blocked",
+            "not_ready",
+            "preview_only",
+            "requires_operator_review",
+        }
+        gate_ids = {
+            card["sandbox_gate_status_id"]
+            for card in pack["sandbox_gate_status_cards"]
+        }
+        for gate_id in [
+            "database_adapter_gate",
+            "schema_migration_gate",
+            "audit_sink_gate",
+            "llm_sandbox_gate",
+            "provider_sandbox_gate",
+            "sandbox_contract_test_matrix_gate",
+            "secret_network_cost_gate",
+            "policy_claim_safety_gate",
+            "media_platform_boundary_gate",
+            "production_unlock_gate",
+        ]:
+            self.assertIn(gate_id, gate_ids)
+        for card in pack["sandbox_gate_status_cards"]:
+            for field in [
+                "sandbox_gate_status_id",
+                "gate_label",
+                "gate_group",
+                "source_pack_refs",
+                "current_status",
+                "status_reason",
+                "required_before_unlock",
+                "blocking_refs",
+                "operator_action_required",
+                "real_unlock_allowed",
+                "real_execution_allowed",
+                "risk_note",
+            ]:
+                self.assertIn(field, card)
+            self.assertIn(card["current_status"], allowed_gate_statuses)
+            self.assertNotIn(card["current_status"], forbidden_ready_statuses)
+            self.assertFalse(card["real_unlock_allowed"])
+            self.assertFalse(card["real_execution_allowed"])
+
+        domain_ids = {
+            card["sandbox_domain_readiness_id"]
+            for card in pack["sandbox_domain_readiness_cards"]
+        }
+        for domain_id in [
+            "database_sandbox_readiness",
+            "migration_sandbox_readiness",
+            "audit_sink_sandbox_readiness",
+            "llm_sandbox_readiness",
+            "provider_sandbox_readiness",
+            "media_boundary_readiness",
+            "platform_upload_readiness",
+            "cost_quota_readiness",
+            "secret_network_readiness",
+            "policy_claim_readiness",
+        ]:
+            self.assertIn(domain_id, domain_ids)
+        for card in pack["sandbox_domain_readiness_cards"]:
+            self.assertIn(card["readiness_status"], allowed_gate_statuses)
+            self.assertFalse(card["real_unlock_allowed"])
+            self.assertIn("missing_approval_refs", card)
+            self.assertIn("missing_test_refs", card)
+            self.assertIn("required_next_controls", card)
+
+        candidate_ids = {
+            card["sandbox_unlock_candidate_id"]
+            for card in pack["sandbox_unlock_candidate_cards"]
+        }
+        for candidate_id in [
+            "db_sandbox_adapter_candidate",
+            "audit_sink_sandbox_candidate",
+            "llm_sandbox_invocation_candidate",
+            "provider_sandbox_invocation_candidate",
+            "media_storage_candidate",
+            "platform_upload_candidate",
+            "production_db_candidate",
+            "production_llm_candidate",
+            "production_provider_candidate",
+        ]:
+            self.assertIn(candidate_id, candidate_ids)
+        for card in pack["sandbox_unlock_candidate_cards"]:
+            self.assertFalse(card["unlock_allowed"])
+            self.assertFalse(card["production_allowed"])
+            self.assertNotIn(card["candidate_status"], forbidden_ready_statuses)
+
+        blocker_text = " ".join(
+            card["blocker_label"]
+            for card in pack["sandbox_blocker_consolidation_cards"]
+        )
+        for blocker in [
+            "no provider sandbox key approval",
+            "no secret access approval",
+            "no external call approval",
+            "no cost quota approval",
+            "no sandbox contract test executed",
+            "no real audit sink",
+            "no media storage approval",
+            "no platform upload approval",
+            "no production approval",
+            "no provider-specific legal review",
+            "no database sandbox approval",
+            "no migration execution approval",
+            "no audit event write approval",
+            "no rollback implementation approval",
+        ]:
+            self.assertIn(blocker, blocker_text)
+
+        decision_ids = {
+            card["operator_decision_id"]
+            for card in pack["sandbox_operator_decision_cards"]
+        }
+        for decision_id in [
+            "continue_preview_only",
+            "prepare_db_sandbox_harness",
+            "prepare_audit_sink_harness",
+            "prepare_llm_sandbox_approval",
+            "prepare_provider_sandbox_approval",
+            "hold_production_unlock",
+            "do_not_enable_external_calls",
+            "do_not_enable_paid_operations",
+        ]:
+            self.assertIn(decision_id, decision_ids)
+        for card in pack["sandbox_operator_decision_cards"]:
+            self.assertFalse(card["real_execution_allowed"])
+            self.assertIn("forbidden_actions", card)
+            self.assertIn("required_review_refs", card)
+
+        validation_text = " ".join(
+            f"{card['validation_evidence_id']} {card['validation_label']}"
+            for card in pack["sandbox_validation_evidence_cards"]
+        )
+        for validation in [
+            "backend_pack_presence_validation",
+            "frontend workspace render",
+            "i18n boundary",
+            "copy export",
+            "safety boundary",
+            "batch gate",
+            "sandbox test matrix",
+            "audit preview",
+        ]:
+            self.assertIn(validation, validation_text)
+        for card in pack["sandbox_validation_evidence_cards"]:
+            self.assertFalse(card["real_test_executed"])
+
+        dependency_labels = [
+            card["dependency_label"]
+            for card in pack["sandbox_dependency_map_cards"]
+        ]
+        self.assertEqual(dependency_labels[0], "DB sandbox adapter harness")
+        self.assertEqual(dependency_labels[-1], "production unlock risk review")
+        for card in pack["sandbox_dependency_map_cards"]:
+            self.assertFalse(card["can_skip"])
+
+        production_gap_text = " ".join(
+            card["gap_label"]
+            for card in pack["sandbox_production_gap_cards"]
+        )
+        for gap in [
+            "real database connection missing",
+            "real audit sink missing",
+            "real secret approval missing",
+            "real external call approval missing",
+            "real cost quota approval missing",
+            "real sandbox contract tests missing",
+            "real LLM sandbox invocation missing",
+            "real provider sandbox invocation missing",
+            "real media storage missing",
+            "real platform upload missing",
+            "production legal review missing",
+            "production rollback implementation missing",
+        ]:
+            self.assertIn(gap, production_gap_text)
+
+        recommendation_text = " ".join(
+            card["recommendation_label"]
+            for card in pack["sandbox_next_phase_recommendation_cards"]
+        )
+        for recommendation in [
+            "111 Real DB Sandbox Adapter Harness Preview",
+            "112 Audit Sink Sandbox Harness Preview",
+            "113 Real LLM Sandbox Invocation Approval Preview",
+            "114 Provider Sandbox Invocation Approval Preview",
+            "115 Secret / Network / Cost Approval Bundle Preview",
+            "116 Sandbox Failure Recovery / Rollback Rehearsal Preview",
+            "117 Sandbox Monitoring / Alerting Preview",
+            "118 Phase 2 Sandbox Gate Closeout Docs",
+        ]:
+            self.assertIn(recommendation, recommendation_text)
+        for card in pack["sandbox_next_phase_recommendation_cards"]:
+            self.assertIn("must_remain_disabled", card)
+            self.assertIn("forbidden_actions", card)
+
+        readiness_blocker_text = " ".join(
+            card["blocker_label"]
+            for card in pack["phase2_sandbox_readiness_blockers"]
+        )
+        for blocker in [
+            "no database sandbox approval",
+            "no migration execution approval",
+            "no real audit sink",
+            "no audit event write approval",
+            "no provider sandbox key approval",
+            "no secret access approval",
+            "no external call approval",
+            "no cost quota approval",
+            "no sandbox contract test executed",
+            "no media storage approval",
+            "no platform upload approval",
+            "no production approval",
+            "no provider-specific legal review",
+            "no production rollback implementation",
+        ]:
+            self.assertIn(blocker, readiness_blocker_text)
+
+        checks = pack["sandbox_readiness_quality_checks"]
+        for key in [
+            "gate_status_covered",
+            "domain_readiness_covered",
+            "unlock_candidates_covered",
+            "blocker_consolidation_covered",
+            "operator_decisions_covered",
+            "validation_evidence_covered",
+            "dependency_map_covered",
+            "production_gaps_covered",
+            "next_phase_recommendations_covered",
+            "blockers_covered",
+            "audit_preview_covered",
+            "safety_boundaries_covered",
+        ]:
+            self.assertTrue(checks[key])
+        for key in [
+            "real_sandbox_unlock_performed",
+            "real_database_unlock_performed",
+            "real_audit_sink_unlock_performed",
+            "real_llm_sandbox_unlock_performed",
+            "real_provider_sandbox_unlock_performed",
+            "real_execution_performed",
+        ]:
+            self.assertFalse(checks[key])
+
+        audit = pack["audit_preview"]
+        self.assertTrue(audit["preview_only"])
+        self.assertFalse(audit["database_write_allowed"])
+        self.assertFalse(audit["database_write_performed"])
+        self.assertFalse(audit["real_log_read_performed"])
+        self.assertFalse(audit["real_audit_log_read_performed"])
+        self.assertFalse(audit["audit_record_created"])
+        self.assertFalse(audit["real_audit_event_created"])
+        self.assertFalse(audit["real_execution_allowed"])
+
+        boundaries = pack["safety_boundaries"]
+        for key in [
+            "provider", "provider_enabled", "provider_sandbox_call",
+            "provider_sandbox_call_enabled", "llm", "llm_enabled",
+            "llm_sandbox_call", "llm_sandbox_call_enabled", "media",
+            "media_enabled", "media_upload", "media_upload_enabled",
+            "media_download", "media_download_enabled", "media_storage",
+            "media_storage_enabled", "external_scraping",
+            "external_scraping_enabled", "database_persistence",
+            "database_persistence_enabled", "database_read",
+            "database_read_enabled", "database_write",
+            "database_write_enabled", "schema_migration",
+            "schema_migration_enabled", "audit_sink", "audit_sink_enabled",
+            "audit_event_write", "audit_event_write_enabled",
+            "audit_log_read", "audit_log_read_enabled",
+            "real_execution", "real_execution_enabled",
+            "real_policy_check", "real_policy_check_enabled",
+            "platform_upload", "platform_upload_enabled",
+            "task_creation", "task_creation_enabled",
+            "real_export", "real_export_enabled",
+            "file_write", "file_write_enabled", "secret_read",
+            "secret_read_enabled", "external_call", "external_call_enabled",
+            "token_issue", "token_issue_enabled", "paid_operation",
+            "paid_operation_enabled",
+        ]:
+            with self.subTest(boundary=key):
+                self.assertIn(key, boundaries)
+                self.assertFalse(boundaries[key])
+
 
 class ReviewWorkspaceAnalysisQualityTest(unittest.TestCase):
     def test_food_review_workspace_uses_food_relevant_labels(self):
