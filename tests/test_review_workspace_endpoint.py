@@ -16208,6 +16208,108 @@ class ReviewWorkspaceEndpointTest(unittest.TestCase):
                 self.assertIn(key, boundaries)
                 self.assertFalse(boundaries[key])
 
+    def test_workspace_phase2_db_sandbox_adapter_harness_is_preview_only(self):
+        response = self.client.post("/api/v1/analyze-review-workspace", json={
+            "workspace_id": "synthetic-db-harness", "source": "manual_import",
+            "output_language": "en", "products": [{
+                "platform": "manual", "asin": "SYNTHETIC111", "title": "Synthetic fixture",
+                "reviews": [{"rating": 2, "title": "Synthetic review",
+                             "text": "Synthetic fixture slips on a desk.", "source_section": "manual_review"}],
+            }],
+        })
+        self.assertEqual(response.status_code, 200)
+        creative = response.json()["creative_decision_pack"]
+        pack = creative["workspace_phase2_db_sandbox_adapter_harness_pack"]
+        summary = pack["db_sandbox_harness_summary"]
+        for mode in ("phase2_db_sandbox_adapter_harness_preview", "deterministic_db_sandbox_harness", "dry_run_only"):
+            self.assertIn(mode, summary["mode"])
+        for ref in summary["source_packs"]:
+            self.assertIn(ref, creative)
+            self.assertTrue(summary["source_pack_presence"][ref])
+        self.assertEqual(len(summary["source_packs"]), 13)
+        self.assertEqual(summary["missing_source_pack_refs"], [])
+        expected = {
+            "connection_harness": ("connection_harness_id", "connection_profile_validation connection_config_presence_check sandbox_database_target_check connection_timeout_policy connection_pool_boundary connection_failure_behavior secret_reference_boundary network_boundary"),
+            "session_harness": ("session_harness_id", "open_session_preview close_session_preview session_timeout_preview session_scope_preview session_cleanup_preview session_failure_preview"),
+            "operation_fixture": ("operation_fixture_id", "save_workspace_session_fixture save_review_import_snapshot_fixture save_evidence_quality_snapshot_fixture save_claim_risk_snapshot_fixture save_final_export_packet_fixture save_campaign_dossier_fixture read_workspace_session_fixture list_workspace_run_snapshots_fixture"),
+            "transaction_harness": ("transaction_harness_id", "begin_transaction_preview commit_transaction_preview rollback_transaction_preview partial_write_preview multi_record_write_preview transaction_timeout_preview transaction_conflict_preview"),
+            "idempotency_harness": ("idempotency_harness_id", "duplicate_request_id duplicate_snapshot_id replayed_write_request same_operation_same_payload same_operation_changed_payload stale_version_write"),
+            "concurrency_boundary": ("concurrency_boundary_id", "concurrent_session_update concurrent_snapshot_write stale_version_conflict duplicate_worker_write transaction_overlap optimistic_lock_preview"),
+            "redaction_validation": ("redaction_validation_id", "provider_secret customer_data review_text generated_copy operator_note raw_prompt provider_response_preview"),
+            "audit_trace_harness": ("audit_trace_harness_id", "trace_id run_id snapshot_id operation_id transaction_id actor_ref source_pack_ref before_summary after_summary result_status"),
+            "failure_injection": ("failure_injection_id", "connection_missing connection_timeout schema_missing migration_required permission_denied redaction_failed duplicate_id stale_version transaction_conflict partial_write audit_sink_missing rollback_unavailable"),
+            "rollback_rehearsal": ("rollback_rehearsal_id", "transaction_rollback_preview partial_write_rollback_preview schema_mismatch_recovery_preview stale_version_recovery_preview audit_failure_recovery_preview redaction_failure_recovery_preview"),
+            "permission_boundary": ("permission_boundary_id", "database_connection database_persistence database_read database_write schema_migration transaction_execution rollback_execution audit_event_write file_write secret_read external_call real_execution"),
+            "test_plan": ("test_plan_id", "unit_tests adapter_contract_tests connection_harness_tests session_harness_tests operation_fixture_tests transaction_harness_tests idempotency_tests concurrency_boundary_tests redaction_tests audit_trace_tests failure_injection_tests rollback_rehearsal_tests permission_boundary_tests"),
+        }
+        disabled = "sandbox_database_connected database_client_created database_session_created database_transaction_started real_database_read_allowed real_database_write_allowed schema_migration_allowed real_rollback_allowed secret_read_allowed external_call_allowed real_file_write_allowed real_audit_event_write_allowed real_execution_allowed".split()
+        for flag in disabled:
+            self.assertIs(summary[flag], False)
+        extra_flags = {
+            "connection_harness": "sandbox_connection_executed config_read_performed",
+            "operation_fixture": "writes_real_database reads_real_database uses_real_customer_data uses_provider_secret",
+            "transaction_harness": "database_transaction_committed database_transaction_rolled_back",
+            "rollback_rehearsal": "real_rollback_executed database_write_executed",
+            "redaction_validation": "database_persistence_allowed audit_persistence_allowed uses_real_customer_data",
+            "audit_trace_harness": "real_audit_event_created real_audit_sink_write_allowed",
+            "concurrency_boundary": "worker_started concurrent_database_access retry_executed",
+            "failure_injection": "failure_actually_injected retry_executed real_rollback_executed",
+            "test_plan": "sandbox_integration_test_executed",
+        }
+        for section, (id_field, names) in expected.items():
+            cards = pack["db_sandbox_" + section + "_cards"]
+            with self.subTest(section=section):
+                self.assertEqual({card[id_field] for card in cards}, set(names.split()))
+                for card in cards:
+                    for flag in disabled + extra_flags.get(section, "").split():
+                        self.assertIs(card[flag], False, (section, flag))
+        for card in pack["db_sandbox_connection_harness_cards"]:
+            for field in "connection_label connection_group source_contract_refs simulated_connection_target required_config_refs required_secret_refs required_network_scope timeout_policy_preview pool_policy_preview failure_behavior_preview risk_note".split():
+                self.assertTrue(card[field])
+        for card in pack["db_sandbox_operation_fixture_cards"]:
+            for field in "fixture_label fixture_group source_adapter_contract_refs simulated_operation mock_input_shape expected_output_shape required_identifiers required_status_fields required_timestamp_fields redaction_requirements audit_trace_requirements".split():
+                self.assertTrue(card[field])
+        for card in pack["db_sandbox_permission_boundary_cards"]:
+            self.assertEqual(card["status"], "disabled")
+            self.assertIs(card["allowed"], False)
+        self.assertEqual({card["blocked_reason"] for card in pack["phase2_db_sandbox_harness_blockers"]}, {
+            "no database sandbox approval", "no sandbox database endpoint", "no sandbox database credentials",
+            "no secret access approval", "no external network approval", "no database connection config",
+            "no schema migration executed", "no sandbox integration test executed", "no real audit sink",
+            "no audit event write approval", "no rollback implementation", "no backup strategy",
+            "no retention enforcement", "no deletion enforcement", "no redaction enforcement", "no production approval",
+        })
+        required_safety = "provider provider_sandbox_call llm llm_sandbox_call media media_upload media_download media_storage external_scraping database_connection database_persistence database_read database_write database_transaction schema_migration audit_sink audit_event_write audit_log_read real_execution real_policy_check platform_upload task_creation real_export file_write secret_read external_call token_issue paid_operation rollback_execution".split()
+        for key in required_safety:
+            self.assertIs(pack["safety_boundaries"][key], False)
+        for key, value in pack["db_sandbox_harness_quality_checks"].items():
+            self.assertIs(value, key != "sandbox_integration_test_executed", key)
+        for key in "real_audit_event_created real_audit_sink_write_allowed database_write_allowed real_log_read_performed audit_sink_connected external_call_allowed real_execution_allowed".split():
+            self.assertIs(pack["audit_preview"][key], False)
+
+    def test_db_sandbox_harness_is_deterministic_redacted_and_fail_closed(self):
+        from copy import deepcopy
+        from main import _rw_workspace_phase2_db_sandbox_adapter_harness_pack as build
+
+        baseline = build({})
+        refs = baseline["db_sandbox_harness_summary"]["source_packs"]
+        source = {ref: {"untrusted_content": "DO_NOT_COPY_CUSTOMER_OR_SECRET", "allowed": True} for ref in refs}
+        original = deepcopy(source)
+        first = build(source)
+        self.assertEqual(first, build(source))
+        self.assertEqual(source, original)
+        self.assertNotIn("DO_NOT_COPY_CUSTOMER_OR_SECRET", str(first))
+        self.assertEqual(first["db_sandbox_harness_summary"]["overall_readiness_status"], "blocked")
+        for malformed in (None, [], {ref: ["malformed"] for ref in refs}):
+            result = build(malformed)
+            self.assertEqual(result, baseline)
+        self.assertFalse(baseline["db_sandbox_harness_quality_checks"]["source_packs_present"])
+        outcomes = {card["idempotency_harness_id"]: card["duplicate_handling"]
+                    for card in first["db_sandbox_idempotency_harness_cards"]}
+        self.assertEqual(outcomes["same_operation_same_payload"], "return_prior_preview")
+        self.assertEqual(outcomes["same_operation_changed_payload"], "reject_fingerprint_mismatch_preview")
+        self.assertEqual(outcomes["stale_version_write"], "reject_stale_version_preview")
+
     def test_workspace_phase2_sandbox_readiness_review_pack_is_preview_only(self):
         payload = {
             "workspace_id": "workspace-phase2-sandbox-readiness-review",

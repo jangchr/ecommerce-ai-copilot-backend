@@ -50169,6 +50169,255 @@ def _rw_workspace_phase2_sandbox_readiness_review_pack(
     }
 
 
+def _rw_workspace_phase2_db_sandbox_adapter_harness_pack(
+    creative_decision_pack: dict,
+) -> dict:
+    source_pack_ids = [
+        "workspace_phase2_real_db_minimal_adapter_contract_pack",
+        "workspace_phase2_db_schema_migration_dry_run_pack",
+        "workspace_phase2_audit_sink_contract_pack",
+        "workspace_phase2_sandbox_contract_test_matrix_pack",
+        "workspace_phase2_sandbox_readiness_review_pack",
+        "workspace_phase2_database_persistence_gate_pack",
+        "workspace_phase2_persistence_mock_harness_pack",
+        "workspace_secret_environment_gate_pack",
+        "workspace_network_external_call_block_guard_pack",
+        "workspace_capability_permission_matrix_pack",
+        "workspace_provider_invocation_audit_packet_pack",
+        "workspace_final_system_health_pack",
+        "workspace_mvp_readiness_dossier_pack",
+    ]
+    source = creative_decision_pack if isinstance(creative_decision_pack, dict) else {}
+    # Only inspect pack presence; never copy customer payloads or configuration.
+    presence = {
+        key: isinstance(source.get(key), dict) and bool(source[key])
+        for key in source_pack_ids
+    }
+    disabled = dict.fromkeys([
+        "sandbox_database_connected", "database_client_created",
+        "database_session_created", "database_transaction_started",
+        "real_database_read_allowed", "real_database_write_allowed",
+        "schema_migration_allowed", "real_rollback_allowed",
+        "secret_read_allowed", "external_call_allowed",
+        "real_file_write_allowed", "real_audit_event_write_allowed",
+        "real_execution_allowed",
+    ], False)
+    safety_names = [
+        "provider", "provider_sandbox_call", "llm", "llm_sandbox_call",
+        "media", "media_upload", "media_download", "media_storage",
+        "external_scraping", "database_connection", "database_persistence",
+        "database_read", "database_write", "database_transaction", "schema_migration",
+        "audit_sink", "audit_event_write", "audit_log_read", "real_execution",
+        "real_policy_check", "platform_upload", "task_creation", "real_export",
+        "file_write", "secret_read", "external_call", "token_issue",
+        "paid_operation", "rollback_execution",
+    ]
+    safety = {key: False for name in safety_names for key in (name, name + "_enabled")}
+    adapter_ref, migration_ref, audit_ref, matrix_ref, readiness_ref = source_pack_ids[:5]
+
+    def cards(names, id_field, refs):
+        return [{
+            id_field: name,
+            "label": name.replace("_", " "),
+            "source_contract_refs": list(refs),
+            "source_contract_presence": {ref: presence[ref] for ref in refs},
+            "preview_only": True,
+            **disabled,
+        } for name in names]
+
+    connections = cards([
+        "connection_profile_validation", "connection_config_presence_check",
+        "sandbox_database_target_check", "connection_timeout_policy",
+        "connection_pool_boundary", "connection_failure_behavior",
+        "secret_reference_boundary", "network_boundary",
+    ], "connection_harness_id", [adapter_ref, source_pack_ids[7], source_pack_ids[8]])
+    for card in connections:
+        card.update({
+            "connection_label": card["label"], "connection_group": "connection_preview",
+            "simulated_connection_target": "synthetic_target_not_resolvable",
+            "required_config_refs": ["sandbox_target_reference", "timeout_policy_reference"],
+            "required_secret_refs": ["credential_reference_only_not_read"],
+            "required_network_scope": "none_approved",
+            "timeout_policy_preview": "simulate timeout; no timer or connection",
+            "pool_policy_preview": "zero live connections; no pool created",
+            "failure_behavior_preview": "blocked; no retry or fallback connection",
+            "sandbox_connection_executed": False,
+            "config_read_performed": False,
+            "risk_note": "Contract preview only; config and secret presence are not checked against the environment.",
+        })
+    sessions = cards([
+        "open_session_preview", "close_session_preview", "session_timeout_preview",
+        "session_scope_preview", "session_cleanup_preview", "session_failure_preview",
+    ], "session_harness_id", [adapter_ref])
+    for card in sessions:
+        card.update({"connection_held": False, "session_scope": "synthetic_request_only",
+                     "simulated_result": "session_lifecycle_preview_no_session_created"})
+    operations = cards([
+        "save_workspace_session_fixture", "save_review_import_snapshot_fixture",
+        "save_evidence_quality_snapshot_fixture", "save_claim_risk_snapshot_fixture",
+        "save_final_export_packet_fixture", "save_campaign_dossier_fixture",
+        "read_workspace_session_fixture", "list_workspace_run_snapshots_fixture",
+    ], "operation_fixture_id", [adapter_ref, source_pack_ids[6]])
+    for card in operations:
+        operation = card["operation_fixture_id"].removesuffix("_fixture")
+        card.update({
+            "fixture_label": card["label"], "fixture_group": "synthetic_shape_only",
+            "source_adapter_contract_refs": [adapter_ref], "simulated_operation": operation,
+            "mock_input_shape": {"workspace_id": "synthetic_workspace", "snapshot_id": "synthetic_snapshot",
+                                 "operation_id": operation, "version": 1, "payload": {"synthetic": True}},
+            "expected_output_shape": {"status": "preview_only", "persisted": False,
+                                      "records": [], "version": 1},
+            "required_identifiers": ["workspace_id", "run_id", "snapshot_id", "operation_id"],
+            "required_status_fields": ["status", "persisted"],
+            "required_timestamp_fields": ["created_at", "updated_at"],
+            "redaction_requirements": ["exclude secrets", "synthetic data only", "exclude raw customer content"],
+            "audit_trace_requirements": ["trace_id", "operation_id", "source_pack_ref"],
+            "writes_real_database": False, "reads_real_database": False,
+            "uses_real_customer_data": False, "uses_provider_secret": False,
+        })
+    transactions = cards([
+        "begin_transaction_preview", "commit_transaction_preview", "rollback_transaction_preview",
+        "partial_write_preview", "multi_record_write_preview", "transaction_timeout_preview",
+        "transaction_conflict_preview",
+    ], "transaction_harness_id", [adapter_ref, migration_ref])
+    for card in transactions:
+        card.update({"database_transaction_committed": False, "database_transaction_rolled_back": False,
+                     "simulated_result": "aborted_preview" if card["transaction_harness_id"] in (
+                         "partial_write_preview", "transaction_timeout_preview", "transaction_conflict_preview"
+                     ) else "lifecycle_preview_only", "records_written": 0})
+    idempotency_results = {
+        "duplicate_request_id": "return_prior_preview",
+        "duplicate_snapshot_id": "reject_duplicate_preview",
+        "replayed_write_request": "return_prior_preview",
+        "same_operation_same_payload": "return_prior_preview",
+        "same_operation_changed_payload": "reject_fingerprint_mismatch_preview",
+        "stale_version_write": "reject_stale_version_preview",
+    }
+    idempotency = cards(idempotency_results, "idempotency_harness_id", [adapter_ref, source_pack_ids[6]])
+    for card in idempotency:
+        changed = card["idempotency_harness_id"] == "same_operation_changed_payload"
+        card.update({"idempotency_key": "synthetic_request_1", "operation_id": "synthetic_save_1",
+                     "snapshot_id": "synthetic_snapshot_1", "version": 1, "expected_version": 2,
+                     "payload_fingerprint": "synthetic_payload_B" if changed else "synthetic_payload_A",
+                     "prior_payload_fingerprint": "synthetic_payload_A",
+                     "duplicate_handling": idempotency_results[card["idempotency_harness_id"]]})
+    concurrency = cards([
+        "concurrent_session_update", "concurrent_snapshot_write", "stale_version_conflict",
+        "duplicate_worker_write", "transaction_overlap", "optimistic_lock_preview",
+    ], "concurrency_boundary_id", [adapter_ref])
+    for card in concurrency:
+        card.update({"worker_started": False, "concurrent_database_access": False,
+                     "expected_version": 2, "supplied_version": 1,
+                     "simulated_result": "conflict_rejected_preview", "retry_executed": False})
+    redaction = cards([
+        "provider_secret", "customer_data", "review_text", "generated_copy",
+        "operator_note", "raw_prompt", "provider_response_preview",
+    ], "redaction_validation_id", [adapter_ref, audit_ref])
+    for card in redaction:
+        card.update({"database_persistence_allowed": False, "audit_persistence_allowed": False,
+                     "uses_real_customer_data": False, "fixture_value": "synthetic_placeholder",
+                     "expected_redacted_value": "[REDACTED]", "validation_status": "preview_only",
+                     "redaction_enforced_on_real_data": False})
+    trace_fields = ["trace_id", "run_id", "snapshot_id", "operation_id", "transaction_id",
+                    "actor_ref", "source_pack_ref", "before_summary", "after_summary", "result_status"]
+    traces = cards(trace_fields, "audit_trace_harness_id", [audit_ref, source_pack_ids[10]])
+    for card in traces:
+        card.update({"required_trace_field": card["audit_trace_harness_id"],
+                     "trace_shape": {field: "synthetic_preview" for field in trace_fields},
+                     "real_audit_event_created": False, "real_audit_sink_write_allowed": False})
+    failures = cards([
+        "connection_missing", "connection_timeout", "schema_missing", "migration_required",
+        "permission_denied", "redaction_failed", "duplicate_id", "stale_version",
+        "transaction_conflict", "partial_write", "audit_sink_missing", "rollback_unavailable",
+    ], "failure_injection_id", [adapter_ref, migration_ref, audit_ref])
+    for card in failures:
+        card.update({"simulated_error_code": card["failure_injection_id"],
+                     "simulated_result": "blocked_preview", "failure_actually_injected": False,
+                     "retry_executed": False, "real_rollback_executed": False})
+    rollbacks = cards([
+        "transaction_rollback_preview", "partial_write_rollback_preview",
+        "schema_mismatch_recovery_preview", "stale_version_recovery_preview",
+        "audit_failure_recovery_preview", "redaction_failure_recovery_preview",
+    ], "rollback_rehearsal_id", [adapter_ref, migration_ref, audit_ref])
+    for card in rollbacks:
+        card.update({"real_rollback_executed": False, "database_write_executed": False,
+                     "simulated_result": "recovery_requires_future_implementation",
+                     "recovery_plan_preview": "stop at blocked result; operator review required"})
+    permissions = cards([
+        "database_connection", "database_persistence", "database_read", "database_write",
+        "schema_migration", "transaction_execution", "rollback_execution", "audit_event_write",
+        "file_write", "secret_read", "external_call", "real_execution",
+    ], "permission_boundary_id", [source_pack_ids[9], readiness_ref])
+    for card in permissions:
+        card.update({"capability": card["permission_boundary_id"], "status": "disabled", "allowed": False})
+    plans = cards([
+        "unit_tests", "adapter_contract_tests", "connection_harness_tests", "session_harness_tests",
+        "operation_fixture_tests", "transaction_harness_tests", "idempotency_tests",
+        "concurrency_boundary_tests", "redaction_tests", "audit_trace_tests",
+        "failure_injection_tests", "rollback_rehearsal_tests", "permission_boundary_tests",
+    ], "test_plan_id", [matrix_ref, readiness_ref])
+    for card in plans:
+        card.update({"test_scope": "deterministic_repo_test_plan", "execution_status": "planned",
+                     "sandbox_integration_test_executed": False,
+                     "expected_assertion": "synthetic preview is deterministic and real capability flags remain false"})
+    blocker_reasons = [
+        "no database sandbox approval", "no sandbox database endpoint", "no sandbox database credentials",
+        "no secret access approval", "no external network approval", "no database connection config",
+        "no schema migration executed", "no sandbox integration test executed", "no real audit sink",
+        "no audit event write approval", "no rollback implementation", "no backup strategy",
+        "no retention enforcement", "no deletion enforcement", "no redaction enforcement", "no production approval",
+    ]
+    blockers = [{"blocker_id": "db_sandbox_harness_blocker_" + str(index),
+                 "blocked_reason": reason, "status": "blocked", "preview_only": True,
+                 "source_contract_refs": [readiness_ref], "real_execution_allowed": False}
+                for index, reason in enumerate(blocker_reasons, 1)]
+    sections = {
+        "db_sandbox_connection_harness_cards": connections,
+        "db_sandbox_session_harness_cards": sessions,
+        "db_sandbox_operation_fixture_cards": operations,
+        "db_sandbox_transaction_harness_cards": transactions,
+        "db_sandbox_idempotency_harness_cards": idempotency,
+        "db_sandbox_concurrency_boundary_cards": concurrency,
+        "db_sandbox_redaction_validation_cards": redaction,
+        "db_sandbox_audit_trace_harness_cards": traces,
+        "db_sandbox_failure_injection_cards": failures,
+        "db_sandbox_rollback_rehearsal_cards": rollbacks,
+        "db_sandbox_permission_boundary_cards": permissions,
+        "db_sandbox_test_plan_cards": plans,
+        "phase2_db_sandbox_harness_blockers": blockers,
+    }
+    return {
+        "pack_version": "workspace_phase2_db_sandbox_adapter_harness_pack_v1",
+        "db_sandbox_harness_summary": {
+            "mode": "phase2_db_sandbox_adapter_harness_preview_deterministic_db_sandbox_harness_dry_run_only",
+            "source_packs": source_pack_ids, "source_pack_presence": presence,
+            "missing_source_pack_refs": [key for key, present in presence.items() if not present],
+            "overall_readiness_status": "blocked",
+            "section_counts": {key: len(value) for key, value in sections.items()},
+            "recommended_operator_action": "review synthetic contracts only; all database unlocks remain blocked",
+            "risk_note": "Presence is not approval or integration evidence. No environment configuration is inspected.",
+            **disabled,
+        },
+        **sections,
+        "db_sandbox_harness_quality_checks": {
+            **{key.removeprefix("db_sandbox_").removesuffix("_cards") + "_covered": bool(value)
+               for key, value in sections.items()},
+            "blockers_covered": bool(blockers), "safety_boundaries_covered": all(value is False for value in safety.values()),
+            "source_packs_present": all(presence.values()),
+            "sandbox_integration_test_executed": False,
+        },
+        "audit_preview": {
+            "audit_preview_id": "db_sandbox_adapter_harness_audit_preview",
+            "preview_only": True, "source_pack_refs": source_pack_ids,
+            "real_audit_event_created": False, "real_audit_sink_write_allowed": False,
+            "database_write_allowed": False, "real_log_read_performed": False,
+            "audit_sink_connected": False, "external_call_allowed": False,
+            "real_execution_allowed": False,
+        },
+        "safety_boundaries": safety,
+    }
+
+
 @app.post("/api/v1/analyze-review-workspace", response_model=ReviewWorkspaceResponse)
 async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
     rows = _rw_collect_reviews(payload)
@@ -50471,6 +50720,10 @@ async def analyze_review_workspace(payload: ReviewWorkspaceRequest):
         _rw_workspace_phase2_sandbox_readiness_review_pack(
             creative_decision_pack
         )
+    )
+
+    creative_decision_pack["workspace_phase2_db_sandbox_adapter_harness_pack"] = (
+        _rw_workspace_phase2_db_sandbox_adapter_harness_pack(creative_decision_pack)
     )
 
     return ReviewWorkspaceResponse(
