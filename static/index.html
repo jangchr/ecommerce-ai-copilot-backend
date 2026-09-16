@@ -3662,6 +3662,7 @@
         let latestProjectWorkspacePhase2LlmSandboxContractPack = {};
         let latestProjectWorkspacePhase2ProviderSandboxContractPack = {};
         let latestProjectWorkspacePhase2SandboxContractTestMatrixPack = {};
+        let latestProjectWorkspacePhase2SandboxReadinessReviewPack = {};
         let latestProjectSourceBundle = null;
         let latestAmazonIntakeData = null;
         let latestQuickUseScript = '';
@@ -7972,7 +7973,56 @@
             phase2SandboxTestMatrixFixtureRequestNote: 'Fixture validation and request/response tests are simulated previews only. LLM fixtures and provider fixtures show fixture id, label, group, source contract refs, required fixture checks, forbidden fixture inputs, expected safe output shape, request contract refs, response schema refs, required trace fields, forbidden response fields, and schema invalid behavior without reading secrets, using real customer data, uploading media, or executing real requests.',
             phase2SandboxTestMatrixAssetPolicyNote: 'Asset boundary and policy claim guard tests are previews only. Image asset, video asset, media manifest, platform delivery payload, analytics event, approval ticket, and rollback snapshot remain reference-only; unsupported claim, missing evidence, do_not_claim, restricted claim, policy disabled, and operator review required are shown without querying real policy APIs, providing legal advice, implying platform compliance or pass rate, or inventing real quotes or buyer evidence.',
             phase2SandboxTestMatrixCostAuditFailurePermissionNote: 'Cost quota, audit trace, failure recovery, and permission boundary tests are previews only. Quota, timeout, cost estimate, rate limit, retry cap, paid operation disabled, trace id, run id, fixture id, response schema id, asset ref, operator ref, decision ref, and cost estimate ref are displayed without billing, real requests, database writes, audit events, real log reads, real retry, rollback, notifications, alerts, or enabled permissions.',
-            phase2SandboxTestMatrixUnlockQualitySafetyNote: 'Unlock simulation, blockers, quality checks, audit preview, and safety boundaries remain blocked/not_ready/preview_only. Provider coverage, fixture validation, request/response tests, asset boundary, policy claim guard, cost quota, audit trace, failure recovery, permission boundary, unlock simulation, blockers, and safety boundary are displayed while provider, provider sandbox call, LLM, LLM sandbox call, media, media upload, media download, media storage, external scraping, database persistence, database read, database write, schema migration, audit sink, audit event write, audit log read, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, paid operation, and real execution remain disabled.'
+            phase2SandboxTestMatrixUnlockQualitySafetyNote: 'Unlock simulation, blockers, quality checks, audit preview, and safety boundaries remain blocked/not_ready/preview_only. Provider coverage, fixture validation, request/response tests, asset boundary, policy claim guard, cost quota, audit trace, failure recovery, permission boundary, unlock simulation, blockers, and safety boundary are displayed while provider, provider sandbox call, LLM, LLM sandbox call, media, media upload, media download, media storage, external scraping, database persistence, database read, database write, schema migration, audit sink, audit event write, audit log read, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, paid operation, and real execution remain disabled.',
+            phase2SandboxReadinessPackTitle: 'Sandbox Readiness Review / Phase 2 Sandbox Gate Summary',
+            phase2SandboxReadinessPackHelper: 'Project Workspace phase2 sandbox readiness review bundle. Deterministic preview only; this is not a real sandbox unlock, not production readiness, does not read API keys or secrets, does not create provider clients, does not call providers or LLMs, does not send external requests, does not upload/download/store media, does not upload to platforms, does not connect to DB, does not read or write DB, does not execute migrations, does not write files, does not create audit events, approval tokens, tasks, alerts, retries, rollbacks, paid operations, real exports, policy conclusions, legal advice, real quotes, or buyer evidence.',
+            phase2SandboxReadinessSummaryGateTitle: 'Sandbox Readiness Summary / Gate Status',
+            phase2SandboxReadinessSummaryTitle: 'Sandbox Readiness Review Summary',
+            phase2SandboxReadinessGateTitle: 'Sandbox Gate Status Cards',
+            phase2SandboxReadinessDomainCandidateTitle: 'Domain Readiness / Unlock Candidates',
+            phase2SandboxReadinessDomainTitle: 'Sandbox Domain Readiness Cards',
+            phase2SandboxReadinessCandidateTitle: 'Sandbox Unlock Candidate Cards',
+            phase2SandboxReadinessBlockerDecisionValidationTitle: 'Blocker Consolidation / Operator Decisions / Validation Evidence',
+            phase2SandboxReadinessBlockerTitle: 'Sandbox Blocker Consolidation Cards',
+            phase2SandboxReadinessDecisionTitle: 'Sandbox Operator Decision Cards',
+            phase2SandboxReadinessValidationTitle: 'Sandbox Validation Evidence Cards',
+            phase2SandboxReadinessDependencyGapNextTitle: 'Dependency Map / Production Gaps / Next Phase Recommendations',
+            phase2SandboxReadinessDependencyTitle: 'Sandbox Dependency Map Cards',
+            phase2SandboxReadinessGapTitle: 'Sandbox Production Gap Cards',
+            phase2SandboxReadinessNextTitle: 'Sandbox Next Phase Recommendation Cards',
+            phase2SandboxReadinessQualityAuditSafetyTitle: 'Sandbox Readiness Quality / Audit / Safety Boundaries',
+            phase2SandboxReadinessReadinessBlockerTitle: 'Phase 2 Sandbox Readiness Blockers',
+            phase2SandboxReadinessQualityTitle: 'Sandbox Readiness Quality Checks',
+            phase2SandboxReadinessAuditPreviewTitle: 'Audit Preview',
+            phase2SandboxReadinessSafetyTitle: 'Safety Boundaries',
+            phase2SandboxReadinessMode: 'Mode',
+            phase2SandboxReadinessOverallStatus: 'Overall readiness status',
+            phase2SandboxReadinessGateStatusCount: 'Gate status count',
+            phase2SandboxReadinessDomainReadinessCount: 'Domain readiness count',
+            phase2SandboxReadinessUnlockCandidateCount: 'Unlock candidate count',
+            phase2SandboxReadinessBlockerCount: 'Blocker count',
+            phase2SandboxReadinessRecommendedAction: 'Recommended operator action',
+            phase2SandboxReadinessDisabled: 'disabled',
+            phase2SandboxReadinessNoData: 'No sandbox readiness review preview data is available.',
+            phase2SandboxReadinessCopyNoData: 'No sandbox readiness review preview content is available to copy.',
+            phase2SandboxReadinessCopyFailed: 'Unable to copy sandbox readiness review preview content.',
+            phase2SandboxReadinessCopied: 'Sandbox readiness review preview content copied.',
+            phase2SandboxReadinessCopySummary: 'Copy sandbox readiness review summary',
+            phase2SandboxReadinessCopyGates: 'Copy sandbox gate status cards',
+            phase2SandboxReadinessCopyDomains: 'Copy sandbox domain readiness cards',
+            phase2SandboxReadinessCopyCandidates: 'Copy sandbox unlock candidate cards',
+            phase2SandboxReadinessCopyBlockers: 'Copy sandbox blocker consolidation cards',
+            phase2SandboxReadinessCopyDecisions: 'Copy sandbox operator decision cards',
+            phase2SandboxReadinessCopyValidation: 'Copy sandbox validation evidence cards',
+            phase2SandboxReadinessCopyDependency: 'Copy sandbox dependency map cards',
+            phase2SandboxReadinessCopyGaps: 'Copy sandbox production gap cards',
+            phase2SandboxReadinessCopyNext: 'Copy sandbox next phase recommendation cards',
+            phase2SandboxReadinessCopyFull: 'Copy full sandbox readiness review pack',
+            phase2SandboxReadinessPreviewNote: 'Deterministic sandbox readiness review preview only. No real sandbox unlock, DB unlock, audit sink unlock, LLM sandbox unlock, provider sandbox unlock, provider client creation, sandbox test, secret read, external call, paid operation, media upload/download/storage, platform upload, real export, file write, DB read/write, migration, audit event, task, token, alert, retry, rollback, real policy API, legal advice, compliance conclusion, real quote, buyer evidence, production unlock, or real execution occurs.',
+            phase2SandboxReadinessDomainCandidateNote: 'Domain readiness and unlock candidates are future preview candidates only. unlock_allowed=false and production_allowed=false; there is no real unlock CTA and no production readiness claim.',
+            phase2SandboxReadinessBlockerDecisionValidationNote: 'Blockers, operator decisions, and validation evidence are deterministic repo validation only. They do not prove that real sandbox, provider, LLM, media, DB, audit, platform, policy, paid, retry, rollback, task, token, alert, or production systems executed.',
+            phase2SandboxReadinessDependencyGapNextNote: 'Dependencies, production gaps, and next phase recommendations describe preview, harness, and approval work only. They are not production unlock, not legal advice, not real platform compliance, and not a real platform pass-rate prediction.',
+            phase2SandboxReadinessQualitySafetyNote: 'Quality checks, audit preview, and safety boundaries remain display-only. Audit preview writes no database, reads no real logs, and creates no audit event while provider, provider sandbox call, LLM, LLM sandbox call, media, media upload, media download, media storage, external scraping, database persistence, database read, database write, schema migration, audit sink, audit event write, audit log read, real policy check, platform upload, task creation, real export, file write, secret read, external call, token issue, paid operation, and real execution remain disabled.'
         });
         Object.assign(LANGUAGE_COPY['zh-CN'], {
             projectWorkspaceClaimSafeCreativeOutputMarker: 'Project Workspace claim-safe creative output bundle',
@@ -9477,6 +9527,55 @@
             phase2SandboxTestMatrixAssetPolicyNote: 'Asset boundary \u548c policy claim guard tests \u4ec5\u4e3a preview\u3002Image asset\u3001video asset\u3001media manifest\u3001platform delivery payload\u3001analytics event\u3001approval ticket \u548c rollback snapshot \u90fd\u53ea\u662f reference-only\uff1bunsupported claim\u3001missing evidence\u3001do_not_claim\u3001restricted claim\u3001policy disabled \u548c operator review required \u4ec5\u5c55\u793a\uff0c\u4e0d\u67e5\u8be2\u771f\u5b9e policy API\uff0c\u4e0d\u6784\u6210\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u4ee3\u8868\u5e73\u53f0\u5408\u89c4\u6216\u901a\u8fc7\u7387\uff0c\u4e0d\u51ed\u7a7a\u751f\u6210\u771f\u5b9e quote \u6216 buyer evidence\u3002',
             phase2SandboxTestMatrixCostAuditFailurePermissionNote: 'Cost quota\u3001audit trace\u3001failure recovery \u548c permission boundary tests \u4ec5\u4e3a preview\u3002Quota\u3001timeout\u3001cost estimate\u3001rate limit\u3001retry cap\u3001paid operation disabled\u3001trace id\u3001run id\u3001fixture id\u3001response schema id\u3001asset ref\u3001operator ref\u3001decision ref \u548c cost estimate ref \u53ea\u5c55\u793a\uff1b\u4e0d\u8ba1\u8d39\uff0c\u4e0d\u53d1\u771f\u5b9e request\uff0c\u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u521b\u5efa audit event\uff0c\u4e0d\u8bfb\u771f\u5b9e log\uff0c\u4e0d\u6267\u884c retry/rollback\uff0c\u4e0d\u53d1\u901a\u77e5\uff0c\u4e0d\u521b\u5efa alert\uff0c\u4e0d\u542f\u7528 permission\u3002',
             phase2SandboxTestMatrixUnlockQualitySafetyNote: 'Unlock simulation\u3001blockers\u3001quality checks\u3001audit preview \u548c safety boundaries \u4fdd\u6301 blocked/not_ready/preview_only\u3002Provider coverage\u3001fixture validation\u3001request/response tests\u3001asset boundary\u3001policy claim guard\u3001cost quota\u3001audit trace\u3001failure recovery\u3001permission boundary\u3001unlock simulation\u3001blockers \u548c safety boundary \u53ea\u5c55\u793a\uff1bprovider\u3001provider sandbox call\u3001LLM\u3001LLM sandbox call\u3001media\u3001media upload\u3001media download\u3001media storage\u3001external scraping\u3001database persistence\u3001database read\u3001database write\u3001schema migration\u3001audit sink\u3001audit event write\u3001audit log read\u3001real policy check\u3001platform upload\u3001task creation\u3001real export\u3001file write\u3001secret read\u3001external call\u3001token issue\u3001paid operation \u548c real execution \u5168\u90e8 disabled\u3002',
+            phase2SandboxReadinessPackTitle: 'Sandbox Readiness Review / Phase 2 Sandbox Gate Summary',
+            phase2SandboxReadinessPackHelper: 'Project Workspace phase2 sandbox readiness review bundle\u3002\u4ec5\u4e3a deterministic preview\uff1b\u8fd9\u4e0d\u662f\u771f\u5b9e sandbox unlock\uff0c\u4e0d\u662f production readiness\uff0c\u4e0d\u8bfb\u53d6 API key \u6216 secret\uff0c\u4e0d\u521b\u5efa provider client\uff0c\u4e0d\u8c03\u7528 provider \u6216 LLM\uff0c\u4e0d\u53d1\u9001 external request\uff0c\u4e0d\u4e0a\u4f20/\u4e0b\u8f7d/\u5b58\u50a8 media\uff0c\u4e0d\u4e0a\u4f20\u5230\u5e73\u53f0\uff0c\u4e0d\u8fde\u63a5 DB\uff0c\u4e0d\u8bfb\u5199 DB\uff0c\u4e0d\u6267\u884c migration\uff0c\u4e0d\u5199\u6587\u4ef6\uff0c\u4e0d\u521b\u5efa audit event\u3001approval token\u3001task\u3001alert\u3001retry\u3001rollback\u3001paid operation\u3001real export\u3001policy conclusion\u3001\u6cd5\u5f8b\u610f\u89c1\u3001\u771f\u5b9e quote \u6216 buyer evidence\u3002',
+            phase2SandboxReadinessSummaryGateTitle: 'Sandbox Readiness Summary / Gate Status',
+            phase2SandboxReadinessSummaryTitle: 'Sandbox Readiness Review Summary',
+            phase2SandboxReadinessGateTitle: 'Sandbox Gate Status Cards',
+            phase2SandboxReadinessDomainCandidateTitle: 'Domain Readiness / Unlock Candidates',
+            phase2SandboxReadinessDomainTitle: 'Sandbox Domain Readiness Cards',
+            phase2SandboxReadinessCandidateTitle: 'Sandbox Unlock Candidate Cards',
+            phase2SandboxReadinessBlockerDecisionValidationTitle: 'Blocker Consolidation / Operator Decisions / Validation Evidence',
+            phase2SandboxReadinessBlockerTitle: 'Sandbox Blocker Consolidation Cards',
+            phase2SandboxReadinessDecisionTitle: 'Sandbox Operator Decision Cards',
+            phase2SandboxReadinessValidationTitle: 'Sandbox Validation Evidence Cards',
+            phase2SandboxReadinessDependencyGapNextTitle: 'Dependency Map / Production Gaps / Next Phase Recommendations',
+            phase2SandboxReadinessDependencyTitle: 'Sandbox Dependency Map Cards',
+            phase2SandboxReadinessGapTitle: 'Sandbox Production Gap Cards',
+            phase2SandboxReadinessNextTitle: 'Sandbox Next Phase Recommendation Cards',
+            phase2SandboxReadinessQualityAuditSafetyTitle: 'Sandbox Readiness Quality / Audit / Safety Boundaries',
+            phase2SandboxReadinessReadinessBlockerTitle: 'Phase 2 Sandbox Readiness Blockers',
+            phase2SandboxReadinessQualityTitle: 'Sandbox Readiness Quality Checks',
+            phase2SandboxReadinessAuditPreviewTitle: 'Audit Preview',
+            phase2SandboxReadinessSafetyTitle: '\u5b89\u5168\u8fb9\u754c',
+            phase2SandboxReadinessMode: '\u6a21\u5f0f',
+            phase2SandboxReadinessOverallStatus: 'Overall readiness status',
+            phase2SandboxReadinessGateStatusCount: 'Gate status \u6570\u91cf',
+            phase2SandboxReadinessDomainReadinessCount: 'Domain readiness \u6570\u91cf',
+            phase2SandboxReadinessUnlockCandidateCount: 'Unlock candidate \u6570\u91cf',
+            phase2SandboxReadinessBlockerCount: 'Blocker \u6570\u91cf',
+            phase2SandboxReadinessRecommendedAction: '\u63a8\u8350 operator action',
+            phase2SandboxReadinessDisabled: 'disabled',
+            phase2SandboxReadinessNoData: '\u6682\u65e0 sandbox readiness review preview \u6570\u636e\u3002',
+            phase2SandboxReadinessCopyNoData: '\u6682\u65e0\u53ef\u590d\u5236\u7684 sandbox readiness review preview \u5185\u5bb9\u3002',
+            phase2SandboxReadinessCopyFailed: '\u65e0\u6cd5\u590d\u5236 sandbox readiness review preview \u5185\u5bb9\u3002',
+            phase2SandboxReadinessCopied: 'Sandbox readiness review preview \u5185\u5bb9\u5df2\u590d\u5236\u3002',
+            phase2SandboxReadinessCopySummary: '\u590d\u5236 sandbox readiness review summary',
+            phase2SandboxReadinessCopyGates: '\u590d\u5236 sandbox gate status cards',
+            phase2SandboxReadinessCopyDomains: '\u590d\u5236 sandbox domain readiness cards',
+            phase2SandboxReadinessCopyCandidates: '\u590d\u5236 sandbox unlock candidate cards',
+            phase2SandboxReadinessCopyBlockers: '\u590d\u5236 sandbox blocker consolidation cards',
+            phase2SandboxReadinessCopyDecisions: '\u590d\u5236 sandbox operator decision cards',
+            phase2SandboxReadinessCopyValidation: '\u590d\u5236 sandbox validation evidence cards',
+            phase2SandboxReadinessCopyDependency: '\u590d\u5236 sandbox dependency map cards',
+            phase2SandboxReadinessCopyGaps: '\u590d\u5236 sandbox production gap cards',
+            phase2SandboxReadinessCopyNext: '\u590d\u5236 sandbox next phase recommendation cards',
+            phase2SandboxReadinessCopyFull: '\u590d\u5236\u5b8c\u6574 sandbox readiness review pack',
+            phase2SandboxReadinessPreviewNote: '\u4ec5\u4e3a deterministic sandbox readiness review preview\u3002\u4e0d\u6267\u884c\u771f\u5b9e sandbox unlock\u3001DB unlock\u3001audit sink unlock\u3001LLM sandbox unlock\u3001provider sandbox unlock\u3001provider client creation\u3001sandbox test\u3001secret read\u3001external call\u3001paid operation\u3001media upload/download/storage\u3001platform upload\u3001real export\u3001file write\u3001DB read/write\u3001migration\u3001audit event\u3001task\u3001token\u3001alert\u3001retry\u3001rollback\u3001real policy API\uff0c\u4e0d\u6784\u6210\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u6216\u901a\u8fc7\u7387\uff0c\u4e0d\u751f\u6210\u771f\u5b9e quote \u6216 buyer evidence\uff0c\u4e0d\u662f production unlock \u6216 real execution\u3002',
+            phase2SandboxReadinessDomainCandidateNote: 'Domain readiness \u548c unlock candidates \u53ea\u662f future preview candidate\u3002unlock_allowed=false \u4e14 production_allowed=false\uff1b\u6ca1\u6709\u771f\u5b9e unlock CTA\uff0c\u4e0d\u4ee3\u8868 production readiness\u3002',
+            phase2SandboxReadinessBlockerDecisionValidationNote: 'Blockers\u3001operator decisions \u548c validation evidence \u53ea\u662f repo \u5185 deterministic validation\u3002\u4e0d\u8868\u793a\u771f\u5b9e sandbox\u3001provider\u3001LLM\u3001media\u3001DB\u3001audit\u3001platform\u3001policy\u3001paid\u3001retry\u3001rollback\u3001task\u3001token\u3001alert \u6216 production system \u5df2\u6267\u884c\u3002',
+            phase2SandboxReadinessDependencyGapNextNote: 'Dependencies\u3001production gaps \u548c next phase recommendations \u53ea\u63cf\u8ff0 preview\u3001harness \u548c approval \u5de5\u4f5c\u3002\u8fd9\u4e0d\u662f production unlock\uff0c\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u4ee3\u8868\u771f\u5b9e\u5e73\u53f0\u5408\u89c4\u6216\u5e73\u53f0\u901a\u8fc7\u7387\u3002',
+            phase2SandboxReadinessQualitySafetyNote: 'Quality checks\u3001audit preview \u548c safety boundaries \u4ec5\u5c55\u793a\u3002Audit preview \u4e0d\u5199\u6570\u636e\u5e93\uff0c\u4e0d\u8bfb\u771f\u5b9e\u65e5\u5fd7\uff0c\u4e0d\u521b\u5efa audit event\uff1bprovider\u3001provider sandbox call\u3001LLM\u3001LLM sandbox call\u3001media\u3001media upload\u3001media download\u3001media storage\u3001external scraping\u3001database persistence\u3001database read\u3001database write\u3001schema migration\u3001audit sink\u3001audit event write\u3001audit log read\u3001real policy check\u3001platform upload\u3001task creation\u3001real export\u3001file write\u3001secret read\u3001external call\u3001token issue\u3001paid operation \u548c real execution \u5168\u90e8 disabled\u3002',
             projectWorkspaceClaimRiskGuardMarker: 'Project Workspace claim risk guard bundle',
             claimRiskGuardPackTitle: 'Claim Risk Guard / Evidence Claim Safety',
             claimRiskGuardPackHelper: '\u67e5\u770b\u4ec5\u57fa\u4e8e\u5df2\u6709 evidence pack \u7684\u786e\u5b9a\u6027 claim risk \u9884\u89c8\u3002\u8fd9\u4e0d\u662f\u6cd5\u5f8b\u610f\u89c1\uff0c\u4e0d\u662f\u771f\u5b9e policy API \u68c0\u67e5\uff0c\u4e5f\u4e0d\u662f\u5408\u89c4\u7ed3\u8bba\u3002',
@@ -12991,6 +13090,7 @@
                 latestProjectWorkspacePhase2LlmSandboxContractPack = latestProjectCreativeDecisionPack.workspace_phase2_llm_sandbox_contract_pack || {};
                 latestProjectWorkspacePhase2ProviderSandboxContractPack = latestProjectCreativeDecisionPack.workspace_phase2_provider_sandbox_contract_pack || {};
                 latestProjectWorkspacePhase2SandboxContractTestMatrixPack = latestProjectCreativeDecisionPack.workspace_phase2_sandbox_contract_test_matrix_pack || {};
+                latestProjectWorkspacePhase2SandboxReadinessReviewPack = latestProjectCreativeDecisionPack.workspace_phase2_sandbox_readiness_review_pack || {};
                 latestProjectWorkspace = {
                     ...(latestProjectWorkspace || {}),
                     creative_decision_pack: latestProjectCreativeDecisionPack
@@ -18889,6 +18989,7 @@
         const PROJECT_WORKSPACE_PHASE2_LLM_SANDBOX_CONTRACT_MARKER = 'Project Workspace phase2 LLM sandbox contract bundle';
         const PROJECT_WORKSPACE_PHASE2_PROVIDER_SANDBOX_CONTRACT_MARKER = 'Project Workspace phase2 provider sandbox contract bundle';
         const PROJECT_WORKSPACE_PHASE2_SANDBOX_CONTRACT_TEST_MATRIX_MARKER = 'Project Workspace phase2 sandbox contract test matrix bundle';
+        const PROJECT_WORKSPACE_PHASE2_SANDBOX_READINESS_REVIEW_MARKER = 'Project Workspace phase2 sandbox readiness review bundle';
         const PROJECT_WORKSPACE_SYSTEM_INTEGRATION_HEALTH_REQUIRED_KEYS = [
             'launch_lock',
             'cycle_gate',
@@ -27984,6 +28085,147 @@
         function copyProjectWorkspaceSandboxUnlockSimulationCards() { return copyProjectWorkspacePhase2SandboxContractTestMatrixText('unlock'); }
         function copyProjectWorkspaceFullPhase2SandboxContractTestMatrixPack() { return copyProjectWorkspacePhase2SandboxContractTestMatrixText('full'); }
 
+        function projectWorkspacePhase2SandboxReadinessReviewPackFromWorkspace(workspace = latestProjectWorkspace) {
+            if (latestProjectWorkspacePhase2SandboxReadinessReviewPack && Object.keys(latestProjectWorkspacePhase2SandboxReadinessReviewPack).length) return latestProjectWorkspacePhase2SandboxReadinessReviewPack;
+            return projectWorkspaceCreativeDecisionPackFromWorkspace(workspace)?.workspace_phase2_sandbox_readiness_review_pack || {};
+        }
+
+        function projectWorkspacePhase2SandboxReadinessReviewHasData(value) {
+            return Boolean(value && (!Array.isArray(value) || value.length) && (typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length));
+        }
+
+        function projectWorkspacePhase2SandboxReadinessReviewJsonText(value) {
+            if (!projectWorkspacePhase2SandboxReadinessReviewHasData(value)) return '';
+            return JSON.stringify(value, null, 2);
+        }
+
+        function projectWorkspacePhase2SandboxReadinessReviewDisabledText(value) {
+            return value === false || value == null ? t('phase2SandboxReadinessDisabled') : String(value);
+        }
+
+        function projectWorkspaceExportPhase2SandboxReadinessReviewSnapshot(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspacePhase2SandboxReadinessReviewPackFromWorkspace(workspace);
+            return {
+                marker: PROJECT_WORKSPACE_PHASE2_SANDBOX_READINESS_REVIEW_MARKER,
+                has_workspace_phase2_sandbox_readiness_review_pack: Boolean(pack.pack_version),
+                pack_version: pack.pack_version || '',
+                sandbox_readiness_review_summary: pack.sandbox_readiness_review_summary || {},
+                sandbox_gate_status_cards: Array.isArray(pack.sandbox_gate_status_cards) ? pack.sandbox_gate_status_cards : [],
+                sandbox_domain_readiness_cards: Array.isArray(pack.sandbox_domain_readiness_cards) ? pack.sandbox_domain_readiness_cards : [],
+                sandbox_unlock_candidate_cards: Array.isArray(pack.sandbox_unlock_candidate_cards) ? pack.sandbox_unlock_candidate_cards : [],
+                sandbox_blocker_consolidation_cards: Array.isArray(pack.sandbox_blocker_consolidation_cards) ? pack.sandbox_blocker_consolidation_cards : [],
+                sandbox_operator_decision_cards: Array.isArray(pack.sandbox_operator_decision_cards) ? pack.sandbox_operator_decision_cards : [],
+                sandbox_validation_evidence_cards: Array.isArray(pack.sandbox_validation_evidence_cards) ? pack.sandbox_validation_evidence_cards : [],
+                sandbox_dependency_map_cards: Array.isArray(pack.sandbox_dependency_map_cards) ? pack.sandbox_dependency_map_cards : [],
+                sandbox_production_gap_cards: Array.isArray(pack.sandbox_production_gap_cards) ? pack.sandbox_production_gap_cards : [],
+                sandbox_next_phase_recommendation_cards: Array.isArray(pack.sandbox_next_phase_recommendation_cards) ? pack.sandbox_next_phase_recommendation_cards : [],
+                phase2_sandbox_readiness_blockers: Array.isArray(pack.phase2_sandbox_readiness_blockers) ? pack.phase2_sandbox_readiness_blockers : [],
+                sandbox_readiness_quality_checks: pack.sandbox_readiness_quality_checks || {},
+                audit_preview: pack.audit_preview || {},
+                safety_boundaries: pack.safety_boundaries || {}
+            };
+        }
+
+        function projectWorkspacePhase2SandboxReadinessReviewSummaryText(pack = projectWorkspaceExportPhase2SandboxReadinessReviewSnapshot()) {
+            if (!pack.has_workspace_phase2_sandbox_readiness_review_pack) return '';
+            const summary = pack.sandbox_readiness_review_summary || {};
+            return [
+                t('phase2SandboxReadinessSummaryTitle'),
+                `${t('phase2SandboxReadinessMode')}: ${summary.mode || t('none')}`,
+                `${t('phase2SandboxReadinessOverallStatus')}: ${summary.overall_readiness_status || t('none')}`,
+                `${t('phase2SandboxReadinessGateStatusCount')}: ${summary.gate_status_count ?? pack.sandbox_gate_status_cards.length}`,
+                `${t('phase2SandboxReadinessDomainReadinessCount')}: ${summary.domain_readiness_count ?? pack.sandbox_domain_readiness_cards.length}`,
+                `${t('phase2SandboxReadinessUnlockCandidateCount')}: ${summary.unlock_candidate_count ?? pack.sandbox_unlock_candidate_cards.length}`,
+                `${t('phase2SandboxReadinessBlockerCount')}: ${summary.blocker_count ?? pack.phase2_sandbox_readiness_blockers.length}`,
+                `${t('phase2SandboxReadinessRecommendedAction')}: ${summary.recommended_operator_action || summary.risk_note || t('phase2SandboxReadinessPreviewNote')}`,
+                `real_sandbox_unlock_allowed: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.real_sandbox_unlock_allowed)}`,
+                `real_database_unlock_allowed: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.real_database_unlock_allowed)}`,
+                `real_audit_sink_unlock_allowed: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.real_audit_sink_unlock_allowed)}`,
+                `real_llm_sandbox_unlock_allowed: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.real_llm_sandbox_unlock_allowed)}`,
+                `real_provider_sandbox_unlock_allowed: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.real_provider_sandbox_unlock_allowed)}`,
+                `real_provider_client_created: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.real_provider_client_created)}`,
+                `real_sandbox_test_executed: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.real_sandbox_test_executed)}`,
+                `secret_read_allowed: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.secret_read_allowed)}`,
+                `external_call_allowed: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.external_call_allowed)}`,
+                `paid_operation_allowed: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.paid_operation_allowed)}`,
+                `media_upload_allowed: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.media_upload_allowed)}`,
+                `media_download_allowed: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.media_download_allowed)}`,
+                `media_storage_allowed: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.media_storage_allowed)}`,
+                `platform_upload_allowed: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.platform_upload_allowed)}`,
+                `real_export_allowed: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.real_export_allowed)}`,
+                `real_execution_allowed: ${projectWorkspacePhase2SandboxReadinessReviewDisabledText(summary.real_execution_allowed)}`,
+                t('phase2SandboxReadinessPreviewNote')
+            ].join('\n');
+        }
+
+        function projectWorkspacePhase2SandboxReadinessReviewSectionText(titleKey, value) {
+            const body = projectWorkspacePhase2SandboxReadinessReviewJsonText(value);
+            if (!body) return '';
+            return `## ${t(titleKey)}\n${body}`;
+        }
+
+        function projectWorkspaceExportPhase2SandboxReadinessReviewMarkdown(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2SandboxReadinessReviewSnapshot(workspace);
+            if (!pack.has_workspace_phase2_sandbox_readiness_review_pack) return '';
+            return [
+                `## ${t('phase2SandboxReadinessPackTitle')}`,
+                projectWorkspacePhase2SandboxReadinessReviewSummaryText(pack), '',
+                projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessSummaryTitle', pack.sandbox_readiness_review_summary), '',
+                projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessGateTitle', pack.sandbox_gate_status_cards), '',
+                projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessDomainTitle', pack.sandbox_domain_readiness_cards), '',
+                projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessCandidateTitle', pack.sandbox_unlock_candidate_cards), '',
+                projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessBlockerTitle', pack.sandbox_blocker_consolidation_cards), '',
+                projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessDecisionTitle', pack.sandbox_operator_decision_cards), '',
+                projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessValidationTitle', pack.sandbox_validation_evidence_cards), '',
+                projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessDependencyTitle', pack.sandbox_dependency_map_cards), '',
+                projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessGapTitle', pack.sandbox_production_gap_cards), '',
+                projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessNextTitle', pack.sandbox_next_phase_recommendation_cards), '',
+                projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessReadinessBlockerTitle', pack.phase2_sandbox_readiness_blockers), '',
+                projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessQualityTitle', pack.sandbox_readiness_quality_checks), '',
+                projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessAuditPreviewTitle', pack.audit_preview), '',
+                projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessSafetyTitle', pack.safety_boundaries),
+                t('phase2SandboxReadinessPreviewNote'),
+                t('phase2SandboxReadinessDomainCandidateNote'),
+                t('phase2SandboxReadinessBlockerDecisionValidationNote'),
+                t('phase2SandboxReadinessDependencyGapNextNote'),
+                t('phase2SandboxReadinessQualitySafetyNote')
+            ].filter(Boolean).join('\n');
+        }
+
+        async function copyProjectWorkspacePhase2SandboxReadinessReviewText(kind = 'full') {
+            const status = document.getElementById('projectWorkspacePhase2SandboxReadinessReviewStatus');
+            const pack = projectWorkspaceExportPhase2SandboxReadinessReviewSnapshot();
+            const text = kind === 'summary' ? projectWorkspacePhase2SandboxReadinessReviewSummaryText(pack)
+                : kind === 'gates' ? projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessGateTitle', pack.sandbox_gate_status_cards)
+                : kind === 'domains' ? projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessDomainTitle', pack.sandbox_domain_readiness_cards)
+                : kind === 'candidates' ? projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessCandidateTitle', pack.sandbox_unlock_candidate_cards)
+                : kind === 'blockers' ? projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessBlockerTitle', pack.sandbox_blocker_consolidation_cards)
+                : kind === 'decisions' ? projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessDecisionTitle', pack.sandbox_operator_decision_cards)
+                : kind === 'validation' ? projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessValidationTitle', pack.sandbox_validation_evidence_cards)
+                : kind === 'dependency' ? projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessDependencyTitle', pack.sandbox_dependency_map_cards)
+                : kind === 'gaps' ? projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessGapTitle', pack.sandbox_production_gap_cards)
+                : kind === 'next' ? projectWorkspacePhase2SandboxReadinessReviewSectionText('phase2SandboxReadinessNextTitle', pack.sandbox_next_phase_recommendation_cards)
+                : projectWorkspaceExportPhase2SandboxReadinessReviewMarkdown();
+            try {
+                if (!text) { if (status) status.textContent = t('phase2SandboxReadinessCopyNoData'); return; }
+                if (!navigator.clipboard?.writeText) throw new Error(t('phase2SandboxReadinessCopyFailed'));
+                await navigator.clipboard.writeText(text);
+                if (status) status.textContent = t('phase2SandboxReadinessCopied');
+            } catch (error) { if (status) status.textContent = error.message || t('phase2SandboxReadinessCopyFailed'); }
+        }
+
+        function copyProjectWorkspacePhase2SandboxReadinessReviewSummary() { return copyProjectWorkspacePhase2SandboxReadinessReviewText('summary'); }
+        function copyProjectWorkspaceSandboxReadinessGateStatusCards() { return copyProjectWorkspacePhase2SandboxReadinessReviewText('gates'); }
+        function copyProjectWorkspaceSandboxDomainReadinessCards() { return copyProjectWorkspacePhase2SandboxReadinessReviewText('domains'); }
+        function copyProjectWorkspaceSandboxUnlockCandidateCards() { return copyProjectWorkspacePhase2SandboxReadinessReviewText('candidates'); }
+        function copyProjectWorkspaceSandboxBlockerConsolidationCards() { return copyProjectWorkspacePhase2SandboxReadinessReviewText('blockers'); }
+        function copyProjectWorkspaceSandboxOperatorDecisionCards() { return copyProjectWorkspacePhase2SandboxReadinessReviewText('decisions'); }
+        function copyProjectWorkspaceSandboxValidationEvidenceCards() { return copyProjectWorkspacePhase2SandboxReadinessReviewText('validation'); }
+        function copyProjectWorkspaceSandboxDependencyMapCards() { return copyProjectWorkspacePhase2SandboxReadinessReviewText('dependency'); }
+        function copyProjectWorkspaceSandboxProductionGapCards() { return copyProjectWorkspacePhase2SandboxReadinessReviewText('gaps'); }
+        function copyProjectWorkspaceSandboxNextPhaseRecommendationCards() { return copyProjectWorkspacePhase2SandboxReadinessReviewText('next'); }
+        function copyProjectWorkspaceFullPhase2SandboxReadinessReviewPack() { return copyProjectWorkspacePhase2SandboxReadinessReviewText('full'); }
+
         function projectWorkspaceCampaignExportPackFromWorkspace(workspace = latestProjectWorkspace) {
             if (latestProjectCampaignExportPack
                 && Object.keys(latestProjectCampaignExportPack).length) {
@@ -28673,6 +28915,36 @@
             const pack = projectWorkspaceExportPhase2SandboxContractTestMatrixSnapshot(workspace); if (!pack.has_workspace_phase2_sandbox_contract_test_matrix_pack) return '';
             const unlock = projectWorkspacePhase2SandboxContractTestMatrixJsonText(pack.sandbox_unlock_simulation_cards); const blockers = projectWorkspacePhase2SandboxContractTestMatrixJsonText(pack.phase2_sandbox_test_matrix_blockers); const quality = projectWorkspacePhase2SandboxContractTestMatrixJsonText(pack.sandbox_test_matrix_quality_checks); const audit = projectWorkspacePhase2SandboxContractTestMatrixJsonText(pack.audit_preview); const safety = projectWorkspacePhase2SandboxContractTestMatrixJsonText(pack.safety_boundaries);
             return `<div class="section-block" id="projectWorkspacePhase2SandboxContractTestMatrixUnlockQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2SandboxTestMatrixUnlockQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2SandboxTestMatrixUnlockQualitySafetyNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSandboxUnlockSimulationCards()">${escapeHTML(t('phase2SandboxTestMatrixCopyUnlock'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2SandboxContractTestMatrixPack()">${escapeHTML(t('phase2SandboxTestMatrixCopyFull'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxTestMatrixUnlockSimulationTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(unlock || t('phase2SandboxTestMatrixNoData'))}</pre><div class="field-helper">blocked / not_ready / preview_only / ready_for_real_sandbox=false / ready_for_real_provider=false; no ready_for_real_sandbox or ready_for_real_provider unlock.</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxTestMatrixBlockerTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2SandboxTestMatrixNoData'))}</pre><div class="field-helper">no provider sandbox key approval / no secret access approval / no external call approval / no cost quota approval / no sandbox contract test executed / no real audit sink / no media storage approval / no platform upload approval / no production approval / no provider-specific legal review</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxTestMatrixQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2SandboxTestMatrixNoData'))}</pre><div class="field-helper">provider test coverage / fixture validation / request/response tests / asset boundary tests / policy claim guard tests / cost quota tests / audit trace tests / failure recovery tests / permission boundary tests / unlock simulation / blockers / safety boundary</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxTestMatrixAuditPreviewTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2SandboxTestMatrixNoData'))}</pre><div class="field-helper">audit preview only; no database write / no real log read / no real audit event</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2SandboxTestMatrixSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / provider_sandbox_call disabled / llm disabled / llm_sandbox_call disabled / media disabled / media_upload disabled / media_download disabled / media_storage disabled / external_scraping disabled / database_persistence disabled / database_read disabled / database_write disabled / schema_migration disabled / audit_sink disabled / audit_event_write disabled / audit_log_read disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled / paid_operation disabled</div><div class="field-helper">${escapeHTML(t('phase2SandboxTestMatrixUnlockQualitySafetyNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2SandboxReadinessReviewSummaryGatePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2SandboxReadinessReviewSnapshot(workspace); if (!pack.has_workspace_phase2_sandbox_readiness_review_pack) return '';
+            const summary = pack.sandbox_readiness_review_summary || {}; const gates = projectWorkspacePhase2SandboxReadinessReviewJsonText(pack.sandbox_gate_status_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2SandboxReadinessReviewSummaryGatePanel" data-marker="project_workspace_phase2_sandbox_readiness_review_marker"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2SandboxReadinessPackTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2SandboxReadinessSummaryGateTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2SandboxReadinessPackHelper'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspacePhase2SandboxReadinessReviewSummary()">${escapeHTML(t('phase2SandboxReadinessCopySummary'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSandboxReadinessGateStatusCards()">${escapeHTML(t('phase2SandboxReadinessCopyGates'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2SandboxReadinessReviewPack()">${escapeHTML(t('phase2SandboxReadinessCopyFull'))}</button></div></div><div class="metric-strip">${metricPill(t('phase2SandboxReadinessMode'), summary.mode || t('none'))}${metricPill(t('phase2SandboxReadinessOverallStatus'), summary.overall_readiness_status || t('none'))}${metricPill(t('phase2SandboxReadinessGateStatusCount'), String(summary.gate_status_count ?? pack.sandbox_gate_status_cards.length))}${metricPill(t('phase2SandboxReadinessDomainReadinessCount'), String(summary.domain_readiness_count ?? pack.sandbox_domain_readiness_cards.length))}${metricPill(t('phase2SandboxReadinessUnlockCandidateCount'), String(summary.unlock_candidate_count ?? pack.sandbox_unlock_candidate_cards.length))}${metricPill(t('phase2SandboxReadinessBlockerCount'), String(summary.blocker_count ?? pack.phase2_sandbox_readiness_blockers.length))}</div><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(projectWorkspacePhase2SandboxReadinessReviewSummaryText(pack) || t('phase2SandboxReadinessNoData'))}</pre><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxReadinessGateTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(gates || t('phase2SandboxReadinessNoData'))}</pre><div class="field-helper">database_adapter_gate / schema_migration_gate / audit_sink_gate / llm_sandbox_gate / provider_sandbox_gate / sandbox_contract_test_matrix_gate / secret_network_cost_gate / policy_claim_safety_gate / media_platform_boundary_gate / production_unlock_gate</div><div class="field-helper">gate status values: blocked / not_ready / preview_only / requires_operator_review; no real sandbox unlock, no provider client, no production unlock.</div></div><div class="demo-warning">${escapeHTML(t('phase2SandboxReadinessPreviewNote'))}</div><div id="projectWorkspacePhase2SandboxReadinessReviewStatus" class="field-helper" aria-live="polite"></div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2SandboxReadinessReviewDomainCandidatePanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2SandboxReadinessReviewSnapshot(workspace); if (!pack.has_workspace_phase2_sandbox_readiness_review_pack) return '';
+            const domains = projectWorkspacePhase2SandboxReadinessReviewJsonText(pack.sandbox_domain_readiness_cards); const candidates = projectWorkspacePhase2SandboxReadinessReviewJsonText(pack.sandbox_unlock_candidate_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2SandboxReadinessReviewDomainCandidatePanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2SandboxReadinessDomainCandidateTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2SandboxReadinessDomainCandidateNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSandboxDomainReadinessCards()">${escapeHTML(t('phase2SandboxReadinessCopyDomains'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSandboxUnlockCandidateCards()">${escapeHTML(t('phase2SandboxReadinessCopyCandidates'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxReadinessDomainTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(domains || t('phase2SandboxReadinessNoData'))}</pre><div class="field-helper">database_sandbox_readiness / migration_sandbox_readiness / audit_sink_sandbox_readiness / llm_sandbox_readiness / provider_sandbox_readiness / media_boundary_readiness / platform_upload_readiness / cost_quota_readiness / secret_network_readiness / policy_claim_readiness</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxReadinessCandidateTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(candidates || t('phase2SandboxReadinessNoData'))}</pre><div class="field-helper">db_sandbox_adapter_candidate / audit_sink_sandbox_candidate / llm_sandbox_invocation_candidate / provider_sandbox_invocation_candidate / media_storage_candidate / platform_upload_candidate / production_db_candidate / production_llm_candidate / production_provider_candidate / unlock_allowed=false / production_allowed=false / blocked / not_ready / preview_only</div></div></div><div class="demo-warning">${escapeHTML(t('phase2SandboxReadinessDomainCandidateNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2SandboxReadinessReviewBlockerDecisionValidationPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2SandboxReadinessReviewSnapshot(workspace); if (!pack.has_workspace_phase2_sandbox_readiness_review_pack) return '';
+            const blockers = projectWorkspacePhase2SandboxReadinessReviewJsonText(pack.sandbox_blocker_consolidation_cards); const decisions = projectWorkspacePhase2SandboxReadinessReviewJsonText(pack.sandbox_operator_decision_cards); const validation = projectWorkspacePhase2SandboxReadinessReviewJsonText(pack.sandbox_validation_evidence_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2SandboxReadinessReviewBlockerDecisionValidationPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2SandboxReadinessBlockerDecisionValidationTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2SandboxReadinessBlockerDecisionValidationNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSandboxBlockerConsolidationCards()">${escapeHTML(t('phase2SandboxReadinessCopyBlockers'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSandboxOperatorDecisionCards()">${escapeHTML(t('phase2SandboxReadinessCopyDecisions'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSandboxValidationEvidenceCards()">${escapeHTML(t('phase2SandboxReadinessCopyValidation'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxReadinessBlockerTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2SandboxReadinessNoData'))}</pre><div class="field-helper">no provider sandbox key approval / no secret access approval / no external call approval / no cost quota approval / no sandbox contract test executed / no real audit sink / no media storage approval / no platform upload approval / no production approval / no provider-specific legal review / no database sandbox approval / no migration execution approval / no audit event write approval / no rollback implementation approval</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxReadinessDecisionTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(decisions || t('phase2SandboxReadinessNoData'))}</pre><div class="field-helper">continue_preview_only / prepare_db_sandbox_harness / prepare_audit_sink_harness / prepare_llm_sandbox_approval / prepare_provider_sandbox_approval / hold_production_unlock / do_not_enable_external_calls / do_not_enable_paid_operations</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxReadinessValidationTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(validation || t('phase2SandboxReadinessNoData'))}</pre><div class="field-helper">backend_pack_presence_validation / frontend_workspace_render_validation / i18n_boundary_validation / copy_export_validation / safety_boundary_validation / batch_gate_validation / sandbox_test_matrix_validation / audit_preview_validation; repo deterministic only, no real sandbox/provider/LLM/media/DB test executed.</div></div></div><div class="demo-warning">${escapeHTML(t('phase2SandboxReadinessBlockerDecisionValidationNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2SandboxReadinessReviewDependencyGapNextPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2SandboxReadinessReviewSnapshot(workspace); if (!pack.has_workspace_phase2_sandbox_readiness_review_pack) return '';
+            const dependency = projectWorkspacePhase2SandboxReadinessReviewJsonText(pack.sandbox_dependency_map_cards); const gaps = projectWorkspacePhase2SandboxReadinessReviewJsonText(pack.sandbox_production_gap_cards); const next = projectWorkspacePhase2SandboxReadinessReviewJsonText(pack.sandbox_next_phase_recommendation_cards);
+            return `<div class="section-block" id="projectWorkspacePhase2SandboxReadinessReviewDependencyGapNextPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2SandboxReadinessDependencyGapNextTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2SandboxReadinessDependencyGapNextNote'))}</div></div><div class="action-row"><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSandboxDependencyMapCards()">${escapeHTML(t('phase2SandboxReadinessCopyDependency'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSandboxProductionGapCards()">${escapeHTML(t('phase2SandboxReadinessCopyGaps'))}</button><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceSandboxNextPhaseRecommendationCards()">${escapeHTML(t('phase2SandboxReadinessCopyNext'))}</button></div></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxReadinessDependencyTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(dependency || t('phase2SandboxReadinessNoData'))}</pre><div class="field-helper">1. DB sandbox adapter harness / 2. audit sink sandbox harness / 3. DB + audit trace replay / 4. LLM sandbox approval preview / 5. provider sandbox approval preview / 6. media storage approval preview / 7. platform upload approval preview / 8. production unlock risk review / can_skip=false</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxReadinessGapTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(gaps || t('phase2SandboxReadinessNoData'))}</pre><div class="field-helper">real database connection missing / real audit sink missing / real secret approval missing / real external call approval missing / real cost quota approval missing / real sandbox contract tests missing / real LLM sandbox invocation missing / real provider sandbox invocation missing / real media storage missing / real platform upload missing / production legal review missing / production rollback implementation missing</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxReadinessNextTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(next || t('phase2SandboxReadinessNoData'))}</pre><div class="field-helper">111 Real DB Sandbox Adapter Harness Preview / 112 Audit Sink Sandbox Harness Preview / 113 Real LLM Sandbox Invocation Approval Preview / 114 Provider Sandbox Invocation Approval Preview / 115 Secret / Network / Cost Approval Bundle Preview / 116 Sandbox Failure Recovery / Rollback Rehearsal Preview / 117 Sandbox Monitoring / Alerting Preview / 118 Phase 2 Sandbox Gate Closeout Docs</div></div></div><div class="demo-warning">${escapeHTML(t('phase2SandboxReadinessDependencyGapNextNote'))}</div></div>`;
+        }
+
+        function renderProjectWorkspacePhase2SandboxReadinessReviewQualityAuditSafetyPanel(workspace = latestProjectWorkspace) {
+            const pack = projectWorkspaceExportPhase2SandboxReadinessReviewSnapshot(workspace); if (!pack.has_workspace_phase2_sandbox_readiness_review_pack) return '';
+            const blockers = projectWorkspacePhase2SandboxReadinessReviewJsonText(pack.phase2_sandbox_readiness_blockers); const quality = projectWorkspacePhase2SandboxReadinessReviewJsonText(pack.sandbox_readiness_quality_checks); const audit = projectWorkspacePhase2SandboxReadinessReviewJsonText(pack.audit_preview); const safety = projectWorkspacePhase2SandboxReadinessReviewJsonText(pack.safety_boundaries);
+            return `<div class="section-block" id="projectWorkspacePhase2SandboxReadinessReviewQualityAuditSafetyPanel"><div class="section-header"><div><div class="json-key">${escapeHTML(t('phase2SandboxReadinessQualityAuditSafetyTitle'))}</div><div class="field-helper">${escapeHTML(t('phase2SandboxReadinessQualitySafetyNote'))}</div></div><button class="btn-secondary" type="button" onclick="copyProjectWorkspaceFullPhase2SandboxReadinessReviewPack()">${escapeHTML(t('phase2SandboxReadinessCopyFull'))}</button></div><div class="graph-os-compact-grid"><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxReadinessReadinessBlockerTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(blockers || t('phase2SandboxReadinessNoData'))}</pre><div class="field-helper">no database sandbox approval / no migration execution approval / no real audit sink / no audit event write approval / no provider sandbox key approval / no secret access approval / no external call approval / no cost quota approval / no sandbox contract test executed / no media storage approval / no platform upload approval / no production approval / no provider-specific legal review / no production rollback implementation</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxReadinessQualityTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(quality || t('phase2SandboxReadinessNoData'))}</pre><div class="field-helper">gate status / domain readiness / unlock candidates / blocker consolidation / operator decisions / validation evidence / dependency map / production gaps / next phase recommendations / blockers / audit preview / safety boundaries coverage</div></div><div class="graph-os-card"><strong>${escapeHTML(t('phase2SandboxReadinessAuditPreviewTitle'))}</strong><pre class="feedback-box" style="white-space:pre-wrap;">${escapeHTML(audit || t('phase2SandboxReadinessNoData'))}</pre><div class="field-helper">audit preview only; no database write / no real log read / no real audit event</div></div></div><div class="demo-warning"><strong>${escapeHTML(t('phase2SandboxReadinessSafetyTitle'))}:</strong> ${escapeHTML(safety || t('none'))}</div><div class="field-helper">provider disabled / provider_sandbox_call disabled / llm disabled / llm_sandbox_call disabled / media disabled / media_upload disabled / media_download disabled / media_storage disabled / external_scraping disabled / database_persistence disabled / database_read disabled / database_write disabled / schema_migration disabled / audit_sink disabled / audit_event_write disabled / audit_log_read disabled / real_execution disabled / real_policy_check disabled / platform_upload disabled / task_creation disabled / real_export disabled / file_write disabled / secret_read disabled / external_call disabled / token_issue disabled / paid_operation disabled</div><div class="field-helper">${escapeHTML(t('phase2SandboxReadinessQualitySafetyNote'))}</div></div>`;
         }
 
         function renderProjectWorkspaceCreativeCoreFlowStrip(workspace = latestProjectWorkspace) {
@@ -33446,6 +33718,8 @@
                 '',
                 projectWorkspaceExportPhase2SandboxContractTestMatrixMarkdown(workspace),
                 '',
+                projectWorkspaceExportPhase2SandboxReadinessReviewMarkdown(workspace),
+                '',
                 projectWorkspaceExportCreativeDecisionPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantPackMarkdown(workspace),
                 projectWorkspaceExportCreativeVariantSelectionMarkdown(workspace),
@@ -33589,6 +33863,7 @@
                 workspace_phase2_llm_sandbox_contract_pack: projectWorkspaceExportPhase2LlmSandboxContractSnapshot(workspace),
                 workspace_phase2_provider_sandbox_contract_pack: projectWorkspaceExportPhase2ProviderSandboxContractSnapshot(workspace),
                 workspace_phase2_sandbox_contract_test_matrix_pack: projectWorkspaceExportPhase2SandboxContractTestMatrixSnapshot(workspace),
+                workspace_phase2_sandbox_readiness_review_pack: projectWorkspaceExportPhase2SandboxReadinessReviewSnapshot(workspace),
                 creative_decision_pack: projectWorkspaceExportCreativeDecisionPackSnapshot(workspace),
                 creative_variant_pack: projectWorkspaceExportCreativeVariantPackSnapshot(workspace),
                 variant_selection_pack: projectWorkspaceExportCreativeVariantSelectionSnapshot(workspace),
@@ -46295,6 +46570,11 @@
                     ${renderProjectWorkspacePhase2SandboxContractTestMatrixAssetPolicyPanel(workspace)}
                     ${renderProjectWorkspacePhase2SandboxContractTestMatrixCostAuditFailurePermissionPanel(workspace)}
                     ${renderProjectWorkspacePhase2SandboxContractTestMatrixUnlockQualityAuditSafetyPanel(workspace)}
+                    ${renderProjectWorkspacePhase2SandboxReadinessReviewSummaryGatePanel(workspace)}
+                    ${renderProjectWorkspacePhase2SandboxReadinessReviewDomainCandidatePanel(workspace)}
+                    ${renderProjectWorkspacePhase2SandboxReadinessReviewBlockerDecisionValidationPanel(workspace)}
+                    ${renderProjectWorkspacePhase2SandboxReadinessReviewDependencyGapNextPanel(workspace)}
+                    ${renderProjectWorkspacePhase2SandboxReadinessReviewQualityAuditSafetyPanel(workspace)}
                     ${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}
                     ${renderProjectWorkspaceCreativeDecisionSummaryStrip(workspace)}
                     ${renderProjectWorkspaceCreativeRecommendedActionPanel(workspace)}

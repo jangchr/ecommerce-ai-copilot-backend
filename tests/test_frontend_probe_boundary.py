@@ -3,6 +3,7 @@ import re
 import unittest
 
 
+ROOT = Path(__file__).resolve().parents[1]
 FRONTEND_PATH = Path(__file__).resolve().parents[1] / "static" / "index.html"
 
 
@@ -14136,6 +14137,277 @@ class ProjectWorkspaceCreativeDecisionPackFrontendTests(unittest.TestCase):
             "no platform compliance conclusion",
             "no real quote or buyer evidence invention",
             "audit_event_write disabled / audit_log_read disabled",
+        ]:
+            with self.subTest(safety_text=safety_text):
+                self.assertIn(safety_text, html)
+        self.assertNotIn("????", html)
+
+    def test_workspace_phase2_sandbox_readiness_review_panels_copy_and_exports_exist(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        for marker in [
+            "Project Workspace phase2 sandbox readiness review bundle",
+            "PROJECT_WORKSPACE_PHASE2_SANDBOX_READINESS_REVIEW_MARKER",
+            "latestProjectWorkspacePhase2SandboxReadinessReviewPack",
+            "workspace_phase2_sandbox_readiness_review_pack: projectWorkspaceExportPhase2SandboxReadinessReviewSnapshot(workspace)",
+            "projectWorkspaceExportPhase2SandboxReadinessReviewMarkdown(workspace)",
+            "project_workspace_phase2_sandbox_readiness_review_marker",
+            "projectWorkspaceExportPhase2SandboxReadinessReviewSnapshot",
+            "projectWorkspaceExportPhase2SandboxReadinessReviewMarkdown",
+            "renderProjectWorkspacePhase2SandboxReadinessReviewSummaryGatePanel",
+            "renderProjectWorkspacePhase2SandboxReadinessReviewDomainCandidatePanel",
+            "renderProjectWorkspacePhase2SandboxReadinessReviewBlockerDecisionValidationPanel",
+            "renderProjectWorkspacePhase2SandboxReadinessReviewDependencyGapNextPanel",
+            "renderProjectWorkspacePhase2SandboxReadinessReviewQualityAuditSafetyPanel",
+            "copyProjectWorkspacePhase2SandboxReadinessReviewSummary",
+            "copyProjectWorkspaceSandboxReadinessGateStatusCards",
+            "copyProjectWorkspaceSandboxDomainReadinessCards",
+            "copyProjectWorkspaceSandboxUnlockCandidateCards",
+            "copyProjectWorkspaceSandboxBlockerConsolidationCards",
+            "copyProjectWorkspaceSandboxOperatorDecisionCards",
+            "copyProjectWorkspaceSandboxValidationEvidenceCards",
+            "copyProjectWorkspaceSandboxDependencyMapCards",
+            "copyProjectWorkspaceSandboxProductionGapCards",
+            "copyProjectWorkspaceSandboxNextPhaseRecommendationCards",
+            "copyProjectWorkspaceFullPhase2SandboxReadinessReviewPack",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, html)
+        for title in [
+            "Sandbox Readiness Review / Phase 2 Sandbox Gate Summary",
+            "Sandbox Readiness Review Summary",
+            "Sandbox Gate Status Cards",
+            "Sandbox Domain Readiness Cards",
+            "Sandbox Unlock Candidate Cards",
+            "Sandbox Blocker Consolidation Cards",
+            "Sandbox Operator Decision Cards",
+            "Sandbox Validation Evidence Cards",
+            "Sandbox Dependency Map Cards",
+            "Sandbox Production Gap Cards",
+            "Sandbox Next Phase Recommendation Cards",
+            "Phase 2 Sandbox Readiness Blockers",
+            "Sandbox Readiness Quality Checks",
+            "Audit Preview",
+            "Safety Boundaries",
+        ]:
+            with self.subTest(title=title):
+                self.assertIn(title, html)
+        for field in [
+            "pack.sandbox_readiness_review_summary",
+            "pack.sandbox_gate_status_cards",
+            "pack.sandbox_domain_readiness_cards",
+            "pack.sandbox_unlock_candidate_cards",
+            "pack.sandbox_blocker_consolidation_cards",
+            "pack.sandbox_operator_decision_cards",
+            "pack.sandbox_validation_evidence_cards",
+            "pack.sandbox_dependency_map_cards",
+            "pack.sandbox_production_gap_cards",
+            "pack.sandbox_next_phase_recommendation_cards",
+            "pack.phase2_sandbox_readiness_blockers",
+            "pack.sandbox_readiness_quality_checks",
+            "pack.audit_preview",
+            "pack.safety_boundaries",
+            "summary.mode",
+            "summary.overall_readiness_status",
+            "summary.gate_status_count",
+            "summary.domain_readiness_count",
+            "summary.unlock_candidate_count",
+            "summary.blocker_count",
+            "summary.real_sandbox_unlock_allowed",
+            "summary.real_database_unlock_allowed",
+            "summary.real_audit_sink_unlock_allowed",
+            "summary.real_llm_sandbox_unlock_allowed",
+            "summary.real_provider_sandbox_unlock_allowed",
+            "summary.real_provider_client_created",
+            "summary.real_sandbox_test_executed",
+            "summary.secret_read_allowed",
+            "summary.external_call_allowed",
+            "summary.paid_operation_allowed",
+            "summary.media_upload_allowed",
+            "summary.media_download_allowed",
+            "summary.media_storage_allowed",
+            "summary.platform_upload_allowed",
+            "summary.real_export_allowed",
+            "summary.real_execution_allowed",
+        ]:
+            with self.subTest(field=field):
+                self.assertIn(field, html)
+        for coverage in [
+            "database_adapter_gate", "schema_migration_gate",
+            "audit_sink_gate", "llm_sandbox_gate",
+            "provider_sandbox_gate", "sandbox_contract_test_matrix_gate",
+            "secret_network_cost_gate", "policy_claim_safety_gate",
+            "media_platform_boundary_gate", "production_unlock_gate",
+            "blocked / not_ready / preview_only / requires_operator_review",
+            "database_sandbox_readiness", "migration_sandbox_readiness",
+            "audit_sink_sandbox_readiness", "llm_sandbox_readiness",
+            "provider_sandbox_readiness", "media_boundary_readiness",
+            "platform_upload_readiness", "cost_quota_readiness",
+            "secret_network_readiness", "policy_claim_readiness",
+            "db_sandbox_adapter_candidate", "audit_sink_sandbox_candidate",
+            "llm_sandbox_invocation_candidate", "provider_sandbox_invocation_candidate",
+            "media_storage_candidate", "platform_upload_candidate",
+            "production_db_candidate", "production_llm_candidate",
+            "production_provider_candidate", "unlock_allowed=false",
+            "production_allowed=false", "no real unlock CTA",
+            "no provider sandbox key approval", "no secret access approval",
+            "no external call approval", "no cost quota approval",
+            "no sandbox contract test executed", "no real audit sink",
+            "no media storage approval", "no platform upload approval",
+            "no production approval", "no provider-specific legal review",
+            "no database sandbox approval", "no migration execution approval",
+            "no audit event write approval", "no rollback implementation approval",
+            "continue_preview_only", "prepare_db_sandbox_harness",
+            "prepare_audit_sink_harness", "prepare_llm_sandbox_approval",
+            "prepare_provider_sandbox_approval", "hold_production_unlock",
+            "do_not_enable_external_calls", "do_not_enable_paid_operations",
+            "backend_pack_presence_validation", "frontend_workspace_render_validation",
+            "i18n_boundary_validation", "copy_export_validation",
+            "safety_boundary_validation", "batch_gate_validation",
+            "sandbox_test_matrix_validation", "audit_preview_validation",
+            "DB sandbox adapter harness", "audit sink sandbox harness",
+            "DB + audit trace replay", "LLM sandbox approval preview",
+            "provider sandbox approval preview", "media storage approval preview",
+            "platform upload approval preview", "production unlock risk review",
+            "can_skip=false", "real database connection missing",
+            "real audit sink missing", "real secret approval missing",
+            "real external call approval missing", "real cost quota approval missing",
+            "real sandbox contract tests missing", "real LLM sandbox invocation missing",
+            "real provider sandbox invocation missing", "real media storage missing",
+            "real platform upload missing", "production legal review missing",
+            "production rollback implementation missing",
+            "111 Real DB Sandbox Adapter Harness Preview",
+            "112 Audit Sink Sandbox Harness Preview",
+            "113 Real LLM Sandbox Invocation Approval Preview",
+            "114 Provider Sandbox Invocation Approval Preview",
+            "115 Secret / Network / Cost Approval Bundle Preview",
+            "116 Sandbox Failure Recovery / Rollback Rehearsal Preview",
+            "117 Sandbox Monitoring / Alerting Preview",
+            "118 Phase 2 Sandbox Gate Closeout Docs",
+            "gate status / domain readiness / unlock candidates / blocker consolidation / operator decisions / validation evidence / dependency map / production gaps / next phase recommendations / blockers / audit preview / safety boundaries coverage",
+        ]:
+            with self.subTest(coverage=coverage):
+                self.assertIn(coverage, html)
+        previous = html.index("${renderProjectWorkspacePhase2SandboxContractTestMatrixUnlockQualityAuditSafetyPanel(workspace)}")
+        summary = html.index("${renderProjectWorkspacePhase2SandboxReadinessReviewSummaryGatePanel(workspace)}")
+        safety = html.index("${renderProjectWorkspacePhase2SandboxReadinessReviewQualityAuditSafetyPanel(workspace)}")
+        creative = html.index("${renderProjectWorkspaceCreativeCoreFlowStrip(workspace)}")
+        self.assertLess(previous, summary)
+        self.assertLess(summary, safety)
+        self.assertLess(safety, creative)
+        for panel_id in [
+            'id="projectWorkspacePhase2SandboxReadinessReviewSummaryGatePanel"',
+            'id="projectWorkspacePhase2SandboxReadinessReviewDomainCandidatePanel"',
+            'id="projectWorkspacePhase2SandboxReadinessReviewBlockerDecisionValidationPanel"',
+            'id="projectWorkspacePhase2SandboxReadinessReviewDependencyGapNextPanel"',
+            'id="projectWorkspacePhase2SandboxReadinessReviewQualityAuditSafetyPanel"',
+        ]:
+            with self.subTest(panel_id=panel_id):
+                self.assertEqual(html.count(panel_id), 1)
+
+    def test_workspace_phase2_sandbox_readiness_review_has_bilingual_guard_and_safe_boundary(self):
+        html = Path("static/index.html").read_text(encoding="utf-8")
+        guard = Path("scripts/frontend_quality_guard.py").read_text(encoding="utf-8")
+        smoke = Path("scripts/smoke_agent_graph_os_public.ps1").read_text(encoding="utf-8")
+        for key in [
+            "phase2SandboxReadinessPackTitle",
+            "phase2SandboxReadinessPackHelper",
+            "phase2SandboxReadinessSummaryTitle",
+            "phase2SandboxReadinessGateTitle",
+            "phase2SandboxReadinessDomainTitle",
+            "phase2SandboxReadinessCandidateTitle",
+            "phase2SandboxReadinessBlockerTitle",
+            "phase2SandboxReadinessDecisionTitle",
+            "phase2SandboxReadinessValidationTitle",
+            "phase2SandboxReadinessDependencyTitle",
+            "phase2SandboxReadinessGapTitle",
+            "phase2SandboxReadinessNextTitle",
+            "phase2SandboxReadinessReadinessBlockerTitle",
+            "phase2SandboxReadinessQualityTitle",
+            "phase2SandboxReadinessAuditPreviewTitle",
+            "phase2SandboxReadinessSafetyTitle",
+            "phase2SandboxReadinessCopySummary",
+            "phase2SandboxReadinessCopyGates",
+            "phase2SandboxReadinessCopyDomains",
+            "phase2SandboxReadinessCopyCandidates",
+            "phase2SandboxReadinessCopyBlockers",
+            "phase2SandboxReadinessCopyDecisions",
+            "phase2SandboxReadinessCopyValidation",
+            "phase2SandboxReadinessCopyDependency",
+            "phase2SandboxReadinessCopyGaps",
+            "phase2SandboxReadinessCopyNext",
+            "phase2SandboxReadinessCopyFull",
+            "phase2SandboxReadinessCopied",
+            "phase2SandboxReadinessCopyFailed",
+            "phase2SandboxReadinessCopyNoData",
+        ]:
+            with self.subTest(key=key):
+                self.assertGreaterEqual(html.count(key), 3)
+        for script in [guard, smoke]:
+            self.assertIn("Project Workspace phase2 sandbox readiness review bundle", script)
+            self.assertIn("project_workspace_phase2_sandbox_readiness_review_marker", script)
+        markdown = html[
+            html.index("function projectWorkspacePhase2SandboxReadinessReviewSummaryText"):
+            html.index("async function copyProjectWorkspacePhase2SandboxReadinessReviewText")
+        ]
+        for key in [
+            "phase2SandboxReadinessPackTitle",
+            "phase2SandboxReadinessSummaryTitle",
+            "phase2SandboxReadinessGateTitle",
+            "phase2SandboxReadinessDomainTitle",
+            "phase2SandboxReadinessCandidateTitle",
+            "phase2SandboxReadinessBlockerTitle",
+            "phase2SandboxReadinessDecisionTitle",
+            "phase2SandboxReadinessValidationTitle",
+            "phase2SandboxReadinessDependencyTitle",
+            "phase2SandboxReadinessGapTitle",
+            "phase2SandboxReadinessNextTitle",
+            "phase2SandboxReadinessReadinessBlockerTitle",
+            "phase2SandboxReadinessQualityTitle",
+            "phase2SandboxReadinessAuditPreviewTitle",
+            "phase2SandboxReadinessSafetyTitle",
+        ]:
+            self.assertIn(key, markdown)
+        section = html[
+            html.index("function projectWorkspacePhase2SandboxReadinessReviewPackFromWorkspace"):
+            html.index("function projectWorkspaceCampaignExportPackFromWorkspace")
+        ]
+        self.assertNotIn("fetch(", section)
+        for forbidden in [
+            "ready_for_real_sandbox",
+            "ready_for_real_provider",
+            "ready_for_production",
+        ]:
+            self.assertNotIn(forbidden, section)
+        for safety_text in [
+            "Deterministic sandbox readiness review preview only",
+            "not a real sandbox unlock",
+            "not production readiness",
+            "does not read API keys or secrets",
+            "does not create provider clients",
+            "does not call providers or LLMs",
+            "does not send external requests",
+            "does not upload/download/store media",
+            "does not connect to DB",
+            "does not read or write DB",
+            "does not execute migrations",
+            "does not write files",
+            "does not create audit events",
+            "No real sandbox unlock",
+            "no real unlock CTA",
+            "repo deterministic only, no real sandbox/provider/LLM/media/DB test executed",
+            "not legal advice",
+            "not real platform compliance",
+            "real policy API",
+            "real quote",
+            "buyer evidence",
+            "audit preview only; no database write / no real log read / no real audit event",
+            "provider_sandbox_call disabled",
+            "llm_sandbox_call disabled",
+            "media_upload disabled / media_download disabled / media_storage disabled",
+            "database_read disabled / database_write disabled",
+            "audit_event_write disabled / audit_log_read disabled",
+            "file_write disabled / secret_read disabled / external_call disabled",
+            "token_issue disabled / paid_operation disabled",
         ]:
             with self.subTest(safety_text=safety_text):
                 self.assertIn(safety_text, html)
